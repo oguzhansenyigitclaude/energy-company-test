@@ -399,7 +399,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-16 22:44) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-16 23:03) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -501,7 +501,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-16 22:44)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-16 23:03)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -603,6 +603,63 @@ const polyHas = (poly, x, y) => { // [dış halka, ...delikler] — göller/iç 
   return true;
 };
 // Ülke adlarının Türkçesi (harita verisi İngilizce gelir). Listede olmayan ülke İngilizce adıyla görünür.
+// ÜLKE ADLARI — 241 kaydın TAMAMI (patron: "kimse ülkesine saygısızlık yapan oyunu oynamaz").
+// Anahtarlar harita verisindeki ADMIN alanıyla BİREBİR eşleşmeli; eşleşmezse ülke İngilizce
+// görünür. (Bu yüzden 'Serbia' değil 'Republic of Serbia', 'Tanzania' değil
+// 'United Republic of Tanzania' yazılı — veri böyle diyor.)
+// Güncel adlar kullanıldı: Swaziland→Esvatini (2018), Macedonia→Kuzey Makedonya (2019),
+// Cabo Verde→Yeşil Burun Adaları. Eski ad kullanmak da bir saygısızlık biçimidir.
+const CNAME_TR_TAM = {
+  // ── Asya ──
+  'Yemen': 'Yemen', 'Bhutan': 'Bhutan', 'East Timor': 'Doğu Timor', 'Brunei': 'Brunei',
+  'Maldives': 'Maldivler', 'Taiwan': 'Tayvan', 'Hong Kong S.A.R.': 'Hong Kong', 'Macao S.A.R': 'Makao',
+  'Palestine': 'Filistin', 'Northern Cyprus': 'Kuzey Kıbrıs', 'Cyprus': 'Güney Kıbrıs',
+  'Siachen Glacier': 'Siaçen Buzulu',
+  // ── Afrika ──
+  'United Republic of Tanzania': 'Tanzanya', 'Burkina Faso': 'Burkina Faso', 'Malawi': 'Malavi',
+  'South Sudan': 'Güney Sudan', 'Guinea': 'Gine', 'Rwanda': 'Ruanda', 'Burundi': 'Burundi',
+  'Benin': 'Benin', 'Togo': 'Togo', 'Sierra Leone': 'Sierra Leone', 'Liberia': 'Liberya',
+  'Central African Republic': 'Orta Afrika Cumhuriyeti', 'Mauritania': 'Moritanya',
+  'Somaliland': 'Somaliland', 'Gambia': 'Gambiya', 'Lesotho': 'Lesotho',
+  'Guinea-Bissau': 'Gine-Bissau', 'Gabon': 'Gabon', 'Swaziland': 'Esvatini',
+  'Mauritius': 'Mauritius', 'Djibouti': 'Cibuti', 'Comoros': 'Komorlar',
+  'Equatorial Guinea': 'Ekvator Ginesi', 'Western Sahara': 'Batı Sahra',
+  'Cabo Verde': 'Yeşil Burun Adaları', 'Sao Tome and Principe': 'São Tomé ve Príncipe',
+  'Seychelles': 'Seyşeller', 'Saint Helena': 'Saint Helena',
+  // ── Avrupa ──
+  'Republic of Serbia': 'Sırbistan', 'Macedonia': 'Kuzey Makedonya', 'Andorra': 'Andorra',
+  'Liechtenstein': 'Lihtenştayn', 'San Marino': 'San Marino', 'Monaco': 'Monako',
+  'Vatican': 'Vatikan', 'Faroe Islands': 'Faroe Adaları', 'Aland': 'Åland',
+  'Isle of Man': 'Man Adası', 'Jersey': 'Jersey', 'Guernsey': 'Guernsey', 'Gibraltar': 'Cebelitarık',
+  // ── Amerika ──
+  'Haiti': 'Haiti', 'El Salvador': 'El Salvador', 'Nicaragua': 'Nikaragua',
+  'Puerto Rico': 'Porto Riko', 'Trinidad and Tobago': 'Trinidad ve Tobago',
+  'Guyana': 'Guyana', 'Suriname': 'Surinam', 'Belize': 'Belize',
+  'The Bahamas': 'Bahamalar', 'Barbados': 'Barbados', 'Saint Lucia': 'Saint Lucia',
+  'Curaçao': 'Curaçao', 'Aruba': 'Aruba', 'Grenada': 'Grenada', 'Dominica': 'Dominika',
+  'Bermuda': 'Bermuda', 'Cayman Islands': 'Cayman Adaları',
+  'Saint Kitts and Nevis': 'Saint Kitts ve Nevis', 'Turks and Caicos Islands': 'Turks ve Caicos Adaları',
+  'Sint Maarten': 'Sint Maarten', 'British Virgin Islands': 'Britanya Virjin Adaları',
+  'United States Virgin Islands': 'ABD Virjin Adaları', 'Saint Vincent and the Grenadines': 'Saint Vincent ve Grenadinler',
+  'Antigua and Barbuda': 'Antigua ve Barbuda', 'Saint Martin': 'Saint Martin',
+  'Saint Barthelemy': 'Saint Barthélemy', 'Anguilla': 'Anguilla', 'Montserrat': 'Montserrat',
+  'Saint Pierre and Miquelon': 'Saint-Pierre ve Miquelon', 'Falkland Islands': 'Falkland Adaları',
+  'South Georgia and the Islands': 'Güney Georgia ve Adaları',
+  // ── Okyanusya ──
+  'Solomon Islands': 'Solomon Adaları', 'French Polynesia': 'Fransız Polinezyası',
+  'Vanuatu': 'Vanuatu', 'New Caledonia': 'Yeni Kaledonya', 'Samoa': 'Samoa', 'Guam': 'Guam',
+  'Kiribati': 'Kiribati', 'Tonga': 'Tonga', 'Federated States of Micronesia': 'Mikronezya',
+  'Marshall Islands': 'Marshall Adaları', 'Northern Mariana Islands': 'Kuzey Mariana Adaları',
+  'American Samoa': 'Amerikan Samoası', 'Palau': 'Palau', 'Nauru': 'Nauru',
+  'Wallis and Futuna': 'Wallis ve Futuna', 'Cook Islands': 'Cook Adaları', 'Niue': 'Niue',
+  'Norfolk Island': 'Norfolk Adası', 'Pitcairn Islands': 'Pitcairn Adaları',
+  // ── Kutup / özel bölgeler ──
+  'Antarctica': 'Antarktika', 'French Southern and Antarctic Lands': 'Fransız Güney ve Antarktika Toprakları',
+  'Heard Island and McDonald Islands': 'Heard ve McDonald Adaları',
+  'British Indian Ocean Territory': 'Britanya Hint Okyanusu Toprakları',
+  'Indian Ocean Territories': 'Hint Okyanusu Toprakları',
+  'Ashmore and Cartier Islands': 'Ashmore ve Cartier Adaları',
+};
 const CNAME_TR = { 'Turkey': 'Türkiye', 'Canada': 'Kanada', 'United States of America': 'ABD', 'Germany': 'Almanya',
   'France': 'Fransa', 'United Kingdom': 'Birleşik Krallık', 'Spain': 'İspanya', 'Italy': 'İtalya', 'Japan': 'Japonya',
   'Brazil': 'Brezilya', 'Russia': 'Rusya', 'China': 'Çin', 'India': 'Hindistan', 'Australia': 'Avustralya',
@@ -635,11 +692,16 @@ const CNAME_TR = { 'Turkey': 'Türkiye', 'Canada': 'Kanada', 'United States of A
   'Croatia': 'Hırvatistan', 'Bosnia and Herzegovina': 'Bosna-Hersek', 'Albania': 'Arnavutluk',
   'North Macedonia': 'Kuzey Makedonya', 'Montenegro': 'Karadağ', 'Kosovo': 'Kosova', 'Cyprus': 'Kıbrıs',
   'Malta': 'Malta', 'Luxembourg': 'Lüksemburg', 'Greenland': 'Grönland', 'Papua New Guinea': 'Papua Yeni Gine',
-  'Fiji': 'Fiji', 'Northern Cyprus': 'Kuzey Kıbrıs' };
+  'Fiji': 'Fiji' };
+// Eksik kalan 105 ülkeyi ana tabloya kat. ÖLÜ ANAHTAR TEMİZLİĞİ: veri 'Republic of Serbia',
+// 'United Republic of Tanzania' ve 'Macedonia' diyor; eski 'Serbia'/'Tanzania'/'North Macedonia'
+// anahtarları hiçbir zaman eşleşmiyordu, yani bu üç ülke oyunda İngilizce görünüyordu.
+delete CNAME_TR['Serbia']; delete CNAME_TR['Tanzania']; delete CNAME_TR['North Macedonia'];
+Object.assign(CNAME_TR, CNAME_TR_TAM);
 // Natural Earth'te ISO_A2 = "-99" olan ülkeler (tartışmalı/özel statü kayıtları)
 const ISO_FIX = { 'France': 'FR', 'Norway': 'NO', 'Kosovo': 'XK', 'Somaliland': 'XS',
   'Northern Cyprus': 'XN', 'Indian Ocean Territories': 'XI', 'Ashmore and Cartier Islands': 'XA',
-  'Siachen Glacier': 'XG', 'Baikonur Cosmodrome': 'XB' };
+  'Siachen Glacier': 'XG' };
 const KITA_TR = { 'Europe': 'Avrupa', 'Asia': 'Asya', 'Africa': 'Afrika', 'North America': 'Kuzey Amerika',
   'South America': 'Güney Amerika', 'Oceania': 'Okyanusya', 'Antarctica': 'Antarktika', 'Seven seas (open ocean)': 'Açık deniz' };
 function landIndex(gj) { // kaba sınır kutuları: her dokunuşta bütün dünyayı taramayalım
@@ -665,20 +727,37 @@ function landIndex(gj) { // kaba sınır kutuları: her dokunuşta bütün düny
 }
 // Bu konum hangi ülkede? — ⚡ hat hiyerarşisi (ülke içi / ülkeler arası / kıtalar arası) buna dayanır
 const CAT_CACHE = {};
-function countryAt(ll) {
+const noktaUlke = (x, y) => { // ham test: nokta hangi poligonun içinde?
+  for (const b of LAND_BOX) if (x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1 && polyHas(b.p, x, y)) return b.m;
+  return null;
+};
+// KIYI PAYI — harita verisi 50m çözünürlükte, yani kıyı çizgisi gerçeğe göre birkaç km kaymış olabilir.
+// Tam kıyıda kurulmuş GERÇEK şehirler (Nuuk, Sisimiut, İskenderiye, Rio...) bu yüzden "deniz"
+// çıkıyordu: ülkesi bulunamıyor, ofis açılamıyor, adı "Açık deniz" görünüyordu.
+// Çözüm: doğrudan isabet yoksa çevreye bak. Pay küçük tutuldu ki açık deniz yine deniz kalsın.
+function countryAt(ll, pay) {
   if (!LAND_BOX || !ll) return null;
-  const key = ll[0].toFixed(2) + ',' + ll[1].toFixed(2);
+  const t = pay === undefined ? 0.12 : pay; // ~12 km
+  const key = ll[0].toFixed(2) + ',' + ll[1].toFixed(2) + ',' + t;
   if (key in CAT_CACHE) return CAT_CACHE[key];
   const x = ll[1], y = ll[0];
-  let hit = null;
-  for (const b of LAND_BOX) if (x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1 && polyHas(b.p, x, y)) { hit = b.m; break; }
+  let hit = noktaUlke(x, y);
+  if (!hit && t > 0) { // 8 yöne bak — en yakın karayı yakala
+    const kx = t / Math.max(.2, Math.cos(y * Math.PI / 180)); // boylamda enlem düzeltmesi
+    for (const [dx, dy] of [[kx, 0], [-kx, 0], [0, t], [0, -t], [kx, t], [-kx, t], [kx, -t], [-kx, -t]]) {
+      hit = noktaUlke(x + dx, y + dy);
+      if (hit) break;
+    }
+  }
   CAT_CACHE[key] = hit;
   return hit;
 }
 const countryOfCell = c => countryAt(cellCenter(c));
 function isLand(ll) {
   if (!LAND_BOX) return true; // harita verisi henüz gelmediyse oyunu KİLİTLEME — serbest bırak
-  return !!countryAt(ll);
+  // Kurulum kararında pay DAHA DAR (~6 km): kıyı şehri kara sayılsın ama açık deniz deniz kalsın,
+  // yoksa "denize kömür santrali kurulamaz" kuralı gevşer.
+  return !!countryAt(ll, 0.06);
 }
 const hash01 = (a, b, s) => { const x = Math.sin(a * 127.1 + b * 311.7 + s * 74.7) * 43758.5453; return x - Math.floor(x); };
 const GEO_SPOTS = [[37.77,29.09],[37.85,27.85],[38.61,27.43],[38.42,27.14],[38.76,30.54],[38.62,34.71],[64.1,-21.6],[33.59,130.40],[36.7,-119.7],[38.9,82.2]];
@@ -745,7 +824,7 @@ const CITY_DB = {
   JP: [['Tokyo',35.68,139.69,37000],['Osaka',34.69,135.50,19000],['Nagoya',35.18,136.91,9500],['Fukuoka',33.59,130.40,5600],['Sapporo',43.06,141.35,2600],['Sendai',38.27,140.87,2300],['Hiroşima',34.39,132.46,2000]],
   BR: [['São Paulo',-23.55,-46.63,22400],['Rio de Janeiro',-22.91,-43.17,13500],['Belo Horizonte',-19.92,-43.94,6100],['Brasília',-15.79,-47.88,4800],['Porto Alegre',-30.03,-51.23,4100],['Recife',-8.05,-34.88,4100],['Fortaleza',-3.73,-38.53,4100],['Salvador',-12.97,-38.50,3900],['Curitiba',-25.43,-49.27,3600],['Manaus',-3.12,-60.02,2600]],
   RU: [['Moskova',55.76,37.62,12600],['St. Petersburg',59.93,30.34,5400],['Novosibirsk',55.01,82.93,1600],['Yekaterinburg',56.84,60.61,1500],['Kazan',55.79,49.11,1300],['Nijniy Novgorod',56.30,44.00,1250],['Çelyabinsk',55.16,61.40,1200],['Samara',53.20,50.15,1150]],
-  CN: [['Şangay',31.23,121.47,24000],['Pekin',39.90,116.40,21500],['Guangzhou',23.13,113.26,18700],['Shenzhen',22.54,114.06,17500],['Chengdu',30.57,104.07,16300],['Çongçing',29.56,106.55,16000],['Tianjin',39.13,117.20,13600],['Wuhan',30.59,114.30,12300],['Xi\'an',34.34,108.94,12000],['Hangzhou',30.27,120.15,11900]],
+  CN: [['Şangay',31.23,121.47,24000],['Pekin',39.90,116.40,21500],['Guangzhou',23.13,113.26,18700],['Shenzhen',22.62,114.03,17500],['Chengdu',30.57,104.07,16300],['Çongçing',29.56,106.55,16000],['Tianjin',39.13,117.20,13600],['Wuhan',30.59,114.30,12300],['Xi\'an',34.34,108.94,12000],['Hangzhou',30.27,120.15,11900]],
   IN: [['Delhi',28.61,77.21,32900],['Mumbai',19.08,72.88,21300],['Kolkata',22.57,88.36,15100],['Bangalore',12.97,77.59,13600],['Chennai',13.08,80.27,11500],['Haydarabad',17.39,78.49,10500],['Ahmedabad',23.03,72.58,8400],['Pune',18.52,73.86,7000]],
   AU: [['Sidney',-33.87,151.21,5300],['Melbourne',-37.81,144.96,5100],['Brisbane',-27.47,153.03,2600],['Perth',-31.95,115.86,2200],['Adelaide',-34.93,138.60,1400],['Canberra',-35.28,149.13,460]],
   MX: [['Mexico City',19.43,-99.13,22000],['Guadalajara',20.66,-103.35,5300],['Monterrey',25.69,-100.32,5300],['Puebla',19.04,-98.21,3200],['Toluca',19.29,-99.66,2350],['Tijuana',32.51,-117.04,2200],['León',21.12,-101.68,1900]],
@@ -786,6 +865,77 @@ const CITY_DB = {
   HU: [['Budapeşte',47.50,19.04,1750],['Debrecen',47.53,21.63,200]],
   CZ: [['Prag',50.08,14.44,1350],['Brno',49.20,16.61,380],['Ostrava',49.82,18.26,280]],
   NZ: [['Auckland',-36.85,174.76,1650],['Wellington',-41.29,174.78,420],['Christchurch',-43.53,172.64,390]],
+  // Seyrek nüfuslu / kutup bölgeleri — buralar boş kalınca harita "bozuk" görünüyordu (patron: Grönland)
+  GL: [['Nuuk',64.18,-51.72,19],['Sisimiut',66.94,-53.67,5],['Ilulissat',69.22,-51.10,5],['Qaqortoq',60.72,-46.04,3]],
+  IS: [['Reykjavik',64.15,-21.94,140],['Akureyri',65.68,-18.09,19],['Keflavik',64.00,-22.56,9]],
+  MN: [['Ulan Batur',47.89,106.91,1600],['Erdenet',49.03,104.08,100]],
+  BT: [['Timphu',27.47,89.64,115]],
+  SR: [['Paramaribo',5.85,-55.20,240]],
+  GY: [['Georgetown',6.80,-58.16,235]],
+  PG: [['Port Moresby',-9.44,147.18,380],['Lae',-6.73,146.99,100]],
+  MG: [['Antananarivo',-18.88,47.51,1400],['Toamasina',-18.15,49.40,330]],
+  ET: [['Addis Ababa',9.01,38.76,5200],['Dire Dawa',9.59,41.87,500]],
+  KE: [['Nairobi',-1.29,36.82,5100],['Mombasa',-4.04,39.67,1300]],
+  TZ: [['Dar es Salaam',-6.79,39.21,7400],['Dodoma',-6.16,35.75,410]],
+  UG: [['Kampala',0.35,32.58,3800]],
+  GH: [['Akra',5.60,-0.19,2600],['Kumasi',6.69,-1.62,3300]],
+  SN: [['Dakar',14.72,-17.47,3200]],
+  CI: [['Abidjan',5.36,-4.01,5600]],
+  CM: [['Duala',4.05,9.77,3900],['Yaounde',3.85,11.50,4300]],
+  ZM: [['Lusaka',-15.39,28.32,3300]],
+  ZW: [['Harare',-17.83,31.05,1600]],
+  MZ: [['Maputo',-25.97,32.58,1120]],
+  AO: [['Luanda',-8.84,13.23,9000],['Huambo',-12.78,15.74,600]],
+  SD: [['Hartum',15.50,32.56,6300]],
+  LY: [['Trablus',32.89,13.19,1200],['Bingazi',32.12,20.07,650]],
+  TN: [['Tunus',36.81,10.18,2400]],
+  // Kudüs bilinçli olarak listeye ALINMADI: statüsü uluslararası tartışmalı ve oyunun onu
+  // bir ülkeye ait göstermesi taraf tutmak olur. Ticaret merkezi Tel Aviv yeterli.
+  IL: [['Tel Aviv',32.08,34.78,4200],['Hayfa',32.79,34.99,1100]],
+  PS: [['Gazze',31.50,34.47,750],['Ramallah',31.90,35.20,350]],
+  JO: [['Amman',31.95,35.93,4300]],
+  LB: [['Beyrut',33.89,35.50,2400]],
+  QA: [['Doha',25.29,51.53,2400]],
+  AE: [['Dubai',25.20,55.27,3600],['Abu Dabi',24.45,54.38,1800],['Şarja',25.35,55.39,1800]],
+  KW: [['Kuveyt',29.38,47.99,3200]],
+  OM: [['Maskat',23.59,58.41,1500]],
+  AZ: [['Bakü',40.41,49.87,2300]],
+  GE: [['Tiflis',41.72,44.83,1200]],
+  AM: [['Erivan',40.18,44.51,1100]],
+  UZ: [['Taşkent',41.30,69.24,2900],['Semerkant',39.63,66.98,550]],
+  BD: [['Dakka',23.81,90.41,22000],['Çittagong',22.36,91.78,5200]],
+  LK: [['Kolombo',6.93,79.86,750]],
+  NP: [['Katmandu',27.72,85.32,1500]],
+  MM: [['Yangon',16.87,96.20,5400]],
+  MY: [['Kuala Lumpur',3.14,101.69,8000],['Johor Bahru',1.49,103.74,1000]],
+  SG: [['Singapur',1.29,103.85,5900]],
+  PH: [['Manila',14.60,120.98,14400],['Davao',7.19,125.46,1800],['Cebu',10.32,123.89,1000]],
+  KH: [['Phnom Penh',11.56,104.92,2300]],
+  TW: [['Taipei',25.03,121.57,7000],['Kaohsiung',22.63,120.30,2800]],
+  BY: [['Minsk',53.90,27.57,2000]],
+  EE: [['Tallinn',59.44,24.75,450]],
+  LV: [['Riga',56.95,24.11,610]],
+  LT: [['Vilnius',54.69,25.28,580]],
+  SK: [['Bratislava',48.15,17.11,440]],
+  SI: [['Ljubljana',46.06,14.51,290]],
+  HR: [['Zagreb',45.81,15.98,800]],
+  BA: [['Saraybosna',43.86,18.41,420]],
+  AL: [['Tiran',41.33,19.82,560]],
+  MK: [['Üsküp',41.99,21.43,530]],
+  // Lefkoşa bölünmüş bir başkent: kuzeyi KKTC'nin, güneyi Kıbrıs Cumhuriyeti'nin başkenti.
+  // Tek listeye koyunca harita testi de "yanlış ülke" diyordu. İkiye ayırmak hem teknik olarak
+  // doğru hem de iki tarafa da haksızlık etmiyor.
+  CY: [['Limasol',34.71,33.02,240],['Larnaka',34.92,33.62,145]],
+  XN: [['Lefkoşa',35.20,33.36,120],['Gazimağusa',35.13,33.94,45],['Girne',35.34,33.32,35]],
+  VE: [['Karakas',10.48,-66.90,2900]],
+  BO: [['La Paz',-16.50,-68.15,1900],['Santa Cruz',-17.78,-63.18,1700]],
+  PY: [['Asunción',-25.26,-57.58,2300]],
+  UY: [['Montevideo',-34.90,-56.16,1400]],
+  CU: [['Havana',23.11,-82.37,2100]],
+  DO: [['Santo Domingo',18.49,-69.93,3300]],
+  GT: [['Guatemala City',14.63,-90.51,3000]],
+  PA: [['Panama City',8.98,-79.52,1900]],
+  CR: [['San José',9.93,-84.09,1400]],
 };
 // Bir ülkenin şehirleri, kalabalıktan seyreğe. Türkiye zaten TR_POP'ta — tekrar yazmıyoruz.
 function citiesOfCountry(iso) {
@@ -793,6 +943,108 @@ function citiesOfCountry(iso) {
     .map(([il, p]) => [il, IL_COORD[il][0], IL_COORD[il][1], p]).sort((a, b) => b[3] - a[3]);
   return (CITY_DB[iso] || []).slice().sort((a, b) => b[3] - a[3]);
 }
+// ═══ 🔎 BÖLGE ARAŞTIRMASI (patron tasarımı) ═══
+// Ofis ekranından $100.000 karşılığı 30 saniyede ülke araştırılır. Sonuç KALICIDIR ve
+// ülke başına BİR KEZ yapılır — ikinci ofiste tekrar ödeme yok, rapor doğrudan görünür.
+// Amaç: oyuncu körlemesine kurmasın. "Rüzgar mükemmel ama nüfus yok" tuzağını ÖNCEDEN görsün.
+const STUDY_COST = 1e5, STUDY_SEC = 30;
+const studyOf = iso => (G.countryStudy || {})[iso] || null;
+function countryReport(iso) {
+  const cs = citiesOfCountry(iso).slice(0, 12);
+  if (!cs.length) return null;
+  let yillikMWh = 0;
+  const adaylar = [];
+  for (const [nm, la, lo, pop] of cs) {
+    const cell = cellId([la, lo]);
+    const q = cellQuality(cell), d = cellDemand(cell), fiyat = cellPriceNow(cell);
+    yillikMWh += d * 365;
+    // Her şehir için en güçlü kaynak: 0..1 aralığına normalize edilmiş potansiyel
+    const kaynaklar = [
+      { tur: 'Güneş', ico: '☀️', p: Math.max(0, Math.min(1, (q.sun - .5) / .95)) },
+      { tur: 'Rüzgar', ico: '🌬️', p: Math.max(0, Math.min(1, (q.wind - .7) / .75)) },
+      { tur: 'Hidro', ico: '💧', p: Math.max(0, Math.min(1, (q.hydro - .55) / .9)) },
+    ];
+    if (q.geo) kaynaklar.push({ tur: 'Jeotermal', ico: '♨️', p: .95 }); // nadir ve sabit üretim
+    kaynaklar.sort((a, b) => b.p - a.p);
+    const en = kaynaklar[0];
+    // Puan = kaynak kalitesi × talebin logaritması × bölge fiyat çarpanı.
+    // Logaritma bilinçli: dev şehir küçük şehri tamamen ezmesin, kaynak kalitesi de sayılsın.
+    const puan = en.p * Math.log10(Math.max(10, d)) * cellPriceFactor(cell);
+    adaylar.push({ sehir: nm, ll: [la, lo], tur: en.tur, ico: en.ico,
+      kalite: Math.round(en.p * 100), talep: Math.round(d), carpan: +cellPriceFactor(cell).toFixed(2), puan });
+  }
+  adaylar.sort((a, b) => b.puan - a.puan);
+  return {
+    ts: Date.now(),
+    yillik: Math.round(yillikMWh),
+    sehirler: cs.slice(0, 6).map(([nm, la, lo, pop]) => ({ nm, ll: [la, lo], pop })),
+    oneriler: adaylar.slice(0, 5),
+  };
+}
+window.startCountryStudy = (iso, ad) => {
+  if (!iso) { toast('🌊 Bu konumda araştırılacak ülke yok', 'warn'); return; }
+  if (studyOf(iso)) { toast('✅ Bu ülke zaten araştırıldı', ''); return; }
+  if (G.countryStudyActive) { toast('🔎 Zaten bir bölge araştırması sürüyor', 'warn'); return; }
+  if (G.cash < STUDY_COST) { toast('Bölge araştırması için ' + fmt(STUDY_COST) + ' gerekli', 'warn'); return; }
+  G.cash -= STUDY_COST;
+  G.countryStudyActive = { iso, ad, until: Date.now() + STUDY_SEC * 1000 / (G.demo ? 60 : 1) };
+  toast('🔎 ' + ad + ' araştırması başladı — ' + STUDY_SEC + ' sn', '', null, 0, true);
+  beep(620, .1);
+  save(); openUnitSheet(window.__lastUnit);
+};
+// Ofis ekranındaki blok: ya "Bölgeyi Araştır" düğmesi, ya sayaç, ya da RAPOR
+function studyBlockHTML(ct) {
+  if (!ct || !ct.iso) return '';
+  const r = studyOf(ct.iso);
+  const a = G.countryStudyActive;
+  if (a && a.iso === ct.iso) {
+    const kalan = Math.max(0, Math.ceil((a.until - Date.now()) / 1000));
+    return `<div style="border:1px solid var(--acc2);border-radius:10px;padding:9px 11px;margin:8px 0">
+      <div style="font-size:12.5px;font-weight:800">🔎 Bölge araştırılıyor — ${kalan} sn</div>
+      <div class="rsbar" style="margin:6px 0"><i style="width:${Math.min(100, 100 * (1 - kalan / STUDY_SEC))}%"></i></div>
+      <div class="sub">Saha ekibi ${ct.nm} enerji piyasasını inceliyor.</div></div>`;
+  }
+  if (!r) {
+    const yok = !citiesOfCountry(ct.iso).length;
+    return `<button class="bigsell" style="background:var(--acc2);color:#071018" onclick="startCountryStudy('${ct.iso}','${ct.nm.replace(/'/g, '')}')"
+      ${G.cash < STUDY_COST || a || yok ? 'disabled' : ''}>🔎 Bölgeyi Araştır — ${fmt(STUDY_COST)}</button>
+    <p class="sub">${yok ? '⚠️ Bu ülke için henüz saha verisi yok.'
+      : `${STUDY_SEC} saniye sürer. Ülkenin yıllık enerji ihtiyacını, talep merkezlerini ve
+         <b>en verimli 5 yatırımı</b> öğrenirsin. Ülke başına <b>bir kez</b> — sonraki ofislerinde ücretsiz görürsün.`}</p>`;
+  }
+  // ── RAPOR ──
+  const gwh = r.yillik / 1000;
+  const yillikTxt = gwh >= 1000 ? (gwh / 1000).toFixed(1) + ' TWh' : gwh >= 1 ? Math.round(gwh) + ' GWh' : Math.round(r.yillik) + ' MWh';
+  return `<div style="border:1px solid var(--acc);border-radius:10px;padding:9px 11px;margin:8px 0;background:#0e1c33">
+    <div style="font-size:12.5px;font-weight:800;color:var(--acc)">✅ Bölge araştırıldı
+      <span class="sub" style="font-weight:600">· ${new Date(r.ts).toLocaleDateString('tr-TR')}</span></div>
+    <table class="ledger" style="margin:6px 0 2px">
+      <tr><td>⚡ Ülkenin yıllık enerji ihtiyacı</td><td><b>${yillikTxt}</b></td></tr>
+      <tr><td>🏙️ Talep merkezi</td><td>${r.sehirler.length} büyük şehir</td></tr>
+    </table>
+    ${r.oneriler.length ? `<div style="font-size:11px;color:var(--acc2);font-weight:800;margin:8px 0 3px">🏆 TOP 5 VERİMLİ YATIRIM ÖNERİSİ</div>
+    <table class="ledger">
+      ${r.oneriler.map((o, i) => `<tr>
+        <td><b>${i + 1}.</b> ${o.ico} <b>${o.tur}</b> —
+          <span class="lnk" style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${o.ll[0]},${o.ll[1]},10,'${o.sehir.replace(/'/g, '')}')">${o.sehir}</span></td>
+        <td><span class="${o.kalite >= 70 ? 'pos' : o.kalite < 40 ? 'neg' : ''}">kaynak %${o.kalite}</span>
+          <span class="sub"> · talep ${fmtN(o.talep)} · fiyat ×${o.carpan}</span></td></tr>`).join('')}
+    </table>
+    <p class="sub" style="margin-top:4px">Sıralama kaynak kalitesi × talep × bölge fiyatına göre. Şehir adına dokun → harita oraya uçar.</p>` : ''}
+  </div>`;
+}
+function studyTick() { // ana tikten çağrılır — süre dolunca raporu üret ve sakla
+  const a = G.countryStudyActive;
+  if (!a || Date.now() < a.until) return;
+  G.countryStudy = G.countryStudy || {};
+  G.countryStudy[a.iso] = countryReport(a.iso) || { ts: Date.now(), yillik: 0, sehirler: [], oneriler: [] };
+  G.countryStudyActive = null;
+  toast('🔎 ' + a.ad + ' araştırması tamamlandı — ofis ekranından raporu gör', '', null, 0, true);
+  beep(880, .12);
+  save();
+  if ($('unitsheet').classList.contains('show') && window.__lastUnit) openUnitSheet(window.__lastUnit);
+}
+
 // ═══ 🌍 KURULUŞ ÜLKELERİ GENİŞLETİLDİ (patron: "diğer ülkeleri de sisteme ekle, ülke konusunda zengin olalım") ═══
 // Bölgeler elle yazılmıyor: her ülkenin seçilebilir bölgeleri CITY_DB'deki en kalabalık
 // şehirlerinden ÜRETİLİYOR — koordinat ve nüfus zaten orada. Böylece tek bir şehir listesi
@@ -1236,6 +1488,7 @@ function freshState() {
     auctionsMkt: [], // 🔨 müzayede ilanları
     ally: null, allyId: null, allyBuffUntil: 0, // 🤝 ittifak (sunucuda ORTAK kayıt; çevrimdışıysa bot simülasyonu) + %50 alım bonusu penceresi
     resPts: { daily: 1, weekly: 0, dailyKey: '' }, // araştırma puanları (patron): Sv1-10 günlük, Sv11+ haftalık puan ister; 1 başlangıç hediyesi
+    countryStudy: {}, countryStudyActive: null, // 🔎 bölge araştırması: ülke başına BİR KEZ, kalıcı
     cellEarned: {}, cellSpent: {}, // ofis bölge raporu için kare bazlı kazanç/harcama
     adFreeUntil: 0, adFreeLife: false,
     week: isoWeek(), weekSold: 0, weekClaimed: false,
@@ -4017,6 +4270,8 @@ function migrate(s) {
   s.capLic = s.capLic || {};
   s.lines = s.lines || []; s.mail = s.mail || []; s.friends = s.friends || []; s.friendReqs = s.friendReqs || [];
   s.chat = s.chat || {}; s.boughtOthers = s.boughtOthers || {}; s.auctionsMkt = s.auctionsMkt || [];
+  s.countryStudy = s.countryStudy || {}; // 🔎 bölge araştırması sonradan geldi — eski kayıtlar boş başlar
+  if (s.countryStudyActive === undefined) s.countryStudyActive = null;
   if (s.showOthers === undefined) s.showOthers = true;
   // kapasite lisansı sonradan geldi: eski kayıtların mevcut kurulu gücü hangi kademeyi gerektiriyorsa BEDAVA verilir
   for (const cat2 of Object.keys(CAP_TIERS)) {
@@ -4475,6 +4730,26 @@ function drawCityLabels() {
       icon: L.divIcon({ html: `<div class="citylbl" onclick="openCityCard('${nm.replace(/'/g, '')}')">${nm}<i>${popTxt(pop)}</i></div>`, className: '', iconSize: [w, 20], iconAnchor: [w / 2, 10] }),
     }).addTo(map));
     if (kutular.length > 80) break;
+  }
+  // ── ÜLKE ETİKETİ YEDEĞİ (patron: "Grönland'da şehir görünümünde bile hiçbir şey görünmüyor") ──
+  // Şehir verisi olmayan bölgelerde ekran bomboş kalıyor ve harita bozukmuş gibi duruyor.
+  // Görünür alandaki HER ülke için, o ülkeye ait hiç şehir etiketi çizilmediyse ülke adını yaz.
+  const gruplar = countryGroups();
+  if (!gruplar) return;
+  for (const k of Object.keys(gruplar)) {
+    const g = gruplar[k];
+    if (g.x1 < b.getWest() || g.x0 > b.getEast() || g.y1 < b.getSouth() || g.y0 > b.getNorth()) continue;
+    if ((g.x1 - g.x0) * (g.y1 - g.y0) < (z <= 4 ? 8 : z <= 6 ? 1.5 : .25)) continue; // minik ülkeler uzakta yazılmasın
+    const merkez = [(g.y0 + g.y1) / 2, (g.x0 + g.x1) / 2];
+    if (!b.contains(merkez)) continue;
+    const p = map.latLngToContainerPoint(merkez), w = g.m.nm.length * 6.6 + 20;
+    if (kutular.some(u => Math.abs(u.x - p.x) < (u.w + w) / 2 && Math.abs(u.y - p.y) < 26)) continue;
+    kutular.push({ x: p.x, y: p.y, w });
+    overlayLayer.push(L.marker(merkez, {
+      icon: L.divIcon({ html: `<div class="citylbl" style="opacity:.72;border-style:dashed">${g.m.nm}</div>`, className: '', iconSize: [w, 20], iconAnchor: [w / 2, 10] }),
+      interactive: false,
+    }).addTo(map));
+    if (kutular.length > 110) break;
   }
 }
 // Şehir kartı: nüfus · enerji ihtiyacı · alım fiyatı · mesafe · şehrin kısa hikâyesi
@@ -4967,6 +5242,7 @@ function openUnitSheet(id) {
         if (!ct) return '<p class="sub">🌊 Bu ofis denizde görünüyor.</p>';
         const list = citiesOfCountry(ct.iso).slice(0, 8);
         return `<div style="font-size:12px;margin:12px 0 2px">📍 <b>ÜLKE:</b> ${ct.nm} <span class="sub">· ${ct.kita}</span></div>
+        ${studyBlockHTML(ct)}
         ${list.length ? `<div style="font-size:12px;margin:8px 0 2px">🏙️ <b>BU ÜLKENİN EN KALABALIK ŞEHİRLERİ</b></div>
         <table class="ledger">
           ${list.map(([nm, la, lo, pop]) => {
@@ -5824,7 +6100,7 @@ function frameBody(ts) {
         save();
         if ($('companysheet').classList.contains('show')) openCompanySheet();
       }
-      allyTick(); allyCallTick(); consortiumTick(); aucTick(); // 🤝 ihale · 💰 bağış · 🌍 konsorsiyum · 🔨 müzayede
+      allyTick(); allyCallTick(); consortiumTick(); aucTick(); studyTick(); // 🤝 ihale · 💰 bağış · 🌍 konsorsiyum · 🔨 müzayede · 🔎 bölge araştırması
       // ⏫ depo kapasite inşaatı bitti mi?
       for (const d of G.units) {
         if (d.kind === 'fueldepot' && d.upgUntil && Date.now() >= d.upgUntil) {
