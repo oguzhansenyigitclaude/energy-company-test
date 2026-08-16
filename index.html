@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Energy Company — Prototip</title>
+<!-- Uygulama simgesiyle AYNI şimşek (tools/ikon-uret.js üretir) -->
+<link rel="icon" type="image/png" sizes="64x64" href="img/favicon-64.png">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<meta name="theme-color" content="#13213a">
 <link rel="stylesheet" href="vendor/leaflet.css"><!-- yerel kopya: APK/çevrimdışı CDN'e muhtaç değil -->
 <style>
   :root {
@@ -42,7 +46,8 @@
   #mapdiv .leaflet-container{background:#2f9e93}
 
   /* Kuruluş modunda (yeni oyun) üst/alt menüler gizli — rakipteki gibi sadece harita + kart */
-  #app.wiz #hdr, #app.wiz #evbanner, #app.wiz #bottombar, #app.wiz #drawer, #app.wiz #drawerhandle{display:none}
+  #app.wiz #hdr, #app.wiz #evbanner, #app.wiz #bottombar, #app.wiz #drawer, #app.wiz #drawerhandle,
+  #app.wiz #navpanel, #app.wiz #navhandle{display:none}
 
   /* ── SAĞDAN AÇILAN ÇEKMECE MENÜ (patron isteği — rakipte solda; bizde sağda, kendi tasarımımız) ── */
   #drawerhandle{position:absolute;top:44%;right:0;z-index:1155;width:28px;height:60px;border-radius:12px 0 0 12px;border:1px solid var(--line);border-right:none;background:var(--cream);color:#13213a;font-size:16px;font-weight:800;cursor:pointer;box-shadow:-2px 2px 10px #0006;padding:0}
@@ -56,6 +61,52 @@
   #drawer #drawerclose{position:absolute;left:-30px;top:50%;transform:translateY(-50%);display:none;width:30px;height:58px;padding:0;border-radius:12px 0 0 12px;border:1px solid var(--line);border-right:none;background:var(--cream);color:#13213a;font-size:14px;font-weight:800;box-shadow:-2px 2px 10px #0006}
   #drawer.open #drawerclose{display:block}
   #drawer.open ~ #drawerhandle, #drawer.open + #drawerhandle{display:none}
+  /* ── SOLDAN AÇILAN SAHA ÇEKMECESİ (patron): ofisler + talep merkezleri.
+     "Bir ofisi Türkiye'ye diğerini Amerika'ya koyunca haritayı komple geri çekip
+     tekrar yakınlaştırmak zor oluyor" — tek dokunuşla ofisler arası atlama. ── */
+  #navhandle{position:absolute;top:44%;left:0;z-index:1155;width:28px;height:60px;border-radius:0 12px 12px 0;border:1px solid var(--line);border-left:none;background:var(--gold);color:#13213a;font-size:15px;font-weight:800;cursor:pointer;box-shadow:2px 2px 10px #0006;padding:0}
+  #navhandle:disabled{opacity:.35}
+  #navpanel{position:absolute;left:0;top:8px;bottom:8px;width:min(280px,82%);z-index:1156;background:#13213af7;border:1px solid var(--line);border-left:none;border-radius:0 14px 14px 0;transform:translateX(-104%);transition:transform .24s;box-shadow:4px 4px 20px #0009;backdrop-filter:blur(3px);display:flex;flex-direction:column;overflow:hidden}
+  #navpanel.open{transform:none}
+  #navhead{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;font-size:13px;font-weight:800;color:var(--cream)}
+  #navhead .x{cursor:pointer;font-size:17px;color:var(--dim);padding:0 4px}
+  #navtabs{flex:0 0 auto;display:flex;gap:5px;padding:0 10px 8px;border-bottom:1px solid var(--line)}
+  #navtabs button{flex:1;padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);font-size:11.5px;font-weight:800;cursor:pointer}
+  #navtabs button.on{background:var(--acc);color:#071018;border-color:var(--acc)}
+  /* toplu satış satırı — kendi sütun düzenimiz: ad+bölge · doluluk çubuğu · değer · eylem */
+  .strow{border:1px solid var(--line);border-radius:10px;padding:7px 9px;margin:5px 0;background:var(--panel2)}
+  .strow .top{display:flex;align-items:baseline;gap:6px;font-size:12px;font-weight:700}
+  .strow .top .cap{margin-left:auto;font-size:10.5px;color:var(--dim);font-weight:600;white-space:nowrap}
+  .strow .bar{height:7px;border-radius:4px;background:#0c1526;overflow:hidden;margin:5px 0 4px}
+  .strow .bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#3ddc97,#5ab0ff)}
+  .strow .foot{display:flex;align-items:center;gap:7px}
+  .strow .foot .val{flex:1;min-width:0;font-size:10.5px;color:var(--dim);font-weight:600}
+  .strow .foot button{flex:0 0 auto;padding:8px 12px;border-radius:8px;border:none;background:var(--acc);color:#071018;font-weight:800;font-size:11.5px;cursor:pointer}
+  .strow .foot button:disabled{background:#2a3346;color:var(--dim)}
+  #navbody{flex:1;overflow-y:auto;padding:8px 10px 14px}
+  #navbody .sect{font-size:10.5px;color:var(--acc2);font-weight:800;letter-spacing:.4px;margin:10px 0 3px}
+  .navrow{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:8px 9px;margin:4px 0;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--cream);font-size:12px;font-weight:700;cursor:pointer}
+  .navrow:active{background:#24304a}
+  .navrow .ico{font-size:17px;flex:0 0 auto;width:20px;text-align:center}
+  .navrow .t{flex:1;min-width:0;overflow:hidden}
+  .navrow .d{font-size:10px;color:var(--dim);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .navrow .r{flex:0 0 auto;font-size:10.5px;color:var(--acc);font-weight:800}
+  #navtip{font-size:11px;font-weight:700;color:var(--danger);text-align:center;margin:10px 2px 2px;line-height:1.45}
+  /* SİNEMATİK GEÇİŞ: hedefe dalarken kenarlar içeri büzülür, sonra açılır (patron: "bir şov gibi olsun") */
+  #flyfx{position:absolute;inset:0;z-index:1149;pointer-events:none;opacity:0}
+  #flyfx.on{animation:flyfx 2.6s ease-in-out}
+  @keyframes flyfx{0%{opacity:0;box-shadow:inset 0 0 0 0 #06101f00}
+    20%{opacity:1;box-shadow:inset 0 0 70px 24px #06101fcc}
+    55%{opacity:1;box-shadow:inset 0 0 150px 62px #06101fe6}
+    80%{opacity:.7;box-shadow:inset 0 0 60px 18px #06101f99}
+    100%{opacity:0;box-shadow:inset 0 0 0 0 #06101f00}}
+  @keyframes navping{0%{transform:scale(.25);opacity:.95}70%{opacity:.4}100%{transform:scale(3.4);opacity:0}}
+  /* 🏙️ Şehir katmanı etiketi — yakınlaştıkça küçük şehirler de belirir, çakışanlar elenir */
+  .citylbl{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;background:#0b1424e6;border:1px solid #4b6a99;border-radius:9px;padding:2px 7px;font-size:11px;font-weight:800;color:var(--cream);cursor:pointer;box-shadow:0 2px 8px #0008}
+  .citylbl i{font-style:normal;font-size:9.5px;font-weight:700;color:var(--acc2)}
+  .citylbl:active{background:var(--acc);color:#071018}
+  .navping{border-radius:50%;border:3px solid var(--gold);box-shadow:0 0 20px #ffd166cc;animation:navping 1.5s ease-out 2}
+  .navlabel{background:#000c;color:var(--gold);border:1px solid var(--gold);border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800;white-space:nowrap}
   #maploading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:13px;z-index:2;flex-direction:column;gap:8px}
 
   .umark{text-align:center;line-height:1;filter:drop-shadow(0 1px 3px #0008);position:relative}
@@ -219,7 +270,18 @@
   .rsbar i{display:block;height:100%;background:var(--acc2)}
 
   /* ── toasts & modal ── */
-  #toasts{position:absolute;top:70px;left:0;right:0;display:flex;flex-direction:column;gap:5px;align-items:center;z-index:60;pointer-events:none}
+  /* z-index 60'tı → giriş ekranı (#overlay, 80) ve panellerin (1200) ARKASINDA kalıyordu:
+     telefon testinde Google giriş hatası okunamıyordu. Artık her şeyin üstünde. */
+  /* ── AÇILIŞ EKRANI ── */
+  #boot{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:18px;transition:opacity .55s}
+  #boot.gone{opacity:0;pointer-events:none}
+  #bootscene{width:min(520px,100%);aspect-ratio:16/10;border-radius:16px;overflow:hidden;box-shadow:0 10px 40px #0009;border:1px solid var(--line)}
+  #bootscene svg{display:block;width:100%;height:100%}
+  #bootbar{width:min(320px,82%);height:6px;border-radius:4px;background:#0c1526;overflow:hidden;margin-top:20px}
+  #bootfill{display:block;height:100%;width:4%;border-radius:4px;background:linear-gradient(90deg,#ffc24a,#ff8a1f);transition:width .45s ease}
+  #bootstep{margin-top:9px;font-size:12px;font-weight:800;color:var(--cream);letter-spacing:.3px}
+  #boottip{margin-top:6px;font-size:11.5px;color:var(--dim);text-align:center;max-width:min(420px,90%);line-height:1.5;min-height:34px}
+  #toasts{position:absolute;top:70px;left:0;right:0;display:flex;flex-direction:column;gap:5px;align-items:center;z-index:1300;pointer-events:none}
   .toast{background:#000d;border:1px solid var(--acc);color:var(--ink);padding:7px 14px;border-radius:18px;font-size:12px;max-width:92%;animation:pop .25s;backdrop-filter:blur(4px)}
   .toast.warn{border-color:var(--warn)} .toast.bad{border-color:var(--danger)}
   @keyframes pop{from{transform:scale(.85);opacity:0}}
@@ -229,7 +291,7 @@
   #modal h2{font-size:18px;margin-bottom:6px}
   #modal p{font-size:12.5px;color:var(--dim);line-height:1.5;margin-bottom:8px}
   #modal p b{color:var(--ink)}
-  .biglogo{text-align:center;font-size:34px;margin:6px 0}
+  .biglogo{text-align:center;font-size:52px;margin:6px 0;filter:drop-shadow(0 3px 10px #ff8a1f55)}
   .choice{display:block;width:100%;text-align:left;margin:5px 0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink);cursor:pointer;font-size:13px}
   .choice .d{font-size:11px;color:var(--dim);margin-top:2px}
   .primary{display:block;width:100%;margin-top:10px;padding:12px;background:var(--acc);color:#08110c;font-weight:800;font-size:14px;border:none;border-radius:10px;cursor:pointer}
@@ -257,6 +319,13 @@
 </style>
 </head>
 <body>
+<!-- AÇILIŞ EKRANI (patron: "her seferinde farklı bir görsel şölen") — sahne JS ile çizilir -->
+<div id="boot">
+  <div id="bootscene"></div>
+  <div id="bootbar"><i id="bootfill"></i></div>
+  <div id="bootstep">Motor hazırlanıyor…</div>
+  <div id="boottip"></div>
+</div>
 <div id="app">
   <div id="hdr">
     <div class="row1">
@@ -330,7 +399,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-16 14:49) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-16 22:13) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -382,6 +451,17 @@
     <div id="tuthint"></div>
 
     <!-- Sağ çekmece menü: hızlı erişim (rakip paraleli, ayna tasarım) -->
+    <!-- SOL: SAHA ÇEKMECESİ — ofisler ve talep merkezleri arası tek dokunuşla atlama -->
+    <div id="flyfx"></div>
+    <button id="navhandle" title="Saha">🧭</button>
+    <div id="navpanel">
+      <div id="navhead"><span id="navtitle">🧭 SAHA</span><span class="x" onclick="closeNav()">✕</span></div>
+      <div id="navtabs">
+        <button data-tab="sell">💰 Depolar</button>
+        <button data-tab="map">🧭 Saha</button>
+      </div>
+      <div id="navbody"></div>
+    </div>
     <button id="drawerhandle" title="Menü">⚡</button>
     <div id="drawer">
       <button id="drawerclose" title="Menüyü kapat">▶</button>
@@ -421,7 +501,16 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-16 14:49)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-16 22:13)'; // deploy.js yayında tarih damgası ekler
+// ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
+// Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
+// simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
+const LOGO_SVG = `<svg viewBox="0 0 100 100" width="1em" height="1em" style="display:block;margin:0 auto" aria-label="Energy Company">
+  <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffc24a"/><stop offset=".5" stop-color="#ff8a1f"/><stop offset="1" stop-color="#e0491a"/>
+  </linearGradient></defs>
+  <path d="M60 4.8 L26.2 55.6 H45.6 L39.8 95.2 L73.8 44.4 H54.4 Z" fill="url(#lg)"/>
+</svg>`;
 // Büyük ekonomi gösterimi: $1,2M · $3,4B · $1,1T (milyar-trilyon seviyelerine çıkan kasalar okunur kalsın)
 function fmt(n) {
   const a = Math.abs(n), s = n < 0 ? '-' : '';
@@ -477,12 +566,98 @@ const COUNTRY_VIEW = { 'Türkiye':[[39.0,35.2],6],'Almanya':[[51.2,10.4],6],'ABD
 // ── KARE (hücre) sistemi: dünya 0.1°'lik karelere bölünür (~9 km) ──
 const CELL = 0.1;
 const MAX_PER_CELL = 8; // OYUNCU BAŞI limit — başkası doldursa da SENİN 8 hakkın durur (adalet)
-const cellId = ll => Math.floor(ll[0] / CELL) + '_' + Math.floor(ll[1] / CELL);
+// ENLEM DÜZELTMESİ (Kanada testi): sabit 0.1°×0.1° kare, kutuplara gidildikçe hem gerçekte
+// hem de Mercator ekranında ince-uzun şeride dönüşüyordu (oran 1/cos(enlem) — 75°'de ~4 kat).
+// Boylam adımını enlem kuşağına göre 2'nin katlarıyla büyütüyoruz: kare her yerde ~kare kalır,
+// ızgara hizası bozulmaz ve |enlem| < 60° için ESKİ kare kimlikleri birebir korunur.
+function lonSteps(cy) {
+  const lat = Math.abs((cy + .5) * CELL);
+  return lat >= 82.8 ? 8 : lat >= 75.5 ? 4 : lat >= 60 ? 2 : 1; // CELL'in katı
+}
+const cellId = ll => { const cy = Math.floor(ll[0] / CELL), k = lonSteps(cy); return cy + '_' + Math.floor(ll[1] / (CELL * k)) * k; };
+// Eski kayıtlardaki hizasız kimlikler de doğru çizilsin diye sınırlar hesaplanırken hizalanır
+const cellSnap = id => { const [cy, cx] = id.split('_').map(Number); const k = lonSteps(cy); return cy + '_' + Math.floor(cx / k) * k; };
 function cellBounds(id) {
   const [cy, cx] = id.split('_').map(Number);
-  return [[cy * CELL, cx * CELL], [(cy + 1) * CELL, (cx + 1) * CELL]];
+  const k = lonSteps(cy), x = Math.floor(cx / k) * k;
+  return [[cy * CELL, x * CELL], [(cy + 1) * CELL, (x + k) * CELL]];
 }
 function cellCenter(id) { const b = cellBounds(id); return [(b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2]; }
+
+// ── 🌊 DENİZ / KARA AYRIMI (patron: "deniz üstüne kömür santrali kurulamaz, mantıklı olalım") ──
+// Kara poligonları zaten yüklediğimiz harita verisinden gelir; nokta-poligon (ışın atma) testiyle
+// karar veririz. Denize YALNIZ offshore rüzgar ve yüzer güneş kurulabilir — gerçek dünyadaki gibi.
+let LAND_BOX = null;
+const SEA_OK = { wind: 1, sun: 1 }; // PLANT_TYPES.kind — denize izinli üretim türleri
+function ringHas(ring, x, y) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+const polyHas = (poly, x, y) => { // [dış halka, ...delikler] — göller/iç denizler delik sayılır
+  if (!ringHas(poly[0], x, y)) return false;
+  for (let i = 1; i < poly.length; i++) if (ringHas(poly[i], x, y)) return false;
+  return true;
+};
+// Ülke adlarının Türkçesi (harita verisi İngilizce gelir). Listede olmayan ülke İngilizce adıyla görünür.
+const CNAME_TR = { 'Turkey': 'Türkiye', 'Canada': 'Kanada', 'United States of America': 'ABD', 'Germany': 'Almanya',
+  'France': 'Fransa', 'United Kingdom': 'Birleşik Krallık', 'Spain': 'İspanya', 'Italy': 'İtalya', 'Japan': 'Japonya',
+  'Brazil': 'Brezilya', 'Russia': 'Rusya', 'China': 'Çin', 'India': 'Hindistan', 'Australia': 'Avustralya',
+  'Mexico': 'Meksika', 'Argentina': 'Arjantin', 'South Africa': 'Güney Afrika', 'Egypt': 'Mısır',
+  'Saudi Arabia': 'Suudi Arabistan', 'Nigeria': 'Nijerya', 'Indonesia': 'Endonezya', 'South Korea': 'Güney Kore',
+  'Poland': 'Polonya', 'Netherlands': 'Hollanda', 'Sweden': 'İsveç', 'Norway': 'Norveç', 'Ukraine': 'Ukrayna',
+  'Pakistan': 'Pakistan', 'Vietnam': 'Vietnam', 'Thailand': 'Tayland', 'Greece': 'Yunanistan', 'Iran': 'İran',
+  'Iraq': 'Irak', 'Kazakhstan': 'Kazakistan', 'Chile': 'Şili', 'Peru': 'Peru', 'Colombia': 'Kolombiya',
+  'Morocco': 'Fas', 'Algeria': 'Cezayir', 'Portugal': 'Portekiz', 'Austria': 'Avusturya', 'Switzerland': 'İsviçre',
+  'Belgium': 'Belçika', 'Denmark': 'Danimarka', 'Finland': 'Finlandiya', 'Ireland': 'İrlanda', 'Romania': 'Romanya',
+  'Bulgaria': 'Bulgaristan', 'Serbia': 'Sırbistan', 'Hungary': 'Macaristan', 'Czechia': 'Çekya', 'New Zealand': 'Yeni Zelanda' };
+// Natural Earth'te ISO_A2 = "-99" olan ülkeler (tartışmalı/özel statü kayıtları)
+const ISO_FIX = { 'France': 'FR', 'Norway': 'NO', 'Kosovo': 'XK', 'Somaliland': 'XS',
+  'Northern Cyprus': 'XN', 'Indian Ocean Territories': 'XI', 'Ashmore and Cartier Islands': 'XA',
+  'Siachen Glacier': 'XG', 'Baikonur Cosmodrome': 'XB' };
+const KITA_TR = { 'Europe': 'Avrupa', 'Asia': 'Asya', 'Africa': 'Afrika', 'North America': 'Kuzey Amerika',
+  'South America': 'Güney Amerika', 'Oceania': 'Okyanusya', 'Antarctica': 'Antarktika', 'Seven seas (open ocean)': 'Açık deniz' };
+function landIndex(gj) { // kaba sınır kutuları: her dokunuşta bütün dünyayı taramayalım
+  const out = [];
+  for (const f of (gj.features || [])) {
+    const g = f.geometry; if (!g) continue;
+    const pr = f.properties || {};
+    const en = pr.ADMIN || pr.NAME || '?';
+    // Ülke künyesi haritanın KENDİ verisinden gelir — 241 ülke hazır: ayrı ülke listesi tutmaya gerek yok.
+    // DİKKAT: Natural Earth bazı ülkelere ISO_A2 yerine "-99" yazar (Fransa, Norveç...). Bu
+    // değeri temizlemezsek hepsi TEK bir "-99" ülkesinde birleşir; Norveç'in şehirleri ve
+    // potansiyel skoru kaybolur. Eksik kodları addan tamamlıyoruz.
+    let iso = pr.ISO_A2 && pr.ISO_A2 !== '-99' ? pr.ISO_A2 : (ISO_FIX[en] || '');
+    const m = { en, nm: CNAME_TR[en] || en, iso, kita: KITA_TR[pr.CONTINENT] || pr.CONTINENT || '', kitaEn: pr.CONTINENT || '' };
+    const polys = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : [];
+    for (const p of polys) {
+      let x0 = 180, y0 = 90, x1 = -180, y1 = -90;
+      for (const pt of p[0]) { if (pt[0] < x0) x0 = pt[0]; if (pt[0] > x1) x1 = pt[0]; if (pt[1] < y0) y0 = pt[1]; if (pt[1] > y1) y1 = pt[1]; }
+      out.push({ p, x0, y0, x1, y1, m });
+    }
+  }
+  return out;
+}
+// Bu konum hangi ülkede? — ⚡ hat hiyerarşisi (ülke içi / ülkeler arası / kıtalar arası) buna dayanır
+const CAT_CACHE = {};
+function countryAt(ll) {
+  if (!LAND_BOX || !ll) return null;
+  const key = ll[0].toFixed(2) + ',' + ll[1].toFixed(2);
+  if (key in CAT_CACHE) return CAT_CACHE[key];
+  const x = ll[1], y = ll[0];
+  let hit = null;
+  for (const b of LAND_BOX) if (x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1 && polyHas(b.p, x, y)) { hit = b.m; break; }
+  CAT_CACHE[key] = hit;
+  return hit;
+}
+const countryOfCell = c => countryAt(cellCenter(c));
+function isLand(ll) {
+  if (!LAND_BOX) return true; // harita verisi henüz gelmediyse oyunu KİLİTLEME — serbest bırak
+  return !!countryAt(ll);
+}
 const hash01 = (a, b, s) => { const x = Math.sin(a * 127.1 + b * 311.7 + s * 74.7) * 43758.5453; return x - Math.floor(x); };
 const GEO_SPOTS = [[37.77,29.09],[37.85,27.85],[38.61,27.43],[38.42,27.14],[38.76,30.54],[38.62,34.71],[64.1,-21.6],[33.59,130.40],[36.7,-119.7],[38.9,82.2]];
 function cellQuality(id) {
@@ -532,13 +707,123 @@ const PLANT_TYPES = (() => {
 const TR_POP = { 'İstanbul':15900,'Ankara':5800,'İzmir':4500,'Bursa':3200,'Antalya':2700,'Konya':2320,'Adana':2270,'Şanlıurfa':2170,'Gaziantep':2154,'Kocaeli':2100,'Mersin':1920,'Diyarbakır':1800,'Hatay':1670,'Manisa':1470,'Kayseri':1440,'Samsun':1370,'Balıkesir':1250,'Kahramanmaraş':1170,'Aydın':1150,'Tekirdağ':1140,'Van':1130,'Sakarya':1080,'Denizli':1060,'Muğla':1050,'Eskişehir':910,'Mardin':870,'Trabzon':820,'Ordu':760,'Erzurum':750,'Malatya':740,'Afyonkarahisar':740,'Sivas':640,'Adıyaman':640,'Batman':640,'Tokat':590,'Elazığ':590,'Zonguldak':590,'Şırnak':570,'Kütahya':570,'Çanakkale':560,'Osmaniye':560,'Çorum':520,'Ağrı':510,'Giresun':450,'Isparta':450,'Aksaray':430,'Yozgat':420,'Edirne':410,'Düzce':410,'Muş':400,'Kırklareli':380,'Kastamonu':380,'Uşak':375,'Niğde':365,'Bitlis':350,'Rize':345,'Amasya':340,'Siirt':330,'Bolu':320,'Nevşehir':310,'Yalova':300,'Kars':285,'Bingöl':280,'Kırıkkale':277,'Hakkari':275,'Burdur':273,'Karaman':260,'Karabük':250,'Kırşehir':245,'Erzincan':240,'Bilecik':230,'Sinop':220,'Bartın':200,'Iğdır':200,'Çankırı':195,'Artvin':170,'Gümüşhane':145,'Kilis':145,'Ardahan':95,'Bayburt':85,'Tunceli':85 };
 const STATE_POP = { 'Bavyera':1500,'K. Ren-Vestfalya':1100,'Baden-Württemberg':630,'Aşağı Saksonya':540,'Schleswig-Holstein':250,'Berlin':3700,'Teksas':2300,'Kaliforniya':3900,'Florida':950,'New York':8500,'Washington':750,'Arizona':1600,'Endülüs':690,'Katalonya':1620,'Galiçya':500,'Madrid':3300,'Valensiya':790,'Hokkaido':1900,'Tokyo':13900,'Kyushu':1600,'Tohoku':1060,'São Paulo':12300,'Bahia':2900,'Amazonas':2200,'Rio de Janeiro':6700,'Ceará':2700 };
 const WORLD_CITIES = [ ['Kahire',30.04,31.24,10100],['Londra',51.51,-.13,8800],['Paris',48.86,2.35,2100],['Şangay',31.23,121.47,24000],['Pekin',39.9,116.4,21500],['Delhi',28.61,77.21,19000],['Mumbai',19.08,72.88,12400],['Moskova',55.76,37.62,12600],['Lagos',6.52,3.38,15000],['Mexico City',19.43,-99.13,9200],['Cakarta',-6.21,106.85,10600],['Seul',37.57,126.98,9700],['Urumçi',43.83,87.62,3500],['Sidney',-33.87,151.21,5300],['Johannesburg',-26.2,28.05,5600],['Buenos Aires',-34.6,-58.38,3100],['Riyad',24.71,46.68,7000],['Tahran',35.69,51.39,8700],['Bağdat',33.31,44.37,7500],['Atina',37.98,23.73,3150],['Sofya',42.7,23.32,1300],['Bükreş',44.43,26.1,1800] ];
+// ── 🏙️ DÜNYA ŞEHİR VERİTABANI (ISO ülke kodu → [ad, enlem, boylam, nüfus bin]) ──
+// İki işi birden görür: (1) kare talebi artık dünyanın HER yerinde gerçekçi hesaplanır,
+// (2) ofis kartındaki "bu ülkenin en kalabalık şehirleri" rehberi buradan beslenir.
+// Patronun Kanada sorunu tam olarak buydu: rüzgar mükemmel ama talep yok — nereye
+// hat çekeceğini görmek için o ülkenin talep merkezlerini görmesi gerekiyor.
+const CITY_DB = {
+  CA: [['Toronto',43.65,-79.38,6200],['Montreal',45.50,-73.57,4300],['Vancouver',49.28,-123.12,2600],['Calgary',51.05,-114.07,1500],['Edmonton',53.55,-113.49,1400],['Ottawa',45.42,-75.70,1400],['Quebec',46.81,-71.21,830],['Winnipeg',49.90,-97.14,830],['Hamilton',43.26,-79.87,790],['Halifax',44.65,-63.58,450]],
+  US: [['New York',40.71,-74.01,18800],['Los Angeles',34.05,-118.24,12500],['Chicago',41.88,-87.63,8900],['Dallas',32.78,-96.80,7600],['Houston',29.76,-95.37,7100],['Washington',38.91,-77.04,6300],['Miami',25.76,-80.19,6100],['Philadelphia',39.95,-75.17,6100],['Atlanta',33.75,-84.39,6100],['Phoenix',33.45,-112.07,4900],['Boston',42.36,-71.06,4900],['San Francisco',37.77,-122.42,4700],['Seattle',47.61,-122.33,4000],['Denver',39.74,-104.99,2960]],
+  DE: [['Berlin',52.52,13.40,3700],['Hamburg',53.55,9.99,1900],['Münih',48.14,11.58,1500],['Köln',50.94,6.96,1100],['Frankfurt',50.11,8.68,770],['Stuttgart',48.78,9.18,630],['Düsseldorf',51.23,6.78,620],['Leipzig',51.34,12.37,600]],
+  FR: [['Paris',48.86,2.35,11000],['Lyon',45.76,4.84,1700],['Marsilya',43.30,5.37,1600],['Toulouse',43.60,1.44,1000],['Lille',50.63,3.06,1000],['Bordeaux',44.84,-0.58,990],['Nice',43.70,7.27,950],['Nantes',47.22,-1.55,660]],
+  GB: [['Londra',51.51,-0.13,9500],['Manchester',53.48,-2.24,2800],['Birmingham',52.49,-1.89,2600],['Leeds',53.80,-1.55,1900],['Glasgow',55.86,-4.25,1700],['Liverpool',53.41,-2.98,900],['Newcastle',54.98,-1.62,810],['Sheffield',53.38,-1.47,730]],
+  ES: [['Madrid',40.42,-3.70,6700],['Barselona',41.39,2.17,5600],['Valensiya',39.47,-0.38,1600],['Sevilla',37.39,-5.98,1500],['Bilbao',43.26,-2.93,1000],['Malaga',36.72,-4.42,970],['Zaragoza',41.65,-0.89,750]],
+  IT: [['Milano',45.46,9.19,4300],['Roma',41.90,12.50,4300],['Napoli',40.85,14.27,3100],['Torino',45.07,7.69,1800],['Palermo',38.12,13.36,1000],['Bologna',44.49,11.34,1000],['Floransa',43.77,11.26,810]],
+  JP: [['Tokyo',35.68,139.69,37000],['Osaka',34.69,135.50,19000],['Nagoya',35.18,136.91,9500],['Fukuoka',33.59,130.40,5600],['Sapporo',43.06,141.35,2600],['Sendai',38.27,140.87,2300],['Hiroşima',34.39,132.46,2000]],
+  BR: [['São Paulo',-23.55,-46.63,22400],['Rio de Janeiro',-22.91,-43.17,13500],['Belo Horizonte',-19.92,-43.94,6100],['Brasília',-15.79,-47.88,4800],['Porto Alegre',-30.03,-51.23,4100],['Recife',-8.05,-34.88,4100],['Fortaleza',-3.73,-38.53,4100],['Salvador',-12.97,-38.50,3900],['Curitiba',-25.43,-49.27,3600],['Manaus',-3.12,-60.02,2600]],
+  RU: [['Moskova',55.76,37.62,12600],['St. Petersburg',59.93,30.34,5400],['Novosibirsk',55.01,82.93,1600],['Yekaterinburg',56.84,60.61,1500],['Kazan',55.79,49.11,1300],['Nijniy Novgorod',56.30,44.00,1250],['Çelyabinsk',55.16,61.40,1200],['Samara',53.20,50.15,1150]],
+  CN: [['Şangay',31.23,121.47,24000],['Pekin',39.90,116.40,21500],['Guangzhou',23.13,113.26,18700],['Shenzhen',22.54,114.06,17500],['Chengdu',30.57,104.07,16300],['Çongçing',29.56,106.55,16000],['Tianjin',39.13,117.20,13600],['Wuhan',30.59,114.30,12300],['Xi\'an',34.34,108.94,12000],['Hangzhou',30.27,120.15,11900]],
+  IN: [['Delhi',28.61,77.21,32900],['Mumbai',19.08,72.88,21300],['Kolkata',22.57,88.36,15100],['Bangalore',12.97,77.59,13600],['Chennai',13.08,80.27,11500],['Haydarabad',17.39,78.49,10500],['Ahmedabad',23.03,72.58,8400],['Pune',18.52,73.86,7000]],
+  AU: [['Sidney',-33.87,151.21,5300],['Melbourne',-37.81,144.96,5100],['Brisbane',-27.47,153.03,2600],['Perth',-31.95,115.86,2200],['Adelaide',-34.93,138.60,1400],['Canberra',-35.28,149.13,460]],
+  MX: [['Mexico City',19.43,-99.13,22000],['Guadalajara',20.66,-103.35,5300],['Monterrey',25.69,-100.32,5300],['Puebla',19.04,-98.21,3200],['Toluca',19.29,-99.66,2350],['Tijuana',32.51,-117.04,2200],['León',21.12,-101.68,1900]],
+  AR: [['Buenos Aires',-34.60,-58.38,15400],['Córdoba',-31.42,-64.18,1600],['Rosario',-32.95,-60.64,1500],['Mendoza',-32.89,-68.84,1200],['La Plata',-34.92,-57.95,940]],
+  ZA: [['Johannesburg',-26.20,28.05,6300],['Cape Town',-33.92,18.42,4800],['Durban',-29.86,31.02,3700],['Pretoria',-25.75,28.19,2500],['Gqeberha',-33.96,25.60,1300]],
+  EG: [['Kahire',30.04,31.24,22200],['İskenderiye',31.20,29.92,5600],['Giza',30.01,31.21,4500],['Port Said',31.26,32.30,780]],
+  SA: [['Riyad',24.71,46.68,7700],['Cidde',21.49,39.19,4800],['Mekke',21.39,39.86,2100],['Medine',24.47,39.61,1500],['Dammam',26.43,50.10,1500]],
+  NG: [['Lagos',6.52,3.38,15900],['Kano',12.00,8.52,4200],['Ibadan',7.38,3.90,3800],['Abuja',9.06,7.49,3800],['Port Harcourt',4.82,7.03,3200]],
+  ID: [['Cakarta',-6.21,106.85,11200],['Surabaya',-7.26,112.75,3000],['Bandung',-6.92,107.61,2600],['Medan',3.60,98.68,2500],['Bekasi',-6.24,106.99,2500],['Semarang',-6.97,110.42,1700]],
+  KR: [['Seul',37.57,126.98,9700],['Busan',35.18,129.08,3400],['Incheon',37.46,126.71,3000],['Daegu',35.87,128.60,2400],['Daejeon',36.35,127.38,1500],['Gwangju',35.16,126.85,1440]],
+  PL: [['Varşova',52.23,21.01,1800],['Krakov',50.06,19.94,800],['Łódź',51.76,19.46,670],['Wrocław',51.11,17.04,640],['Poznań',52.41,16.93,530],['Gdańsk',54.35,18.65,480]],
+  NL: [['Amsterdam',52.37,4.90,1160],['Rotterdam',51.92,4.48,1010],['Lahey',52.08,4.31,700],['Utrecht',52.09,5.12,660],['Eindhoven',51.44,5.48,440]],
+  SE: [['Stockholm',59.33,18.07,1650],['Göteborg',57.71,11.97,620],['Malmö',55.60,13.00,350],['Uppsala',59.86,17.64,240]],
+  NO: [['Oslo',59.91,10.75,1070],['Bergen',60.39,5.32,290],['Stavanger',58.97,5.73,230],['Trondheim',63.43,10.39,210]],
+  UA: [['Kiev',50.45,30.52,3000],['Harkiv',49.99,36.23,1400],['Odesa',46.48,30.73,1000],['Dnipro',48.46,35.05,980],['Lviv',49.84,24.03,720]],
+  PK: [['Karaçi',24.86,67.01,17100],['Lahor',31.55,74.34,13100],['Faisalabad',31.42,73.08,3600],['Ravalpindi',33.60,73.04,2300],['Multan',30.16,71.52,2100],['İslamabad',33.68,73.05,1200]],
+  VN: [['Ho Chi Minh',10.82,106.63,9300],['Hanoi',21.03,105.85,8200],['Hai Phong',20.86,106.68,2100],['Can Tho',10.05,105.77,1240],['Da Nang',16.05,108.20,1230]],
+  TH: [['Bangkok',13.76,100.50,10800],['Chiang Mai',18.79,98.99,1200],['Nakhon Ratchasima',14.97,102.10,460]],
+  GR: [['Atina',37.98,23.73,3150],['Selanik',40.64,22.94,1090],['Patras',38.25,21.73,215]],
+  IR: [['Tahran',35.69,51.39,9500],['Meşhed',36.30,59.61,3400],['İsfahan',32.65,51.67,2200],['Kereç',35.84,50.94,1970],['Şiraz',29.59,52.58,1870],['Tebriz',38.08,46.29,1770]],
+  IQ: [['Bağdat',33.31,44.37,7500],['Basra',30.51,47.78,2900],['Musul',36.34,43.13,1700],['Erbil',36.19,44.01,1600]],
+  KZ: [['Almatı',43.24,76.89,2100],['Astana',51.17,71.45,1300],['Şımkent',42.32,69.60,1100]],
+  CL: [['Santiago',-33.45,-70.67,6900],['Valparaíso',-33.05,-71.62,1000],['Concepción',-36.83,-73.05,1000]],
+  PE: [['Lima',-12.05,-77.04,11000],['Arequipa',-16.41,-71.54,1100],['Trujillo',-8.11,-79.03,970]],
+  CO: [['Bogotá',4.71,-74.07,11300],['Medellín',6.24,-75.58,4100],['Cali',3.45,-76.53,2800],['Barranquilla',10.97,-74.80,2300]],
+  MA: [['Kazablanka',33.57,-7.59,3800],['Rabat',34.02,-6.84,1900],['Fes',34.03,-5.00,1200],['Marakeş',31.63,-8.01,1000]],
+  DZ: [['Cezayir',36.75,3.06,3400],['Oran',35.70,-0.63,1000],['Konstantin',36.36,6.61,940]],
+  PT: [['Lizbon',38.72,-9.14,2960],['Porto',41.15,-8.61,1700],['Braga',41.55,-8.43,200]],
+  AT: [['Viyana',48.21,16.37,1980],['Graz',47.07,15.44,300],['Linz',48.31,14.29,210]],
+  CH: [['Zürih',47.38,8.54,1450],['Cenevre',46.20,6.14,620],['Basel',47.56,7.59,550],['Bern',46.95,7.45,430]],
+  BE: [['Brüksel',50.85,4.35,2100],['Antwerp',51.22,4.40,1050],['Gent',51.05,3.72,570]],
+  DK: [['Kopenhag',55.68,12.57,1370],['Aarhus',56.16,10.20,290],['Odense',55.40,10.39,180]],
+  FI: [['Helsinki',60.17,24.94,1300],['Tampere',61.50,23.79,350],['Turku',60.45,22.27,260]],
+  IE: [['Dublin',53.35,-6.26,1260],['Cork',51.90,-8.47,220]],
+  RO: [['Bükreş',44.43,26.10,1800],['Cluj',46.77,23.60,320],['Timișoara',45.75,21.23,320],['Iași',47.16,27.59,290]],
+  BG: [['Sofya',42.70,23.32,1300],['Plovdiv',42.14,24.75,350],['Varna',43.21,27.91,340]],
+  RS: [['Belgrad',44.79,20.45,1400],['Novi Sad',45.25,19.83,370]],
+  HU: [['Budapeşte',47.50,19.04,1750],['Debrecen',47.53,21.63,200]],
+  CZ: [['Prag',50.08,14.44,1350],['Brno',49.20,16.61,380],['Ostrava',49.82,18.26,280]],
+  NZ: [['Auckland',-36.85,174.76,1650],['Wellington',-41.29,174.78,420],['Christchurch',-43.53,172.64,390]],
+};
+// Bir ülkenin şehirleri, kalabalıktan seyreğe. Türkiye zaten TR_POP'ta — tekrar yazmıyoruz.
+function citiesOfCountry(iso) {
+  if (iso === 'TR') return Object.entries(TR_POP).filter(([il]) => IL_COORD[il])
+    .map(([il, p]) => [il, IL_COORD[il][0], IL_COORD[il][1], p]).sort((a, b) => b[3] - a[3]);
+  return (CITY_DB[iso] || []).slice().sort((a, b) => b[3] - a[3]);
+}
+// ═══ 🌍 KURULUŞ ÜLKELERİ GENİŞLETİLDİ (patron: "diğer ülkeleri de sisteme ekle, ülke konusunda zengin olalım") ═══
+// Bölgeler elle yazılmıyor: her ülkenin seçilebilir bölgeleri CITY_DB'deki en kalabalık
+// şehirlerinden ÜRETİLİYOR — koordinat ve nüfus zaten orada. Böylece tek bir şehir listesi
+// hem kare talebini, hem ofis rehberini, hem de kuruluş ekranını besliyor.
+// MEVCUT 6 ÜLKEYE DOKUNULMUYOR: eski kayıtlarda G.il = 'Teksas' / 'Bavyera' gibi değerler var,
+// listeyi değiştirmek o oyuncuların şehrini listeden düşürürdü.
+const COUNTRY_ADD = {
+  CA: ['Kanada', '🇨🇦', [58, -98], 3],        FR: ['Fransa', '🇫🇷', [46.6, 2.4], 5],
+  GB: ['Birleşik Krallık', '🇬🇧', [54.3, -3], 5], IT: ['İtalya', '🇮🇹', [42.5, 12.5], 5],
+  RU: ['Rusya', '🇷🇺', [58, 60], 3],           CN: ['Çin', '🇨🇳', [34, 104], 4],
+  IN: ['Hindistan', '🇮🇳', [22, 79], 4],       AU: ['Avustralya', '🇦🇺', [-25, 134], 4],
+  MX: ['Meksika', '🇲🇽', [23, -102], 4],       AR: ['Arjantin', '🇦🇷', [-35, -64], 4],
+  ZA: ['Güney Afrika', '🇿🇦', [-29, 24], 5],   EG: ['Mısır', '🇪🇬', [26.8, 30.8], 5],
+  SA: ['Suudi Arabistan', '🇸🇦', [24, 45], 5], NG: ['Nijerya', '🇳🇬', [9.1, 8.7], 5],
+  ID: ['Endonezya', '🇮🇩', [-2, 118], 4],      KR: ['Güney Kore', '🇰🇷', [36.5, 127.9], 6],
+  PL: ['Polonya', '🇵🇱', [52, 19.4], 5],       NL: ['Hollanda', '🇳🇱', [52.2, 5.3], 7],
+  SE: ['İsveç', '🇸🇪', [62, 15], 4],           NO: ['Norveç', '🇳🇴', [64.5, 12], 4],
+  UA: ['Ukrayna', '🇺🇦', [48.4, 31.2], 5],     PK: ['Pakistan', '🇵🇰', [30.4, 69.3], 5],
+  VN: ['Vietnam', '🇻🇳', [16, 106], 5],        TH: ['Tayland', '🇹🇭', [15.9, 101], 5],
+  GR: ['Yunanistan', '🇬🇷', [39.1, 22.9], 6],  IR: ['İran', '🇮🇷', [32.4, 53.7], 5],
+  IQ: ['Irak', '🇮🇶', [33.2, 43.7], 6],        KZ: ['Kazakistan', '🇰🇿', [48, 67], 4],
+  CL: ['Şili', '🇨🇱', [-35, -71], 4],          PE: ['Peru', '🇵🇪', [-9.2, -75], 5],
+  CO: ['Kolombiya', '🇨🇴', [4.6, -74.3], 5],   MA: ['Fas', '🇲🇦', [31.8, -7.1], 5],
+  DZ: ['Cezayir', '🇩🇿', [28, 2.6], 4],        PT: ['Portekiz', '🇵🇹', [39.6, -8], 6],
+  AT: ['Avusturya', '🇦🇹', [47.6, 14.1], 6],   CH: ['İsviçre', '🇨🇭', [46.8, 8.2], 7],
+  BE: ['Belçika', '🇧🇪', [50.6, 4.6], 7],      DK: ['Danimarka', '🇩🇰', [56.1, 10], 6],
+  FI: ['Finlandiya', '🇫🇮', [64, 26], 4],      IE: ['İrlanda', '🇮🇪', [53.2, -8], 6],
+  RO: ['Romanya', '🇷🇴', [45.9, 25], 6],       BG: ['Bulgaristan', '🇧🇬', [42.7, 25.3], 6],
+  RS: ['Sırbistan', '🇷🇸', [44.2, 20.9], 7],   HU: ['Macaristan', '🇭🇺', [47.1, 19.5], 6],
+  CZ: ['Çekya', '🇨🇿', [49.8, 15.5], 6],       NZ: ['Yeni Zelanda', '🇳🇿', [-41, 173], 5],
+};
+(() => {
+  for (const [iso, [nm, flag, ll, z]] of Object.entries(COUNTRY_ADD)) {
+    const cs = citiesOfCountry(iso);
+    if (!cs.length || COUNTRIES[nm]) continue;
+    COUNTRIES[nm] = { flag, note: cs.length + ' şehir', states: cs.map(c => c[0]), iso };
+    COUNTRY_VIEW[nm] = [ll, z];
+    for (const [cn, la, lo, pop] of cs) {
+      if (!IL_COORD[cn]) IL_COORD[cn] = [la, lo];   // mevcut eyalet adlarının üstüne YAZMA
+      if (!STATE_POP[cn]) STATE_POP[cn] = pop;
+    }
+  }
+})();
 let CITY_LIST = null;
 function cityList() {
   if (CITY_LIST) return CITY_LIST;
+  const seen = {};
   CITY_LIST = [];
-  for (const [il, p] of Object.entries(TR_POP)) if (IL_COORD[il]) CITY_LIST.push([il, IL_COORD[il][0], IL_COORD[il][1], p]);
-  for (const [st, p] of Object.entries(STATE_POP)) if (IL_COORD[st]) CITY_LIST.push([st, IL_COORD[st][0], IL_COORD[st][1], p]);
-  for (const c of WORLD_CITIES) CITY_LIST.push(c);
+  const add = (nm, la, lo, p) => { if (seen[nm]) return; seen[nm] = 1; CITY_LIST.push([nm, la, lo, p]); }; // çift sayım = çift talep
+  for (const [il, p] of Object.entries(TR_POP)) if (IL_COORD[il]) add(il, IL_COORD[il][0], IL_COORD[il][1], p);
+  for (const [st, p] of Object.entries(STATE_POP)) if (IL_COORD[st]) add(st, IL_COORD[st][0], IL_COORD[st][1], p);
+  for (const c of WORLD_CITIES) add(c[0], c[1], c[2], c[3]);
+  for (const arr of Object.values(CITY_DB)) for (const c of arr) add(c[0], c[1], c[2], c[3]);
   return CITY_LIST;
 }
 // Kare talebi (MWh/gün): yakın şehir nüfuslarının mesafeyle sönümlenmiş toplamı. 150 km ötesi katkı vermez.
@@ -716,6 +1001,10 @@ function botLease(cell) { // bilgi ekranı için: kazanılmamış karede bot imt
 const cellPriceFactor = c => { const [cy, cx] = c.split('_').map(Number); return .8 + hash01(cy, cx, 77) * .5; };
 const cellPriceNow = c => priceNow() * cellPriceFactor(c) * (myLease(c) ? 1 + LEASE_PRIM : 1) * (G.allyBuffUntil > Date.now() ? 1.5 : 1); // 🤝 ittifak zaferi: +%50 alım fiyatı
 const TRANSFER_FEE = 0.10; // başka bölgenin pazarına satışta -%10 aktarım bedeli (arbitraj kapısı)
+// 🔁 "KOMŞU pazar" GERÇEKTEN komşu olmalı (telefon testi hatası): mesafe sınırı yokken
+// Kanada'daki depodan İstanbul'a %10 kesintiyle satılabiliyordu — bu, milyon dolarlık
+// ⚡ nakil hattı sistemini tamamen anlamsız kılıyordu. Uzak pazar = hat şart.
+const NEIGHBOR_KM = 120;
 function sellRevenue(cell, mwh) {
   const base = cellPriceNow(cell);
   const remaining = demandLeft(cell);
@@ -754,7 +1043,7 @@ const FUEL_TYPES = {
 };
 const DEPOT_STEP = 50; // kapasite kademesi: +50 ton
 const DEPOT_TYPES = {
-  coaldepot: { cat: 'Yakıt', nm: 'Kömür Deposu', ico: '⛏️', fuel: 'coal', cost: 2e6, baseCap: 100, build: 60, d: 'Kömür stoğu. Kömür santralleri ikmali buradan çeker. Kapasite araştırmayla kademeli büyür (+50 ton/kademe).' },
+  coaldepot: { cat: 'Yakıt', nm: 'Kömür Deposu', ico: '🪨', fuel: 'coal', cost: 2e6, baseCap: 100, build: 60, d: 'Kömür stoğu. Kömür santralleri ikmali buradan çeker. Kapasite araştırmayla kademeli büyür (+50 ton/kademe).' },
   lngdepot:  { cat: 'Yakıt', nm: 'LNG Tankı', ico: '🛢️', fuel: 'gas', cost: 3e6, baseCap: 100, build: 90, d: 'Sıvı doğalgaz stoğu. Gaz santralleri ikmali buradan çeker. Kapasite araştırmayla büyür.' },
 };
 // OFİS: bir bölgede ruhsat almanın ÖN ŞARTI (rakipteki ofis kuralı). Kapsama yarıçapı ~80 km.
@@ -897,7 +1186,7 @@ function freshState() {
     showOthers: true, boughtOthers: {}, // 👥 diğer oyuncuların tesisleri (varsayılan GÖRÜNÜR — patron)
     mail: [], friends: [], friendReqs: [], chat: {}, chatSeen: 0, // 💬 sosyal katman
     auctionsMkt: [], // 🔨 müzayede ilanları
-    ally: null, allyBuffUntil: 0, // 🤝 ittifak (prototipte bot üyelerle simülasyon) + %50 alım bonusu penceresi
+    ally: null, allyId: null, allyBuffUntil: 0, // 🤝 ittifak (sunucuda ORTAK kayıt; çevrimdışıysa bot simülasyonu) + %50 alım bonusu penceresi
     resPts: { daily: 1, weekly: 0, dailyKey: '' }, // araştırma puanları (patron): Sv1-10 günlük, Sv11+ haftalık puan ister; 1 başlangıç hediyesi
     cellEarned: {}, cellSpent: {}, // ofis bölge raporu için kare bazlı kazanç/harcama
     adFreeUntil: 0, adFreeLife: false,
@@ -1227,9 +1516,24 @@ window.sellUnitAd = id => {
 // ── BOŞALTMA SÜRELİ SATIŞ (patron tasarımı): SAT'a basınca depo süre içinde boşalır —
 // en küçük depo ~35 sn, en büyüğü TAM dolulukta 2 dk. Para akan enerjiyle birlikte akar.
 const dischSecOf = T => Math.round(30 + 90 * Math.min(1, T.cap / 500));
+// UZAK PAZARA SATIŞ İZNİ — tek kapı. Hayalet aktarımı burada kesiyoruz:
+// uzak bir kareye ancak 🌍 konsorsiyum hattı, ⚡ KENDİ kurduğun hat, 🚨 acil ihale
+// ya da GERÇEKTEN komşu mesafe (≤ NEIGHBOR_KM) ile satabilirsin.
+function transferAllowed(from, to) {
+  if (!to || from === to) return true;
+  const cn = consortiumFor(from);
+  if (cn && cn.cell === to) return true;                          // 🌍 konsorsiyum hattı (ittifak/hissedar)
+  if ((G.lines || []).some(l => l.from === from && l.to === to && lineReady(l) && lineLoss(l) < 100)) return true; // ⚡ kendi hattın
+  if (allyLineTo(from, to)) return true;                          // 🤝 ittifak hattı — her üye kullanır
+  const at = G.ally && G.ally.tender;
+  if (at && to === at.cell && Date.now() < at.until) return true; // 🚨 acil ihale teslimatı
+  return kmDist(cellCenter(from), cellCenter(to)) <= NEIGHBOR_KM; // 🔁 komşu pazar
+}
 // Muhasebenin tek kapısı: bir depodan mwh kadar enerjiyi hedef pazara sat (aktarım kesintisi dahil)
 function sellChunk(st, mwh, targetCell, mult) {
   if (mwh <= 0) return 0;
+  // İzinsiz uzak hedef sessizce KENDİ bölgene düşer — arayüz atlansa bile arbitraj açılmaz
+  if (targetCell && targetCell !== st.cell && !transferAllowed(st.cell, targetCell)) targetCell = null;
   const cell = targetCell || st.cell;
   let gain;
   const at = G.ally && G.ally.tender;
@@ -1245,6 +1549,20 @@ function sellChunk(st, mwh, targetCell, mult) {
     G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
     // kWh payı hattı İŞLETEN ittifakın kasasına; hissedar olarak kullanıyorsan kasan yoksa pay yanmaz, sende kalır
     if (!cn.asShareholder && G.ally) G.ally.treasury = (G.ally.treasury || 0) + mwh * cn.route.kwhFee * 1000;
+    return gain;
+  }
+  // 🤝 İTTİFAK HATTI: başkan çekti, ÜYE kullanıyor. Taşıma ücretsiz; yalnız MWh başına
+  // küçük bir bakım payı ittifak kasasına yazılır (hattı ayakta tutan ortak gider).
+  const aline = targetCell && targetCell !== st.cell ? allyLineTo(st.cell, targetCell) : null;
+  if (aline) {
+    const r = sellRevenue(cell, mwh);
+    gain = r.gain * (mult || 1) * (1 - lineLoss(aline) / 100);
+    st.stored = Math.max(0, st.stored - mwh);
+    noteSold(cell, mwh);
+    G.cash += gain;
+    G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain;
+    G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
+    G.ally.treasury = (G.ally.treasury || 0) + mwh * ALLY_LINE_FEE;
     return gain;
   }
   const line = targetCell && targetCell !== st.cell ? (G.lines || []).find(l => l.from === st.cell && l.to === targetCell && lineReady(l)) : null;
@@ -1647,6 +1965,14 @@ function placeAt(c, ll) {
   const mine = G.units.filter(u => u.cell === c && u.kind !== 'office').length;
   if (mine >= MAX_PER_CELL) { toast('Bu karede senin limitin doldu (' + MAX_PER_CELL + ') — başka kareye dokun', 'warn'); return; }
   if (kind === 'plant' && PLANT_TYPES[t].geoOnly && !q.geo) { toast('♨️ Bu karede jeotermal kaynak yok — ♨️ işaretli bir kare seç', 'warn'); return; }
+  // 🌊 DENİZ KURALI (patron): denize yalnız offshore rüzgar ve yüzer güneş. Kömür/gaz/nükleer/
+  // jeotermal/hidro santraller ile depolar ve yakıt tankları karaya kurulur — gerçek dünyadaki gibi.
+  if (!isLand(ll) && !(kind === 'plant' && SEA_OK[PLANT_TYPES[t].kind])) {
+    toast(kind === 'plant'
+      ? '🌊 Denize ' + T.cat + ' santrali kurulamaz — açık denizde yalnız 🌬️ offshore rüzgar ve ☀️ yüzer güneş çalışır'
+      : '🌊 Burası deniz — ' + T.nm + ' karaya kurulur', 'warn', null, 7000);
+    return;
+  }
   if (kind === 'plant' && capBlocked(t)) { toast('🔒 ' + T.cat + ' kurulu güç limitin dolu — İnşa ekranından lisans yükselt', 'warn'); PENDING = null; setMode(null); return; }
   if (G.cash < T.cost) { toast('Yetersiz bakiye — ' + fmt(T.cost) + ' gerekli', 'warn'); PENDING = null; setMode(null); return; }
   G.cash -= T.cost;
@@ -1665,6 +1991,7 @@ function placeAt(c, ll) {
 }
 // OFİS AÇ — ruhsatsız bölgede de kurulabilir (genişlemenin kapısı ofistir)
 window.buildOfficeAsk = () => {
+  if (!isLand(SEL.ll || cellCenter(SEL.cell))) { toast('🌊 Denize ofis açılmaz — karada bir konum seç', 'warn'); return; }
   if (offices().length >= maxOffices()) { toast('🏢 Ofis limitin dolu (' + maxOffices() + ') — 🧪 "Ofis Ağı" araştırmasıyla artır', 'warn'); return; }
   if (G.cash < OFFICE.cost) { toast('Ofis için ' + fmt(OFFICE.cost) + ' gerekli', 'warn'); return; }
   $('modal').innerHTML = `
@@ -1890,15 +2217,101 @@ const lineWear = l => Math.max(0, 100 - (Date.now() - l.built) / 864e6 * LINE.we
 const lineReady = l => l.done <= Date.now();
 const lineLoss = l => Math.max(5, Math.min(100, lineLossPct(l.km, l.hubs) + lineBrand(l).loss + (100 - lineWear(l)) * .5)); // marka + yıpranma
 const linesOf = cell => (G.lines || []).filter(l => l.from === cell && lineReady(l) && lineLoss(l) < 100);
-window.startLineFrom = cell => { // hedef seçme moduna geç
+// ═══ 🤝 İTTİFAK HATTI = İTTİFAĞIN MALI, kuranın değil ═══
+// Patron kuralı: hattı ÇEKMEK başkan/yardımcı yetkisi ister, ama KULLANMAK bütün üyelerin hakkı.
+// Bu yüzden ittifak hatları G.lines'ta (kişisel) değil G.ally.lines'ta (ortak) durur.
+// Erişim konsorsiyum modelinin aynısı: hattın çıkış ucuna ya da transfer merkezlerinden birine
+// ALLY_ACCESS_KM içinde deposu olan her üye hattı ÜCRETSİZ kullanır.
+const ALLY_ACCESS_KM = 150;
+const ALLY_LINE_FEE = 2000; // taşınan MWh başına ittifak KASASINA giden bakım payı (~%1)
+const allyLines = () => (G.ally && G.ally.lines) || [];
+function allyLineNodes(l) { // çıkış ucu + hat üzerindeki transfer merkezleri
+  const a = cellCenter(l.from), b = cellCenter(l.to), out = [a];
+  for (let i = 1; i <= (l.hubs || 0); i++) { const t = i / ((l.hubs || 0) + 1); out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); }
+  return out;
+}
+function allyLinesFor(cell) {
+  if (!G.ally) return [];
+  const c = cellCenter(cell);
+  return allyLines().filter(l => lineReady(l) && lineLoss(l) < 100 && allyLineNodes(l).some(n => kmDist(n, c) <= ALLY_ACCESS_KM));
+}
+const allyLineTo = (cell, target) => allyLinesFor(cell).find(l => l.to === target);
+window.startLineFrom = (cell, ally) => { // hedef seçme moduna geç
   LINE_SRC = cell;
+  LINE_ALLY = !!ally;
   hideSheets();
   setMode('line');
-  toast('⚡ Hattın VARACAĞI noktaya dokun (uzak şehir = pahalı pazar)', '', null, 0, true);
+  toast(ally ? '🤝 İTTİFAK HATTI — varış noktasına haritadan dokun (kasadan ödenir)'
+             : '⚡ Hattın VARACAĞI noktaya dokun (uzak şehir = pahalı pazar)', '', null, 0, true);
 };
-let LINE_SRC = null;
+// 🤝 İTTİFAK HATTI: ülke sınırını aşan hat. Yalnız başkan/yardımcı, kasadan finanse edilir.
+// Patron: "haritadan seçsin ülkeleri bu şekilde yazıyla değil" — hedef HARİTADAN seçilir.
+window.startAllyLine = () => {
+  if (!G.ally) { toast('🤝 Önce bir ittifaka katıl', 'warn'); return; }
+  if (!canAllyLine()) { toast('👑 İttifak hattını yalnız başkan veya yardımcısı başlatabilir', 'warn'); return; }
+  const cells = [...new Set(stores().map(s => s.cell))];
+  if (!cells.length) { toast('Önce depolu bir bölgen olmalı — hat oradan başlar', 'warn'); return; }
+  $('modal').innerHTML = `
+    <h2>🤝 İttifak Hattı Oluştur</h2>
+    <p class="sub">Ülke sınırını aşan hat. Maliyeti <b>ittifak kasasından</b> ödenir —
+    kasa: <b class="pos">${fmt(G.ally.treasury || 0)}</b>.<br>
+    Önce başlangıç bölgeni seç, sonra <b>haritada varış noktasına dokun</b>.</p>
+    <p class="sub">🌍 Farklı KITAYA uzanan hat için ${CONS_MIN_ALLIES} ittifaklı konsorsiyum gerekir.</p>
+    ${cells.map(c => `<button class="bigsell half" onclick="closeModal();startLineFrom('${c}',true)">⚡ ${nearestCityName(c) || cellCode(c)} bölgesinden başlat</button>`).join('')}
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+let LINE_SRC = null, LINE_ALLY = false; // LINE_ALLY: ittifak hattı modu (başkan/yardımcı)
+// ═══ ⚡ HAT HİYERARŞİSİ (patron: "kısaca büyük kazanç için birlik olmak şart olsun") ═══
+// 🧍 BİREYSEL oyuncu: yalnız ÜLKE İÇİNDE hat çeker — başlangıç ülkesinde ya da sonradan
+//    ofis açtığı başka bir ülkede, o ülkenin İÇİNDE (iller/eyaletler arası).
+// 🤝 ÜLKELER ARASI: İTTİFAK HATTI — yalnız başkan ya da yardımcısı başlatabilir, kasadan ödenir.
+// 🌍 KITALAR ARASI: tek ittifak kaldıramaz — 3 ittifaklı KONSORSİYUM şart.
+const CONS_MIN_ALLIES = 3;
+// Hattın kasası: ittifak hattıysa ittifak kasası, değilse şirketin nakdi
+const linePurse = () => (LINE_ALLY && G.ally && canAllyLine()) ? (G.ally.treasury || 0) : G.cash;
+// Kıta sınırı tek başına yetmez: harita verisi Türkiye'yi tamamen ASYA'ya koyar, bu yüzden
+// Türkiye→Bulgaristan (~400 km) "kıtalar arası" sayılıp koca bir konsorsiyum isterdi. Saçma olurdu.
+// Kural: kıta FARKLI **ve** mesafe 800 km'den uzunsa kıtalar arasıdır; komşu geçişler ittifak işidir.
+const KITA_MIN_KM = 800;
+const isKitaArasi = (A, B, km) => A.kitaEn !== B.kitaEn && km > KITA_MIN_KM;
+function lineBlockedInfo(A, B, km) {
+  const kitaArasi = isKitaArasi(A, B, km);
+  const rota = `<b>${A.nm}</b> → <b>${B.nm}</b>`;
+  if (kitaArasi) {
+    $('modal').innerHTML = `
+      <h2>🌍 Kıtalar Arası Hat</h2>
+      <p>${rota} — bu hat <b>${A.kita}</b> ile <b>${B.kita}</b> arasında.</p>
+      <p style="color:var(--warn)"><b>Kıtalar arası hat çekimi için ${CONS_MIN_ALLIES} ittifaktan oluşan bir KONSORSİYUM gereklidir.</b>
+      Tek ittifak bu yatırımı kaldıramaz.</p>
+      <p class="sub">Yol haritası: ittifak kur → üye topla → kasayı doldur → 🤝 İttifak ekranından konsorsiyum ortağı bul.</p>
+      ${G.ally ? '<button class="primary" onclick="closeModal();openAllySheet()">🤝 İttifak Ekranını Aç</button>' : '<button class="primary" onclick="closeModal();openAllySheet()">🤝 Önce İttifak Kur</button>'}
+      <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
+  } else {
+    const yetkin = G.ally && canAllyLine();
+    $('modal').innerHTML = `
+      <h2>🤝 Ülkeler Arası Hat</h2>
+      <p>${rota} — bu bir <b>İTTİFAK HATTI</b>. Bireysel oyuncular yalnız <b>kendi ülkeleri içinde</b> hat çeker.</p>
+      <p class="sub">Başka bir ülkede ofis açarsan o ülkenin <b>içinde</b> de hat çekebilirsin — ama ülke sınırını
+      aşan hat ittifak işidir ve yalnız 👑 <b>başkan</b> ya da 🎖️ <b>yardımcısı</b> başlatabilir.</p>
+      ${!G.ally ? '<p class="neg">Henüz bir ittifakın yok.</p><button class="primary" onclick="closeModal();openAllySheet()">🤝 İttifak Kur / Katıl</button>'
+        : yetkin ? `<p class="pos">Yetkin var (${ALLY_ROLES[myAllyRole()].ico} ${ALLY_ROLES[myAllyRole()].nm}) — ittifak kasasından finanse edilir.</p>
+          <button class="primary" onclick="closeModal();startAllyLine()">🤝 İttifak Hattı Oluştur</button>`
+        : `<p class="neg">Rütben ${ALLY_ROLES[myAllyRole()].ico} ${ALLY_ROLES[myAllyRole()].nm} — bu hattı yalnız başkan veya yardımcısı başlatabilir.</p>`}
+      <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
+  }
+  $('overlay').classList.add('show');
+}
 function lineConfirm(toCell) {
+  // ÜLKE KONTROLÜ hiyerarşinin kapısı — harita verisindeki gerçek ülke sınırlarına bakar
+  const A = countryOfCell(LINE_SRC), B = countryOfCell(toCell);
+  if (!A || !B) { toast('🌊 Hattın iki ucu da karada olmalı', 'warn'); LINE_ALLY = false; return; }
   const km = Math.round(kmDist(cellCenter(LINE_SRC), cellCenter(toCell)));
+  if (A.iso !== B.iso) {
+    // 🌍 kıtalar arası: ittifak yetkisi bile yetmez, konsorsiyum şart
+    // 🤝 ülkeler arası: yalnız ittifak hattı modunda (başkan/yardımcı) geçilir
+    if (isKitaArasi(A, B, km) || !LINE_ALLY) { LINE_ALLY = false; lineBlockedInfo(A, B, km); return; }
+  }
   if (km < 20) { toast('Çok yakın — hat gerekmez, doğrudan satabilirsin', 'warn'); return; }
   const need = Math.max(0, Math.ceil(km / 300) - 1); // %100 kaybı önleyen asgari merkez
   const opt = Math.max(0, Math.ceil(km / 100) - 1);  // en iyi (%10) için gereken merkez
@@ -1920,8 +2333,9 @@ function lineConfirm(toCell) {
     ${rows.map(h => {
       const loss = lineLossPct(km, h), cost = lineCost(km, h);
       const net = cellPriceNow(toCell) * (1 - loss / 100);
-      return `<button class="bigsell ${loss <= 10 ? '' : 'half'}" onclick="closeModal();pickBrand('${toCell}',${km},${h})" ${G.cash < cost ? 'disabled' : ''}>
-        ${h} merkez · kayıp %${loss} · net ${fmt(net)}/MWh — ~${fmt(cost)}${G.cash < cost ? ' (bakiye yetersiz)' : ''}</button>`;
+      const kasa = linePurse(); // ittifak hattıysa kasa, değilse kendi paran
+      return `<button class="bigsell ${loss <= 10 ? '' : 'half'}" onclick="closeModal();pickBrand('${toCell}',${km},${h})" ${kasa < cost ? 'disabled' : ''}>
+        ${h} merkez · kayıp %${loss} · net ${fmt(net)}/MWh — ~${fmt(cost)}${kasa < cost ? (LINE_ALLY ? ' (kasa yetersiz)' : ' (bakiye yetersiz)') : ''}</button>`;
     }).join('')}
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
@@ -1940,16 +2354,36 @@ window.buildLine = (toCell, km, hubs, brand) => {
   if (!LINE_SRC || !toCell) { toast('Hat başlangıcı seçilmedi', 'warn'); return; } // bozuk hat kaydı oluşmasın
   brand = brand || 'voltas';
   const cost = brandPrice(brand, lineCost(km, hubs));
-  if (G.cash < cost) { toast('Hat için ' + fmt(cost) + ' gerekli', 'warn'); return; }
-  G.cash -= cost;
+  const viaAlly = LINE_ALLY && G.ally && canAllyLine(); // 🤝 ittifak hattı → kasadan
+  if (viaAlly) {
+    if ((G.ally.treasury || 0) < cost) { toast('💰 İttifak kasasında ' + fmt(cost) + ' yok — 📣 bağış çağrısı aç', 'warn'); return; }
+    G.ally.treasury -= cost;
+  } else {
+    if (G.cash < cost) { toast('Hat için ' + fmt(cost) + ' gerekli', 'warn'); return; }
+    G.cash -= cost;
+    G.cellSpent[LINE_SRC] = (G.cellSpent[LINE_SRC] || 0) + cost;
+  }
   brandBuy(brand); // sadakat/ilişki güncellenir
-  G.cellSpent[LINE_SRC] = (G.cellSpent[LINE_SRC] || 0) + cost;
-  G.lines = G.lines || [];
   const secs = lineBuildSec(km) * BRANDS[brand].build;
-  G.lines.push({ id: G.nextId++, from: LINE_SRC, to: toCell, km, hubs, brand, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1) });
-  toast('⚡ ' + BRANDS[brand].ico + ' ' + BRANDS[brand].nm + ' ile hat inşaatı başladı: ' + fmtN(km) + ' km — ' + fmtHrs(secs / 3600) + ' · ilişki ' + brandRel(brand) + '/100', '', null, 0, true);
+  const rec = { id: G.nextId++, from: LINE_SRC, to: toCell, km, hubs, brand, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1) };
+  if (viaAlly) {
+    // İttifak hattı ORTAK MALDIR: kişisel G.lines'a değil ittifağın defterine yazılır.
+    // Böylece hattı kuran başkan ayrılsa/atılsa bile hat ittifakta kalır, üyeler kullanmaya devam eder.
+    rec.ally = G.ally.name; rec.by = G.company;
+    G.ally.lines = G.ally.lines || [];
+    G.ally.lines.push(rec);
+    if (allyOnline()) { // ortak kayda yaz → hat BÜTÜN üyelerin oyununda belirir
+      NET.allyLineAdd(G.allyId, rec).catch(() => {});
+      NET.allyLedger(G.allyId, -cost, 'hat: ' + (nearestCityName(toCell) || cellCode(toCell))).catch(() => {});
+    }
+    addMail('🤝 ' + G.ally.name, 'İttifak hattı başlatıldı', `${G.company}, kasadan ${fmt(cost)} harcayarak ${nearestCityName(LINE_SRC) || cellCode(LINE_SRC)} → ${nearestCityName(toCell) || cellCode(toCell)} arasında ${fmtN(km)} km'lik ittifak hattı başlattı. Hat devreye girince ${ALLY_ACCESS_KM} km çevresinde deposu olan TÜM üyeler kullanabilecek.`, true);
+  } else {
+    G.lines = G.lines || [];
+    G.lines.push(rec);
+  }
+  toast((viaAlly ? '🤝 İTTİFAK HATTI — ' : '⚡ ') + BRANDS[brand].ico + ' ' + BRANDS[brand].nm + ': ' + fmtN(km) + ' km — ' + fmtHrs(secs / 3600) + ' · ilişki ' + brandRel(brand) + '/100', '', null, 0, true);
   beep(500, .12);
-  LINE_SRC = null; setMode(null);
+  LINE_SRC = null; LINE_ALLY = false; setMode(null);
   save(); drawOverlay();
 };
 window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça aralara yeni merkez alıp kaybı azalt")
@@ -1993,10 +2427,30 @@ function gridPanelHTML() {
       : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
     </div>`;
   }).join('');
+  // ── 🤝 İTTİFAK HATLARI: ittifağın ORTAK malı. Çekmek başkan/yardımcı yetkisi ister,
+  //    kullanmak her üyenin hakkıdır — burada herkes görür.
+  const al = allyLines();
+  if (G.ally && al.length) {
+    h += `<div style="font-size:12px;margin:12px 0 4px">🤝 <b>İTTİFAK HATLARI</b> <span class="sub">${G.ally.name} · ortak mal</span></div>`;
+    h += al.map(l => {
+      const rdy = lineReady(l), loss = Math.round(lineLoss(l));
+      const yakin = allyLineNodes(l).some(n => stores().some(s => kmDist(n, cellCenter(s.cell)) <= ALLY_ACCESS_KM));
+      return `<div style="border:1px solid #1f7a5a;border-radius:10px;padding:8px 10px;margin:6px 0">
+        <div style="font-size:12.5px;font-weight:700">${nearestCityName(l.from) || cellCode(l.from)} → ${nearestCityName(l.to) || cellCode(l.to)}
+          <span class="sub">${fmtN(l.km)} km · ${l.by || '—'} kurdu</span></div>
+        ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · ${l.hubs} transfer merkezi</div>
+          <div class="sub ${yakin ? 'pos' : 'neg'}">${yakin ? '✅ Deponun bu hatta erişimi var — satış ekranında görünür' : '⚠️ Deponun uzak: hattın ucuna ya da bir transfer merkezine ' + ALLY_ACCESS_KM + ' km içinde depo kur'}</div>`
+        : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
+      </div>`;
+    }).join('');
+  }
   const cells = [...new Set(stores().map(s => s.cell))];
-  h += `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">YENİ HAT ÇEK <span class="sub">(depolu bölgenden başlar)</span></div>`;
+  h += `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">YENİ HAT ÇEK <span class="sub">(depolu bölgenden başlar · ÜLKE İÇİ)</span></div>`;
   h += cells.length ? cells.map(c => `<button class="bigsell half" onclick="startLineFrom('${c}')">⚡ ${nearestCityName(c) || cellCode(c)} bölgesinden hat çek</button>`).join('')
     : '<p class="sub">Önce bir bölgeye pil istasyonu kur.</p>';
+  h += `<p class="sub">🧍 Bireysel hat yalnız <b>ülke içindedir</b> (iller/eyaletler arası).
+    🤝 Ülke sınırını aşan hat ittifak işidir — 🤝 İttifak ekranından başkan ya da yardımcısı başlatır.
+    🌍 Kıtalar arası için ${CONS_MIN_ALLIES} ittifaklı konsorsiyum gerekir.</p>`;
   return h;
 }
 function drawLines() {
@@ -2008,11 +2462,13 @@ function drawLines() {
       L.marker(n.ll, { icon: divIcon(`<div style="font-size:${n.end ? 20 : 16}px;filter:drop-shadow(0 1px 3px #000)">${n.end ? '🌍' : '🗼'}</div>`, [20, 20]), interactive: false }).addTo(map)));
   }
   if (G.lines) G.lines = G.lines.filter(l => l && l.from && l.to); // eksik veri çizimi çökertmesin
-  for (const l of (G.lines || [])) {
+  if (G.ally && G.ally.lines) G.ally.lines = G.ally.lines.filter(l => l && l.from && l.to);
+  for (const l of (G.lines || []).concat(allyLines())) { // kişisel + 🤝 ittifak hatları birlikte çizilir
     const rdy = lineReady(l), loss = rdy ? lineLoss(l) : 100;
     const a = cellCenter(l.from), b = cellCenter(l.to);
-    const col = !rdy ? '#8b95a8' : loss >= 50 ? '#ff5c5c' : loss <= 15 ? '#3ddc97' : '#ffd166';
-    overlayLayer.push(L.polyline([a, b], { color: col, weight: MAPVIEW === 'grid' ? 4 : 2, opacity: .85, dashArray: rdy ? null : '6 6', interactive: false }).addTo(map));
+    // 🤝 ittifak hattı ayrı renkte ve daha kalın çizilir — ortak mal olduğu bir bakışta anlaşılsın
+    const col = !rdy ? '#8b95a8' : l.ally ? '#2fd6a0' : loss >= 50 ? '#ff5c5c' : loss <= 15 ? '#3ddc97' : '#ffd166';
+    overlayLayer.push(L.polyline([a, b], { color: col, weight: (MAPVIEW === 'grid' ? 4 : 2) + (l.ally ? 2 : 0), opacity: .85, dashArray: rdy ? null : '6 6', interactive: false }).addTo(map));
     if (MAPVIEW === 'grid') { // transfer merkezleri hat üzerinde eşit aralıkla
       for (let i = 1; i <= l.hubs; i++) {
         const t = i / (l.hubs + 1);
@@ -2032,6 +2488,138 @@ const ALLY_MEMBER_SHARE_CAP = .4;
 const allyCap = () => Math.min(50, 10 + Math.floor(((G.ally && G.ally.pts) || 0) / 3) * 5);
 const allyBuffOn = () => G.allyBuffUntil > Date.now();
 const ALLY_BOTS = ['RüzgarKurdu', 'VoltHan', 'ŞebekeReis', 'GüneşKızı', 'TeraVatt34', 'AkımUstası', 'PilBaron', 'MegaJul', 'HidroCan'];
+// ── 🤝 İTTİFAK RÜTBELERİ (patron: "ben kurucuyum, başkan olarak üye çıkarma veya davet edebilmeliyim") ──
+// Rütbe sadece bir unvan değil YETKİ: ülkeler arası ⚡ İTTİFAK HATTI'nı yalnız başkan ve
+// yardımcısı başlatabilir; üye çıkarma/davet/rütbe verme yalnız başkanda.
+const ALLY_ROLES = { lider: { nm: 'Başkan', ico: '👑', r: 3 }, yardimci: { nm: 'Yardımcı', ico: '🎖️', r: 2 }, uye: { nm: 'Üye', ico: '👤', r: 1 } };
+const myAllyRole = () => (G.ally && G.ally.role) || null;
+const isAllyBoss = () => myAllyRole() === 'lider';                                  // davet · çıkarma · rütbe
+const canAllyLine = () => myAllyRole() === 'lider' || myAllyRole() === 'yardimci';  // ülkeler arası hat
+function allyRoster() { // eski kayıtlarda liste yoksa mevcut üye sayısından üretilir
+  if (!G.ally) return [];
+  if (!G.ally.roster) {
+    G.ally.role = G.ally.role || 'lider'; // ittifakı kuran sensin
+    G.ally.roster = [{ nm: G.company, role: 'lider', since: G.ally.since || Date.now(), me: true }].concat(
+      ALLY_BOTS.slice(0, Math.max(0, (G.ally.members || 1) - 1))
+        .map((b, i) => ({ nm: b, role: i === 0 ? 'yardimci' : 'uye', since: Date.now() - (i + 1) * 864e5 })));
+  }
+  return G.ally.roster;
+}
+function allySyncCount() { G.ally.members = allyRoster().length; }
+
+// ═══ 🤝 İTTİFAK SUNUCU SENKRONU ═══
+// Sunucu bağlıyken ittifak ORTAK bir kayıttır: üye listesi, rütbeler, kasa ve ittifak hatları
+// bütün üyelerde AYNI görünür. Başkanın çektiği hat üyenin oyununda da belirir.
+// Sunucu yoksa/çevrimdışıysa eski bot simülasyonu aynen sürer — oyun kilitlenmez.
+const allyOnline = () => NET.on() && !!G.allyId;
+const ALLY_INV_TAG = '[[ITT-DAVET]]';
+function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
+  if (!rec || !rec.meta) return;
+  const mem = rec.members || {};
+  const me = mem[NET.id];
+  if (!me) { // üyeliğin sunucuda yok → çıkarılmışsın
+    const nm = (G.ally && G.ally.name) || rec.meta.name;
+    G.allyId = null; G.ally = null;
+    toast('🚪 ' + nm + ' ittifakından çıkarıldın', 'warn', null, 0, true);
+    addMail('🤝 ' + nm, 'İttifaktan çıkarıldın', 'Artık bu ittifakın üyesi değilsin. Ortak hat ve avantajlar kapandı. ⚖️ Konsorsiyum hissen varsa o hakkın devam eder.', true);
+    save(); refreshAllyUI(); renderMenu();
+    return;
+  }
+  const led = Object.values(rec.ledger || {});
+  const a = G.ally = G.ally || {};
+  a.name = rec.meta.name;
+  a.founder = rec.meta.founder;
+  a.role = me.role || 'uye';
+  a.roster = Object.entries(mem).map(([pid, m]) => ({ pid, nm: m.nm, role: ALLY_ROLES[m.role] ? m.role : 'uye', since: m.since, me: pid === NET.id }));
+  a.members = a.roster.length;
+  // kasa = defterin toplamı (tek yazılan sayı değil → eşzamanlı bağışlar birbirini silmez)
+  a.treasury = Math.max(0, led.reduce((s, e) => s + (e.amt || 0), 0));
+  a.donations = {};
+  for (const e of led) if ((e.amt || 0) > 0 && e.nm) {
+    const d = a.donations[e.nm] = a.donations[e.nm] || { total: 0, week: 0 };
+    d.total += e.amt;
+    if (Date.now() - (e.ts || 0) < 6048e5) d.week += e.amt;
+  }
+  a.lines = Object.values(rec.lines || {});
+  a.pts = a.pts || 0;
+}
+async function allySync() { if (!allyOnline()) return; try { allyApply(await NET.allyGet(G.allyId)); } catch (e) {} }
+// Davet POSTA ile gider (ayrı bir tarama gerekmez, güvenlik kuralı da değişmez)
+function allyInviteMail(aid, name) { return ALLY_INV_TAG + aid + '|' + name; }
+window.acceptAllyInvite = async (aid, name) => {
+  if (G.allyId) { toast('Önce mevcut ittifakından ayrılmalısın', 'warn'); return; }
+  G.mail = (G.mail || []).filter(m => !m.allyInv);
+  try {
+    await NET.allyJoin(aid, 'uye');
+    G.allyId = aid;
+    await allySync();
+    toast('🤝 ' + name + ' ittifakına katıldın', '', null, 0, true);
+  } catch (e) { toast('Katılım başarısız — bağlantını kontrol et', 'bad'); }
+  save(); hideSheets(); openAllySheet();
+};
+window.rejectAllyInvite = () => { G.mail = (G.mail || []).filter(m => !m.allyInv); save(); openMailSheet(); };
+window.allySetRole = (nm, role) => {
+  if (!isAllyBoss() || !ALLY_ROLES[role]) return;
+  const m = allyRoster().find(x => x.nm === nm);
+  if (!m || m.nm === G.company) { toast('Kendi rütbeni değiştiremezsin', 'warn'); return; }
+  m.role = role;
+  if (allyOnline() && m.pid) NET.allyRoleSet(G.allyId, m.pid, role).catch(() => {});
+  toast(ALLY_ROLES[role].ico + ' ' + nm + ' artık ' + ALLY_ROLES[role].nm, '', null, 0, true);
+  addMail('🤝 ' + G.ally.name, 'Rütbe değişikliği', `${nm} üyesinin rütbesi ${ALLY_ROLES[role].nm} olarak güncellendi.`, true);
+  save(); refreshAllyUI();
+};
+window.allyKickAsk = nm => {
+  if (!isAllyBoss()) return;
+  $('modal').innerHTML = `
+    <h2>🚪 ${nm} ittifaktan çıkarılsın mı?</h2>
+    <p>Üye ittifaktan çıkarıldığında ortak hat ve avantajlar kapanır.</p>
+    <p class="sub">⚖️ Ama konsorsiyum hattında <b>hissesi varsa</b> o hakkı devam eder — hisse kişiye aittir,
+    "parayı topla sonra at" oyunu bu yüzden işlemez.</p>
+    <button class="primary" style="background:var(--danger);color:#fff" onclick="closeModal();allyKick('${nm.replace(/'/g, '')}')">🚪 Evet, Çıkar</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.allyKick = nm => {
+  if (!isAllyBoss() || nm === G.company) return;
+  const m = allyRoster().find(x => x.nm === nm);
+  if (allyOnline() && m && m.pid) { // sunucudan da düşür — çıkarılan üye bunu anında görür
+    NET.allyRemove(G.allyId, m.pid).catch(() => {});
+    NET.sendMail(m.pid, '🤝 İttifaktan çıkarıldın', `${G.ally.name} ittifakından çıkarıldın.`).catch(() => {});
+  }
+  G.ally.roster = allyRoster().filter(x => x.nm !== nm);
+  allySyncCount();
+  toast('🚪 ' + nm + ' ittifaktan çıkarıldı', 'warn', null, 0, true);
+  save(); refreshAllyUI();
+};
+window.allyInviteAsk = () => {
+  if (!isAllyBoss()) { toast('👑 Davet yetkisi yalnız başkanda', 'warn'); return; }
+  if (allyRoster().length >= allyCap()) { toast('👥 Üye tavanı dolu (' + allyCap() + ') — ittifak puanıyla artar', 'warn'); return; }
+  const pool = searchPool().filter(n => n && n !== G.company && !allyRoster().some(m => m.nm === n)).slice(0, 12);
+  $('modal').innerHTML = `
+    <h2>✉️ İttifaka Davet Et</h2>
+    <p class="sub">Üye: ${allyRoster().length}/${allyCap()}. Davet edilen oyuncuya posta gider; kabul ederse ittifaka katılır.</p>
+    ${pool.length ? pool.map(n => `<button class="bigsell half" style="text-align:left" onclick="closeModal();allyInvite('${n.replace(/'/g, '')}')">👤 ${n}</button>`).join('')
+      : '<p class="sub">Davet edilecek oyuncu bulunamadı.</p>'}
+    <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
+  $('overlay').classList.add('show');
+};
+window.allyInvite = nm => {
+  if (!isAllyBoss() || !nm) return;
+  if (allyRoster().some(m => m.nm === nm)) { toast('Zaten üye', 'warn'); return; }
+  if (allyRoster().length >= allyCap()) { toast('👥 Üye tavanı dolu', 'warn'); return; }
+  // Davet POSTA ile gider: alıcı kabul edince SUNUCUDAKİ ittifağa kendisi katılır.
+  // (Ayrı bir davet tablosu taramak yerine bu yol seçildi — güvenlik kuralı değişmiyor.)
+  const p = NET.on() ? NET.list().find(x => x.nm === nm) : null;
+  if (p && allyOnline()) {
+    NET.sendMail(p.id, '🤝 İttifak daveti', allyInviteMail(G.allyId, G.ally.name)).catch(() => {});
+    toast('✉️ ' + nm + ' davet edildi — kabul edince listede görünecek', '', null, 0, true);
+  } else { // bot/çevrimdışı: eski simülasyon
+    G.ally.roster.push({ nm, role: 'uye', since: Date.now(), invited: true });
+    allySyncCount();
+    toast('✉️ ' + nm + ' davet edildi', '', null, 0, true);
+  }
+  save(); refreshAllyUI();
+};
 // ── 💰 İTTİFAK KASASI + BAĞIŞ ÇAĞRISI (patron tasarımı) ──
 // Kasadan BİREYSEL para çekilemez; yalnız toplu kararlarda (konsorsiyum, kıtalararası hat) kullanılır.
 // Bağış barı renkleri patronun istediği gibi: %25 kırmızı · %50 sarı · %75 mavi · altı gri · dolunca yeşil.
@@ -2067,6 +2655,9 @@ window.donateAlly = amt => {
   const d = G.ally.donations[G.company] || { total: 0, week: 0 };
   d.total += amt; d.week += amt;
   G.ally.donations[G.company] = d;
+  // Sunucudaki ORTAK deftere yaz: kasa = defter toplamı olduğu için eşzamanlı
+  // bağışlar birbirinin üstüne binmez (tek sayı yazsaydık para kaybolurdu).
+  if (allyOnline()) NET.allyLedger(G.allyId, amt, 'bağış').catch(() => {});
   toast('💚 Bağışın kasaya geçti: ' + fmt(amt), '');
   beep(700, .1);
   save(); refreshAllyUI();
@@ -2230,19 +2821,51 @@ window.leaveAllyAsk = () => {
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
-window.leaveAlly = () => {
+window.leaveAlly = async () => {
   if (!G.ally) return;
   const nm = G.ally.name;
+  if (allyOnline()) { try { await NET.allyLeave(G.allyId); } catch (e) {} } // sunucudaki üyeliği de sil
+  G.allyId = null;
   G.ally = null;
   G.allyBuffUntil = 0; // ittifak avantajları anında biter
   toast('🚪 ' + nm + ' ittifakından ayrıldın — ortak hat ve avantajlar kapandı', 'warn', null, 0, true);
   save(); refreshAllyUI(); renderMenu();
 };
-window.foundAlly = () => {
+// Kurucu ittifağına KENDİ adını verir — sunucuda birden çok ittifak olacağı için şart
+window.foundAllyAsk = () => {
   if (G.ally) return;
-  const nm = ['Enerji Birliği', 'Güç Konseyi', 'Watt Kardeşliği', 'Şebeke Paktı', 'Anadolu Grid'][Math.floor(Math.random() * 5)];
-  G.ally = { name: nm, pts: 0, members: 1 + ALLY_BOTS.length, tender: null, wins: 0, treasury: 0, call: null, donations: {}, consortium: null };
-  toast('🤝 "' + nm + '" ittifakı kuruldu — ' + G.ally.members + ' üye (prototipte bot arkadaşlar)', '', null, 0, true);
+  const öner = ['Enerji Birliği', 'Güç Konseyi', 'Watt Kardeşliği', 'Şebeke Paktı', 'Anadolu Grid'][Math.floor(Math.random() * 5)];
+  $('modal').innerHTML = `
+    <h2>🤝 İttifak Kur</h2>
+    <p class="sub">İttifakına bir isim ver. Kurucu olarak 👑 <b>başkan</b> olursun: üye davet edebilir,
+    rütbe verebilir, üye çıkarabilir ve ülkeler arası ⚡ ittifak hattı başlatabilirsin.</p>
+    <input id="allynm" maxlength="28" value="${öner}" placeholder="İttifak adı"
+      style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:11px;font-size:14px;font-weight:700">
+    <button class="primary" onclick="foundAlly()">🤝 Kur (ücretsiz)</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.foundAlly = async () => {
+  if (G.ally) return;
+  const el = $('allynm');
+  const nm = ((el && el.value) || 'Enerji Birliği').replace(/[<>&"']/g, '').trim().slice(0, 28) || 'Enerji Birliği';
+  closeModal();
+  G.ally = { name: nm, pts: 0, members: 1, tender: null, wins: 0, treasury: 0, call: null, donations: {}, consortium: null, role: 'lider', since: Date.now(), lines: [] };
+  if (NET.on()) {
+    // sunucuda ORTAK kayıt aç — böylece davet ettiğin gerçek oyuncular aynı ittifağı görür
+    const aid = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    try {
+      await NET.allyCreate(aid, nm);
+      await NET.allyJoin(aid, 'lider');
+      G.allyId = aid;
+      await allySync();
+      toast('🤝 "' + nm + '" ittifakı kuruldu — sen 👑 başkansın. Üye davet et!', '', null, 0, true);
+    } catch (e) { toast('🤝 "' + nm + '" kuruldu (sunucuya yazılamadı — çevrimdışı)', 'warn', null, 0, true); }
+  } else {
+    G.ally.members = 1 + ALLY_BOTS.length;
+    allyRoster(); // çevrimdışı: bot üyelerle simülasyon
+    toast('🤝 "' + nm + '" ittifakı kuruldu — ' + G.ally.members + ' üye (çevrimdışı: bot arkadaşlar)', '', null, 0, true);
+  }
   beep(700, .12);
   save(); renderMenu(); refreshAllyUI();
 };
@@ -2297,7 +2920,7 @@ function allyHTML() {
   let h = '<p class="sub">Prototip: bot üyelerle simülasyon — gerçek çok oyunculu tam sürümde.</p>';
   if (!G.ally) {
     h += `<p class="sub">Birlik ol, devletin ACİL İHALELERİNİ birlikte teslim et: tüm üyelere <b>24 saat +%50 alım fiyatı</b> + ittifak puanı. Üye tavanı 10 → puanla 50.</p>
-    <button class="bigsell half" onclick="foundAlly()">🤝 İttifak Kur (ücretsiz)</button>`;
+    <button class="bigsell half" onclick="foundAllyAsk()">🤝 İttifak Kur (ücretsiz)</button>`;
   } else {
     const t = G.ally.tender;
     h += `<div class="qline" style="font-size:11.5px"><span>🏰 <b>${G.ally.name}</b></span><span>👥 ${G.ally.members}/${allyCap()}</span><span>⭐ ${G.ally.pts} puan</span><span>🏆 ${G.ally.wins || 0} teslim</span></div>`;
@@ -2318,11 +2941,36 @@ function allyHTML() {
       </div>`;
     } else h += `<button class="bigsell half" onclick="startCall()">📣 Bağış Çağrısı Aç (24 saat)</button>`;
     // üye bağış listesi (patron: "herkesin haftalık ve toplam bağışı isminin yanında")
+    // ── 👥 ÜYE LİSTESİ + RÜTBELER (patron isteği) ──
+    const ros = allyRoster().slice().sort((a, b) => ALLY_ROLES[b.role].r - ALLY_ROLES[a.role].r || a.nm.localeCompare(b.nm, 'tr'));
+    h += `<div style="font-size:12px;margin:12px 0 2px">👥 <b>ÜYELER</b> <span class="sub">${ros.length}/${allyCap()}</span>
+      ${isAllyBoss() ? `<span class="lnk" style="float:right;cursor:pointer;text-decoration:underline;color:var(--acc2)" onclick="allyInviteAsk()">✉️ Davet Et</span>` : ''}</div>`;
+    h += ros.map(m => {
+      const R = ALLY_ROLES[m.role], me = m.nm === G.company;
+      return `<div class="mrow">
+        <span class="mid" style="cursor:pointer" onclick="openPlayerCard('${m.nm.replace(/'/g, '')}')">
+          <div>${R.ico} ${me ? '<b>' + m.nm + ' (SEN)</b>' : m.nm}${m.invited ? ' <span class="sub">· davet bekliyor</span>' : ''}</div>
+          <div class="d">${R.nm}${m.since ? ' · ' + new Date(m.since).toLocaleDateString('tr-TR') + '\'den beri' : ''}</div></span>
+        ${isAllyBoss() && !me ? `<span style="display:flex;gap:4px">
+          ${m.role !== 'yardimci' ? `<button title="Yardımcı yap" onclick="allySetRole('${m.nm.replace(/'/g, '')}','yardimci')" style="padding:7px 8px;border-radius:8px;border:none;background:var(--acc2);color:#071018;font-weight:800;font-size:11px;cursor:pointer">🎖️</button>` : ''}
+          ${m.role !== 'uye' ? `<button title="Üye yap" onclick="allySetRole('${m.nm.replace(/'/g, '')}','uye')" style="padding:7px 8px;border-radius:8px;border:none;background:#2a3346;color:var(--cream);font-weight:800;font-size:11px;cursor:pointer">👤</button>` : ''}
+          <button title="İttifaktan çıkar" onclick="allyKickAsk('${m.nm.replace(/'/g, '')}')" style="padding:7px 8px;border-radius:8px;border:none;background:var(--danger);color:#fff;font-weight:800;font-size:11px;cursor:pointer">🚪</button>
+        </span>` : ''}
+      </div>`;
+    }).join('');
+    if (!isAllyBoss()) h += `<p class="sub">Davet ve üye çıkarma yetkisi 👑 başkandadır.</p>`;
     const dons = Object.entries(G.ally.donations || {}).sort((a, b) => b[1].total - a[1].total).slice(0, 6);
     if (dons.length) h += `<div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">👥 ÜYE BAĞIŞLARI</div>` +
       dons.map(([nm, d]) => `<div class="mrow"><span class="mid"><div>${nm === G.company ? '<b>' + nm + ' (SEN)</b>' : nm}</div><div class="d">bu hafta ${fmt(d.week)}</div></span><b>${fmt(d.total)}</b></div>`).join('');
     // ── 🌍 KONSORSİYUM / KITALARARASI HAT ──
-    h += `<div style="font-size:12px;margin:12px 0 2px">🌍 <b>KITALARARASI HAT</b> <span class="sub">tek ittifak kaldıramaz — konsorsiyum şart</span></div>`;
+    // ── ⚡ İTTİFAK HATTI (patron: "Kıtalar arası hat yazısı yerine İttifak Hattı Oluştur seçeneği
+    // koy, basınca haritadan seçsin ülkeleri, bu şekilde yazıyla değil") ──
+    h += `<div style="font-size:12px;margin:12px 0 2px">⚡ <b>İTTİFAK HATTI</b> <span class="sub">ülkeler arası — bireysel oyuncu yalnız ülke içi hat çeker</span></div>`;
+    h += canAllyLine()
+      ? `<button class="bigsell" style="background:var(--acc2);color:#071018" onclick="startAllyLine()">🤝 İttifak Hattı Oluştur — haritadan seç</button>
+         <p class="sub">Bölgeni seç, sonra haritada varış noktasına dokun. Maliyet ittifak kasasından karşılanır.</p>`
+      : `<p class="sub">👑 Bu hattı yalnız <b>başkan</b> veya 🎖️ <b>yardımcısı</b> başlatabilir. Rütben: ${ALLY_ROLES[myAllyRole() || 'uye'].ico} ${ALLY_ROLES[myAllyRole() || 'uye'].nm}</p>`;
+    h += `<div style="font-size:12px;margin:12px 0 2px">🌍 <b>KITALAR ARASI HAT</b> <span class="sub">tek ittifak kaldıramaz — ${CONS_MIN_ALLIES} ittifaklı konsorsiyum şart</span></div>`;
     const cs = G.ally.consortium;
     if (!cs) {
       h += CONSORTIUM_ROUTES.map((r, i) => `<button class="bigsell half" style="text-align:left" onclick="proposeConsortium(${i})">
@@ -2467,6 +3115,10 @@ const NET = {
       await this.put('players/' + this.id, {
         nm: G.company, il: G.il, country: G.country, worth: Math.round(myWorth()),
         em: co2Avg(), mw: installedMW(), ally: G.ally ? G.ally.name : null, ts: Date.now(),
+        // 🏢 KAMUYA AÇIK KARNE (şirket kartı için). Kasa, ciro, stok ve araştırma
+        // BİLEREK paylaşılmaz — rakibin nakit durumunu görmek oyunu bozar.
+        off: offices().length, lic: Object.keys(G.licenses).length,
+        pl: plants().length, st: stores().length, since: G.founded || null,
       });
       // kendi tesislerini paylaş (harita üzerinde diğerleri görsün)
       // PAYLAŞIM KURALI (patron): hediye/eğitim birimleri DİĞER oyunculara görünmez —
@@ -2481,16 +3133,30 @@ const NET = {
       const mb = await this.get('mail/' + this.id);
       if (mb) {
         for (const [k, m] of Object.entries(mb)) {
-          if (!(G.mail || []).some(x => x.nid === k)) { addMail(m.from, m.subj, m.body); G.mail[0].nid = k; }
+          if ((G.mail || []).some(x => x.nid === k)) continue;
+          const s = socialMail(m.from, m.body); // 🤝 arkadaşlık istek/kabul/red etiketlerini çöz
+          addMail(m.from, s ? s.subj : m.subj, s ? s.body : m.body, !!s);
+          G.mail[0].nid = k;
+          if (s && s.req) G.mail[0].req = s.req;           // arkadaşlık yanıt butonları
+          if (s && s.allyInv) G.mail[0].allyInv = s.allyInv; // ittifak daveti butonları
         }
         save();
       }
+      if (G.allyId) await allySync(); // 🤝 ortak ittifak kaydı: üyeler, rütbeler, kasa, hatlar
       othersDrawn = ''; drawOthers();
     } catch (e) {}
     setTimeout(() => this.loop(), 12000);
   },
   // sunucudaki oyuncular (kendi hariç) — arkadaş/sohbet/harita bunları kullanır
-  list() { return Object.entries(this.players).filter(([k]) => k !== this.id).map(([k, v]) => ({ ...v, id: k, online: Date.now() - (v.ts || 0) < 60000 })); },
+  // Çevrimiçi penceresi 60 sn'di: telefon arka plana alınınca 12 sn'lik tik durduğu için
+  // GERÇEKTEN oynayan oyuncu "çevrimdışı" görünüyordu. 5 dk daha dürüst bir ölçü.
+  list() { return Object.entries(this.players).filter(([k]) => k !== this.id).map(([k, v]) => ({ ...v, id: k, online: Date.now() - (v.ts || 0) < 3e5 })); },
+  // Sayım KENDİNİ de içerir — sen oynarken "0 oyuncu çevrimiçi" yazması hem yanlıştı
+  // hem de az oyunculu test döneminde oyunu ölü gösteriyordu.
+  census() {
+    const l = this.list(), now = Date.now();
+    return { online: l.filter(p => p.online).length + 1, day: l.filter(p => now - (p.ts || 0) < 864e5).length + 1, total: l.length + 1 };
+  },
   unitsInCell(cell) {
     const out = [];
     for (const [pid, us] of Object.entries(this.units)) {
@@ -2500,6 +3166,19 @@ const NET = {
     }
     return out;
   },
+  // ── 🤝 İTTİFAK SUNUCUDA (ortak kayıt) ──
+  // Kasa TEK BİR SAYI olarak tutulmuyor: birden çok üye aynı anda yazınca birbirinin
+  // üstüne biner ve para kaybolur/çoğalır. Bunun yerine EKLEMELİ DEFTER: her hareket
+  // ayrı ve DEĞİŞTİRİLEMEZ bir satır, kasa = satırların toplamı. Yarış koşulu imkânsız.
+  allyGet(aid) { return this.get('allies/' + aid); },
+  allyAll() { return this.get('allies'); },
+  allyCreate(aid, name) { return this.put('allies/' + aid + '/meta', { name, founder: this.id, created: Date.now() }); },
+  allyJoin(aid, role) { return this.put('allies/' + aid + '/members/' + this.id, { nm: G.company, role: role || 'uye', since: Date.now() }); },
+  allyLeave(aid) { return this.req('allies/' + aid + '/members/' + this.id, 'DELETE'); },
+  allyRoleSet(aid, pid, role) { return this.put('allies/' + aid + '/members/' + pid + '/role', role); },
+  allyRemove(aid, pid) { return this.req('allies/' + aid + '/members/' + pid, 'DELETE'); },
+  allyLedger(aid, amt, note) { return this.push('allies/' + aid + '/ledger', { pid: this.id, nm: G.company, amt: Math.round(amt), note: (note || '').slice(0, 40), ts: Date.now() }); },
+  allyLineAdd(aid, l) { return this.put('allies/' + aid + '/lines/' + l.id, l); },
   sendMail(toId, subj, body) { return this.push('mail/' + toId, { from: G.company, subj, body, ts: Date.now() }); },
   sendChat(room, txt) { return this.push('chat/' + room, { who: G.company, txt, ts: Date.now() }); },
   async pullChat(room) { const c = await this.get('chat/' + room); return c ? Object.values(c).slice(-40) : []; },
@@ -2886,12 +3565,58 @@ function renderChatBody(room) {
   $('chat_msgs').innerHTML = msgs.length ? msgs.map(m => {
     const on = m.me ? true : playerOnline(m.idx || 0);
     return `<div class="chatmsg${m.me ? ' me' : ''}">
-      <div class="who">${m.me ? '' : `<span style="color:${on ? 'var(--acc)' : 'var(--danger)'}">●</span> `}<span ${m.me ? '' : `onclick="openDM('${(m.who || '').replace(/'/g, '')}')" style="cursor:pointer;text-decoration:underline"`}>${m.who}</span> <span class="sub">${new Date(m.ts).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span></div>
+      <div class="who">${m.me ? '' : `<span style="color:${on ? 'var(--acc)' : 'var(--danger)'}">●</span> `}<span ${m.me ? '' : `onclick="openPlayerCard('${(m.who || '').replace(/'/g, '')}')" style="cursor:pointer;text-decoration:underline"`}>${m.who}</span> <span class="sub">${new Date(m.ts).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span></div>
       <div>${m.txt}</div></div>`;
   }).join('') : `<p class="sub">${room === 'ally' ? 'Önce bir ittifaka katıl.' : 'Henüz mesaj yok — ilk yazan sen ol!'}</p>`;
   $('chat_msgs').scrollTop = $('chat_msgs').scrollHeight;
   G.chatSeen = Date.now();
 }
+// ═══ 🏢 ŞİRKET KARTI (patron: "isme basınca şirket sayfası gelsin ama bu kadar ayrıntılı olmasın") ═══
+// BAŞKALARINA yalnız KAMUYA AÇIK karne görünür: şirket değeri · ofis · ruhsat · santral · depo.
+// Kasa, ciro, yakıt stoğu, araştırma ve ihale planları GİZLİ — rakibin cebini görmek oyunu bozar.
+// Kendi şirketine dokunursan tam ayrıntılı ekran (openCompanySheet) açılır.
+function botCard(i) { // bot şirketlerin karnesi: servetiyle tutarlı ve deterministik
+  const w = botWorth(i), k = Math.max(1, w / 6e6);
+  return { nm: WORLD_PLAYERS[i], w, em: botEm(i), bot: true,
+    off: Math.max(1, Math.round(k * .5 + hash01(i, 11, 1) * 2)),
+    lic: Math.max(1, Math.round(k * 1.6 + hash01(i, 12, 1) * 4)),
+    pl: Math.max(1, Math.round(k * 2.2 + hash01(i, 13, 1) * 5)),
+    st: Math.max(1, Math.round(k * .9 + hash01(i, 14, 1) * 3)) };
+}
+window.openPlayerCard = nm => {
+  nm = (nm || '').trim();
+  if (!nm || !G) return;
+  if (nm === G.company) { hideSheets(); openCompanySheet(); return; } // kendi şirketin: tam ekran
+  const net = NET.on() ? NET.list().find(x => x.nm === nm) : null;
+  const wi = WORLD_PLAYERS.indexOf(nm);
+  const c = net
+    ? { nm, w: net.worth || 0, em: net.em || 0, off: net.off, lic: net.lic, pl: net.pl, st: net.st,
+        il: net.il, country: net.country, ally: net.ally, online: net.online, since: net.since }
+    : wi >= 0 ? botCard(wi) : { nm, unknown: true };
+  const row = (l, v) => v === undefined || v === null ? '' : `<tr><td>${l}</td><td><b>${v}</b></td></tr>`;
+  const friend = (G.friends || []).some(f => f.nm === nm);
+  $('modal').innerHTML = `
+    <h2 style="margin-bottom:2px">🏢 ${nm}</h2>
+    <p class="sub" style="margin-top:0">
+      ${c.online !== undefined ? `<span style="color:${c.online ? 'var(--acc)' : 'var(--dim)'}">●</span> ${c.online ? 'sahada' : 'çevrimdışı'} · ` : ''}
+      ${c.country ? (COUNTRIES[c.country] ? COUNTRIES[c.country].flag + ' ' : '') + (c.il ? c.il + ', ' : '') + c.country : c.bot ? 'rakip şirket' : 'şirket'}
+      ${c.em !== undefined ? ' · ' + emBadgeHTML(c.em) : ''}</p>
+    ${c.unknown ? '<p class="sub">Bu şirketin karnesi henüz sunucuya düşmedi.</p>' : `
+    <table class="ledger">
+      ${row('💼 Şirket değeri', fmt(c.w))}
+      ${row('🏢 Ofis', c.off)}
+      ${row('📜 Ruhsat', c.lic)}
+      ${row('⚡ Santral', c.pl)}
+      ${row('🔋 Enerji deposu', c.st)}
+      ${c.ally ? row('🤝 İttifak', c.ally) : ''}
+    </table>
+    <p class="sub" style="margin-top:6px">Kasa, ciro ve stok bilgileri gizlidir — herkes için.</p>`}
+    <button class="bigsell half" onclick="closeModal();openDM('${nm.replace(/'/g, '')}')">✉️ Mesaj Gönder</button>
+    ${friend ? '' : `<button class="bigsell half" onclick="sendFriendReq('${nm.replace(/'/g, '')}');closeModal()">👥 Arkadaş Ekle</button>`}
+    <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
+  $('overlay').classList.add('show');
+};
+
 // ── 📬 POSTA ──
 function addMail(from, subj, body, sys) {
   G.mail = G.mail || [];
@@ -2914,7 +3639,15 @@ window.openMailSheet = () => {
       <div style="border:1px solid ${m.read ? 'var(--line)' : 'var(--acc2)'};border-radius:10px;padding:8px 10px;margin:6px 0" onclick="readMail(${m.id})">
         <div style="font-size:12.5px;font-weight:${m.read ? '600' : '800'}">${m.sys ? '📢' : '✉️'} ${m.subj}</div>
         <div class="sub">${m.from} · ${new Date(m.ts).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${m.read ? '' : ' · <b style="color:var(--acc2)">YENİ</b>'}</div>
-        ${m._open ? `<p style="font-size:12px;margin-top:6px">${m.body}</p>${m.sys ? '' : `<button class="bigsell half" onclick="event.stopPropagation();openDM('${m.from}')">↩️ Yanıtla</button>`}` : ''}
+        ${m.allyInv ? `<div style="display:flex;gap:6px;margin-top:7px" onclick="event.stopPropagation()">
+          <button onclick="acceptAllyInvite('${m.allyInv.aid}','${(m.allyInv.nm || '').replace(/'/g, '')}')" ${G.allyId ? 'disabled' : ''} style="flex:1;padding:9px 4px;border-radius:8px;border:none;background:${G.allyId ? '#2a3346' : 'var(--acc)'};color:${G.allyId ? 'var(--dim)' : '#071018'};font-weight:800;font-size:11.5px;cursor:pointer">🤝 ${G.allyId ? 'Zaten bir ittifaktasın' : 'Katıl'}</button>
+          <button onclick="rejectAllyInvite()" style="flex:0 0 90px;padding:9px 4px;border-radius:8px;border:none;background:#2a3346;color:var(--cream);font-weight:800;font-size:11.5px;cursor:pointer">✖️ Reddet</button>
+        </div>` : ''}
+        ${m.req ? `<div style="display:flex;gap:6px;margin-top:7px" onclick="event.stopPropagation()">
+          <button onclick="answerFriendReq('${m.req.replace(/'/g, '')}',true)" style="flex:1;padding:9px 4px;border-radius:8px;border:none;background:var(--acc);color:#071018;font-weight:800;font-size:11.5px;cursor:pointer">✅ Kabul Et</button>
+          <button onclick="answerFriendReq('${m.req.replace(/'/g, '')}',false)" style="flex:1;padding:9px 4px;border-radius:8px;border:none;background:#2a3346;color:var(--cream);font-weight:800;font-size:11.5px;cursor:pointer">✖️ Reddet</button>
+        </div>` : ''}
+        ${m._open ? `<p style="font-size:12px;margin-top:6px">${m.body}</p>${m.sys || m.req ? '' : `<button class="bigsell half" onclick="event.stopPropagation();openDM('${m.from}')">↩️ Yanıtla</button>`}` : ''}
       </div>`).join('') : '<p class="sub">Posta kutun boş.</p>'}`;
   showSheet('mailsheet');
 };
@@ -2952,20 +3685,37 @@ window.sendDM = () => {
   save();
 };
 // ── 🤝 ARKADAŞLIK ──
+// TELEFON TESTİ HATASI (patron): "arkadaşım isteği KABUL ETTİĞİ HALDE bana red mesajı geliyordu".
+// Sebep: istek tamamen YEREL simülasyondu — karşı tarafın ne yaptığına hiç bakılmıyor,
+// oyuncunun ADININ UZUNLUĞUNDAN türetilen sabit bir hash karar veriyordu. Aynı isim → hep aynı red.
+// ÇÖZÜM: gerçek oyuncuda istek ve cevap POSTA kanalı üzerinden karşı tarafa gidiyor.
+// (Posta yolu bilerek seçildi: sunucu güvenlik kurallarını değiştirmeden çalışır.)
+const FREQ_TAG = '[[FR-ISTEK]]', FACC_TAG = '[[FR-KABUL]]', FREJ_TAG = '[[FR-RED]]';
+const addFriend = nm => {
+  G.friends = G.friends || [];
+  if (!G.friends.some(f => f.nm === nm)) G.friends.push({ nm, idx: Math.max(0, WORLD_PLAYERS.indexOf(nm)), since: Date.now() });
+};
 window.sendFriendReq = nm => {
   if (!nm) return;
   G.friendReqs = G.friendReqs || [];
   if ((G.friends || []).some(f => f.nm === nm)) { toast(nm + ' zaten arkadaşın', 'warn'); return; }
-  if (G.friendReqs.includes(nm)) { toast('İstek zaten gönderildi', 'warn'); return; }
+  if (G.friendReqs.includes(nm)) { toast('İstek zaten gönderildi — yanıtı bekleniyor', 'warn'); return; }
+  const real = NET.on() ? NET.list().find(x => x.nm === nm) : null;
   G.friendReqs.push(nm);
+  if (real) { // GERÇEK OYUNCU: kararı O verir, biz yanıtı bekleriz
+    NET.sendMail(real.id, '🤝 Arkadaşlık isteği', FREQ_TAG + G.company);
+    toast('🤝 İstek gönderildi: ' + nm + ' — yanıtını bekliyoruz', '', null, 0, true);
+    save(); return;
+  }
+  // BOT şirket (gerçek oyuncu değil): prototip simülasyonu sürer
   toast('🤝 Arkadaşlık isteği gönderildi: ' + nm, '');
   const pi = WORLD_PLAYERS.indexOf(nm);
-  setTimeout(() => { // karşı taraf yanıtlar
+  setTimeout(() => {
+    if (!G) return;
     const ok = hash01(pi < 0 ? nm.length : pi, 5, 11) > .25;
     G.friendReqs = (G.friendReqs || []).filter(x => x !== nm);
     if (ok) {
-      G.friends = G.friends || [];
-      G.friends.push({ nm, idx: pi < 0 ? 0 : pi, since: Date.now() });
+      addFriend(nm);
       addMail(nm, 'Arkadaşlık kabul edildi', 'Arkadaşlık isteğini kabul ettim, listendeyim. İyi oyunlar!');
       toast('🤝 ' + nm + ' arkadaşlık isteğini KABUL ETTİ', '', null, 0, true);
     } else {
@@ -2975,6 +3725,44 @@ window.sendFriendReq = nm => {
     save();
   }, 5000 + Math.random() * 8000);
   save();
+};
+// Gelen sosyal postayı yorumla: etiketli mesajlar okunur metne çevrilir ve etkisi işlenir.
+// null dönerse mesaj sıradan postadır.
+function socialMail(from, body) {
+  if (!body) return null;
+  if (body.startsWith(FREQ_TAG)) return { subj: '🤝 Arkadaşlık isteği', body: from + ' seni arkadaş olarak eklemek istiyor.', req: from };
+  if (body.startsWith(ALLY_INV_TAG)) { // 🤝 ittifak daveti — kabul edilince sunucudaki ittifağa katılınır
+    const p = body.slice(ALLY_INV_TAG.length).split('|');
+    return { subj: '🤝 İttifak daveti', body: `${from}, seni "${p[1] || 'ittifak'}" ittifakına davet ediyor.`, allyInv: { aid: p[0], nm: p[1] || 'İttifak' } };
+  }
+  if (body.startsWith(FACC_TAG)) {
+    G.friendReqs = (G.friendReqs || []).filter(x => x !== from);
+    addFriend(from);
+    toast('🤝 ' + from + ' arkadaşlık isteğini KABUL ETTİ', '', null, 0, true);
+    return { subj: '🤝 Arkadaşlık kabul edildi', body: from + ' arkadaşlık isteğini kabul etti — artık listende.' };
+  }
+  if (body.startsWith(FREJ_TAG)) {
+    G.friendReqs = (G.friendReqs || []).filter(x => x !== from);
+    toast(from + ' isteğini şimdilik reddetti', 'warn');
+    return { subj: '🤝 Arkadaşlık isteği', body: from + ' şu an arkadaş listesini genişletmiyor.' };
+  }
+  return null;
+}
+window.answerFriendReq = (nm, ok) => {
+  const p = NET.on() ? NET.list().find(x => x.nm === nm) : null;
+  // isteği posta kutusundan düş (aynı istek iki kez yanıtlanmasın)
+  G.mail = (G.mail || []).filter(m => !(m.req === nm));
+  if (ok) {
+    addFriend(nm);
+    if (p) NET.sendMail(p.id, '🤝 Arkadaşlık kabul edildi', FACC_TAG + G.company);
+    toast('🤝 ' + nm + ' artık arkadaşın', '', null, 0, true);
+  } else {
+    if (p) NET.sendMail(p.id, '🤝 Arkadaşlık isteği', FREJ_TAG + G.company);
+    toast(nm + ' isteği reddedildi', 'warn');
+  }
+  save();
+  // hangi ekrandan yanıtlandıysa o tazelensin
+  if ($('friendssheet').classList.contains('show')) openFriendsSheet(); else openMailSheet();
 };
 // arkadaş aramasında sunucudaki gerçek oyuncular öncelikli
 const searchPool = () => (NET.on() ? NET.list().map(p => p.nm).filter(Boolean) : []).concat(WORLD_PLAYERS);
@@ -2987,14 +3775,26 @@ window.openFriendsSheet = () => {
       <input id="frsearch" placeholder="Oyuncu adı ara..." oninput="renderFriendSearch()" style="flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px;font-size:13px">
     </div>
     <div id="frresults"></div>
+    ${(() => { // 📥 SANA GELEN istekler — burada da yanıtlanabilir (posta kutusunu açmaya gerek yok)
+      const inc = (G.mail || []).filter(m => m.req);
+      if (!inc.length) return '';
+      return `<div style="font-size:11px;color:var(--acc);margin:8px 0 2px">📥 SANA GELEN İSTEKLER (${inc.length})</div>` + inc.map(m => {
+        const n = m.req.replace(/'/g, '');
+        return `<div class="mrow"><span class="mid"><div>${m.req}</div><div class="d">arkadaş olmak istiyor</div></span>
+          <span style="display:flex;gap:4px">
+            <button onclick="answerFriendReq('${n}',true)" style="padding:8px 10px;border-radius:8px;border:none;background:var(--acc);color:#071018;font-weight:800;font-size:11px;cursor:pointer">✅</button>
+            <button onclick="answerFriendReq('${n}',false)" style="padding:8px 10px;border-radius:8px;border:none;background:#2a3346;color:var(--cream);font-weight:800;font-size:11px;cursor:pointer">✖️</button>
+          </span></div>`;
+      }).join('');
+    })()}
     ${rq.length ? `<div style="font-size:11px;color:var(--warn);margin:8px 0 2px">⏳ BEKLEYEN İSTEKLERİN</div>${rq.map(n => `<div class="mrow"><span class="mid">${n}</span><span class="sub">yanıt bekleniyor</span></div>`).join('')}` : ''}
     <div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">👥 ARKADAŞLARIN (${fs.length})</div>
-    ${NET.on() ? `<p class="sub">🌐 Sunucuda ${NET.list().filter(p => p.online).length} oyuncu çevrimiçi (toplam ${NET.list().length})</p>` : ''}
+    ${NET.on() ? (() => { const c = NET.census(); return `<p class="sub">🌐 <b class="pos">${c.online}</b> şirket şu an sahada · son 24 saatte <b>${c.day}</b> aktif · toplam <b>${c.total}</b> kayıtlı şirket</p>`; })() : ''}
     ${fs.length ? fs.map(f => {
       const on = onlineOf(f.nm);
       return `<div class="mrow">
         <span style="color:${on ? 'var(--acc)' : 'var(--danger)'};font-size:16px">●</span>
-        <span class="mid"><div>${f.nm}</div><div class="d">${on ? 'çevrimiçi' : 'çevrimdışı'} · ${emBadgeHTML(botEm(f.idx))}</div></span>
+        <span class="mid" style="cursor:pointer" onclick="openPlayerCard('${(f.nm || '').replace(/'/g, '')}')"><div style="text-decoration:underline">${f.nm}</div><div class="d">${on ? 'çevrimiçi' : 'çevrimdışı'} · ${emBadgeHTML(botEm(f.idx))}</div></span>
         <button onclick="openDM('${f.nm}')" style="padding:8px 10px;border-radius:8px;border:none;background:var(--acc2);color:#071018;font-weight:800;font-size:11px;cursor:pointer">✉️</button>
       </div>`;
     }).join('') : '<p class="sub">Henüz arkadaşın yok — yukarıdan ara ve istek gönder.</p>'}`;
@@ -3007,7 +3807,7 @@ window.renderFriendSearch = () => {
     const i = Math.max(0, WORLD_PLAYERS.indexOf(p)), on = onlineOf(p);
     const already = (G.friends || []).some(f => f.nm === p);
     return `<div class="mrow"><span style="color:${on ? 'var(--acc)' : 'var(--danger)'};font-size:16px">●</span>
-      <span class="mid"><div>${p}</div><div class="d">${emBadgeHTML(botEm(i))}</div></span>
+      <span class="mid" style="cursor:pointer" onclick="openPlayerCard('${p.replace(/'/g, '')}')"><div style="text-decoration:underline">${p}</div><div class="d">${emBadgeHTML(botEm(i))}</div></span>
       <button onclick="sendFriendReq('${p}')" ${already ? 'disabled' : ''} style="padding:8px 10px;border-radius:8px;border:none;background:${already ? '#2a3346' : 'var(--acc)'};color:#071018;font-weight:800;font-size:11px;cursor:pointer">${already ? '✓ arkadaş' : '+ ekle'}</button>
     </div>`;
   }).join('');
@@ -3161,6 +3961,18 @@ function migrate(s) {
     while (CAP_TIERS[cat2][Math.min(s.capLic[cat2] || 0, CAP_TIERS[cat2].length - 1)].mw < used && (s.capLic[cat2] || 0) < CAP_TIERS[cat2].length - 1)
       s.capLic[cat2] = (s.capLic[cat2] || 0) + 1;
   }
+  // ── ENLEM IZGARA DÜZELTMESİ: yüksek enlemdeki (|lat| ≥ 60°) eski kare kimlikleri yeni
+  // ızgaraya hizalanır. Birimlerin karesi konumundan yeniden türetilir (en güvenlisi),
+  // ruhsat/imtiyaz/muhasebe anahtarları da aynı hizaya taşınır — Kanada ofisi kaybolmasın.
+  const remap = {};
+  for (const c of Object.keys(s.licenses || {})) { const n = cellSnap(c); if (n !== c) remap[c] = n; }
+  for (const [o, n] of Object.entries(remap)) {
+    s.licenses[n] = s.licenses[o]; delete s.licenses[o];
+    for (const m of ['leases', 'cellEarned', 'cellSpent', 'wonWeek'])
+      if (s[m] && s[m][o] !== undefined) { s[m][n] = s[m][o]; delete s[m][o]; }
+  }
+  for (const u of s.units) if (u.ll) u.cell = cellId(u.ll);
+  for (const l of (s.lines || [])) { if (l.from) l.from = cellSnap(l.from); if (l.to) l.to = cellSnap(l.to); }
   delete s._aucT; // eski kayıtlarda kalan rAF zaman damgası — ihale/araştırma tikini donduruyordu
   if (s.totalEarned >= BOOST_CAP) s.starterClaimed = true; // köklü şirketler eğitim moduna geri düşmesin
   if (!s.demo) { // eski demo-saat kayması bug'ının kirlettiği kayıtları temizle
@@ -3212,6 +4024,7 @@ function initMap(center, zoom) {
   const LAND_STYLE = { fillColor: '#4db36b', fillOpacity: 1, color: '#2e7d4f', weight: .9 };
   const drawWorld = gj => {
     L.geoJSON(gj, { pane: 'land', renderer: landCanvas, interactive: false, smoothFactor: 1.4, style: LAND_STYLE }).addTo(map);
+    LAND_BOX = landIndex(gj); // 🌊 deniz/kara testi aynı veriden beslenir — ayrı indirme yok
     $('maploading').style.display = 'none';
   };
   fetch('vendor/world50m.json').then(r => r.json()).then(drawWorld)
@@ -3272,6 +4085,36 @@ function containerSVG(px, fill01, tip) {
     <text x="24" y="26" font-size="11" text-anchor="middle">⚡</text>
     <rect x="6" y="28.5" width="36" height="3.6" rx="1.8" fill="#00000022"/>
     <rect x="6" y="28.5" width="${fillW}" height="3.6" rx="1.8" fill="#3ddc97"/>
+  </svg>`;
+}
+// YAKIT DEPOSU: KONTEYNER çizimi (patron: "kazma simgesi yerine içi kömür dolu / üzerinde
+// kömür işareti olan konteyner"). Pil istasyonuyla aynı tasarım dili — ayrım renkte ve yükte:
+// kömür koyu konteynerde yükselen kara yığın, LNG yalıtımlı soğuk mavi tank. Doluluk canlı.
+function fuelDepotSVG(px, fill01, fuel) {
+  const w = px + 10, h = Math.round(px * .8);
+  const f = Math.max(0, Math.min(1, fill01 || 0));
+  const fillW = f * 36;
+  if (fuel === 'gas') { // 🛢️ LNG: kriyojenik silindir tank
+    return `<svg width="${w}" height="${h}" viewBox="0 0 48 38">
+      <rect x="3" y="9" width="42" height="24" rx="12" fill="#e9eff7" stroke="#6f7d90" stroke-width="1.6"/>
+      <rect x="3" y="9" width="42" height="5.5" rx="2.7" fill="#2f9fd6"/>
+      <ellipse cx="13" cy="21" rx="4.5" ry="7.5" fill="#ffffff" opacity=".5"/>
+      <path d="M25 15.5 l3.6 6 h-2.4 v4.4 h-2.5 v-4.4 h-2.3 Z" fill="#2f9fd6"/>
+      <rect x="6" y="27.6" width="36" height="3.6" rx="1.8" fill="#00000022"/>
+      <rect x="6" y="27.6" width="${fillW}" height="3.6" rx="1.8" fill="#4ec3f0"/>
+    </svg>`;
+  }
+  const py = 31 - f * 15; // kömür yığınının tepesi — depo doldukça yükselir
+  return `<svg width="${w}" height="${h}" viewBox="0 0 48 38">
+    <rect x="1.5" y="8" width="45" height="26" rx="3" fill="#5a4d41" stroke="#2a231d" stroke-width="1.6"/>
+    <rect x="1.5" y="8" width="45" height="5" rx="2.5" fill="#8a6b3f"/>
+    ${[10, 17, 31, 38].map(x => `<line x1="${x}" y1="14" x2="${x}" y2="32" stroke="#00000033" stroke-width="1.2"/>`).join('')}
+    ${f > .02 ? `<path d="M5 32 Q 13 ${py + 1} 24 ${py} Q 35 ${py + 1} 43 32 Z" fill="#17140f"/>
+    <circle cx="16" cy="${py + 2.2}" r="1.6" fill="#3d352c"/><circle cx="28" cy="${py + 1.6}" r="1.3" fill="#3d352c"/>
+    <circle cx="36" cy="${py + 3.4}" r="1.1" fill="#332c25"/>` : ''}
+    <path d="M24 16.4 l3 3 -1.5 1.5 -1.5-1.5 -1.5 1.5 -1.5-1.5 Z" fill="#ffd166" opacity=".92"/>
+    <rect x="6" y="28.5" width="36" height="3.6" rx="1.8" fill="#00000044"/>
+    <rect x="6" y="28.5" width="${fillW}" height="3.6" rx="1.8" fill="#e0a34a"/>
   </svg>`;
 }
 // Basit rüzgar türbini SVG'si — AKTİFKEN döner, durunca pervane durur; MW büyüdükçe boyut büyür
@@ -3346,6 +4189,8 @@ function unitIconHTML(u) {
   let visual;
   if (u.kind === 'store') {
     visual = containerSVG(px, u.stored / T.cap, T.tip); // konteyner bina — pil emojisi değil
+  } else if (u.kind === 'fueldepot') {
+    visual = fuelDepotSVG(px, (u.fuel || 0) / depotCap(u), T.fuel); // kömür/LNG konteyneri — kazma emojisi değil
   } else if (u.kind === 'plant' && T.kind === 'wind') {
     visual = turbineSVG(px, producing, producing && out > T.mw * 0.5, noconn ? '#ff5c5c' : null);
   } else if (u.kind === 'plant' && u.t.startsWith('coal')) {
@@ -3427,6 +4272,61 @@ const VIEWS = {
   wind: { nm: 'Rüzgar Verimliliği', ico: '🌬️', d: 'Kareler rüzgar potansiyeline göre renklenir: koyu mavi = türbin cenneti.' },
   sun: { nm: 'Güneş Verimliliği', ico: '☀️', d: 'Kareler güneş potansiyeline göre renklenir: koyu turuncu = panel cenneti.' },
   grid: { nm: 'Enerji Nakil Hattı', ico: '⚡', d: 'Hatların, transfer merkezlerin ve kayıp oranların.' },
+  city: { nm: 'Şehirler', ico: '🏙️', d: 'Talep merkezleri. İsme dokun: nüfus, enerji ihtiyacı ve şehrin kısa hikâyesi.' },
+};
+// 🏙️ ŞEHİRLERİN KISA HİKÂYESİ (patron: "mesela Kocaeli'nin pişmaniyesi meşhurdur yazarsın")
+const CITY_NOTE = {
+  'İstanbul': 'İki kıtayı birleştiren tek şehir; boğazdan geçen gemiler kadar enerjisi de hiç durmaz.',
+  'Ankara': 'Başkent ve Ankara keçisi; tiftiği bir zamanlar dünyaya buradan giderdi.',
+  'İzmir': 'Ege\'nin incisi; Çeşme rüzgârı türbin kanatlarını en çok sevdiren esintidir.',
+  'Kocaeli': 'Pişmaniyesiyle meşhurdur; sanayinin kalbi olduğu için enerji iştahı da bir o kadar tatlıdır.',
+  'Bursa': 'İpeğin ve İskender kebabının şehri; Uludağ eteklerinde kurulmuş ilk Osmanlı başkenti.',
+  'Gaziantep': 'Baklavanın başkenti; UNESCO gastronomi şehri olarak da tescilli.',
+  'Adana': 'Kebabı ve şalgamıyla anılır; Çukurova güneşi panel için altın değerinde.',
+  'Antalya': 'Turizmin başkenti; yılın 300 günü güneş, otellerin klima yükü de o kadar.',
+  'Konya': 'Mevlânâ\'nın şehri ve Türkiye\'nin tahıl ambarı; geniş ovaları güneş santralleri için ideal.',
+  'Trabzon': 'Hamsisi ve Karadeniz yaylalarıyla ünlü; yağış bolluğu hidroyu güçlü kılar.',
+  'Rize': 'Çayın memleketi; Türkiye\'nin en çok yağış alan ili, dere tipi santral cenneti.',
+  'Şanlıurfa': 'Göbeklitepe\'nin ve isotun şehri; GAP sulaması bölgeyi bereketlendirdi.',
+  'Kayseri': 'Pastırma ve sucuğun başkenti; Erciyes\'in eteğinde kurulu sanayi kenti.',
+  'Malatya': 'Kayısının dünya başkenti; kuru kayısının dörtte üçü buradan çıkar.',
+  'Afyonkarahisar': 'Mermeri, sucuğu ve kaymağıyla bilinir; termal kaynakları jeotermal için değerli.',
+  'Denizli': 'Pamukkale\'nin beyaz travertenleri ve horozuyla anılır; jeotermalde Türkiye lideri.',
+  'Aydın': 'İnciriyle meşhur; Büyük Menderes hattı jeotermal santrallerle dolu.',
+  'Manisa': 'Mesir macunu ve sultani üzümün diyarı.',
+  'Muğla': 'Bodrum ve Fethiye\'nin şehri; bal ormanlarıyla ünlü.',
+  'Balıkesir': 'Zeytini ve Ayvalık kıyısıyla bilinir; Bandırma rüzgâr koridoru türbin doludur.',
+  'Çanakkale': 'Boğazın rüzgârı hiç dinmez — Türkiye\'nin en verimli rüzgâr sahalarından biri.',
+  'Zonguldak': 'Taş kömürünün çıkarıldığı tek il; Türkiye\'nin ilk madenci şehri.',
+  'Eskişehir': 'Lületaşı ve met helvasıyla anılır; öğrenci şehri.',
+  'Samsun': 'Kurtuluşun başladığı liman; Bafra ovası ve fındık bahçeleri.',
+  'Mersin': 'Tantunisi ve narenciyesiyle bilinir; Akkuyu ile nükleerin adresi oldu.',
+  'Sivas': 'Kangal köpeği ve divriği taş işçiliği; balıklı kaplıcası şifalı sayılır.',
+  'Erzurum': 'Cağ kebabı ve Palandöken; Türkiye\'nin en soğuk kışları burada geçer.',
+  'Van': 'Kahvaltısı ve Van kedisiyle ünlü; Türkiye\'nin en büyük gölü.',
+  'Diyarbakır': 'Karpuzu ve surlarıyla anılır; surları UNESCO listesinde.',
+  'Hatay': 'Künefe ve zeytinyağı; medeniyetlerin kavşağı.',
+  'Nevşehir': 'Kapadokya peribacaları ve balonlar; yeraltı şehirleriyle ünlü.',
+  'Isparta': 'Gül yağının başkenti; halısıyla da bilinir.',
+  'Ordu': 'Fındığın merkezi; Boztepe\'den Karadeniz seyri meşhurdur.',
+  'Giresun': 'Fındığın adını verdiği şehir; Giresun Adası Karadeniz\'in tek adasıdır.',
+  'Kars': 'Kaşarı, balı ve Ani Harabeleri; kışları Sibirya soğuğunu andırır.',
+  'Edirne': 'Ciğeri, Selimiye Camii ve Kırkpınar yağlı güreşleri.',
+  'Tekirdağ': 'Köftesi ve rakısıyla anılır; Trakya rüzgârı türbinleri döndürür.',
+  'Bolu': 'Aşçıların memleketi; Türkiye mutfağının ustaları buradan çıkar.',
+  'Sakarya': 'Islama köftesi ve Sapanca Gölü.',
+  'Kütahya': 'Çinisiyle dünyaca ünlü; termik santralleriyle de bilinir.',
+  'Elazığ': 'Orcik tatlısı ve Hazar Gölü; Keban Barajı burada.',
+  'Kahramanmaraş': 'Dövme dondurmasının vatanı.',
+  'Tokyo': 'Dünyanın en kalabalık metropol alanı — 37 milyonluk tek bir enerji iştahı.',
+  'New York': 'Uyumayan şehir; şebekesi de öyle.',
+  'Kahire': 'Piramitlerin gölgesinde Afrika\'nın en kalabalık şehri.',
+  'Toronto': 'Kanada\'nın en büyük şehri; ülke nüfusunun beşte biri Ontario gölü kıyısında.',
+  'Londra': 'Kuzey Denizi rüzgâr çiftlikleri bu şehri besliyor.',
+  'Şangay': 'Dünyanın en yoğun limanı; Çin\'in enerji kalbi.',
+  'Delhi': 'Dünyanın en hızlı büyüyen metropolü.',
+  'São Paulo': 'Güney Yarımküre\'nin en kalabalık şehri.',
+  'Moskova': 'Kışın -20°C\'de ısınma yükü zirveye çıkar.',
 };
 window.setMapView = v => { MAPVIEW = v; drawOverlay(); openViewSheet(); toast(VIEWS[v].ico + ' ' + VIEWS[v].nm + ' görünümü', ''); };
 function openViewSheet() {
@@ -3444,21 +4344,119 @@ function openViewSheet() {
     (MAPVIEW === 'grid' ? gridPanelHTML() : '');
   showSheet('viewsheet');
 }
+// ═══ 🌍 ÜLKE BAZLI RENKLENDİRME (patron: "uzaktan bakınca kare olarak değil ülke olarak renklendir") ═══
+// Kareler ~9 km; dünya ölçeğinde tek tek çizmek hem anlamsız hem de haritayı kilitler.
+// Uzakta ülkenin ORTALAMA potansiyelini hesaplayıp ülkeyi bir bütün olarak boyuyoruz.
+let CGROUPS = null;
+function countryGroups() { // ülke → poligonları + sınır kutusu (bir kez kurulur)
+  if (CGROUPS || !LAND_BOX) return CGROUPS;
+  CGROUPS = {};
+  for (const b of LAND_BOX) {
+    const k = b.m.iso || b.m.en;
+    const g = CGROUPS[k] = CGROUPS[k] || { m: b.m, polys: [], x0: 180, y0: 90, x1: -180, y1: -90 };
+    g.polys.push(b);
+    if (b.x0 < g.x0) g.x0 = b.x0; if (b.y0 < g.y0) g.y0 = b.y0;
+    if (b.x1 > g.x1) g.x1 = b.x1; if (b.y1 > g.y1) g.y1 = b.y1;
+  }
+  return CGROUPS;
+}
+function countryScore(k) { // ülkenin ortalama rüzgar/güneş potansiyeli (hesap bir kez, sonra önbellek)
+  const g = countryGroups()[k];
+  if (!g) return null;
+  if (g.score) return g.score;
+  let n = 0, w = 0, s = 0, N = 5;
+  for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) {
+    const x = g.x0 + (g.x1 - g.x0) * i / N, y = g.y0 + (g.y1 - g.y0) * j / N;
+    if (!g.polys.some(b => x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1 && polyHas(b.p, x, y))) continue;
+    const q = cellQuality(cellId([y, x])); w += q.wind; s += q.sun; n++;
+  }
+  if (!n) { const q = cellQuality(cellId([(g.y0 + g.y1) / 2, (g.x0 + g.x1) / 2])); w = q.wind; s = q.sun; n = 1; }
+  return (g.score = { wind: w / n, sun: s / n });
+}
+function drawCountryTint() {
+  const groups = countryGroups();
+  if (!groups) return;
+  const b = map.getBounds(), z = zoomNow();
+  const minArea = z <= 3 ? 1.5 : z <= 5 ? .5 : .12; // uzakta minik adacıkları çizme
+  let çizilen = 0;
+  for (const k of Object.keys(groups)) {
+    const g = groups[k];
+    if (g.x1 < b.getWest() || g.x0 > b.getEast() || g.y1 < b.getSouth() || g.y0 > b.getNorth()) continue;
+    const sc = countryScore(k); if (!sc) continue;
+    const v = Math.max(0, Math.min(1, MAPVIEW === 'wind' ? (sc.wind - .7) / .75 : (sc.sun - .5) / .95));
+    const col = MAPVIEW === 'wind' ? `rgba(30,90,200,${.2 + .55 * v})` : `rgba(255,150,20,${.2 + .55 * v})`;
+    for (const poly of g.polys) {
+      if ((poly.x1 - poly.x0) * (poly.y1 - poly.y0) < minArea) continue;
+      const ring = poly.p[0], step = Math.max(1, Math.floor(ring.length / 110)); // uzakta detay şart değil
+      const pts = [];
+      for (let i = 0; i < ring.length; i += step) pts.push([ring[i][1], ring[i][0]]);
+      if (pts.length < 3) continue;
+      overlayLayer.push(L.polygon(pts, { color: '#ffffff', weight: .5, opacity: .3, fillColor: col, fillOpacity: 1, interactive: false }).addTo(map));
+      if (++çizilen > 300) return; // performans emniyeti
+    }
+  }
+}
+// ═══ 🏙️ ŞEHİR KATMANI (patron: "yakınlaşınca görünsün yoksa uzaktan tüm yazılar iç içe geçer") ═══
+function drawCityLabels() {
+  const z = zoomNow(), b = map.getBounds();
+  // zoom'a göre nüfus eşiği: uzakta yalnız metropoller, yaklaştıkça küçük şehirler
+  const esik = z <= 3 ? 7000 : z <= 4 ? 3500 : z <= 5 ? 1800 : z <= 6 ? 900 : z <= 7 ? 450 : z <= 8 ? 220 : z <= 9 ? 100 : 0;
+  const list = cityList().filter(c => c[3] >= esik && b.contains([c[1], c[2]])).sort((a, c) => c[3] - a[3]);
+  const kutular = []; // çakışma önleme: kalabalık şehir öncelikli, üstüne binen elenir
+  for (const [nm, la, lo, pop] of list) {
+    const p = map.latLngToContainerPoint([la, lo]);
+    const w = nm.length * 6.6 + 34;
+    if (kutular.some(u => Math.abs(u.x - p.x) < (u.w + w) / 2 && Math.abs(u.y - p.y) < 21)) continue;
+    kutular.push({ x: p.x, y: p.y, w });
+    overlayLayer.push(L.marker([la, lo], {
+      icon: L.divIcon({ html: `<div class="citylbl" onclick="openCityCard('${nm.replace(/'/g, '')}')">${nm}<i>${popTxt(pop)}</i></div>`, className: '', iconSize: [w, 20], iconAnchor: [w / 2, 10] }),
+    }).addTo(map));
+    if (kutular.length > 80) break;
+  }
+}
+// Şehir kartı: nüfus · enerji ihtiyacı · alım fiyatı · mesafe · şehrin kısa hikâyesi
+window.openCityCard = nm => {
+  const c = cityList().find(x => x[0] === nm);
+  if (!c || !G) return;
+  const [ad, la, lo, pop] = c;
+  const cell = cellId([la, lo]), ct = countryAt([la, lo]);
+  const yakin = offices().reduce((m, o) => Math.min(m, kmDist(o.ll, [la, lo])), Infinity);
+  const not = CITY_NOTE[ad];
+  const d = cellDemand(cell);
+  $('modal').innerHTML = `
+    <h2 style="margin-bottom:2px">🏙️ ${ad}</h2>
+    <p class="sub" style="margin-top:0">${ct ? (COUNTRIES[ct.nm] ? COUNTRIES[ct.nm].flag + ' ' : '') + ct.nm + ' · ' + ct.kita : ''}</p>
+    <table class="ledger">
+      <tr><td>👥 Nüfus</td><td><b>${popTxt(pop)}</b></td></tr>
+      <tr><td>⚡ Günlük enerji ihtiyacı</td><td><b class="${d >= 2000 ? 'pos' : d < 200 ? 'neg' : ''}">${fmtN(d)} MWh/gün</b>${d < 200 ? ' <span class="sub">— ıssız</span>' : d >= 5000 ? ' <span class="sub">— dev pazar</span>' : ''}</td></tr>
+      <tr><td>💲 Bölge alım fiyatı</td><td>${fmt(cellPriceNow(cell))}/MWh <span class="sub">(×${cellPriceFactor(cell).toFixed(2)})</span></td></tr>
+      <tr><td>📍 En yakın ofisine</td><td>${isFinite(yakin) ? fmtN(Math.round(yakin)) + ' km' : '— ofisin yok'}</td></tr>
+      <tr><td>🗺️ Kare</td><td>${cellCode(cell)}</td></tr>
+    </table>
+    ${not ? `<p style="font-size:12px;margin-top:8px;padding:8px 10px;border-left:3px solid var(--gold);background:#1a2438;border-radius:0 8px 8px 0">💡 ${not}</p>` : ''}
+    <button class="bigsell" onclick="closeModal();flyToPlace(${la},${lo},10,'${ad.replace(/'/g, '')}')">🗺️ Haritada Göster</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
+  $('overlay').classList.add('show');
+};
 function drawOverlay() {
   if (!map) return;
   overlayLayer.forEach(l => l.remove()); overlayLayer = [];
   drawLines(); // nakil hatları her görünümde çizilir (grid'te kalın)
+  if (MAPVIEW === 'city') { drawCityLabels(); return; }
   if (MAPVIEW !== 'wind' && MAPVIEW !== 'sun') return;
-  if (zoomNow() < 8) return; // çok uzakta karo ızgarası anlamsız
+  if (zoomNow() < 8) { drawCountryTint(); return; } // uzakta ÜLKE, yakında KARE
   const b = map.getBounds(), step = CELL;
   const y0 = Math.floor(b.getSouth() / step), y1 = Math.floor(b.getNorth() / step);
   const x0 = Math.floor(b.getWest() / step), x1 = Math.floor(b.getEast() / step);
   if ((y1 - y0 + 1) * (x1 - x0 + 1) > 420) return; // performans emniyeti
-  for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
-    const id = cy + '_' + cx, q = cellQuality(id);
-    const v = MAPVIEW === 'wind' ? (q.wind - .7) / .75 : (q.sun - .5) / .95; // 0..1
-    const col = MAPVIEW === 'wind' ? `rgba(30,90,200,${.12 + .5 * v})` : `rgba(255,150,20,${.12 + .5 * v})`;
-    overlayLayer.push(L.rectangle(cellBounds(id), { color: '#ffffff', weight: .4, opacity: .25, fillColor: col, fillOpacity: 1, interactive: false }).addTo(map));
+  for (let cy = y0; cy <= y1; cy++) {
+    const k = lonSteps(cy); // yüksek enlemde kareler geniş — adım da o kadar olmalı, yoksa üst üste çizilir
+    for (let cx = Math.floor(x0 / k) * k; cx <= x1; cx += k) {
+      const id = cy + '_' + cx, q = cellQuality(id);
+      const v = MAPVIEW === 'wind' ? (q.wind - .7) / .75 : (q.sun - .5) / .95; // 0..1
+      const col = MAPVIEW === 'wind' ? `rgba(30,90,200,${.12 + .5 * v})` : `rgba(255,150,20,${.12 + .5 * v})`;
+      overlayLayer.push(L.rectangle(cellBounds(id), { color: '#ffffff', weight: .4, opacity: .25, fillColor: col, fillOpacity: 1, interactive: false }).addTo(map));
+    }
   }
 }
 // RUHSATLI KARELER: haritada kalıcı şeffaf mavi karolar (patron isteği — "burada kurabilirim" görünsün)
@@ -3469,6 +4467,154 @@ function refreshLicenseTiles() {
     if (!licLayer[c]) licLayer[c] = L.rectangle(cellBounds(c), { color: '#eaf6ff', weight: 1.3, opacity: .8, fillColor: '#bfe3ff', fillOpacity: .22, interactive: false }).addTo(map);
   for (const c of Object.keys(licLayer))
     if (!G.licenses[c]) { licLayer[c].remove(); delete licLayer[c]; }
+}
+
+// ═══ 🧭 SAHA ÇEKMECESİ + SİNEMATİK GEÇİŞ (patron isteği) ═══
+// "Bir ofisi Türkiye'ye diğerini Amerika'ya koyunca haritayı komple geri çekip tekrar
+//  yakınlaştırmak zor oluyor" → ofisler ve talep merkezleri listeden tek dokunuşla gezilir.
+// "Önce zoom out olup sonra seçilen ofise zoom in yapsın, bir şov gibi olsun" → uzak
+//  hedefe İKİ AŞAMALI uçuş + kenarların büzülüp açıldığı geçiş efekti.
+const popTxt = p => p >= 1000 ? (p / 1000).toFixed(p >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'M' : p + 'K';
+let flyPing = [];
+function clearPing() { flyPing.forEach(m => m.remove()); flyPing = []; }
+function pingAt(ll, label) {
+  clearPing();
+  if (!map) return;
+  flyPing.push(L.marker(ll, { icon: divIcon('<div class="navping" style="width:34px;height:34px"></div>', [34, 34]), interactive: false, zIndexOffset: 900 }).addTo(map));
+  if (label) flyPing.push(L.marker(ll, { icon: L.divIcon({ html: `<div class="navlabel">${label}</div>`, className: '', iconSize: [10, 10], iconAnchor: [5, 34] }), interactive: false, zIndexOffset: 901 }).addTo(map));
+  setTimeout(clearPing, 3400);
+}
+function flyFx() { const el = $('flyfx'); el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); }
+window.flyToPlace = (lat, lng, zoom, label) => {
+  if (!map) return;
+  closeNav(); hideSheets();
+  const ll = [lat, lng], z = zoom || 11, from = map.getCenter();
+  const km = kmDist([from.lat, from.lng], ll);
+  // Yakın hedefe doğrudan uç — her seferinde şov yapmak yorucu olur
+  if (km < 350) { map.flyTo(ll, z, { duration: .9 }); pingAt(ll, label); return; }
+  flyFx();
+  const outZ = km > 5000 ? 2 : km > 2000 ? 3 : km > 800 ? 4 : 5;
+  map.flyTo([(from.lat + ll[0]) / 2, (from.lng + ll[1]) / 2], outZ, { duration: 1.1 });
+  setTimeout(() => { map.flyTo(ll, z, { duration: 1.4 }); setTimeout(() => pingAt(ll, label), 1250); }, 1250);
+};
+window.closeNav = () => { $('navpanel').classList.remove('open'); $('navhandle').style.display = ''; };
+window.openNav = tab => {
+  if (!G || !G._started) return;
+  if (tab) NAVTAB = tab;
+  renderNav();
+  $('navpanel').classList.add('open'); $('navhandle').style.display = 'none';
+};
+let NAVTAB = 'sell', STSORT = 'dolu';
+window.setNavTab = t => { NAVTAB = t; renderNav(); };
+window.setStSort = s => { STSORT = s; renderNav(); };
+function renderNav() {
+  $('navtitle').textContent = NAVTAB === 'sell' ? '💰 DEPOLARIN' : '🧭 SAHA';
+  document.querySelectorAll('#navtabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === NAVTAB));
+  if (NAVTAB === 'sell') renderStorePanel(); else renderNavPanel();
+}
+// ═══ 💰 TOPLU DEPO / SATIŞ PANELİ (patron: "rakibin soldan açılan satış menüsü çok iyi") ═══
+// TELİF NOTU: rakibin düzeni kopyalanmadı — kendi mavi/krem temamız, kendi sütun sıramız
+// (ad+bölge · doluluk çubuğu · değer · eylem), kendi kelimelerimiz. Alınan yalnız FİKİR:
+// "bütün depoları tek listede gör ve tek dokunuşla sat".
+function renderStorePanel() {
+  const sts = stores().filter(s => s.buildDone <= Date.now());
+  if (!sts.length) { $('navbody').innerHTML = '<p class="sub">Henüz deponun yok — bir kareye 🔋 pil istasyonu kur.</p>'; return; }
+  const rows = sts.map(s => {
+    const T = STORE_TYPES[s.t];
+    const r = sellRevenue(s.cell, s.stored);
+    const inflow = plants().filter(p => assignedStoreOf(p) === s).reduce((a, p) => a + plantOutput(p), 0) * speedMult();
+    return { s, T, r, inflow, pct: s.stored / T.cap };
+  });
+  const key = { dolu: (a, b) => b.pct - a.pct, deger: (a, b) => b.r.gain - a.r.gain, bolge: (a, b) => (nearestCityName(a.s.cell) || '').localeCompare(nearestCityName(b.s.cell) || '', 'tr') }[STSORT];
+  rows.sort(key);
+  const satilabilir = rows.filter(x => !x.s.disch && x.s.stored >= .005);
+  const toplamMWh = rows.reduce((a, x) => a + x.s.stored, 0);
+  const toplamPara = satilabilir.reduce((a, x) => a + x.r.gain, 0);
+  const kapasite = rows.reduce((a, x) => a + x.T.cap, 0);
+  $('navbody').innerHTML = `
+    <div style="border:1px solid var(--acc);border-radius:11px;padding:9px 10px;margin:2px 0 8px;background:#0e1c33">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim);font-weight:700">
+        <span>${rows.length} depo</span><span>${fmtE(toplamMWh)} / ${kapasite} MWh</span></div>
+      <div style="height:8px;border-radius:5px;background:#0c1526;overflow:hidden;margin:6px 0">
+        <i style="display:block;height:100%;width:${Math.min(100, 100 * toplamMWh / (kapasite || 1))}%;background:linear-gradient(90deg,#3ddc97,#5ab0ff)"></i></div>
+      <button onclick="sellAllStoresAsk()" ${satilabilir.length ? '' : 'disabled'}
+        style="width:100%;margin-top:4px;padding:11px;border-radius:9px;border:none;background:${satilabilir.length ? 'var(--acc)' : '#2a3346'};color:${satilabilir.length ? '#071018' : 'var(--dim)'};font-weight:800;font-size:13px;cursor:pointer">
+        💰 Hepsini Sat — ${fmt(toplamPara)} <span style="font-size:10.5px;font-weight:700">(${satilabilir.length} depo)</span></button>
+    </div>
+    <div style="display:flex;gap:5px;margin:0 0 4px">
+      ${[['dolu', 'Doluluk'], ['deger', 'Değer'], ['bolge', 'Bölge']].map(([k, n]) =>
+        `<button onclick="setStSort('${k}')" style="flex:1;padding:6px 2px;border-radius:8px;border:1px solid var(--line);background:${STSORT === k ? 'var(--acc2)' : 'var(--panel2)'};color:${STSORT === k ? '#071018' : 'var(--dim)'};font-size:10.5px;font-weight:800;cursor:pointer">${n} ↓</button>`).join('')}
+    </div>
+    ${rows.map(({ s, T, r, inflow, pct }) => {
+      const dolum = T.cap - s.stored;
+      return `<div class="strow">
+        <div class="top">
+          <span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${s.ll[0]},${s.ll[1]},11,'${(nearestCityName(s.cell) || cellCode(s.cell)).replace(/'/g, '')}')">${unitName(s)}</span>
+          <span class="cap">${nearestCityName(s.cell) || cellCode(s.cell)}</span></div>
+        <div class="bar"><i style="width:${Math.min(100, pct * 100)}%"></i></div>
+        <div class="foot">
+          <span class="val">${fmtE(s.stored)}/${T.cap} MWh · %${Math.round(pct * 100)}
+            ${inflow > .05 ? ` · ⚡${inflow.toFixed(1)} MW` : ' · <span class="neg">üretim yok</span>'}
+            ${s.disch ? '' : `<br><b style="color:var(--acc)">${fmt(r.gain)}</b>${r.excess > .5 ? ' <span class="neg">· talep aşımı</span>' : ''}`}</span>
+          ${s.disch
+            ? `<span style="font-size:10.5px;color:var(--gold);font-weight:800">⚡ %${Math.round(100 * s.disch.sold / (s.disch.sold + s.disch.left))}</span>`
+            : `<button onclick="sellUnit(${s.id},1);renderNav()" ${s.stored < .005 ? 'disabled' : ''}>SAT</button>`}
+        </div></div>`;
+    }).join('')}
+    <p class="sub" style="margin-top:8px">Depo adına dokun → harita oraya uçar. Satış her zaman senin kararın — oto-satış yok.</p>`;
+}
+window.sellAllStoresAsk = () => {
+  const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && s.stored >= .005);
+  if (!sts.length) return;
+  const toplam = sts.reduce((a, s) => a + sellRevenue(s.cell, s.stored).gain, 0);
+  const mwh = sts.reduce((a, s) => a + s.stored, 0);
+  $('modal').innerHTML = `
+    <h2>💰 Hepsini Sat</h2>
+    <p><b>${sts.length} depo</b> · ${fmtE(mwh)} MWh · tahmini <b class="pos">${fmt(toplam)}</b></p>
+    <p class="sub">Boşaltma süresince her depoya bağlı santraller duracak, bitince kendiliğinden açılır.
+    Bölge talebini aşan kısım yok pahasına gider — panelde "talep aşımı" yazan depolar için bekle.</p>
+    <button class="primary" onclick="closeModal();sellAllStores()">💰 Evet, ${sts.length} Depoyu Sat</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.sellAllStores = () => {
+  const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && s.stored >= .005);
+  sts.forEach(s => startDischarge(s.id, 1, null, null, true)); // quiet: tek tek bildirim yağmuru olmasın
+  toast('💰 ' + sts.length + ' depo boşaltılıyor — para akmaya başladı', '', null, 0, true);
+  save(); renderNav();
+};
+function renderNavPanel() {
+  const offs = offices();
+  const jump = (la, lo, z, lbl) => `flyToPlace(${la},${lo},${z},'${String(lbl).replace(/'/g, '')}')`;
+  let h = `<div class="sect">🏢 OFİSLERİN (${offs.length}/${maxOffices()})</div>`;
+  h += offs.length ? offs.map(o => {
+    const ct = countryAt(o.ll), city = nearestCityName(o.cell);
+    const inR = G.units.filter(x => x.kind !== 'office' && kmDist(o.ll, x.ll) <= OFFICE.radiusKm).length;
+    return `<button class="navrow" onclick="${jump(o.ll[0], o.ll[1], 11, o.hq ? 'MERKEZ' : unitName(o))}">
+      <span class="ico">${o.hq ? '🏛️' : '🏢'}</span>
+      <span class="t"><div>${o.hq ? 'MERKEZ OFİS' : unitName(o)}</div>
+        <div class="d">${ct ? ct.nm : '🌊 deniz'}${city ? ' · ' + city : ''} · ${inR} tesis</div></span>
+      <span class="r">➤</span></button>`;
+  }).join('') : '<p class="sub">Henüz ofisin yok — haritada bir konuma dokunup ofis aç.</p>';
+  // Ofisin bulunduğu HER ÜLKENİN talep merkezleri (patron: "kalabalık yere hat çekip oraya satarım")
+  const cs = [];
+  for (const o of offs) { const c = countryAt(o.ll); if (c && c.iso && !cs.some(x => x.iso === c.iso)) cs.push(c); }
+  for (const c of cs) {
+    const list = citiesOfCountry(c.iso).slice(0, 8);
+    if (!list.length) continue;
+    h += `<div class="sect">🏙️ ${c.nm.toLocaleUpperCase('tr')} — EN KALABALIK ŞEHİRLER</div>`; // "TÜRKIYE" değil "TÜRKİYE"
+    h += list.map(([nm, la, lo, pop]) => {
+      const d = cellDemand(cellId([la, lo]));
+      const near = offs.reduce((m, o) => Math.min(m, kmDist(o.ll, [la, lo])), 1e9);
+      return `<button class="navrow" onclick="${jump(la, lo, 10, nm)}">
+        <span class="ico">🏙️</span>
+        <span class="t"><div>${nm} <span style="color:var(--acc2)">${popTxt(pop)}</span></div>
+          <div class="d">talep ${fmtN(d)} MWh/gün · ${fmtN(Math.round(near))} km uzakta</div></span>
+        <span class="r">➤</span></button>`;
+    }).join('');
+  }
+  h += `<div id="navtip">Şehre gitmek için şehir ismine tıklayın</div>`;
+  $('navbody').innerHTML = h;
 }
 
 // ── Kare sayfası ──
@@ -3516,6 +4662,7 @@ function openCellSheet(c, ll, mode) {
       <tr><td>💲 Bölge alım fiyatı (şu an)</td><td class="${cellPriceFactor(c) >= 1.1 ? 'pos' : cellPriceFactor(c) < .9 ? 'neg' : ''}">${fmt(cellPriceNow(c))}/MWh <span class="sub">(çarpan ×${cellPriceFactor(c).toFixed(2)})</span></td></tr>
       <tr><td>Bölge talebi (gerçek nüfusa göre)</td><td>${fmtN(cellDemand(c))} MWh/gün ${cellDemand(c) < 100 ? '<span class="neg">— ıssız bölge, satış zor!</span>' : ''}</td></tr>
       ${licensed ? `<tr><td>Bugün kalan talep</td><td class="${demandLeft(c) < 10 ? 'neg' : ''}">${fmtN(demandLeft(c))} MWh</td></tr>` : ''}
+      <tr><td>🗺️ Zemin</td><td>${isLand(ll || cellCenter(c)) ? '🏞️ <b>Kara</b> <span class="sub">— her tür tesis kurulabilir</span>' : '🌊 <b>Deniz</b> <span class="neg">— yalnız offshore rüzgar ve yüzer güneş</span>'}</td></tr>
       <tr><td>Maks birim <span style="color:var(--dim)">(oyuncu başına — kimse kimseyi engelleyemez)</span></td><td>${mine.length} / ${MAX_PER_CELL}</td></tr>
       <tr><td>Sahip</td><td>${licensed ? '<b class="pos">SEN 📜</b>' : 'Devlet'}</td></tr>
       ${botsHere.length ? `<tr><td>Buradaki rakipler</td><td>${botsHere.map(b => BOTS[b.b]).join(', ')}</td></tr>` : ''}
@@ -3673,6 +4820,7 @@ function openUnitSheet(id) {
       let best = null;
       for (const c2 of Object.keys(G.licenses)) {
         if (c2 === u.cell || demandLeft(c2) < 1) continue;
+        if (kmDist(cellCenter(u.cell), cellCenter(c2)) > NEIGHBOR_KM) continue; // uzak pazar = ⚡ hat şart
         const p2 = cellPriceNow(c2) * (1 - TRANSFER_FEE);
         if (!best || p2 > best.p) best = { c: c2, p: p2 };
       }
@@ -3700,6 +4848,12 @@ function openUnitSheet(id) {
       <button class="bigsell" onclick="sellUnit(${u.id},1)" ${u.stored < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(u.stored)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * u.stored / T.cap))} sn)</button>
       ${alt ? `<button class="bigsell" style="background:${alt.emergency ? 'var(--danger);color:#fff' : 'var(--gold);color:#131313'}" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${u.stored < .005 ? 'disabled' : ''}>${alt.emergency ? '🚨 ACİL İHALEYE SAT — ' + cellCode(alt.c) + ' (tam fiyat, kesinti yok)' : '🔁 ' + cellCode(alt.c) + ' pazarına SAT — ' + fmt(alt.p) + '/MWh (-%10 aktarım dahil)'}</button>` : ''}
       ${linesOf(u.cell).map(l => { const net = cellPriceNow(l.to) * (1 - lineLoss(l) / 100); return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || net <= base ? 'disabled' : ''}>⚡ HAT ile ${nearestCityName(l.to) || cellCode(l.to)}'e SAT — ${fmt(net)}/MWh (kayıp %${Math.round(lineLoss(l))})</button>`; }).join('')}
+      ${allyLinesFor(u.cell).map(l => { // 🤝 İTTİFAK HATTI — başkan çekti, HER ÜYE kullanır
+        const net = cellPriceNow(l.to) * (1 - lineLoss(l) / 100);
+        return `<button class="bigsell" style="background:#1f7a5a;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || net <= base ? 'disabled' : ''}>
+          🤝 İTTİFAK HATTI ile ${nearestCityName(l.to) || cellCode(l.to)}'e SAT — ${fmt(net)}/MWh
+          <span style="font-size:10px">(kayıp %${Math.round(lineLoss(l))} · ÜCRETSİZ · MWh başına ${fmt(ALLY_LINE_FEE)} kasaya)</span></button>`;
+      }).join('')}
       ${(() => { // 🌍 İTTİFAK KONSORSİYUM HATTI — üyelere ÜCRETSİZ (patron kuralı)
         const cn = consortiumFor(u.cell);
         if (!cn) return '';
@@ -3745,6 +4899,22 @@ function openUnitSheet(id) {
         <tr><td><b>NET</b></td><td class="${net >= 0 ? 'pos' : 'neg'}"><b>${net >= 0 ? '+' : ''}${fmt(net)}</b></td></tr>
       </table>
       <p class="sub">Ofis: ${offices().length}/${maxOffices()} · ruhsat hakkı: ${Object.keys(G.licenses).length}/${licCap()} — 🧪 araştırmayla ikisi de artar.</p>
+      ${(() => { // 🏙️ ÜLKE + TALEP MERKEZLERİ (patron: "ıssız yerde satış zor, kalabalık yere hat çekerim")
+        const ct = countryAt(u.ll);
+        if (!ct) return '<p class="sub">🌊 Bu ofis denizde görünüyor.</p>';
+        const list = citiesOfCountry(ct.iso).slice(0, 8);
+        return `<div style="font-size:12px;margin:12px 0 2px">📍 <b>ÜLKE:</b> ${ct.nm} <span class="sub">· ${ct.kita}</span></div>
+        ${list.length ? `<div style="font-size:12px;margin:8px 0 2px">🏙️ <b>BU ÜLKENİN EN KALABALIK ŞEHİRLERİ</b></div>
+        <table class="ledger">
+          ${list.map(([nm, la, lo, pop]) => {
+            const km = Math.round(kmDist(u.ll, [la, lo]));
+            return `<tr><td><span class="lnk" style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${la},${lo},10,'${nm.replace(/'/g, '')}')">${nm}</span> <span class="sub">${popTxt(pop)}</span></td>
+              <td>${fmtN(cellDemand(cellId([la, lo])))} MWh/gün <span class="sub">· ${fmtN(km)} km</span></td></tr>`;
+          }).join('')}
+        </table>
+        <p style="font-size:11.5px;font-weight:700;color:var(--danger);text-align:center;margin:8px 0 2px">Şehre gitmek için şehir ismine tıklayın</p>
+        <p class="sub" style="margin-top:2px">Üretim iyi ama talep düşükse: kalabalık şehre ⚡ nakil hattı çekip oraya sat.</p>` : ''}`;
+      })()}
       ${u.hq ? '<p class="sub">🏢 Merkez ofis — satılamaz.</p>' : `<button class="bigsell half" onclick="demolishUnit(${u.id})" style="color:var(--danger)">🗑️ Ofisi Kapat — ${fmt(resaleValue(u).value)} iade</button>
       <p class="sub">⚠️ Ofis kapanınca bu bölgede YENİ ruhsat alamazsın (mevcut ruhsat ve tesisler çalışmaya devam eder).</p>`}`;
   } else if (u.kind === 'fueldepot') {
@@ -4139,11 +5309,12 @@ function renderMenu() {
   // liderlik: emisyon rozeti herkeste görünür (patron: "ittifaklar üyeleri ona göre seçer")
   // sunucu bağlıysa GERÇEK oyuncular listelenir
   // gerçek oyuncular + bot şirketler (botlar YAVAŞ gelişir — gerçek oyuncu hep önde olabilir)
-  const rows = (NET.on() ? NET.list().map(p => ({ nm: p.nm + (p.online ? ' ●' : ''), w: p.worth || 0, em: p.em || 0 })) : [])
-    .concat(BOTS.map((b, i) => ({ nm: '🤖 ' + b, w: botWorth(i), em: botEm(i) })));
-  rows.push({ nm: G.company + ' (SEN)', w: myWorth(), em: co2Avg(), me: true });
+  const rows = (NET.on() ? NET.list().map(p => ({ nm: p.nm + (p.online ? ' ●' : ''), raw: p.nm, w: p.worth || 0, em: p.em || 0 })) : [])
+    .concat(BOTS.map((b, i) => ({ nm: '🤖 ' + b, raw: b, w: botWorth(i), em: botEm(i) })));
+  rows.push({ nm: G.company + ' (SEN)', raw: G.company, w: myWorth(), em: co2Avg(), me: true });
   rows.sort((a, b) => b.w - a.w);
-  $('lb').innerHTML = rows.slice(0, 9).map((r, i) => `<div class="r ${r.me ? 'me' : ''}"><span>#${i + 1} ${r.nm} ${emBadgeHTML(r.em)}</span><span>${fmt(r.w)}</span></div>`).join('');
+  // Sıraya dokununca o şirketin kamuya açık karnesi açılır (patron isteği)
+  $('lb').innerHTML = rows.slice(0, 9).map((r, i) => `<div class="r ${r.me ? 'me' : ''}" style="cursor:pointer" onclick="openPlayerCard('${(r.raw || '').replace(/'/g, '')}')"><span>#${i + 1} ${r.nm} ${emBadgeHTML(r.em)}</span><span>${fmt(r.w)}</span></div>`).join('');
   // VIP Reklamsız satırı ($10B kazanç sonrası menüde kalıcı; aylık her ay yenilenebilir)
   if (G.totalEarned >= 1e10 || adFreeActive()) {
     $('modrow').innerHTML = `<div style="font-size:12px;margin:12px 0 2px">🚫 <b>REKLAMLARI KAPAT (VIP)</b></div>
@@ -4218,7 +5389,7 @@ function wizardStart() {
   if (has) { G = has; startGame(true); return; }
   $('app').classList.add('wiz'); // kuruluşta üst/alt menüler gizli
   $('modal').innerHTML = `
-    <div class="biglogo">⚡</div>
+    <div class="biglogo">${LOGO_SVG}</div>
     <h2 style="text-align:center">ENERGY COMPANY</h2>
     <p style="text-align:center;font-size:11px;color:var(--gold)">Development of Company games</p>
     <p style="text-align:center">Gerçek dünya haritasında enerji imparatorluğunu kur.<br>Adil · Şeffaf · Günde ~2 saat yeter.</p>
@@ -4232,7 +5403,7 @@ const WIZ = { step: 0 };
 function showLoginScreen() {
   $('app').classList.add('wiz');
   $('modal').innerHTML = `
-    <div class="biglogo">⚡</div>
+    <div class="biglogo">${LOGO_SVG}</div>
     <h2 style="text-align:center">ENERGY COMPANY</h2>
     <p style="text-align:center;font-size:11px;color:var(--gold)">Development of Company games</p>
     <p style="text-align:center">Şirketin ve tüm ilerlemen <b>sunucuda</b> saklanır.<br>Google hesabı bağlarsan telefonunu değiştirsen bile kaybolmaz.</p>
@@ -4263,8 +5434,25 @@ window.loginGoogle = async () => {
     if (a) { closeModal(); toast('🔓 Hoş geldin ' + (a.name || a.email || ''), '', null, 0, true); await afterLogin(); }
     // mobilde yönlendirme olur; dönüşte NET.googleCheckRedirect yakalar
   } catch (e) {
-    toast('Google girişi başarısız: ' + (e.message || ''), 'bad');
-    showLoginScreen();
+    // Hata mesajı ÖNCEDEN toast ile veriliyordu ve giriş modalının ARKASINDA kalıyordu (telefon testi).
+    // Artık modalın kendisinde, ne yapılacağı yazılı olarak gösteriliyor.
+    const code = (e && e.code) || '';
+    const host = location.hostname || '(bilinmiyor)';
+    const known = {
+      'auth/unauthorized-domain': `Bu alan adı (<b>${host}</b>) Firebase'de Google girişi için yetkili değil.<br><span class="sub">Çözüm: Firebase Console → Authentication → Settings → <b>Authorized domains</b> → <b>Add domain</b> → <code>${host}</code></span>`,
+      'auth/operation-not-allowed': 'Google sağlayıcısı Firebase\'de kapalı.<br><span class="sub">Çözüm: Firebase Console → Authentication → Sign-in method → Google → Etkinleştir.</span>',
+      'auth/popup-blocked': 'Tarayıcı açılır pencereyi engelledi.<br><span class="sub">Açılır pencerelere izin ver ya da misafir olarak devam et.</span>',
+      'auth/network-request-failed': 'İnternet bağlantısı kurulamadı.<br><span class="sub">Bağlantını kontrol edip tekrar dene.</span>',
+    };
+    $('modal').innerHTML = `
+      <h2>🔓 Google Girişi Yapılamadı</h2>
+      <p>${known[code] || (e && e.message) || 'Bilinmeyen bir hata oluştu.'}</p>
+      ${code ? `<p class="sub">Hata kodu: <code>${code}</code></p>` : ''}
+      <p class="sub">İlerlemen kaybolmaz — misafir olarak oynayıp sonradan menüden Google hesabına bağlayabilirsin.</p>
+      <button class="primary" onclick="closeModal();loginGuest()">👤 Misafir Olarak Devam Et</button>
+      <button class="primary ghostbtn" onclick="closeModal();loginGoogle()">🔄 Tekrar Dene</button>
+      <button class="primary ghostbtn" onclick="closeModal();showLoginScreen()">← Geri</button>`;
+    $('overlay').classList.add('show');
   }
 };
 async function afterLogin() {
@@ -4278,7 +5466,7 @@ async function afterLogin() {
   if (s) { G = migrate(s); startGame(true); return; }
   $('app').classList.add('wiz');
   $('modal').innerHTML = `
-    <div class="biglogo">⚡</div>
+    <div class="biglogo">${LOGO_SVG}</div>
     <h2 style="text-align:center">ENERGY COMPANY</h2>
     <p style="text-align:center">Gerçek dünya haritasında enerji imparatorluğunu kur.<br>Adil · Şeffaf · Günde ~2 saat yeter.</p>
     <button class="primary" onclick="wizMapStart()">🌍 Yeni Oyun — Haritadan Başla</button>
@@ -4291,21 +5479,34 @@ window.wizMapStart = () => {
   initMap([28, 20], 2);
   wizStep1();
 };
+// Ülke sayısı 6'dan 51'e çıkınca dünya ölçeğinde bayraklar üst üste biniyordu.
+// Çözüm: görünür alandaki bayrakları çakışmaya göre ele, haritayı gezdikçe yeniden çiz.
+function wizDrawCountries() {
+  if (WIZ.step !== 1 || !map) return;
+  wizLayer.forEach(m => m.remove()); wizLayer = [];
+  const b = map.getBounds(), kutular = [];
+  for (const [c, v] of Object.entries(COUNTRIES)) {
+    const [ll] = COUNTRY_VIEW[c] || [];
+    if (!ll || !b.contains(ll)) continue;
+    const p = map.latLngToContainerPoint(ll), w = c.length * 6.2 + 30;
+    if (kutular.some(u => Math.abs(u.x - p.x) < (u.w + w) / 2 && Math.abs(u.y - p.y) < 40)) continue;
+    kutular.push({ x: p.x, y: p.y, w });
+    const m = L.marker(ll, { icon: divIcon(`<div class="cmark">${v.flag}<div class="cl">${c}</div></div>`, [64, 42]) }).addTo(map);
+    m.on('click', () => wizSetCountry(c));
+    wizLayer.push(m);
+  }
+}
 function wizStep1() {
   WIZ.step = 1; WIZ.country = null;
   wizLayer.forEach(m => m.remove()); wizLayer = [];
   map.setView([28, 20], 2);
-  // harita işaretçileri
-  Object.entries(COUNTRIES).forEach(([c, v]) => {
-    const [ll] = COUNTRY_VIEW[c];
-    const m = L.marker(ll, { icon: divIcon(`<div class="cmark">${v.flag}<div class="cl">${c}</div></div>`, [64, 42]) }).addTo(map);
-    m.on('click', () => wizSetCountry(c));
-    wizLayer.push(m);
-  });
+  wizDrawCountries();
+  map.off('moveend', wizDrawCountries).on('moveend', wizDrawCountries); // yaklaştıkça daha çok ülke belirir
   // alt kart — Devam Et YOK: ülkeye dokunmak/seçmek direkt il ekranına götürür
-  $('wiztitle').textContent = '🌍 Ülke seç — haritadan dokun ya da listeden seç';
+  $('wiztitle').textContent = '🌍 Ülke seç — yaklaş ve dokun ya da listeden seç';
   $('wizselect').innerHTML = '<option value="">— Ülke seç —</option>' +
-    Object.entries(COUNTRIES).map(([c, v]) => `<option value="${c}">${v.flag} ${c} (${v.note})</option>`).join('');
+    Object.entries(COUNTRIES).sort((a, b2) => a[0].localeCompare(b2[0], 'tr'))
+      .map(([c, v]) => `<option value="${c}">${v.flag} ${c} (${v.note})</option>`).join('');
   $('wiznext').style.display = 'none';
   $('wizsheet').classList.add('show');
 }
@@ -4317,6 +5518,7 @@ function wizSetCountry(c) {
 function wizStep2() {
   WIZ.step = 2; WIZ.il = null;
   G.country = WIZ.country;
+  map.off('moveend', wizDrawCountries); // 1. adımın yeniden-çizimi burada dursun
   wizLayer.forEach(m => m.remove()); wizLayer = [];
   const [ll, z] = COUNTRY_VIEW[G.country];
   try { map.flyTo(ll, z, { duration: .7 }); } catch (e) { map.setView(ll, z); } // gizli/sıfır boyutlu panelde flyTo NaN atabiliyor
@@ -4457,6 +5659,8 @@ function openMarket() { const open = $('pricesheet').classList.contains('show');
 function openTasks() { const open = $('menusheet').classList.contains('show'); hideSheets(); if (!open) { renderMenu(); showSheet('menusheet'); } }
 function goHome() { if (map && G && G.il) { try { map.flyTo(IL_COORD[G.il], 11); } catch (e) { map.setView(IL_COORD[G.il], 11); } } }
 // Sağ çekmece menü
+$('navhandle').addEventListener('click', () => openNav());
+document.querySelectorAll('#navtabs button').forEach(b => b.addEventListener('click', () => setNavTab(b.dataset.tab)));
 $('drawerhandle').addEventListener('click', () => {
   if (!G || !G._started) return;
   const open = $('drawer').classList.toggle('open');
@@ -4605,19 +5809,158 @@ try {
       if (inWiz && $('wizsheet').classList.contains('show')) { $('wizback').click(); return; } // sihirbazda geri = bir adım geri
       if ($('chatpanel').classList.contains('open')) { closeChat(); return; }
       if (document.querySelector('.sheet.show')) { hideSheets(); return; }
+      if ($('navpanel').classList.contains('open')) { closeNav(); return; }
       if ($('drawer').classList.contains('open')) { $('drawer').classList.remove('open'); $('drawerhandle').style.display = ''; return; }
       if (MODE || PENDING) { PENDING = null; setMode(null); return; } // yerleştirme iptali de temizlensin
       window.Capacitor.Plugins.App.exitApp();
     });
   }
 } catch (e) {}
+// ═══ 🎬 AÇILIŞ EKRANI (patron: "güzel bir görsel yükleme ekranı, her seferinde farklı bir görsel şölen") ═══
+// Hazır resim kullanmıyoruz: sahneler KODLA çiziliyor, her açılışta rastgele seçilip
+// rastgele yerleşiyor. Böylece 6 sahne aslında sonsuz varyasyon demek ve APK'ya tek byte
+// görsel yükü binmiyor. Çubuk gerçek yükleme adımlarına bağlı, sahte ilerleme yok.
+const BOOT_TIPS = [
+  'Gördüğün fiyat = hesabına geçen para. Trafo kaybı yok, gizli kesinti yok.',
+  'Rüzgâr mükemmel ama nüfus azsa satış zordur — talebi olan şehre ⚡ hat çek.',
+  'Ruhsat kalıcı ve oyuncu başına: kimse bir kareyi sana kapatamaz.',
+  'Depon dolunca üretim durur. 🔔 bildirimi aç, boşa üretim yapma.',
+  'Emisyonun düşükse devlet teşviki satışlarına +%15\'e kadar ekler.',
+  '300 km\'den uzun hat bölümü enerji taşımaz — araya transfer merkezi koy.',
+  'Aynı trafo markasına sadık kalırsan iskonto %25\'e kadar çıkar.',
+  'Ülke sınırını aşan hat ittifak işidir; kıtalar arası için konsorsiyum gerekir.',
+  'Denize yalnız offshore rüzgâr ve yüzer güneş kurulur — gerçek dünyadaki gibi.',
+  'Bölge talebini aşan enerji yok pahasına gider. Kalabalık şehre yakın depola.',
+  'Oto-satış yok: satış anı senin kararın. Oyun seni ekrana kilitlemek için tasarlanmadı.',
+  'Haftalık Pazar ihalesini kazanan, o karede bir hafta +%20 primli satar.',
+];
+function bootScene() {
+  const R = (a, b) => a + Math.random() * (b - a);
+  const I = (a, b) => Math.floor(R(a, b + 1));
+  const W = 800, H = 500;
+  const gökler = [
+    ['#1a2c4d', '#ff8a1f', '#e0491a'], // gün batımı
+    ['#0d1626', '#213a63', '#3b6ea5'], // gece mavisi
+    ['#123', '#2a5a8a', '#7fc4e8'],    // şafak
+    ['#1b2c4d', '#b06a2c', '#ffc24a'], // altın saat
+  ][I(0, 3)];
+  const sky = `<defs>
+    <linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${gökler[0]}"/><stop offset=".62" stop-color="${gökler[1]}"/><stop offset="1" stop-color="${gökler[2]}"/></linearGradient>
+    <linearGradient id="bolt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc24a"/><stop offset="1" stop-color="#e0491a"/></linearGradient>
+  </defs><rect width="${W}" height="${H}" fill="url(#sk)"/>`;
+  const yıldız = n => Array.from({ length: n }, () => `<circle cx="${R(0, W).toFixed(0)}" cy="${R(0, H * .5).toFixed(0)}" r="${R(.6, 1.7).toFixed(1)}" fill="#fff" opacity="${R(.25, .8).toFixed(2)}"/>`).join('');
+  const güneş = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r * 1.9}" fill="#ffb547" opacity=".13"/><circle cx="${x}" cy="${y}" r="${r * 1.35}" fill="#ffb547" opacity=".18"/><circle cx="${x}" cy="${y}" r="${r}" fill="#ffd166"/>`;
+  const tepe = (y, col, op) => `<path d="M0 ${H} L0 ${y} Q ${W * .2} ${y - R(30, 70)} ${W * .42} ${y + R(-10, 25)} T ${W} ${y - R(10, 40)} L ${W} ${H} Z" fill="${col}" opacity="${op}"/>`;
+  const türbin = (x, yb, s, dur) => `<g transform="translate(${x} ${yb}) scale(${s})">
+    <path d="M-3 0 L-2 -95 L2 -95 L3 0 Z" fill="#eef3fa" opacity=".95"/>
+    <g transform="translate(0 -95)"><animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="${dur}s" repeatCount="indefinite" additive="sum"/>
+      ${[0, 120, 240].map(a => `<path d="M0 0 L-4 -52 L4 -52 Z" fill="#eef3fa" opacity=".95" transform="rotate(${a})"/>`).join('')}
+    </g><circle cx="0" cy="-95" r="4.5" fill="#ff8a1f"/></g>`;
+  const panelSırası = (y, n, s, op) => Array.from({ length: n }, (_, i) => {
+    const x = (i + .5) * (W / n);
+    return `<g transform="translate(${x} ${y}) scale(${s})" opacity="${op}"><path d="M-42 0 L34 0 L46 -30 L-30 -30 Z" fill="#1d4e89" stroke="#9fc2ea" stroke-width="1.6"/>
+      <path d="M-30 -30 L46 -30" stroke="#9fc2ea" stroke-width="1.2"/><path d="M-16 0 L-4 -30 M2 0 L14 -30 M20 0 L32 -30" stroke="#9fc2ea" stroke-width="1"/>
+      <rect x="-4" y="0" width="5" height="16" fill="#55677f"/></g>`;
+  }).join('');
+  const direk = (x, yb, s) => `<g transform="translate(${x} ${yb}) scale(${s})" stroke="#e8eef7" stroke-width="3" fill="none" opacity=".92">
+    <path d="M-22 0 L0 -110 L22 0 M-15 -35 L15 -35 M-9 -70 L9 -70 M-26 -12 L26 -12"/>
+    <path d="M-30 -78 L30 -78" stroke-width="2.4"/></g>`;
+  const bina = (x, w2, h2, ışık) => {
+    let win = '';
+    for (let r = 0; r < Math.floor(h2 / 22); r++) for (let c = 0; c < Math.floor(w2 / 16); c++)
+      if (Math.random() < ışık) win += `<rect x="${x + 6 + c * 16}" y="${H - 60 - h2 + 10 + r * 22}" width="7" height="10" fill="#ffd166" opacity="${R(.5, 1).toFixed(2)}"/>`;
+    return `<rect x="${x}" y="${H - 60 - h2}" width="${w2}" height="${h2}" fill="#101c31"/>${win}`;
+  };
+  const sahneler = [
+    () => { // 1) Rüzgâr tarlası
+      let s = sky + güneş(R(120, 680), R(120, 200), R(34, 52)) + tepe(H * .68, '#0f2a1f', .55) + tepe(H * .78, '#123b28', .9);
+      for (let i = 0; i < I(5, 9); i++) s += türbin(R(50, W - 50), R(H * .74, H * .93), R(.5, 1.05), R(2.6, 5.4));
+      return s + `<rect y="${H - 26}" width="${W}" height="26" fill="#0b1f16"/>`;
+    },
+    () => { // 2) Güneş tarlası
+      let s = sky + güneş(R(150, 650), R(90, 160), R(40, 58)) + tepe(H * .62, '#3a2f16', .5);
+      s += `<rect y="${H * .66}" width="${W}" height="${H * .34}" fill="#2b3a22"/>`;
+      s += panelSırası(H * .78, I(4, 6), R(.85, 1.05), .85) + panelSırası(H * .95, I(3, 5), R(1.1, 1.4), 1);
+      return s;
+    },
+    () => { // 3) Açık deniz rüzgârı
+      let s = sky + yıldız(I(25, 60)) + güneş(R(120, 680), R(90, 150), R(26, 40));
+      s += `<rect y="${H * .68}" width="${W}" height="${H * .32}" fill="#0e2f4a"/>`;
+      for (let i = 0; i < 7; i++) s += `<path d="M0 ${H * .72 + i * 22} q ${R(40, 90)} ${R(-9, 9)} ${W} 0" stroke="#5ab0ff" stroke-width="1.5" fill="none" opacity="${(.32 - i * .035).toFixed(2)}"/>`;
+      for (let i = 0; i < I(4, 7); i++) s += türbin(R(60, W - 60), R(H * .70, H * .80), R(.55, .95), R(3, 6));
+      return s;
+    },
+    () => { // 4) Gece şehri
+      let s = sky + yıldız(I(40, 90));
+      let x = R(10, 40);
+      while (x < W - 30) { const w2 = R(38, 82), h2 = R(70, 240); s += bina(x, w2, h2, R(.25, .6)); x += w2 + R(6, 20); }
+      s += `<rect y="${H - 60}" width="${W}" height="60" fill="#0a1220"/>`;
+      s += direk(R(80, 260), H - 60, R(.5, .7)) + direk(R(520, 720), H - 60, R(.5, .7));
+      return s;
+    },
+    () => { // 5) Baraj / hidro
+      let s = sky + tepe(H * .5, '#16301f', .8);
+      s += `<path d="M0 ${H * .58} L${W} ${H * .58} L${W} ${H} L0 ${H} Z" fill="#0f3550"/>`;
+      s += `<path d="M${W * .18} ${H * .58} L${W * .82} ${H * .58} L${W * .74} ${H * .92} L${W * .26} ${H * .92} Z" fill="#94a3b8"/>`;
+      s += `<path d="M${W * .18} ${H * .58} L${W * .82} ${H * .58} L${W * .8} ${H * .66} L${W * .2} ${H * .66} Z" fill="#cbd5e1"/>`;
+      for (let i = 0; i < 3; i++) { const x = W * (.36 + i * .14); s += `<path d="M${x} ${H * .66} q 8 ${H * .16} 0 ${H * .26}" stroke="#bfe3ff" stroke-width="${R(9, 16).toFixed(0)}" fill="none" opacity=".8"/>`; }
+      s += `<rect y="${H * .92}" width="${W}" height="${H * .08}" fill="#0a2c44"/>`;
+      return s;
+    },
+    () => { // 6) Nakil hattı
+      let s = sky + güneş(R(100, 700), R(110, 190), R(30, 46)) + tepe(H * .66, '#1a3324', .6) + tepe(H * .76, '#14442c', .95);
+      const n = I(3, 5), yb = H * .82;
+      for (let i = 0; i < n; i++) {
+        const x = (i + .5) * (W / n);
+        s += direk(x, yb, R(.75, 1));
+        if (i) { const px = (i - .5) * (W / n);
+          s += `<path d="M${px} ${yb - 78} Q ${(px + x) / 2} ${yb - 46} ${x} ${yb - 78}" stroke="#dbe6f5" stroke-width="1.6" fill="none" opacity=".75"/>`;
+          s += `<path d="M${px} ${yb - 62} Q ${(px + x) / 2} ${yb - 30} ${x} ${yb - 62}" stroke="#dbe6f5" stroke-width="1.6" fill="none" opacity=".6"/>`; }
+      }
+      return s + `<rect y="${H - 22}" width="${W}" height="22" fill="#0d2418"/>`;
+    },
+  ];
+  const gövde = sahneler[I(0, sahneler.length - 1)]();
+  // köşede marka şimşeği
+  const marka = `<g transform="translate(${W - 92} 30) scale(.46)"><path d="M60 4.8 L26.2 55.6 H45.6 L39.8 95.2 L73.8 44.4 H54.4 Z" fill="url(#bolt)"/></g>
+    <text x="${W - 100}" y="112" text-anchor="end" font-family="Segoe UI,system-ui,sans-serif" font-size="21" font-weight="700" fill="#f0e6d2" opacity=".95">ENERGY COMPANY</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${gövde}${marka}</svg>`;
+}
+let BOOT_ON = true;
+function bootStep(pct, txt) {
+  if (!BOOT_ON) return;
+  const f = $('bootfill'), s = $('bootstep');
+  if (f) f.style.width = Math.max(4, Math.min(100, pct)) + '%';
+  if (s && txt) s.textContent = txt;
+}
+function bootDone() {
+  if (location.search.includes('acilis')) return; // ?acilis — sahneyi incelemek için açık tut (yenile = yeni sahne)
+  if (!BOOT_ON) return;
+  BOOT_ON = false;
+  bootStep(100, 'Hazır ⚡');
+  setTimeout(() => { $('boot').classList.add('gone'); setTimeout(() => { const b = $('boot'); if (b) b.remove(); }, 600); }, 260);
+}
+(() => {
+  $('bootscene').innerHTML = bootScene();
+  $('boottip').textContent = '💡 ' + BOOT_TIPS[Math.floor(Math.random() * BOOT_TIPS.length)];
+  bootStep(18, 'Motor hazırlanıyor…');
+})();
+
+const BOOT_AT = Date.now();
 NET.init().then(async () => { // online sunucu (net-config.json varsa) — yoksa simülasyon sürer
+  bootStep(58, NET.on() ? 'Sunucuya bağlanıldı' : 'Çevrimdışı mod');
+  // Sahne en az 1.6 sn görünsün — yoksa "görsel şölen" göz kırpmasına dönüyor
+  const bekle = Math.max(0, 1600 - (Date.now() - BOOT_AT));
+  await new Promise(r => setTimeout(r, bekle));
+  bootStep(82, 'Hesap kontrol ediliyor…');
   if (NET.on() && NET.googleAvailable()) {
     const a = await NET.googleCheckRedirect(); // Google yönlendirmesinden dönüş
-    if (a) { toast('🔓 Hoş geldin ' + (a.name || a.email || ''), '', null, 0, true); await afterLogin(); return; }
+    if (a) { toast('🔓 Hoş geldin ' + (a.name || a.email || ''), '', null, 0, true); bootDone(); await afterLogin(); return; }
   }
+  bootDone();
   wizardStart();
-});
+}).catch(() => { bootDone(); wizardStart(); }); // açılış ekranı ASLA takılı kalmasın
+setTimeout(bootDone, 12000); // son emniyet: ağ ölse bile 12 sn sonra oyuna gir
 requestAnimationFrame(frame);
 // debug/test
 window.G_get = () => G; window.__step = step; window.__sellAll = sellAll; window.__addUnit = addUnit; window.__cellQuality = cellQuality; window.__cellId = cellId; window.__setSel = (c, ll) => { SEL.cell = c; SEL.ll = ll; };
