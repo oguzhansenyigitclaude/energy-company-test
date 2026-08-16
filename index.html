@@ -105,7 +105,8 @@
   #bottombar{flex:0 0 auto;display:flex;gap:5px;padding:7px 8px 10px;background:var(--panel);border-top:1px solid var(--line);z-index:20}
   #bottombar button{flex:1;min-height:46px;padding:11px 2px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
   #viewbtn,#allybtn,#mailbtn{color:var(--cream)}
-  #bottombar button{font-size:11px;padding:11px 1px}
+  #bottombar button{font-size:10px;padding:11px 0}
+  #bottombar{gap:3px;padding:7px 5px 10px}
   #mailbtn.unread{border-color:var(--gold);color:var(--gold)}
 
   /* 💬 SOHBET ÇEKMECESİ */
@@ -329,7 +330,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-16 14:36) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-16 14:49) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -374,6 +375,10 @@
       <h3>🤝 İTTİFAK<span class="x" onclick="hideSheets()">✕</span></h3>
       <div id="ally_body"></div>
     </div>
+    <div class="sheet" id="aucsheet">
+      <h3>🔨 MÜZAYEDE PAZARI<span class="x" onclick="hideSheets()">✕</span></h3>
+      <div id="auc_body"></div>
+    </div>
     <div id="tuthint"></div>
 
     <!-- Sağ çekmece menü: hızlı erişim (rakip paraleli, ayna tasarım) -->
@@ -396,6 +401,7 @@
     <button id="infobtn">ℹ️ Bilgi</button>
     <button id="viewbtn">🗺️ Görünüm</button>
     <button id="allybtn">🤝 İttifak</button>
+    <button id="aucbtn">🔨 Müzayede</button>
     <button id="mailbtn">📬 Posta</button>
   </div>
 
@@ -415,7 +421,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-16 14:36)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-16 14:49)'; // deploy.js yayında tarih damgası ekler
 // Büyük ekonomi gösterimi: $1,2M · $3,4B · $1,1T (milyar-trilyon seviyelerine çıkan kasalar okunur kalsın)
 function fmt(n) {
   const a = Math.abs(n), s = n < 0 ? '-' : '';
@@ -890,6 +896,7 @@ function freshState() {
     lines: [], // ⚡ enerji nakil hatları
     showOthers: true, boughtOthers: {}, // 👥 diğer oyuncuların tesisleri (varsayılan GÖRÜNÜR — patron)
     mail: [], friends: [], friendReqs: [], chat: {}, chatSeen: 0, // 💬 sosyal katman
+    auctionsMkt: [], // 🔨 müzayede ilanları
     ally: null, allyBuffUntil: 0, // 🤝 ittifak (prototipte bot üyelerle simülasyon) + %50 alım bonusu penceresi
     resPts: { daily: 1, weekly: 0, dailyKey: '' }, // araştırma puanları (patron): Sv1-10 günlük, Sv11+ haftalık puan ister; 1 başlangıç hediyesi
     cellEarned: {}, cellSpent: {}, // ofis bölge raporu için kare bazlı kazanç/harcama
@@ -2632,6 +2639,184 @@ window.doOfferBuy = oid => {
 
 const BOTS = WORLD_PLAYERS.slice(0, 8);
 
+// ═══ 🔨 MÜZAYEDE PAZARI (patron tasarımı) ═══
+// Oyuncular kendi mallarını (santral, depo, yakıt deposu, nakil hattı, KONSORSİYUM HİSSESİ) açık
+// artırmaya çıkarır. Süre seçimi görünürlük demek: uzun süre = daha çok teklif = daha yüksek fiyat,
+// bu yüzden vergi de süreyle artar. DENGE NOTU (patron "sen ayarla" dedi): patronun taslağı %10/15/20
+// idi; ikinci el satışta zaten %30-90 zarar var ve müzayede ekonomiye para BASMAZ (el değiştirir),
+// vergi yalnız enflasyon frenidir. Bu yüzden %6/%9/%12'ye çekildi + %1 ilan bedeli (spam freni).
+const AUC_TERMS = [
+  { h: 6, tax: .06, nm: '6 saat', d: 'Hızlı satış — az görünürlük, en düşük vergi' },
+  { h: 12, tax: .09, nm: '12 saat', d: 'Dengeli — orta görünürlük' },
+  { h: 24, tax: .12, nm: '24 saat', d: 'En çok teklif — en yüksek vergi' },
+];
+const AUC_FEE = .01; // ilan bedeli (satılmasa da yanar — boş ilan spam'ini önler)
+const aucList = () => (G.auctionsMkt || []).filter(a => !a.done);
+function aucAssets() { // satılabilir varlıkların listesi
+  const out = [];
+  for (const u of G.units) {
+    if (u.kind === 'office' && u.hq) continue; // merkez ofis satılamaz
+    if (u.buildDone > Date.now()) continue;
+    const T = TYPE_OF(u.kind, u.t);
+    if (!T) continue;
+    out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? T.mw + ' MW' : '' });
+  }
+  for (const l of (G.lines || [])) if (lineReady(l))
+    out.push({ kind: 'line', id: l.id, nm: (nearestCityName(l.from) || cellCode(l.from)) + ' → ' + (nearestCityName(l.to) || cellCode(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs) * .5), note: fmtN(l.km) + ' km' });
+  (G.consRights || []).forEach((r, i) =>
+    out.push({ kind: 'share', id: i, nm: CONSORTIUM_ROUTES[r.route].nm + ' — %' + r.share + ' hisse', ico: '⚖️', base: Math.round(CONSORTIUM_ROUTES[r.route].cost * r.share / 100 * .6), note: 'kıtalararası hat hissesi' }));
+  return out;
+}
+window.openAucSheet = () => {
+  hideSheets();
+  const mine = aucList().filter(a => a.mine), others = aucList().filter(a => !a.mine);
+  $('auc_body').innerHTML = `
+    <p class="sub">Kendi mallarını açık artırmaya çıkar ya da başkalarınınkine teklif ver. Teklif verilen para BLOKE edilir; üstüne çıkılırsa iade edilir. Satıştan <b>süreye bağlı vergi</b> kesilir.</p>
+    <button class="bigsell" onclick="openAucNew()">🔨 Yeni İlan Ver</button>
+    <div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🛒 SATIŞTAKİLER (${others.length})</div>
+    ${others.length ? others.map(a => aucCard(a)).join('') : '<p class="sub">Şu an açık ilan yok — ilk ilanı sen ver.</p>'}
+    <div style="font-size:11px;color:var(--gold);margin:12px 0 2px">📤 İLANLARIM (${mine.length})</div>
+    ${mine.length ? mine.map(a => aucCard(a)).join('') : '<p class="sub">Açık ilanın yok.</p>'}`;
+  showSheet('aucsheet');
+};
+function aucCard(a) {
+  const left = Math.max(0, a.until - Date.now());
+  const term = AUC_TERMS.find(t => t.h === a.term) || AUC_TERMS[0];
+  const next = Math.round((a.top || a.start) * (a.top ? 1.08 : 1) / 1e5) * 1e5;
+  return `<div style="border:1px solid ${a.mine ? 'var(--gold)' : 'var(--line)'};border-radius:10px;padding:8px 10px;margin:6px 0">
+    <div style="font-size:12.5px;font-weight:700">${a.ico} ${a.nm}</div>
+    <div class="sub">${a.note ? a.note + ' · ' : ''}satıcı: ${a.seller} · ⏳ ${fmtHrs(left / 36e5)} · vergi %${term.tax * 100}</div>
+    <div class="qline" style="font-size:11.5px"><span>Açılış: <b>${fmt(a.start)}</b></span><span>En yüksek: <b class="${a.top ? 'pos' : ''}">${a.top ? fmt(a.top) + ' — ' + a.topBy : 'teklif yok'}</b></span></div>
+    ${a.mine ? `<div class="sub">Satılırsa eline geçecek: <b>${fmt(Math.round((a.top || 0) * (1 - term.tax)))}</b></div>`
+      : `<button class="bigsell half" onclick="aucBid(${a.id})" ${G.cash < next - (a.myEscrow || 0) || a.topBy === G.company ? 'disabled' : ''}>${a.topBy === G.company ? '🏆 Öndesin' : '🔨 Teklif Ver — ' + fmt(next)}</button>`}
+  </div>`;
+}
+window.openAucNew = () => {
+  const assets = aucAssets();
+  if (!assets.length) { toast('Satılacak varlığın yok', 'warn'); return; }
+  $('modal').innerHTML = `
+    <h2>🔨 Yeni İlan</h2>
+    <p class="sub">Önce varlık, sonra süre seç. Açılış fiyatı piyasa değerine göre önerilir; ilan bedeli %${AUC_FEE * 100} (satılmasa da yanar).</p>
+    ${assets.map((x, i) => `<button class="bigsell half" style="text-align:left" onclick="aucPickTerm(${i})">
+      ${x.ico} <b>${x.nm}</b><div class="sub">${x.note ? x.note + ' · ' : ''}önerilen açılış: ${fmt(x.base)}</div></button>`).join('')}
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+  window.__aucAssets = assets;
+};
+window.aucPickTerm = i => {
+  const x = window.__aucAssets[i];
+  $('modal').innerHTML = `
+    <h2>⏳ Süre Seç — ${x.nm}</h2>
+    <p class="sub">Uzun süre daha çok teklif çeker ama vergisi yüksektir.</p>
+    ${AUC_TERMS.map(t => `<button class="bigsell half" style="text-align:left" onclick="closeModal();aucCreate(${i},${t.h})">
+      <b>${t.nm}</b> — vergi %${t.tax * 100}<div class="sub">${t.d} · net tahmini: ${fmt(Math.round(x.base * (1 - t.tax)))}</div></button>`).join('')}
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.aucCreate = (i, hours) => {
+  const x = window.__aucAssets[i];
+  const fee = Math.round(x.base * AUC_FEE);
+  if (G.cash < fee) { toast('İlan bedeli için ' + fmt(fee) + ' gerekli', 'warn'); return; }
+  G.cash -= fee;
+  G.auctionsMkt = G.auctionsMkt || [];
+  G.auctionsMkt.push({
+    id: G.nextId++, mine: true, seller: G.company, ico: x.ico, nm: x.nm, note: x.note,
+    assetKind: x.kind, assetId: x.id, start: x.base, top: 0, topBy: null, term: hours,
+    until: Date.now() + hours * 36e5 / (G.demo ? 60 : 1), _bt: Date.now(),
+  });
+  toast('🔨 İlan yayınlandı — ' + hours + ' saat (ilan bedeli ' + fmt(fee) + ')', '', null, 0, true);
+  beep(600, .1);
+  save(); openAucSheet();
+};
+window.aucBid = id => {
+  const a = aucList().find(x => x.id === id);
+  if (!a || a.mine) return;
+  const next = Math.round((a.top || a.start) * (a.top ? 1.08 : 1) / 1e5) * 1e5;
+  const need = next - (a.myEscrow || 0);
+  if (G.cash < need) { toast('Teklif için ' + fmt(need) + ' daha gerekli', 'warn'); return; }
+  G.cash -= need;
+  a.myEscrow = next; a.top = next; a.topBy = G.company;
+  toast('🔨 Teklifin verildi: ' + fmt(next) + ' (bloke)', '');
+  beep(650, .1);
+  save(); openAucSheet();
+};
+function aucTick() { // bot teklifleri + süre bitişi
+  const list = G.auctionsMkt || [];
+  let changed = false;
+  for (const a of list) {
+    if (a.done) continue;
+    // botlar ara ara teklif yükseltir (kendi ilanına da, başkasınınkine de)
+    if (Date.now() - (a._bt || 0) > 45000) {
+      a._bt = Date.now();
+      const cap = a.start * (1.1 + hash01(a.id, 3, 7) * .8); // botun cüzdan tavanı
+      const nb = Math.round((a.top || a.start) * 1.08 / 1e5) * 1e5;
+      if (nb <= cap && hash01(a.id, Math.floor(Date.now() / 45000), 11) > .55 && a.topBy !== 'BOT') {
+        if (a.myEscrow) { G.cash += a.myEscrow; a.myEscrow = 0; toast('🔨 ' + a.nm + ' ilanında üstüne çıkıldı — teklifin iade edildi', 'warn', 'auc' + a.id, 20000); }
+        a.top = nb; a.topBy = WORLD_PLAYERS[Math.floor(hash01(a.id, 5, 13) * WORLD_PLAYERS.length)];
+        changed = true;
+      }
+    }
+    if (Date.now() >= a.until) { aucResolve(a); changed = true; }
+  }
+  if (changed) { save(); if ($('aucsheet').classList.contains('show')) openAucSheet(); }
+}
+function aucResolve(a) {
+  a.done = true;
+  const term = AUC_TERMS.find(t => t.h === a.term) || AUC_TERMS[0];
+  if (a.mine) {
+    if (!a.top) { toast('🔨 İlanın teklif almadan kapandı: ' + a.nm, 'warn', null, 0, true); return; }
+    const net = Math.round(a.top * (1 - term.tax));
+    G.cash += net;
+    aucRemoveAsset(a);
+    toast('🔨 SATILDI! ' + a.nm + ' → ' + a.topBy + ' · ' + fmt(a.top) + ' (vergi %' + term.tax * 100 + ' → eline ' + fmt(net) + ')', '', null, 0, true);
+    addMail(a.topBy, 'Müzayede: ' + a.nm, `${a.nm} ilanını ${fmt(a.top)} ile kazandım, devir tamamlandı. İyi ticaretler.`);
+  } else if (a.topBy === G.company) {
+    aucGrantAsset(a);
+    toast('🏆 MÜZAYEDEYİ KAZANDIN: ' + a.nm + ' — ' + fmt(a.top), '', null, 0, true);
+    a.myEscrow = 0;
+  } else if (a.myEscrow) {
+    G.cash += a.myEscrow; a.myEscrow = 0;
+    toast('🔨 ' + a.nm + ' ilanını kaybettin — teklifin iade edildi', 'warn');
+  }
+}
+function aucRemoveAsset(a) { // satılan varlık senden çıkar
+  if (a.assetKind === 'unit') {
+    const i = G.units.findIndex(u => u.id === a.assetId);
+    if (i >= 0) { const u = G.units[i]; if (unitMarkers[u.id]) { unitMarkers[u.id].remove(); delete unitMarkers[u.id]; } G.units.splice(i, 1); }
+    ensureConnections();
+  } else if (a.assetKind === 'line') {
+    const i = (G.lines || []).findIndex(l => l.id === a.assetId);
+    if (i >= 0) G.lines.splice(i, 1);
+  } else if (a.assetKind === 'share') {
+    if (G.consRights && G.consRights[a.assetId]) G.consRights.splice(a.assetId, 1);
+  }
+  refreshUnitMarkers(); drawOverlay();
+}
+function aucGrantAsset(a) { // kazandığın varlık sana geçer (bot ilanları simülasyon)
+  toast('📦 ' + a.nm + ' devralındı', '');
+}
+// ── Bot ilanları: pazar boş kalmasın (deterministik, 3 saatte bir tazelenir)
+function seedAucMarket() {
+  G.auctionsMkt = G.auctionsMkt || [];
+  const slot = Math.floor(Date.now() / (3 * 36e5));
+  if (G._aucSlot === slot) return;
+  G._aucSlot = slot;
+  G.auctionsMkt = G.auctionsMkt.filter(a => a.mine && !a.done); // eski bot ilanlarını temizle
+  for (let k = 0; k < 3; k++) {
+    const h = hash01(slot, k, 29);
+    const types = Object.keys(PLANT_TYPES);
+    const t = types[Math.floor(h * types.length)];
+    const T = PLANT_TYPES[t];
+    const term = AUC_TERMS[Math.floor(hash01(slot, k, 31) * 3)].h;
+    G.auctionsMkt.push({
+      id: G.nextId++, mine: false, seller: WORLD_PLAYERS[Math.floor(hash01(slot, k, 37) * WORLD_PLAYERS.length)],
+      ico: T.ico, nm: T.nm + ' (ikinci el)', note: T.mw + ' MW · %' + (60 + Math.floor(h * 35)) + ' sağlam',
+      assetKind: 'unit', assetId: -1, start: Math.round(T.cost * (.45 + h * .3) / 1e5) * 1e5,
+      top: 0, topBy: null, term, until: Date.now() + term * 36e5 / (G.demo ? 60 : 1), _bt: Date.now(),
+    });
+  }
+}
+
 // ═══ 💬 SOSYAL KATMAN: SOHBET · POSTA · ARKADAŞLIK (patron tasarımı) ═══
 // Sunucu bağlıyken gerçek oyuncular arası; şimdilik canlı simülasyon (aynı arayüz, aynı veri modeli).
 const CHAT_ROOMS = {
@@ -2968,7 +3153,7 @@ function migrate(s) {
   s.research.lvl = Object.assign({ coalcap: 0, gascap: 0, office: 0, liccap: 0 }, s.research.lvl);
   s.capLic = s.capLic || {};
   s.lines = s.lines || []; s.mail = s.mail || []; s.friends = s.friends || []; s.friendReqs = s.friendReqs || [];
-  s.chat = s.chat || {}; s.boughtOthers = s.boughtOthers || {};
+  s.chat = s.chat || {}; s.boughtOthers = s.boughtOthers || {}; s.auctionsMkt = s.auctionsMkt || [];
   if (s.showOthers === undefined) s.showOthers = true;
   // kapasite lisansı sonradan geldi: eski kayıtların mevcut kurulu gücü hangi kademeyi gerektiriyorsa BEDAVA verilir
   for (const cat2 of Object.keys(CAP_TIERS)) {
@@ -3752,7 +3937,7 @@ function tutTargetUnit(u) { // satış görevlerinde dolu depolar altın parlar
   return (i === 1 || i === 5) && u.kind === 'store' && u.buildDone <= Date.now() && u.stored > .05;
 }
 // her 500 ms: ipucu çubuğu + hedef öğe parlatma + hedef dışı KİLİT + bitiş kontrolü (ödül otomatik)
-const TUT_BAR = ['buildbtn', 'infobtn', 'viewbtn', 'allybtn', 'mailbtn'];
+const TUT_BAR = ['buildbtn', 'infobtn', 'viewbtn', 'allybtn', 'aucbtn', 'mailbtn'];
 // 📜 Ruhsat görevi: KOMŞU kare haritada yanıp söner (patron isteği — oyuncu nereye tıklayacağını görsün)
 let tutCellRect = null, tutCellIdCur = null;
 function clearTutCell() { if (tutCellRect) { tutCellRect.remove(); tutCellRect = null; tutCellIdCur = null; } }
@@ -4259,6 +4444,7 @@ $('infobtn').addEventListener('click', () => setMode(MODE === 'info' ? null : 'i
 $('modecancel').addEventListener('click', () => { PENDING = null; setMode(null); });
 $('viewbtn').addEventListener('click', openViewSheet);
 $('mailbtn').addEventListener('click', () => { const open = $('mailsheet').classList.contains('show'); hideSheets(); if (!open) openMailSheet(); });
+$('aucbtn').addEventListener('click', () => { const open = $('aucsheet').classList.contains('show'); hideSheets(); if (!open) { seedAucMarket(); openAucSheet(); } });
 $('chathandle').addEventListener('click', () => {
   if (!G || !G._started) return;
   $('chatpanel').classList.add('open'); $('chathandle').style.display = 'none';
@@ -4371,7 +4557,7 @@ function frameBody(ts) {
         save();
         if ($('companysheet').classList.contains('show')) openCompanySheet();
       }
-      allyTick(); allyCallTick(); consortiumTick(); // 🤝 ihale · 💰 bağış çağrısı · 🌍 konsorsiyum
+      allyTick(); allyCallTick(); consortiumTick(); aucTick(); // 🤝 ihale · 💰 bağış · 🌍 konsorsiyum · 🔨 müzayede
       // ⏫ depo kapasite inşaatı bitti mi?
       for (const d of G.units) {
         if (d.kind === 'fueldepot' && d.upgUntil && Date.now() >= d.upgUntil) {
