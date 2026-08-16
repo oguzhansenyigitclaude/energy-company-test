@@ -97,7 +97,7 @@
 
   /* ── alt bar ── */
   #bottombar{flex:0 0 auto;display:flex;gap:5px;padding:7px 8px 10px;background:var(--panel);border-top:1px solid var(--line);z-index:20}
-  #bottombar button{flex:1;padding:10px 2px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+  #bottombar button{flex:1;min-height:46px;padding:11px 2px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
   #maintbtn,#homebtn,#menubtn{flex:0 0 46px;font-size:15px}
   #pricebtn{color:var(--acc);flex:1.3}
   #bottombar button.on{border-color:var(--acc2);color:var(--acc2);background:#16283e}
@@ -145,9 +145,9 @@
   .pdesc{font-size:10.5px;color:var(--dim)}
   .pbuy{flex:0 0 auto;text-align:center}
   .pprice{font-size:13px;font-weight:800;color:var(--acc);margin-bottom:5px}
-  .pbuy button{padding:9px 14px;border-radius:9px;border:none;background:var(--acc);color:#08110c;font-weight:800;font-size:12px;cursor:pointer}
+  .pbuy button{min-height:44px;padding:11px 14px;border-radius:9px;border:none;background:var(--acc);color:#08110c;font-weight:800;font-size:12px;cursor:pointer}
   .pbuy button:disabled{background:#2a3346;color:var(--dim)}
-  .ghostmini{display:block;width:100%;margin-top:5px;padding:6px 0;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:10.5px;font-weight:700;cursor:pointer}
+  .ghostmini{display:block;width:100%;min-height:34px;margin-top:5px;padding:8px 0;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:10.5px;font-weight:700;cursor:pointer}
   .detimg{position:relative;width:100%;height:200px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:74px;margin-bottom:10px}
   .detimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .detcols{display:flex;gap:8px;margin-bottom:8px}
@@ -305,7 +305,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-16 00:00) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-16 00:21) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -357,7 +357,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-16 00:00)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-16 00:21)'; // deploy.js yayında tarih damgası ekler
 // Büyük ekonomi gösterimi: $1,2M · $3,4B · $1,1T (milyar-trilyon seviyelerine çıkan kasalar okunur kalsın)
 function fmt(n) {
   const a = Math.abs(n), s = n < 0 ? '-' : '';
@@ -848,8 +848,10 @@ const jitter = ll => [ll[0] + (Math.random() - .5) * CELL * .5, ll[1] + (Math.ra
 
 // ── 🔄 OTOMATİK GÜNCELLEME (test sürümü): sunucudaki version.json ile karşılaştır, eskiyse tazele.
 // WebView/tarayıcı index.html'i önbelleğe aldığı için sürüm sorgusuyla ZORLA yeni kopya çekilir.
-(async () => {
+async function checkUpdate() {
   if (location.protocol === 'file:') return; // yerel dosyada güncelleme kontrolü yok
+  if (document.querySelector('.sheet.show') || $('overlay').classList.contains('show')) return; // panel/modal açıkken ekranı elinden alma
+  if (window.G && G.units && stores().some(s => s.disch)) return; // satış sürerken kesme
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
@@ -858,10 +860,14 @@ const jitter = ll => [ll[0] + (Math.random() - .5) * CELL * .5, ll[1] + (Math.ra
       const seen = sessionStorage.getItem('ec_upd');
       if (seen === v) return; // bu oturumda zaten denendi — sonsuz döngü koruması
       sessionStorage.setItem('ec_upd', v);
+      try { save(); } catch (e) {}
       location.replace(location.pathname + '?v=' + encodeURIComponent(v));
     }
   } catch (e) {}
-})();
+}
+checkUpdate();
+// APK'da uygulama simgeden geri açılınca sayfa YENİDEN YÜKLENMEZ — o yüzden öne gelince tekrar bak
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(checkUpdate, 1200); });
 
 // ── 🐞 TEST SÜRÜMÜ HATA YAKALAMA: son 3 hata kaydedilir, "Hata Bildir" raporuna eklenir ──
 const ERRLOG = [];
@@ -974,7 +980,11 @@ async function surveyCell(cell) {
     const sund = (fr.daily && fr.daily.sunshine_duration) || [];
     const sunH = sund.length ? sund.reduce((a, b) => a + (b || 0), 0) / sund.length / 3600 : null;
     WX.survey[cell] = { ok: 1, elev: er && er.elevation ? Math.round(er.elevation[0]) : null, wAvg, sunH };
-  } catch (e) { delete WX.survey[cell]; }
+  } catch (e) {
+    // BUGFIX: önbelleği SİLMEK sonsuz fetch döngüsü yaratıyordu (ağ kopunca panel titriyor, telefon ısınıyordu).
+    // Hatayı İŞARETLE: 964'teki koruma devreye girer, oyuncu "Tekrar dene" ile elle yeniler.
+    WX.survey[cell] = { err: 1, at: Date.now() };
+  }
   if (SEL.cell === cell && $('cellsheet').classList.contains('show')) openCellSheet(cell, SEL.ll);
   // açık birim sayfası bu karedeyse tazele (ikinci el değeri keşifle netleşir)
   if ($('unitsheet').classList.contains('show') && window.__lastUnit) {
@@ -982,6 +992,8 @@ async function surveyCell(cell) {
     if (lu && lu.cell === cell) openUnitSheet(lu.id);
   }
 }
+
+window.retrySurvey = c => { if (WX.survey) delete WX.survey[c]; surveyCell(c); openCellSheet(c, SEL.ll); };
 
 // ── Simüle hava (canlı veri yoksa / çevrimdışı hesap için) & piyasa ──
 const smoothNoise = (t, s) => (Math.sin(t * .9 + s * 7.3) + Math.sin(t * .23 + s * 3.1) * .6 + Math.sin(t * .061 + s) * .4) / 2;
@@ -1162,7 +1174,8 @@ window.startDischarge = (id, frac, adMult, targetCell, quiet) => {
   grantDailyResPt();
   st.disch = { left: amt, mult: adMult || 1, target: targetCell || null, sold: 0, gain: 0, full: frac >= .99 };
   // PATRON KURALI: boşaltma boyunca bu depoya bağlı cihazlar KAPANIR ve yeniden açılamaz (bitince açılabilir)
-  plants().forEach(p => { if (p.st === st.id) p.on = false; });
+  // _autoOff: OYUN kapattı (oyuncu değil) — boşaltma bitince/çevrimdışı dönüşte otomatik geri açılır
+  plants().forEach(p => { if (p.st === st.id && p.on) { p.on = false; p._autoOff = true; } });
   const T = STORE_TYPES[st.t];
   if (!quiet) toast('⚡ Boşaltma başladı: ' + fmtE(amt) + ' MWh — ~' + Math.max(1, Math.ceil(dischSecOf(T) * amt / T.cap)) + ' sn' + (targetCell ? ' · 🔁 ' + cellCode(targetCell) + ' pazarına (-%10 aktarım)' : ''), '');
   beep(600, .08);
@@ -1181,6 +1194,7 @@ function dischargeTick(dtSec) {
     }
     if (d.left <= .005 || st.stored <= .001) {
       st.disch = null;
+      plants().forEach(p => { if (p.st === st.id && p._autoOff) { p.on = true; p._autoOff = false; } }); // oyunun kapattıkları geri açılır
       toast('💰 Satış tamam: ' + fmtE(d.sold) + ' MWh = ' + fmt(d.gain) + (d.mult > 1 ? ' (🎬 +%15 dahil)' : '') + (d.target ? ' · 🔁 ' + cellCode(d.target) : ''), '');
       beep(660, .09); beep(990, .12);
       $('restartbar').style.display = 'block'; // bağlı cihazlar boşaltma başında durdu — şimdi yeniden başlatılabilir
@@ -1217,7 +1231,7 @@ function restartAll() {
   plants().forEach(u => {
     const s2 = u.st ? storeById(u.st) : null;
     if (s2 && s2.disch) { locked++; return; } // boşaltması süren depoya bağlı cihaz AÇILAMAZ (patron kuralı)
-    u.on = true;
+    u.on = true; u._autoOff = false;
   });
   $('restartbar').style.display = 'none';
   toast(locked ? '🔄 Santraller başlatıldı — ' + locked + ' cihaz depo boşaltması bitince açılabilir' : '🔄 Tüm santraller yeniden başlatıldı', locked ? 'warn' : '');
@@ -1819,13 +1833,17 @@ function offlineProgress() {
   let produced = 0, wasted = 0, fuel = 0;
   const earnedB = G.totalEarned, soldB = G.totalSold;
   // yarım kalan boşaltmalar: sen yokken tamamlanmış sayılır (kalan enerji anlık satılır)
+  // KRİTİK: santralleri ÜRETİM DÖNGÜSÜNDEN ÖNCE geri aç — yoksa uzakta geçen sürede üretim SIFIR olur
   let dischN = 0, dischGain = 0;
   for (const st of stores()) {
     if (!st.disch) continue;
     const d = st.disch;
     dischGain += sellChunk(st, Math.min(d.left, st.stored), d.target, d.mult); // kalan kısım satılır
     st.disch = null; dischN++;
+    plants().forEach(p => { if (p.st === st.id && p._autoOff) { p.on = true; p._autoOff = false; } });
   }
+  // emniyet ağı: boşaltması bitmiş ama açılmamış cihaz kalmışsa kurtar
+  plants().forEach(p => { if (p._autoOff && !(p.st && storeById(p.st) && storeById(p.st).disch)) { p.on = true; p._autoOff = false; } });
   let remainMin = gapSec / 60, t = 0;
   while (remainMin > 0.05) { // 15 dk'lık adımlar + KALAN artık da işlenir (eskiden atılıyordu)
     const d = Math.min(15, remainMin);
@@ -1860,11 +1878,16 @@ function offlineProgress() {
   $('overlay').classList.add('show');
   save();
 }
-window.closeModal = () => $('overlay').classList.remove('show');
+window.closeModal = () => {
+  $('overlay').classList.remove('show');
+  // emniyet: kuruluş sırasında modal kapanırsa ekran boş kalmasın — karşılama ekranını geri getir
+  if ($('app').classList.contains('wiz') && !$('wizsheet').classList.contains('show')) setTimeout(() => { if (!G || !G._started) wizardStart(); }, 50);
+};
 
 // ── 🔔 BİLDİRİM: İSTEĞE BAĞLI (rakip zorluyor ve nefret ediliyor — bizde hayır diyen de rahatça oynar) ──
 function askNotifPermission() {
   if (!G || G.notifAsked) return;
+  if (!('Notification' in window)) { G.notifAsked = true; save(); return; } // APK/WebView: bildirim API'si yok — boş yere sorma
   G.notifAsked = true; save();
   $('modal').innerHTML = `
     <h2>🔔 Depon dolunca haber verelim mi?</h2>
@@ -1983,12 +2006,16 @@ function initMap(center, zoom) {
   };
   fetch('vendor/world50m.json').then(r => r.json()).then(drawWorld)
     .catch(() => fetch('vendor/world.geo.json').then(r => r.json()).then(drawWorld)
-    .catch(() => { $('maploading').innerHTML = '⚠️ Harita sınır verisi yüklenemedi'; }));
+    .catch(() => { // BUGFIX: hata mesajı gizli elemana yazılıyordu — göster ve tekrar dene sun
+      const el = $('maploading');
+      el.style.display = 'flex';
+      el.innerHTML = '⚠️ Harita yüklenemedi (bağlantını kontrol et)<button class="pickbtn" style="max-width:200px" onclick="location.reload()">🔄 Tekrar dene</button>';
+    }));
   fetch('vendor/tr-iller.geo.json').then(r => r.json()).then(gj => {
     L.geoJSON(gj, { pane: 'land', renderer: landCanvas, interactive: false, smoothFactor: 1.4, style: { fill: false, color: '#e8f5ec', weight: .8, opacity: .5 } }).addTo(map);
   }).catch(() => {});
   map.setView(center, zoom);
-  $('maploading').style.display = 'none';
+  // NOT: 'Harita yükleniyor' göstergesi artık sınır verisi ÇİZİLİNCE kapanır (drawWorld) — erken gizleme kalktı
   // konteyner boyutu değişince haritayı tazele (şerit halinde çizilme hatasının kökten çözümü)
   setTimeout(() => map.invalidateSize(), 80);
   setTimeout(() => map.invalidateSize(), 600);
@@ -2216,7 +2243,8 @@ function openCellSheet(c, ll, mode) {
       <tr><td>⛰️ Rakım</td><td>${sv.elev != null ? fmtN(sv.elev) + ' m' : '—'}</td></tr>
       <tr><td>🌬️ Rüzgar 100m (7 gün ort.)</td><td class="${sv.wAvg >= 6 ? 'pos' : sv.wAvg < 4 ? 'neg' : ''}">${sv.wAvg != null ? sv.wAvg.toFixed(1) + ' m/s — ' + wNote : '—'}</td></tr>
       <tr><td>☀️ Güneşlenme (7 gün ort.)</td><td class="${sv.sunH >= 7 ? 'pos' : sv.sunH < 5 ? 'neg' : ''}">${sv.sunH != null ? sv.sunH.toFixed(1) + ' saat/gün — ' + sNote : '—'}</td></tr>`;
-    } else svRows = `<tr><td colspan="2">🛰️ Saha keşfi yükleniyor... (canlı rakım + rüzgar + güneş verisi)</td></tr>`;
+    } else if (sv && sv.err) svRows = `<tr><td colspan="2">🛰️ Saha verisi alınamadı (çevrimdışı olabilirsin) — <span class="lnk" onclick="retrySurvey('${c}')">tekrar dene</span></td></tr>`;
+  else svRows = `<tr><td colspan="2">🛰️ Saha keşfi yükleniyor... (canlı rakım + rüzgar + güneş verisi)</td></tr>`;
     $('cs_occupancy').innerHTML = `
     <table class="ledger" style="margin:4px 0">
       ${svRows}
@@ -2691,7 +2719,8 @@ function tutTick() {
   } else clearTutCell();
   if (tutActive()) { // patron isteği: eğitimde hedef seçenek dışındaki butonlar KİLİTLİ
     // İnşa her zaman açık kalır (soft-lock önleme: deposunu satan oyuncu kilitli kalmasın)
-    const allow = task.el ? [task.el] : ['buildbtn'].concat(i === 5 ? ['pricebtn'] : []);
+    // 🏠 Merkeze git HER ZAMAN açık (haritayı kaydıran oyuncu tesislerini kaybetmesin) + İnşa hep açık
+    const allow = ['homebtn', 'buildbtn'].concat(task.el ? [task.el] : []).concat(i === 5 ? ['pricebtn'] : []);
     TUT_BAR.forEach(id => { if (!allow.includes(id)) $(id).disabled = true; });
     $('drawerhandle').disabled = true;
     $('drawer').classList.remove('open');
@@ -2908,7 +2937,7 @@ function wizardStart() {
     <p style="text-align:center;font-size:11px;color:var(--gold)">Development of Company games</p>
     <p style="text-align:center">Gerçek dünya haritasında enerji imparatorluğunu kur.<br>Adil · Şeffaf · Günde ~2 saat yeter.</p>
     <button class="primary" onclick="wizMapStart()">🌍 Yeni Oyun — Haritadan Başla</button>
-    <p style="text-align:center;font-size:10px;margin-top:10px">Prototip 0.6 — harita ana oynanış ekranı</p>`;
+    <p style="text-align:center;font-size:10px;margin-top:10px">${BUILD_TAG} — test sürümü</p>`;
   $('overlay').classList.add('show');
 }
 // İki adımlı kuruluş: 1) Ülke (liste VEYA haritadan) 2) İl/şehir (liste VEYA haritadaki noktadan) — rakiple aynı akış
@@ -3128,6 +3157,14 @@ document.addEventListener('visibilitychange', () => {
 let lastTs = 0, uiAcc = 0, histAcc = 0, mkAcc = 0, aucT = 0, sheetTouchTs = 0;
 $('unitsheet').addEventListener('pointerdown', () => sheetTouchTs = performance.now(), { passive: true });
 function frame(ts) {
+  try { frameBody(ts); } catch (e) { // tek bir hata simülasyonu kalıcı öldürmesin (test sürümü koruması)
+    ERRLOG.push('frame: ' + (e && e.message));
+    if (ERRLOG.length > 3) ERRLOG.shift();
+  }
+  lastTs = ts;
+  requestAnimationFrame(frame);
+}
+function frameBody(ts) {
   if (G && G._started) {
     if (lastTs) {
       const dtSec = Math.min(1, (ts - lastTs) / 1000);
@@ -3201,8 +3238,6 @@ function frame(ts) {
     // BAĞLANTI YOK bugfix: bağlantılar periyodik kendini onarır (eskiden sadece kapat-aç düzeltiyordu)
     if (mkAcc > 2500) { mkAcc = 0; ensureConnections(); refreshUnitMarkers(); }
   }
-  lastTs = ts;
-  requestAnimationFrame(frame);
 }
 if (!window.L) $('maploading').innerHTML = '⚠️ Harita kütüphanesi yüklenemedi — internet bağlantısı gerekli (prototip)';
 // ── ANDROID GERİ TUŞU (yalnız APK/Capacitor içinde çalışır; tarayıcıda etkisiz) ──
@@ -3210,10 +3245,17 @@ if (!window.L) $('maploading').innerHTML = '⚠️ Harita kütüphanesi yüklene
 try {
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
     window.Capacitor.Plugins.App.addListener('backButton', () => {
-      if ($('overlay').classList.contains('show')) { closeModal(); return; }
+      const inWiz = $('app').classList.contains('wiz'); // kuruluş sihirbazı
+      if ($('overlay').classList.contains('show')) {
+        // BUGFIX: açılış modali kapatılırsa ekranda tıklanacak hiçbir şey kalmıyordu (kilitlenme)
+        if (inWiz && !$('wizsheet').classList.contains('show')) return;
+        closeModal();
+        return;
+      }
+      if (inWiz && $('wizsheet').classList.contains('show')) { $('wizback').click(); return; } // sihirbazda geri = bir adım geri
       if (document.querySelector('.sheet.show')) { hideSheets(); return; }
       if ($('drawer').classList.contains('open')) { $('drawer').classList.remove('open'); return; }
-      if (MODE) { setMode(null); return; }
+      if (MODE || PENDING) { PENDING = null; setMode(null); return; } // yerleştirme iptali de temizlensin
       window.Capacitor.Plugins.App.exitApp();
     });
   }
