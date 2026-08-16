@@ -1,0 +1,4 @@
+{
+  "_aciklama": "GERÇEK ONLINE SUNUCU AYARI. 'db' alanı boşken oyun simülasyonla çalışır (tek kişilik). Firebase Realtime Database adresini yazınca oyun otomatik olarak gerçek çok oyunculuya geçer: tesisler, sohbet, posta, arkadaşlar ve çevrimiçi durumu tüm oyuncular arasında paylaşılır. Kurulum adımları: docs/online-sunucu-kurulumu.md",
+  "db": ""
+}
