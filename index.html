@@ -399,7 +399,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-16 23:03) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-16 23:18) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -501,7 +501,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-16 23:03)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-16 23:18)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1026,7 +1026,7 @@ function studyBlockHTML(ct) {
     <table class="ledger">
       ${r.oneriler.map((o, i) => `<tr>
         <td><b>${i + 1}.</b> ${o.ico} <b>${o.tur}</b> —
-          <span class="lnk" style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${o.ll[0]},${o.ll[1]},10,'${o.sehir.replace(/'/g, '')}')">${o.sehir}</span></td>
+          <span class="lnk" style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${o.ll[0]},${o.ll[1]},10,'${jsStr(o.sehir)}')">${o.sehir}</span></td>
         <td><span class="${o.kalite >= 70 ? 'pos' : o.kalite < 40 ? 'neg' : ''}">kaynak %${o.kalite}</span>
           <span class="sub"> · talep ${fmtN(o.talep)} · fiyat ×${o.carpan}</span></td></tr>`).join('')}
     </table>
@@ -1295,6 +1295,14 @@ const TRANSFER_FEE = 0.10; // başka bölgenin pazarına satışta -%10 aktarım
 // Kanada'daki depodan İstanbul'a %10 kesintiyle satılabiliyordu — bu, milyon dolarlık
 // ⚡ nakil hattı sistemini tamamen anlamsız kılıyordu. Uzak pazar = hat şart.
 const NEIGHBOR_KM = 120;
+// Aynı karede DAHA ÖNCE satılmış varsayılan miktarı hesaba katan sürüm (toplu satış tahmini için)
+function sellRevenueAfter(cell, mwh, oncekiMwh) {
+  const base = cellPriceNow(cell);
+  const kalan = Math.max(0, demandLeft(cell) - (oncekiMwh || 0));
+  const inD = Math.min(mwh, kalan), excess = mwh - inD;
+  const gb = 1 + greenBonus();
+  return { gain: (inD * base + excess * base * DUMP_RATE) * gb, inD, excess, remaining: kalan, price: base, green: gb - 1 };
+}
 function sellRevenue(cell, mwh) {
   const base = cellPriceNow(cell);
   const remaining = demandLeft(cell);
@@ -1372,7 +1380,9 @@ const officeCovers = cell => { const c = cellCenter(cell); return offices().some
 // Tutorial (Başlarken): tutGuide = ipuçları + otomatik ödül; tutActive = hız ayrıcalıkları + UI kilidi.
 // Ayrıcalıklar yalnız kuruluşun İLK 60 DAKİKASINDA — eğitimi bilerek bitirmeyip süresiz ×10 sömürüsü kapalı.
 const tutGuide = () => G && G.company && !G.starterClaimed && !G.demo;
-const tutActive = () => tutGuide() && Date.now() - (G.founded || 0) < 3600e3;
+// ⚠️ HATA AVI (kritik): fark NEGATİF olunca da "< 3600e3" doğru çıkıyordu. Cihaz saatini
+// geriye alan oyuncuda eğitim ×10 KALICILAŞIYOR ve toplam hız ×100'e fırlıyordu. dt >= 0 şart.
+const tutActive = () => { const dt = Date.now() - (G.founded || 0); return tutGuide() && dt >= 0 && dt < 3600e3; };
 const TUT_MULT = 10; // tutorial üretim çarpanı (×10 başlangıç bonusunun ÜSTÜNE — sadece eğitim penceresinde)
 const speedMult = () => boostFactor() * (tutActive() ? TUT_MULT : 1); // TEK hız kaynağı: sim, çevrimdışı, bildirim, ETA hepsi bunu kullanır
 
@@ -1849,7 +1859,13 @@ function sellChunk(st, mwh, targetCell, mult) {
     G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain;
     G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
     // kWh payı hattı İŞLETEN ittifakın kasasına; hissedar olarak kullanıyorsan kasan yoksa pay yanmaz, sende kalır
-    if (!cn.asShareholder && G.ally) G.ally.treasury = (G.ally.treasury || 0) + mwh * cn.route.kwhFee * 1000;
+    // ⚠️ HATA AVI (kritik): kasa yalnız YERELDE artıyordu; 12 sn sonra allySync kasayı
+    // defterden yeniden hesaplayıp bu geliri SİLİYORDU. Artık deftere de yazılıyor.
+    if (!cn.asShareholder && G.ally) {
+      const pay = mwh * cn.route.kwhFee * 1000;
+      G.ally.treasury = (G.ally.treasury || 0) + pay;
+      if (allyOnline()) NET.allyLedger(G.allyId, pay, 'konsorsiyum hat payı').catch(() => {});
+    }
     return gain;
   }
   // 🤝 İTTİFAK HATTI: başkan çekti, ÜYE kullanıyor. Taşıma ücretsiz; yalnız MWh başına
@@ -1863,7 +1879,9 @@ function sellChunk(st, mwh, targetCell, mult) {
     G.cash += gain;
     G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain;
     G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
-    G.ally.treasury = (G.ally.treasury || 0) + mwh * ALLY_LINE_FEE;
+    const bakim = mwh * ALLY_LINE_FEE;
+    G.ally.treasury = (G.ally.treasury || 0) + bakim;
+    if (allyOnline()) NET.allyLedger(G.allyId, bakim, 'ittifak hattı bakım payı').catch(() => {});
     return gain;
   }
   const line = targetCell && targetCell !== st.cell ? (G.lines || []).find(l => l.from === st.cell && l.to === targetCell && lineReady(l)) : null;
@@ -1885,8 +1903,12 @@ function sellChunk(st, mwh, targetCell, mult) {
     const cnt = Math.min(mwh, room);
     at.delivered = Math.min(at.need, at.delivered + cnt);
     at.mine += cnt;
-    gain = mwh * cellPriceNow(cell) * (1 + greenBonus()) * (mult || 1);
-    if (cnt < mwh - .01) toast('🤝 Katkı tavanına ulaştın (%40) — kalan satış normal sayıldı', 'warn', 'allycap', 30000);
+    // ⚠️ HATA AVI (yüksek): tavan yalnız SAYACA uygulanıyordu, ÖDEMEYE değil — tavan üstü MWh
+    // de sınırsız talep fiyatından ödeniyordu. Artık tavan üstü kısım normal satış kurallarına
+    // (kalan talep + DUMP_RATE) tabi; mesaj da gerçeği söylüyor.
+    const fazla = sellRevenue(cell, mwh - cnt);
+    gain = (cnt * cellPriceNow(cell) * (1 + greenBonus()) + fazla.gain) * (mult || 1);
+    if (cnt < mwh - .01) toast('🤝 Katkı tavanına ulaştın (%40) — kalan ' + fmtE(mwh - cnt) + ' MWh normal fiyattan satıldı', 'warn', 'allycap', 30000);
   } else {
     const r = sellRevenue(cell, mwh);
     gain = r.gain * (mult || 1);
@@ -1898,8 +1920,9 @@ function sellChunk(st, mwh, targetCell, mult) {
   G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain; // ofis bölge raporu (kaynak bölgeye yazılır)
   const wasBoosted = G.totalEarned < BOOST_CAP;
   G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
-  // 🌍 kıtalararası hat devredeyse: taşınan her MWh'den ittifak KASASINA pay (patron: "kWh başına şu kadarı ittifak kasasına")
-  if (consortiumLive()) G.ally.treasury = (G.ally.treasury || 0) + mwh * CONSORTIUM_ROUTES[G.ally.consortium.route].kwhFee * 1000;
+  // ⚠️ HATA AVI (yüksek): burası hattı HİÇ KULLANMAYAN yerel satışlara da pay yazıyordu —
+  // konsorsiyum devredeyken kasaya yoktan para basılıyordu. Gerçek taşıma payı zaten yukarıdaki
+  // konsorsiyum dalında yazılıyor; bu satır tamamen kaldırıldı.
   if (wasBoosted && G.totalEarned >= BOOST_CAP)
     toast('🚀 Başlangıç bonusu bitti! Gerçek ritim: yakıt stokları ~12 saatte biter, sabah-akşam iki oturum yeter.', '', null, 0, true);
   return gain;
@@ -2197,7 +2220,8 @@ window.buyLicense = () => {
   G.licenses[c] = true;
   toast('📜 Kare ruhsatı alındı — artık burada kurabilirsin!', '');
   beep(600, .1);
-  refreshLicenseTiles(); // haritada şeffaf mavi karo (patron isteği)
+  refreshLicenseTiles();
+  drawOverlay(); // ⚠️ HATA AVI: açılışta hiç çağrılmıyordu → nakil hatları haritada görünmüyordu // haritada şeffaf mavi karo (patron isteği)
   save();
   if (PENDING) { hideSheets(); setMode('build'); toast('🏗️ Şimdi kurulacak yere dokun', ''); } // yerleştirme bekliyordu — devam
   else openCellSheet(c, SEL.ll);
@@ -2415,8 +2439,12 @@ function mgAvail() {
   if (G.mgDate !== key) { G.mgDate = key; G.mgPlays = 0; }
   return MG_MAX - G.mgPlays;
 }
-let MG = null;
+let MG = null, MG_IV = null;
 function startMinigame() {
+  // ⚠️ HATA AVI (orta): önceki oyunun interval'i temizlenmiyordu — ikinci kez başlatınca
+  // iki sayaç aynı anda işliyor, 30 saniyelik vardiya 15 saniyede bitiyordu.
+  if (MG_IV) { clearInterval(MG_IV); MG_IV = null; }
+  MG = null;
   if (!eventWindow().open || mgAvail() <= 0) return;
   G.mgPlays++;
   hideSheets();
@@ -2437,8 +2465,8 @@ function startMinigame() {
   };
   hold($('mgL'), -1); hold($('mgR'), 1);
   let last = performance.now();
-  const iv = setInterval(() => {
-    if (!MG) { clearInterval(iv); return; }
+  const iv = MG_IV = setInterval(() => {
+    if (!MG) { clearInterval(iv); MG_IV = null; return; }
     const now = performance.now(), dt = (now - last) / 1000; last = now;
     MG.t -= dt;
     MG.vel += (Math.random() - .5) * 30 + Math.sin(now / 700) * 9;
@@ -2453,7 +2481,7 @@ function startMinigame() {
     if ($('mgtime')) $('mgtime').textContent = Math.max(0, MG.t).toFixed(0);
     if ($('mgzonet')) $('mgzonet').textContent = MG.inZone.toFixed(1);
     if (MG.t <= 0) {
-      clearInterval(iv);
+      clearInterval(iv); MG_IV = null;
       const reward = Math.round(MG.inZone * (15000 + installedMW() * 2000));
       G.cash += reward;
       const perfect = MG.inZone >= 27;
@@ -2605,8 +2633,10 @@ function lineBlockedInfo(A, B, km) {
 }
 function lineConfirm(toCell) {
   // ÜLKE KONTROLÜ hiyerarşinin kapısı — harita verisindeki gerçek ülke sınırlarına bakar
+  // ⚠️ HATA AVI (yüksek): harita kara verisi henüz yüklenmediyse A/B null oluyor ve oyuncuya
+  // YANLIŞ "iki uç da karada olmalı" hatası veriliyordu. Veri yoksa ülke hiyerarşisi uygulanmaz.
   const A = countryOfCell(LINE_SRC), B = countryOfCell(toCell);
-  if (!A || !B) { toast('🌊 Hattın iki ucu da karada olmalı', 'warn'); LINE_ALLY = false; return; }
+  if (LAND_BOX && (!A || !B)) { toast('🌊 Hattın iki ucu da karada olmalı', 'warn'); LINE_ALLY = false; return; }
   const km = Math.round(kmDist(cellCenter(LINE_SRC), cellCenter(toCell)));
   if (A.iso !== B.iso) {
     // 🌍 kıtalar arası: ittifak yetkisi bile yetmez, konsorsiyum şart
@@ -2708,6 +2738,7 @@ window.repairLine = id => {
 window.demolishLine = id => {
   const i = (G.lines || []).findIndex(x => x.id === id);
   if (i < 0) return;
+  if (aucListed('line', id)) { toast('🔨 Bu hat açık artırmada — önce ilanı bekle', 'warn', null, 6000); return; }
   G.cash += Math.round(lineCost(G.lines[i].km, G.lines[i].hubs) * .3);
   G.lines.splice(i, 1);
   toast('🗑️ Hat söküldü — %30 hurda değeri iade', 'warn');
@@ -2848,7 +2879,7 @@ async function allySync() { if (!allyOnline()) return; try { allyApply(await NET
 // Davet POSTA ile gider (ayrı bir tarama gerekmez, güvenlik kuralı da değişmez)
 function allyInviteMail(aid, name) { return ALLY_INV_TAG + aid + '|' + name; }
 window.acceptAllyInvite = async (aid, name) => {
-  if (G.allyId) { toast('Önce mevcut ittifakından ayrılmalısın', 'warn'); return; }
+  if (G.ally || G.allyId) { toast('Önce mevcut ittifakından ayrılmalısın', 'warn'); return; } // ⚠️ HATA AVI: allyId'siz yerel ittifak da engel olmalı
   G.mail = (G.mail || []).filter(m => !m.allyInv);
   try {
     await NET.allyJoin(aid, 'uye');
@@ -2970,6 +3001,10 @@ function allyCallTick() { // bot üyelerin bağışları + süre bitişi
   const dt = Math.max(0, (Math.min(now, c.until) - (c._bt || now)) / 1000);
   c._bt = Math.min(now, c.until);
   if (c.raised < c.goal && dt > 0) { // botlar hedefin ~%55'ini 24 saate yayarak toplar
+    // ⚠️ HATA AVI (yüksek): çevrimiçi ittifakta bot bağışı kasayı YERELDE şişiriyor ama deftere
+    // yazılmıyordu; allySync kasayı defterden hesaplayınca üyelerin GERÇEK bağışı da yanıyordu.
+    // Çevrimiçi ittifakta kasanın tek kaynağı defterdir — bot simülasyonu yalnız çevrimdışında.
+    if (allyOnline()) return;
     const add = c.goal * .55 / 86400 * dt;
     c.raised = Math.min(c.goal, c.raised + add);
     G.ally.treasury = (G.ally.treasury || 0) + add;
@@ -3405,6 +3440,9 @@ const NET = {
     const o = { method, cache: 'no-store' };
     if (body !== undefined) { o.headers = { 'Content-Type': 'application/json' }; o.body = JSON.stringify(body); }
     const r = await fetch(this.db + '/' + path + '.json', o);
+    // ⚠️ HATA AVI (yüksek): başarısız YAZMA da null dönüyordu, yani "başarılı" sayılıyordu.
+    // Oyuncu sunucuda var olmayan bir ittifağa katılmış gibi kilitleniyordu. Yazmalarda artık atıyoruz.
+    if (!r.ok && method && method !== 'GET') throw new Error('HTTP ' + r.status + ' @ ' + path);
     return r.ok ? r.json() : null;
   },
   get(p) { return this.req(p, 'GET'); },
@@ -3434,12 +3472,18 @@ const NET = {
       const mb = await this.get('mail/' + this.id);
       if (mb) {
         for (const [k, m] of Object.entries(mb)) {
-          if ((G.mail || []).some(x => x.nid === k)) continue;
-          const s = socialMail(m.from, m.body); // 🤝 arkadaşlık istek/kabul/red etiketlerini çöz
-          addMail(m.from, s ? s.subj : m.subj, s ? s.body : m.body, !!s);
-          G.mail[0].nid = k;
-          if (s && s.req) G.mail[0].req = s.req;           // arkadaşlık yanıt butonları
-          if (s && s.allyInv) G.mail[0].allyInv = s.allyInv; // ittifak daveti butonları
+          // ⚠️ HATA AVI (kritik): sunucudaki posta hiç silinmiyordu. G.mail 60 kayıtta
+          // taşınca eski nid'ler düşüyor, aynı posta 12 sn sonra DİRİLİYORDU — yanıtlanan
+          // arkadaşlık isteği ve silinen mesajlar sonsuza dek geri geliyordu.
+          // Çözüm: okunan postayı sunucudan da düş (kutu tek okuyuculu, kimse mağdur olmaz).
+          if (!(G.mail || []).some(x => x.nid === k)) {
+            const s = socialMail(m.from, m.body); // 🤝 arkadaşlık istek/kabul/red etiketlerini çöz
+            addMail(m.from, s ? s.subj : m.subj, s ? s.body : m.body, !!s);
+            G.mail[0].nid = k;
+            if (s && s.req) G.mail[0].req = s.req;           // arkadaşlık yanıt butonları
+            if (s && s.allyInv) G.mail[0].allyInv = s.allyInv; // ittifak daveti butonları
+          }
+          this.req('mail/' + this.id + '/' + k, 'DELETE').catch(() => {});
         }
         save();
       }
@@ -3486,10 +3530,21 @@ const NET = {
   allyRoleSet(aid, pid, role) { return this.put('allies/' + aid + '/members/' + pid + '/role', role); },
   allyRemove(aid, pid) { return this.req('allies/' + aid + '/members/' + pid, 'DELETE'); },
   allyLedger(aid, amt, note) { return this.push('allies/' + aid + '/ledger', { pid: this.id, nm: G.company, amt: Math.round(amt), note: (note || '').slice(0, 40), ts: Date.now() }); },
-  allyLineAdd(aid, l) { return this.put('allies/' + aid + '/lines/' + l.id, l); },
+  // ⚠️ HATA AVI (yüksek): anahtar yerel G.nextId'den geliyordu; iki üyenin sayacı çakışınca
+  // biri diğerinin hattını SESSİZCE eziyordu. Oyuncu kimliğiyle önekleyip benzersiz yapıyoruz.
+  // Ek fayda: anahtar sayısal olmaktan çıkınca Firebase düğümü diziye çevirmiyor (null delik yok).
+  allyLineAdd(aid, l) { return this.put('allies/' + aid + '/lines/' + this.id + '_' + l.id, l); },
   sendMail(toId, subj, body) { return this.push('mail/' + toId, { from: G.company, subj, body, ts: Date.now() }); },
-  sendChat(room, txt) { return this.push('chat/' + room, { who: G.company, txt, ts: Date.now() }); },
-  async pullChat(room) { const c = await this.get('chat/' + room); return c ? Object.values(c).slice(-40) : []; },
+  // ⚠️ HATA AVI (yüksek): oda anahtarı kapsamsızdı — DÜNYADAKİ TÜM ittifaklar aynı 'ally'
+  // düğümünü, tüm ülkeler aynı 'country' düğümünü paylaşıyordu. Anahtarı kapsamla üretiyoruz.
+  chatKey(room) {
+    if (room === 'ally') return G.allyId ? 'ally_' + G.allyId : null;   // ittifak sunucuda yoksa yazma
+    if (room === 'country') return 'country_' + (G.country || 'x').replace(/[^A-Za-z0-9]/g, '');
+    if (room === 'city') return 'city_' + (G.il || 'x').replace(/[^A-Za-z0-9]/g, '');
+    return 'world';
+  },
+  sendChat(room, txt) { const k = this.chatKey(room); return k ? this.push('chat/' + k, { who: G.company, txt, ts: Date.now() }) : Promise.resolve(); },
+  async pullChat(room) { const k = this.chatKey(room); if (!k) return []; const c = await this.get('chat/' + k); return c ? Object.values(c).slice(-40) : []; },
 };
 
 // ═══ 🌐 DİĞER OYUNCULAR (patron: "büyük problem — başkalarının panellerini göremiyoruz") ═══
@@ -3534,7 +3589,7 @@ function drawOthers() {
   if (sig === othersDrawn) return;
   othersDrawn = sig;
   othersLayer.forEach(m => m.remove()); othersLayer = [];
-  if ((y1 - y0 + 1) * (x1 - x0 + 1) > 260) return; // performans emniyeti
+  if ((y1 - y0 + 1) * (x1 - x0 + 1) > 260) return; // performans emniyeti (bu ölçekte zaten zoom<9 filtresi devrede)
   for (let cy = y0; cy <= y1; cy++) {
    const k = lonSteps(cy); // yüksek enlemde kare kimlikleri k'nin katı — 1'er artırırsak hiç eşleşmez
    for (let cx = Math.floor(x0 / k) * k; cx <= x1; cx += k) {
@@ -3648,18 +3703,21 @@ const AUC_TERMS = [
 const AUC_FEE = .01; // ilan bedeli (satılmasa da yanar — boş ilan spam'ini önler)
 const aucList = () => (G.auctionsMkt || []).filter(a => !a.done);
 function aucAssets() { // satılabilir varlıkların listesi
+  // ⚠️ HATA AVI: zaten AÇIK İLANDA olan varlık listeye girmemeli — yoksa aynı tesis
+  // iki ayrı ilana konup iki kez paraya çevrilebiliyordu.
   const out = [];
   for (const u of G.units) {
     if (u.kind === 'office' && u.hq) continue; // merkez ofis satılamaz
     if (u.buildDone > Date.now()) continue;
+    if (aucListed('unit', u.id)) continue;
     const T = TYPE_OF(u.kind, u.t);
     if (!T) continue;
     out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? T.mw + ' MW' : '' });
   }
-  for (const l of (G.lines || [])) if (lineReady(l))
+  for (const l of (G.lines || [])) if (lineReady(l) && !aucListed('line', l.id))
     out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs) * .5), note: fmtN(l.km) + ' km' });
-  (G.consRights || []).forEach((r, i) =>
-    out.push({ kind: 'share', id: i, nm: CONSORTIUM_ROUTES[r.route].nm + ' — %' + r.share + ' hisse', ico: '⚖️', base: Math.round(CONSORTIUM_ROUTES[r.route].cost * r.share / 100 * .6), note: 'kıtalararası hat hissesi' }));
+  (G.consRights || []).forEach((r, i) => { if (aucListed('share', i)) return;
+    out.push({ kind: 'share', id: i, nm: CONSORTIUM_ROUTES[r.route].nm + ' — %' + r.share + ' hisse', ico: '⚖️', base: Math.round(CONSORTIUM_ROUTES[r.route].cost * r.share / 100 * .6), note: 'kıtalararası hat hissesi' }); });
   return out;
 }
 window.openAucSheet = () => {
@@ -3760,9 +3818,16 @@ function aucResolve(a) {
   const term = AUC_TERMS.find(t => t.h === a.term) || AUC_TERMS[0];
   if (a.mine) {
     if (!a.top) { toast('🔨 İlanın teklif almadan kapandı: ' + a.nm, 'warn', null, 0, true); return; }
+    // ⚠️ HATA AVI (kritik): ödeme KOŞULSUZ yapılıyordu. Oyuncu ilana çıkardığı tesisi ayrıca
+    // "Sat" ile bozdurunca varlık G.units'ten siliniyor, ihale kapanışında para İKİNCİ kez
+    // ödeniyordu. Artık önce varlığın hâlâ elimizde olduğunu doğruluyoruz.
+    if (!aucRemoveAsset(a)) {
+      toast('🔨 ' + a.nm + ' artık sende değil — satış iptal edildi, ödeme yapılmadı', 'warn', null, 0, true);
+      addMail('🔨 Müzayede', 'Satış iptal', `${a.nm} ilanı kapanırken varlık elinizde bulunamadı (daha önce satılmış ya da sökülmüş olabilir). Ödeme yapılmadı.`, true);
+      return;
+    }
     const net = Math.round(a.top * (1 - term.tax));
     G.cash += net;
-    aucRemoveAsset(a);
     toast('🔨 SATILDI! ' + a.nm + ' → ' + a.topBy + ' · ' + fmt(a.top) + ' (vergi %' + term.tax * 100 + ' → eline ' + fmt(net) + ')', '', null, 0, true);
     addMail(a.topBy, 'Müzayede: ' + a.nm, `${a.nm} ilanını ${fmt(a.top)} ile kazandım, devir tamamlandı. İyi ticaretler.`);
   } else if (a.topBy === G.company) {
@@ -3774,21 +3839,45 @@ function aucResolve(a) {
     toast('🔨 ' + a.nm + ' ilanını kaybettin — teklifin iade edildi', 'warn');
   }
 }
-function aucRemoveAsset(a) { // satılan varlık senden çıkar
+// Satılan varlığı senden çıkarır. BAŞARILI olursa true döner — çağıran taraf ödemeyi
+// buna göre yapar (varlık yoksa para ödenmemeli).
+function aucRemoveAsset(a) {
+  let ok = false;
   if (a.assetKind === 'unit') {
     const i = G.units.findIndex(u => u.id === a.assetId);
-    if (i >= 0) { const u = G.units[i]; if (unitMarkers[u.id]) { unitMarkers[u.id].remove(); delete unitMarkers[u.id]; } G.units.splice(i, 1); }
+    if (i >= 0) { const u = G.units[i]; if (unitMarkers[u.id]) { unitMarkers[u.id].remove(); delete unitMarkers[u.id]; } G.units.splice(i, 1); ok = true; }
     ensureConnections();
   } else if (a.assetKind === 'line') {
     const i = (G.lines || []).findIndex(l => l.id === a.assetId);
-    if (i >= 0) G.lines.splice(i, 1);
+    if (i >= 0) { G.lines.splice(i, 1); ok = true; }
   } else if (a.assetKind === 'share') {
-    if (G.consRights && G.consRights[a.assetId]) G.consRights.splice(a.assetId, 1);
+    if (G.consRights && G.consRights[a.assetId]) { G.consRights.splice(a.assetId, 1); ok = true; }
   }
   refreshUnitMarkers(); drawOverlay();
+  return ok;
 }
-function aucGrantAsset(a) { // kazandığın varlık sana geçer (bot ilanları simülasyon)
-  toast('📦 ' + a.nm + ' devralındı', '');
+// Bir varlık şu an açık ilanda mı? (çift satış ve çift ilan bunun üstüne kurulu)
+const aucListed = (kind, id) => aucList().some(a => a.mine && a.assetKind === kind && a.assetId === id);
+function aucGrantAsset(a) {
+  // ⚠️ HATA AVI (yüksek): burası BOŞTU — müzayedeyi kazanınca para gidiyor ama varlık gelmiyordu.
+  // Bot ilanları assetId:-1 ile geldiği için devredilecek gerçek bir birim yok; ilandaki tür
+  // bilgisinden YENİ bir birim kuruyoruz. Kurulum yeri: merkez ofisin karesi (ruhsatlı ve senin).
+  if (a.assetKind !== 'unit') { toast('📦 ' + a.nm + ' devralındı', ''); return; }
+  const t = a.assetType, kind = a.assetType2 || 'plant';
+  const T = t && TYPE_OF(kind, t);
+  if (!T) { // tür çözülemedi → parayı iade et, oyuncu mağdur olmasın
+    G.cash += a.myEscrow || a.top || 0;
+    toast('🔨 ' + a.nm + ' devredilemedi — ödemen iade edildi', 'warn', null, 0, true);
+    return;
+  }
+  const hq = G.units.find(u => u.kind === 'office' && u.hq) || offices()[0];
+  const ll = hq ? [hq.ll[0] + (Math.random() - .5) * .02, hq.ll[1] + (Math.random() - .5) * .02] : (SEL.ll || [40.77, 29.94]);
+  const nu = addUnit(kind, t, ll);
+  nu.cond = a.assetCond || 75; // "ikinci el" — sağlamlık ilandaki değerle gelir
+  nu.buildDone = Date.now();   // devir anında hazır, yeniden inşa yok
+  ensureConnections();
+  toast('📦 ' + T.nm + ' devralındı — merkez ofisinin bölgesine kuruldu (%' + Math.round(nu.cond) + ' sağlam)', '', null, 0, true);
+  refreshUnitMarkers();
 }
 // ── Bot ilanları: pazar boş kalmasın (deterministik, 3 saatte bir tazelenir)
 function seedAucMarket() {
@@ -3796,6 +3885,15 @@ function seedAucMarket() {
   const slot = Math.floor(Date.now() / (3 * 36e5));
   if (G._aucSlot === slot) return;
   G._aucSlot = slot;
+  // ⚠️ HATA AVI (kritik): eski bot ilanları silinirken oyuncunun BLOKE teklifi iade edilmiyordu.
+  // Bot ilanı 6-24 saat açık kalıyor ama tazeleme 3 saatte bir; yani ilanda ÖNDE olan —
+  // kazanmaya en yakın — oyuncu parasını garantili kaybediyordu. Silmeden önce blokeyi geri ver.
+  for (const a of G.auctionsMkt) {
+    if (a.mine || a.done || !a.myEscrow) continue;
+    G.cash += a.myEscrow;
+    toast('🔨 ' + a.nm + ' ilanı kapandı — bloke teklifin ' + fmt(a.myEscrow) + ' iade edildi', 'warn', null, 0, true);
+    a.myEscrow = 0;
+  }
   G.auctionsMkt = G.auctionsMkt.filter(a => a.mine && !a.done); // eski bot ilanlarını temizle
   for (let k = 0; k < 3; k++) {
     const h = hash01(slot, k, 29);
@@ -3806,7 +3904,9 @@ function seedAucMarket() {
     G.auctionsMkt.push({
       id: G.nextId++, mine: false, seller: WORLD_PLAYERS[Math.floor(hash01(slot, k, 37) * WORLD_PLAYERS.length)],
       ico: T.ico, nm: T.nm + ' (ikinci el)', note: T.mw + ' MW · %' + (60 + Math.floor(h * 35)) + ' sağlam',
-      assetKind: 'unit', assetId: -1, start: Math.round(T.cost * (.45 + h * .3) / 1e5) * 1e5,
+      // assetType/assetCond: kazanan oyuncuya GERÇEK birim kurabilmek için tür bilgisi taşınır
+      assetKind: 'unit', assetId: -1, assetType: t, assetType2: 'plant', assetCond: 60 + Math.floor(h * 35),
+      start: Math.round(T.cost * (.45 + h * .3) / 1e5) * 1e5,
       top: 0, topBy: null, term, until: Date.now() + term * 36e5 / (G.demo ? 60 : 1), _bt: Date.now(),
     });
   }
@@ -4019,8 +4119,15 @@ window.sendFriendReq = nm => {
   const real = NET.on() ? NET.list().find(x => x.nm === nm) : null;
   G.friendReqs.push(nm);
   if (real) { // GERÇEK OYUNCU: kararı O verir, biz yanıtı bekleriz
-    NET.sendMail(real.id, '🤝 Arkadaşlık isteği', FREQ_TAG + G.company);
-    toast('🤝 İstek gönderildi: ' + nm + ' — yanıtını bekliyoruz', '', null, 0, true);
+    // ⚠️ HATA AVI (yüksek): gönderim await edilmiyordu; çevrimdışıyken istek sessizce kayboluyor
+    // ama yerel listeye yazıldığı için o oyuncuya BİR DAHA istek gönderilemiyordu (kalıcı kilit).
+    NET.sendMail(real.id, '🤝 Arkadaşlık isteği', FREQ_TAG + G.company)
+      .then(() => toast('🤝 İstek gönderildi: ' + nm + ' — yanıtını bekliyoruz', '', null, 0, true))
+      .catch(() => {
+        G.friendReqs = (G.friendReqs || []).filter(x => x !== nm);
+        save();
+        toast('Gönderilemedi — bağlantını kontrol edip tekrar dene', 'bad', null, 0, true);
+      });
     save(); return;
   }
   // BOT şirket (gerçek oyuncu değil): prototip simülasyonu sürer
@@ -4148,7 +4255,11 @@ const BOT_PLANTS = [
 
 // ── Çevrimdışı ilerleme ──
 function offlineProgress() {
-  const gapSec = (Date.now() - G.lastSeen) / 1000;
+  // ⚠️ HATA AVI (yüksek): gapSec'in üst sınırı yoktu. Cihaz saati ileri alınınca hem bütün
+  // Date.now() sayaçları anında doluyor hem de döngü on binlerce tur dönüp oyunu kilitliyordu.
+  // Geriye alınca da negatif fark üretiyordu. İkisini de kapatıyoruz: en fazla 24 saat telafi.
+  if (G.lastSeen > Date.now()) G.lastSeen = Date.now(); // saat geriye alınmış — damgayı düzelt
+  const gapSec = Math.min((Date.now() - G.lastSeen) / 1000, 24 * 3600);
   if (gapSec < 30) return; // BUGFIX: 120 sn eşiği + 15dk kuantizasyon kısa aralıkları tamamen yutuyordu
   const startMin = nowMin() - gapSec / 60;
   let produced = 0, wasted = 0, fuel = 0;
@@ -4201,8 +4312,13 @@ function offlineProgress() {
 }
 window.closeModal = () => {
   $('overlay').classList.remove('show');
+  if (MG_IV) { clearInterval(MG_IV); MG_IV = null; MG = null; } // açık mini oyun kapanınca sayaç da dursun
   // emniyet: kuruluş sırasında modal kapanırsa ekran boş kalmasın — karşılama ekranını geri getir
-  if ($('app').classList.contains('wiz') && !$('wizsheet').classList.contains('show')) setTimeout(() => { if (!G || !G._started) wizardStart(); }, 50);
+  // ⚠️ HATA AVI (kritik): bu emniyet ağı, afterLogin() bulut kaydını BEKLERKEN tetikleniyordu —
+  // oyun iki kez başlıyor ya da yüklü oyunun üstünde "Yeni Oyun" modalı kalıyordu.
+  // LOGIN_BUSY bayrağı giriş akışı boyunca ağı bastırır.
+  if ($('app').classList.contains('wiz') && !$('wizsheet').classList.contains('show'))
+    setTimeout(() => { if (!LOGIN_BUSY && (!G || !G._started)) wizardStart(); }, 50);
 };
 
 // ── 🔔 BİLDİRİM: İSTEĞE BAĞLI (rakip zorluyor ve nefret ediliyor — bizde hayır diyen de rahatça oynar) ──
@@ -4287,7 +4403,14 @@ function migrate(s) {
   for (const [o, n] of Object.entries(remap)) {
     s.licenses[n] = s.licenses[o]; delete s.licenses[o];
     for (const m of ['leases', 'cellEarned', 'cellSpent', 'wonWeek'])
-      if (s[m] && s[m][o] !== undefined) { s[m][n] = s[m][o]; delete s[m][o]; }
+      if (s[m] && s[m][o] !== undefined) {
+        // ⚠️ HATA AVI (orta): iki eski kare aynı yeni kareye düşünce üzerine yazılıyordu.
+        // Muhasebe TOPLANMALI, kira/imtiyaz bitişinde ise en UZUN olan kalmalı (parayla alındı).
+        s[m][n] = (m === 'leases' || m === 'wonWeek')
+          ? Math.max(s[m][n] || 0, s[m][o])
+          : (s[m][n] || 0) + s[m][o];
+        delete s[m][o];
+      }
   }
   for (const u of s.units) if (u.ll) u.cell = cellId(u.ll);
   for (const l of (s.lines || [])) { if (l.from) l.from = cellSnap(l.from); if (l.to) l.to = cellSnap(l.to); }
@@ -4727,7 +4850,7 @@ function drawCityLabels() {
     if (kutular.some(u => Math.abs(u.x - p.x) < (u.w + w) / 2 && Math.abs(u.y - p.y) < 21)) continue;
     kutular.push({ x: p.x, y: p.y, w });
     overlayLayer.push(L.marker([la, lo], {
-      icon: L.divIcon({ html: `<div class="citylbl" onclick="openCityCard('${nm.replace(/'/g, '')}')">${nm}<i>${popTxt(pop)}</i></div>`, className: '', iconSize: [w, 20], iconAnchor: [w / 2, 10] }),
+      icon: L.divIcon({ html: `<div class="citylbl" onclick="openCityCard('${jsStr(nm)}')">${nm}<i>${popTxt(pop)}</i></div>`, className: '', iconSize: [w, 20], iconAnchor: [w / 2, 10] }),
     }).addTo(map));
     if (kutular.length > 80) break;
   }
@@ -4786,7 +4909,9 @@ function drawOverlay() {
   const b = map.getBounds(), step = CELL;
   const y0 = Math.floor(b.getSouth() / step), y1 = Math.floor(b.getNorth() / step);
   const x0 = Math.floor(b.getWest() / step), x1 = Math.floor(b.getEast() / step);
-  if ((y1 - y0 + 1) * (x1 - x0 + 1) > 420) return; // performans emniyeti
+  // ⚠️ HATA AVI (yüksek): kare sayısı aşınca HİÇ çizmiyordu → zoom 8'de ekran bomboş kalıyordu
+  // (ne ülke boyaması ne kare boyaması). Artık ülke boyamasına düşüyoruz.
+  if ((y1 - y0 + 1) * (x1 - x0 + 1) > 420) { drawCountryTint(); return; }
   for (let cy = y0; cy <= y1; cy++) {
     const k = lonSteps(cy); // yüksek enlemde kareler geniş — adım da o kadar olmalı, yoksa üst üste çizilir
     for (let cx = Math.floor(x0 / k) * k; cx <= x1; cx += k) {
@@ -4812,6 +4937,9 @@ function refreshLicenseTiles() {
 //  yakınlaştırmak zor oluyor" → ofisler ve talep merkezleri listeden tek dokunuşla gezilir.
 // "Önce zoom out olup sonra seçilen ofise zoom in yapsın, bir şov gibi olsun" → uzak
 //  hedefe İKİ AŞAMALI uçuş + kenarların büzülüp açıldığı geçiş efekti.
+// ⚠️ HATA AVI: adı onclick'e gömerken kesme işareti SİLİNİYORDU (Xi'an → Xian), sonra
+// arama birebir eşleşmediği için kart hiç açılmıyordu. Silmek yerine KAÇIRIYORUZ.
+const jsStr = v => String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 const popTxt = p => p >= 1000 ? (p / 1000).toFixed(p >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'M' : p + 'K';
 let flyPing = [];
 function clearPing() { flyPing.forEach(m => m.remove()); flyPing = []; }
@@ -4857,9 +4985,16 @@ function renderNav() {
 function renderStorePanel() {
   const sts = stores().filter(s => s.buildDone <= Date.now());
   if (!sts.length) { $('navbody').innerHTML = '<p class="sub">Henüz deponun yok — bir kareye 🔋 pil istasyonu kur.</p>'; return; }
-  const rows = sts.map(s => {
+  // ⚠️ HATA AVI (orta): her depo için sellRevenue ayrı çağrılıyordu, yani AYNI KAREDEKİ her depo
+  // günlük talebi sıfırdan tüketiyormuş gibi hesaplanıyordu. Gösterilen tutar gerçekte ödenenden
+  // çok yüksek çıkıyor, oyuncu "vaat edilen para gelmedi" diyordu — rakibin en nefret edilen kusuru.
+  // Çözüm: kare bazlı biriktirici. Sıra ekrandaki sırayla aynı olsun diye önce doluluğa göre gidiyoruz.
+  const kareSatilan = {};
+  const rows = sts.slice().sort((a, b) => (b.stored / STORE_TYPES[b.t].cap) - (a.stored / STORE_TYPES[a.t].cap)).map(s => {
     const T = STORE_TYPES[s.t];
-    const r = sellRevenue(s.cell, s.stored);
+    const onceki = kareSatilan[s.cell] || 0;
+    const r = sellRevenueAfter(s.cell, s.stored, onceki);
+    kareSatilan[s.cell] = onceki + s.stored;
     const inflow = plants().filter(p => assignedStoreOf(p) === s).reduce((a, p) => a + plantOutput(p), 0) * speedMult();
     return { s, T, r, inflow, pct: s.stored / T.cap };
   });
@@ -4904,7 +5039,14 @@ function renderStorePanel() {
 window.sellAllStoresAsk = () => {
   const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && s.stored >= .005);
   if (!sts.length) return;
-  const toplam = sts.reduce((a, s) => a + sellRevenue(s.cell, s.stored).gain, 0);
+  // ⚠️ HATA AVI: burada da her depo günlük talebi sıfırdan tüketiyormuş gibi sayılıyordu.
+  // Aynı kare biriktiricisi — onay ekranındaki rakam gerçekte ödenecek tutar olsun.
+  const kareSatilan = {};
+  const toplam = sts.reduce((a, s) => {
+    const onceki = kareSatilan[s.cell] || 0;
+    kareSatilan[s.cell] = onceki + s.stored;
+    return a + sellRevenueAfter(s.cell, s.stored, onceki).gain;
+  }, 0);
   const mwh = sts.reduce((a, s) => a + s.stored, 0);
   $('modal').innerHTML = `
     <h2>💰 Hepsini Sat</h2>
@@ -5247,7 +5389,7 @@ function openUnitSheet(id) {
         <table class="ledger">
           ${list.map(([nm, la, lo, pop]) => {
             const km = Math.round(kmDist(u.ll, [la, lo]));
-            return `<tr><td><span class="lnk" style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${la},${lo},10,'${nm.replace(/'/g, '')}')">${nm}</span> <span class="sub">${popTxt(pop)}</span></td>
+            return `<tr><td><span class="lnk" style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${la},${lo},10,'${jsStr(nm)}')">${nm}</span> <span class="sub">${popTxt(pop)}</span></td>
               <td>${fmtN(cellDemand(cellId([la, lo])))} MWh/gün <span class="sub">· ${fmtN(km)} km</span></td></tr>`;
           }).join('')}
         </table>
@@ -5372,6 +5514,8 @@ window.demolishUnit = id => { // SATIŞ ONAYI (patron isteği — telefon testi)
   const u = G.units.find(x => x.id === id);
   if (!u) return;
   if (u.kind === 'office' && u.hq) { toast('🏢 Merkez ofis satılamaz', 'warn'); return; }
+  // ⚠️ HATA AVI (kritik): açık ilandaki tesisi ayrıca bozdurmak ÇİFT ÖDEME açığıydı
+  if (aucListed('unit', id)) { toast('🔨 Bu tesis açık artırmada — önce ilanı bekle ya da müzayededen çek', 'warn', null, 6000); return; }
   const r = resaleValue(u);
   const loss = 100 - r.pct;
   $('modal').innerHTML = `
@@ -5752,11 +5896,14 @@ function showLoginScreen() {
     <p style="text-align:center;font-size:10px;margin-top:8px">${BUILD_TAG}</p>`;
   $('overlay').classList.add('show');
 }
+// Giriş akışı boyunca closeModal'ın "wizardStart" emniyet ağını bastıran bayrak
+let LOGIN_BUSY = false;
 window.loginGuest = async () => {
+  LOGIN_BUSY = true;
   $('modal').innerHTML = '<h2>👤 Misafir girişi</h2><p>Sunucuya bağlanılıyor...</p>';
   try { await NET.guestLogin(); } catch (e) { toast('Giriş hatası: ' + e.message, 'bad'); }
   closeModal();
-  await afterLogin();
+  try { await afterLogin(); } finally { LOGIN_BUSY = false; }
 };
 window.loginGoogle = async () => {
   if (!NET.googleAvailable()) {
@@ -5767,10 +5914,12 @@ window.loginGoogle = async () => {
     $('overlay').classList.add('show');
     return;
   }
+  LOGIN_BUSY = true;
   $('modal').innerHTML = '<h2>🔓 Google girişi</h2><p>Google hesabına yönlendiriliyorsun...</p>';
   try {
     const a = await NET.googleLogin();
-    if (a) { closeModal(); toast('🔓 Hoş geldin ' + (a.name || a.email || ''), '', null, 0, true); await afterLogin(); }
+    if (a) { closeModal(); toast('🔓 Hoş geldin ' + (a.name || a.email || ''), '', null, 0, true); try { await afterLogin(); } finally { LOGIN_BUSY = false; } }
+    else LOGIN_BUSY = false; // mobilde yönlendirme oldu — sayfa yeniden yüklenecek
     // mobilde yönlendirme olur; dönüşte NET.googleCheckRedirect yakalar
   } catch (e) {
     // Hata mesajı ÖNCEDEN toast ile veriliyordu ve giriş modalının ARKASINDA kalıyordu (telefon testi).
@@ -6042,7 +6191,12 @@ $('resetlink').addEventListener('click', () => {
 $('mutelink').addEventListener('click', () => { G.muted = !G.muted; $('mutelink').textContent = G.muted ? '🔇' : '🔊'; });
 document.addEventListener('visibilitychange', () => {
   if (!G || !G._started) return;
-  if (document.hidden) { save(); scheduleFillNotifs(); }
+  if (document.hidden) {
+    save(); scheduleFillNotifs();
+    // ⚠️ HATA AVI (orta): buluta zorunlu flush yoktu. afterLogin "bulut esas" dediği için
+    // her açılışta son ≤20 saniyelik oynanış geri alınıyordu.
+    if (NET.on()) NET.cloudSave(true);
+  }
   else { notifTimers.forEach(t => clearTimeout(t)); notifTimers = []; offlineProgress(); }
 });
 
@@ -6100,6 +6254,7 @@ function frameBody(ts) {
         save();
         if ($('companysheet').classList.contains('show')) openCompanySheet();
       }
+      checkWeek(); // ⚠️ HATA AVI: yalnız menü açılınca çağrılıyordu — hafta dönümünden sonraki satışlar siliniyordu
       allyTick(); allyCallTick(); consortiumTick(); aucTick(); studyTick(); // 🤝 ihale · 💰 bağış · 🌍 konsorsiyum · 🔨 müzayede · 🔎 bölge araştırması
       // ⏫ depo kapasite inşaatı bitti mi?
       for (const d of G.units) {
