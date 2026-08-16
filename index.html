@@ -329,7 +329,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-16 13:30) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-16 13:53) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -412,7 +412,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-16 13:30)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-16 13:53)'; // deploy.js yayında tarih damgası ekler
 // Büyük ekonomi gösterimi: $1,2M · $3,4B · $1,1T (milyar-trilyon seviyelerine çıkan kasalar okunur kalsın)
 function fmt(n) {
   const a = Math.abs(n), s = n < 0 ? '-' : '';
@@ -1255,6 +1255,8 @@ function sellChunk(st, mwh, targetCell, mult) {
   G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain; // ofis bölge raporu (kaynak bölgeye yazılır)
   const wasBoosted = G.totalEarned < BOOST_CAP;
   G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
+  // 🌍 kıtalararası hat devredeyse: taşınan her MWh'den ittifak KASASINA pay (patron: "kWh başına şu kadarı ittifak kasasına")
+  if (consortiumLive()) G.ally.treasury = (G.ally.treasury || 0) + mwh * CONSORTIUM_ROUTES[G.ally.consortium.route].kwhFee * 1000;
   if (wasBoosted && G.totalEarned >= BOOST_CAP)
     toast('🚀 Başlangıç bonusu bitti! Gerçek ritim: yakıt stokları ~12 saatte biter, sabah-akşam iki oturum yeter.', '', null, 0, true);
   return gain;
@@ -1625,7 +1627,8 @@ function placeAt(c, ll) {
   if (G.cash < T.cost) { toast('Yetersiz bakiye — ' + fmt(T.cost) + ' gerekli', 'warn'); PENDING = null; setMode(null); return; }
   G.cash -= T.cost;
   G.cellSpent[c] = (G.cellSpent[c] || 0) + T.cost;
-  addUnit(kind, t, ll);
+  const nu = addUnit(kind, t, ll);
+  if (tutActive()) nu.hidden = true; // eğitimde ZORUNLU kurulanlar da başkalarına görünmez (patron kuralı)
   ensureConnections(); // yeni santral boş slota otomatik bağlanır
   fetchWeather(); // yeni kare için canlı hava çek
   toast(T.ico + ' ' + T.nm + ' inşaatı başladı — ' + (tutActive() ? 'saniyeler içinde hazır 🎓' : T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn'), '');
@@ -1819,6 +1822,33 @@ function startMinigame() {
 //   TRANSFER MERKEZİ segmenti böler → her 100 km'de bir merkez = en iyi durum %10
 // Maliyet: kablo (km) + iki uç trafo + geçilen bölgelerin izin bedeli + işçilik. Hat yıpranır, bakım ister.
 const LINE = { cableKm: 80000, transformer: 15e6, permitPer100: 2e6, laborRate: .2, hub: 25e6, wearPer10d: 5 };
+
+// ═══ ⚙️ TRAFO MARKALARI + İLİŞKİ SİSTEMİ (patron tasarımı) ═══
+// Aynı trafoyu farklı markalardan alabilirsin. Sadık kaldıkça İLİŞKİ artar (max 100) →
+// %25'e varan iskonto. Başka markadan alınca o markayla ilişki düşer: hepsiyle 100 olamazsın.
+// Her markanın KENDİ avantajı var — hangi oyun tarzına yatırım yaptığın seçim demek.
+const BRANDS = {
+  voltas:  { nm: 'Voltaş Trafo', ico: '🔷', d: 'Ekonomik seri — liste fiyatı %12 ucuz.', price: .88, loss: 0, build: 1, wear: 1 },
+  anadolu: { nm: 'Anadolu Elektromekanik', ico: '🔶', d: 'Düşük kayıplı sargı — hat kaybı 3 puan azalır.', price: 1, loss: -3, build: 1, wear: 1 },
+  eurogrid:{ nm: 'EuroGrid Systems', ico: '🔵', d: 'Hızlı montaj — kurulum süresi %35 kısalır.', price: 1.06, loss: 0, build: .65, wear: 1 },
+  nordic:  { nm: 'Nordic PowerTech', ico: '⬜', d: 'Dayanıklı gövde — yıpranma yarı yarıya yavaş.', price: 1.12, loss: 0, build: 1, wear: .5 },
+};
+const brandRel = b => (G.brandRel && G.brandRel[b]) || 0;
+const brandDisc = b => 1 - .25 * (brandRel(b) / 100);              // 100 ilişki = %25 iskonto
+const brandPrice = (b, base) => Math.round(base * BRANDS[b].price * brandDisc(b));
+function brandBuy(b) { // sadakat: seçtiğin marka +12, diğerleri -4 (hepsiyle 100 olunamaz)
+  G.brandRel = G.brandRel || {};
+  for (const k of Object.keys(BRANDS)) G.brandRel[k] = Math.max(0, Math.min(100, (G.brandRel[k] || 0) + (k === b ? 12 : -4)));
+}
+function brandRow(b, base, onclick) {
+  const B = BRANDS[b], rel = brandRel(b), p = brandPrice(b, base);
+  return `<button class="bigsell half" style="text-align:left" onclick="${onclick}">
+    ${B.ico} <b>${B.nm}</b> — <b class="pos">${fmt(p)}</b>${rel > 0 ? ` <span class="sub">(-%${Math.round(25 * rel / 100)} sadakat)</span>` : ''}
+    <div class="sub" style="margin-top:2px">${B.d}</div>
+    <div class="rsbar" style="margin-top:4px"><i style="width:${rel}%"></i></div>
+    <div class="sub">İlişki: ${rel}/100</div>
+  </button>`;
+}
 function lineLossPct(km, hubs) {
   const seg = km / ((hubs || 0) + 1);
   if (seg > 300) return 100;              // taşınamaz — daha çok transfer merkezi gerekiyor
@@ -1831,9 +1861,10 @@ function lineCost(km, hubs) {
   return Math.round(base * (1 + LINE.laborRate));
 }
 const lineBuildSec = km => Math.min(86400, Math.round(60 + km * 6)); // en fazla 1 gün (kıtalararası tam sürümde 3 gün)
-const lineWear = l => Math.max(0, 100 - (Date.now() - l.built) / 864e6 * LINE.wearPer10d * 10); // 10 günde %5
+const lineBrand = l => BRANDS[l.brand] || BRANDS.voltas;
+const lineWear = l => Math.max(0, 100 - (Date.now() - l.built) / 864e6 * LINE.wearPer10d * 10 * lineBrand(l).wear); // marka dayanıklılığı
 const lineReady = l => l.done <= Date.now();
-const lineLoss = l => Math.min(100, lineLossPct(l.km, l.hubs) + (100 - lineWear(l)) * .5); // yıpranma kaybı artırır
+const lineLoss = l => Math.max(5, Math.min(100, lineLossPct(l.km, l.hubs) + lineBrand(l).loss + (100 - lineWear(l)) * .5)); // marka + yıpranma
 const linesOf = cell => (G.lines || []).filter(l => l.from === cell && lineReady(l) && lineLoss(l) < 100);
 window.startLineFrom = cell => { // hedef seçme moduna geç
   LINE_SRC = cell;
@@ -1865,21 +1896,34 @@ function lineConfirm(toCell) {
     ${rows.map(h => {
       const loss = lineLossPct(km, h), cost = lineCost(km, h);
       const net = cellPriceNow(toCell) * (1 - loss / 100);
-      return `<button class="bigsell ${loss <= 10 ? '' : 'half'}" onclick="closeModal();buildLine('${toCell}',${km},${h})" ${G.cash < cost ? 'disabled' : ''}>
-        ${h} merkez · kayıp %${loss} · net ${fmt(net)}/MWh — ${fmt(cost)}${G.cash < cost ? ' (bakiye yetersiz)' : ''}</button>`;
+      return `<button class="bigsell ${loss <= 10 ? '' : 'half'}" onclick="closeModal();pickBrand('${toCell}',${km},${h})" ${G.cash < cost ? 'disabled' : ''}>
+        ${h} merkez · kayıp %${loss} · net ${fmt(net)}/MWh — ~${fmt(cost)}${G.cash < cost ? ' (bakiye yetersiz)' : ''}</button>`;
     }).join('')}
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 }
-window.buildLine = (toCell, km, hubs) => {
+// ⚙️ MARKA SEÇİMİ (patron): aynı trafo 4 markadan alınabilir — fiyat, kayıp, süre, dayanıklılık farkı
+window.pickBrand = (toCell, km, hubs) => {
+  const base = lineCost(km, hubs);
+  $('modal').innerHTML = `
+    <h2>⚙️ Trafo Markası Seç</h2>
+    <p class="sub">Ortalama piyasa fiyatı: <b>${fmt(base)}</b>. Aynı markadan almaya devam edersen ilişkin artar ve <b>%25'e varan iskonto</b> kazanırsın — ama başka markaya kayarsan o ilişki düşer.</p>
+    ${Object.keys(BRANDS).map(b => brandRow(b, base, `closeModal();buildLine('${toCell}',${km},${hubs},'${b}')`)).join('')}
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.buildLine = (toCell, km, hubs, brand) => {
   if (!LINE_SRC || !toCell) { toast('Hat başlangıcı seçilmedi', 'warn'); return; } // bozuk hat kaydı oluşmasın
-  const cost = lineCost(km, hubs);
+  brand = brand || 'voltas';
+  const cost = brandPrice(brand, lineCost(km, hubs));
   if (G.cash < cost) { toast('Hat için ' + fmt(cost) + ' gerekli', 'warn'); return; }
   G.cash -= cost;
+  brandBuy(brand); // sadakat/ilişki güncellenir
   G.cellSpent[LINE_SRC] = (G.cellSpent[LINE_SRC] || 0) + cost;
   G.lines = G.lines || [];
-  G.lines.push({ id: G.nextId++, from: LINE_SRC, to: toCell, km, hubs, built: Date.now(), done: Date.now() + lineBuildSec(km) * 1000 / (G.demo ? 60 : 1) });
-  toast('⚡ Hat inşaatı başladı: ' + fmtN(km) + ' km — ' + fmtHrs(lineBuildSec(km) / 3600), '', null, 0, true);
+  const secs = lineBuildSec(km) * BRANDS[brand].build;
+  G.lines.push({ id: G.nextId++, from: LINE_SRC, to: toCell, km, hubs, brand, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1) });
+  toast('⚡ ' + BRANDS[brand].ico + ' ' + BRANDS[brand].nm + ' ile hat inşaatı başladı: ' + fmtN(km) + ' km — ' + fmtHrs(secs / 3600) + ' · ilişki ' + brandRel(brand) + '/100', '', null, 0, true);
   beep(500, .12);
   LINE_SRC = null; setMode(null);
   save(); drawOverlay();
@@ -1887,8 +1931,9 @@ window.buildLine = (toCell, km, hubs) => {
 window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça aralara yeni merkez alıp kaybı azalt")
   const l = (G.lines || []).find(x => x.id === id);
   if (!l) return;
-  if (G.cash < LINE.hub) { toast('Transfer merkezi için ' + fmt(LINE.hub) + ' gerekli', 'warn'); return; }
-  G.cash -= LINE.hub; l.hubs++;
+  const c = brandPrice(l.brand || 'voltas', LINE.hub);
+  if (G.cash < c) { toast('Transfer merkezi için ' + fmt(c) + ' gerekli', 'warn'); return; }
+  G.cash -= c; l.hubs++; brandBuy(l.brand || 'voltas');
   toast('🏗️ Transfer merkezi eklendi — kayıp %' + lineLossPct(l.km, l.hubs), '');
   save(); openViewSheet(); drawOverlay();
 };
@@ -1916,9 +1961,9 @@ function gridPanelHTML() {
   h += ls.map(l => {
     const rdy = lineReady(l), loss = Math.round(lineLoss(l)), wear = Math.round(100 - lineWear(l));
     return `<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0">
-      <div style="font-size:12.5px;font-weight:700">${nearestCityName(l.from) || cellCode(l.from)} → ${nearestCityName(l.to) || cellCode(l.to)} <span class="sub">${fmtN(l.km)} km</span></div>
+      <div style="font-size:12.5px;font-weight:700">${nearestCityName(l.from) || cellCode(l.from)} → ${nearestCityName(l.to) || cellCode(l.to)} <span class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</span></div>
       ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · ${l.hubs} transfer merkezi · yıpranma %${wear} · net ${fmt(cellPriceNow(l.to) * (1 - loss / 100))}/MWh</div>
-      <button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(LINE.hub)} (kayıp %${lineLossPct(l.km, l.hubs + 1)}'e iner)</button>
+      <button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))} (kayıp %${Math.max(5, lineLossPct(l.km, l.hubs + 1) + lineBrand(l).loss)}'e iner)</button>
       ${wear > 5 ? `<button class="bigsell half" onclick="repairLine(${l.id})">🔧 Hat Bakımı — ${fmt(Math.round(wear * l.km * 900))}</button>` : ''}
       <button class="bigsell half" style="color:var(--danger)" onclick="demolishLine(${l.id})">🗑️ Hattı Sök</button>`
       : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
@@ -1956,10 +2001,140 @@ const ALLY_MEMBER_SHARE_CAP = .4;
 const allyCap = () => Math.min(50, 10 + Math.floor(((G.ally && G.ally.pts) || 0) / 3) * 5);
 const allyBuffOn = () => G.allyBuffUntil > Date.now();
 const ALLY_BOTS = ['RüzgarKurdu', 'VoltHan', 'ŞebekeReis', 'GüneşKızı', 'TeraVatt34', 'AkımUstası', 'PilBaron', 'MegaJul', 'HidroCan'];
+// ── 💰 İTTİFAK KASASI + BAĞIŞ ÇAĞRISI (patron tasarımı) ──
+// Kasadan BİREYSEL para çekilemez; yalnız toplu kararlarda (konsorsiyum, kıtalararası hat) kullanılır.
+// Bağış barı renkleri patronun istediği gibi: %25 kırmızı · %50 sarı · %75 mavi · altı gri · dolunca yeşil.
+const callColor = p => p >= 100 ? 'var(--acc)' : p >= 75 ? '#9aa4b5' : p >= 50 ? '#4ea8ff' : p >= 25 ? '#ffd166' : '#ff5c5c';
+const myDonation = () => (G.ally && G.ally.donations && G.ally.donations[G.company]) || { total: 0, week: 0 };
+window.startCall = () => {
+  if (!G.ally || G.ally.call) return;
+  const goal = Math.max(5e8, Math.round(myWorth() * 3 / 1e8) * 1e8); // ittifak ölçeğine göre hedef
+  $('modal').innerHTML = `
+    <h2>📣 Bağış Çağrısı Aç</h2>
+    <p>İttifak kasası için <b>24 saatlik</b> çağrı açacaksın. Tüm üyelere bildirim gider; toplanan para
+    yalnız <b>ortak kararlarla</b> (konsorsiyum, kıtalararası hat) harcanır — kimse tek başına çekemez.</p>
+    <p>Hedef: <b class="pos">${fmt(goal)}</b></p>
+    <button class="primary" onclick="closeModal();doStartCall(${goal})">📣 Çağrıyı Başlat</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.doStartCall = goal => {
+  if (!G.ally || G.ally.call) return;
+  G.ally.call = { goal, raised: 0, until: Date.now() + 864e5 / (G.demo ? 60 : 1), _bt: Date.now() };
+  addMail('🤝 ' + G.ally.name, 'Bağış çağrısı açıldı', `İttifakımız ${fmt(goal)} hedefiyle 24 saatlik bağış çağrısı başlattı. Katkın ittifak kasasına yazılır ve ortak projelerde kullanılır.`, true);
+  toast('📣 Bağış çağrısı açıldı — hedef ' + fmt(goal), '', null, 0, true);
+  save(); refreshAllyUI();
+};
+window.donateAlly = amt => {
+  if (!G.ally || !G.ally.call) return;
+  amt = Math.min(amt, G.cash);
+  if (amt < 1) { toast('Bağış için paran yok', 'warn'); return; }
+  G.cash -= amt;
+  G.ally.treasury = (G.ally.treasury || 0) + amt;
+  G.ally.call.raised += amt;
+  G.ally.donations = G.ally.donations || {};
+  const d = G.ally.donations[G.company] || { total: 0, week: 0 };
+  d.total += amt; d.week += amt;
+  G.ally.donations[G.company] = d;
+  toast('💚 Bağışın kasaya geçti: ' + fmt(amt), '');
+  beep(700, .1);
+  save(); refreshAllyUI();
+};
+function allyCallTick() { // bot üyelerin bağışları + süre bitişi
+  const c = G.ally && G.ally.call;
+  if (!c) return;
+  const now = Date.now();
+  const dt = Math.max(0, (Math.min(now, c.until) - (c._bt || now)) / 1000);
+  c._bt = Math.min(now, c.until);
+  if (c.raised < c.goal && dt > 0) { // botlar hedefin ~%55'ini 24 saate yayarak toplar
+    const add = c.goal * .55 / 86400 * dt;
+    c.raised = Math.min(c.goal, c.raised + add);
+    G.ally.treasury = (G.ally.treasury || 0) + add;
+    G.ally.donations = G.ally.donations || {};
+    ALLY_BOTS.forEach((b, i) => {
+      const d = G.ally.donations[b] || { total: 0, week: 0 };
+      d.total += add / ALLY_BOTS.length; d.week += add / ALLY_BOTS.length;
+      G.ally.donations[b] = d;
+    });
+  }
+  if (c.raised >= c.goal) {
+    G.ally.call = null;
+    G.ally.pts += 1;
+    toast('💚 BAĞIŞ HEDEFİ TUTTU! Kasa: ' + fmt(G.ally.treasury) + ' · +1 ittifak puanı', '', null, 0, true);
+    addMail('🤝 ' + G.ally.name, 'Hedefe ulaşıldı', `Bağış çağrısı başarıyla tamamlandı. Kasadaki ${fmt(G.ally.treasury)} artık ortak projelerde kullanılabilir.`, true);
+    save(); refreshAllyUI();
+  } else if (now > c.until) {
+    G.ally.call = null;
+    toast('⌛ Bağış çağrısı süresi doldu — toplanan ' + fmt(c.raised) + ' kasada kaldı', 'warn', null, 0, true);
+    save(); refreshAllyUI();
+  }
+}
+// ── 🌍 KONSORSİYUM + KITALARARASI HAT (patron tasarımı) ──
+// İki ittifak birleşmeden kıtalararası hat çekilemez. Teklif → kabul → ortak finansman → 3 günlük inşa.
+// Gelir: hattı kullanan her MWh'nin bir kısmı hat sahibi ittifakın KASASINA gider.
+const CONSORTIUM_ROUTES = [
+  { nm: 'Afrika → Avrupa (Cebelitarık)', from: [35.9, -5.6], to: [36.1, -5.4], km: 4200, cost: 8e11, kwhFee: .06 },
+  { nm: 'Türkiye → Avrupa (Balkan Koridoru)', from: [41.0, 28.9], to: [48.2, 16.4], km: 1800, cost: 3.5e11, kwhFee: .05 },
+  { nm: 'Orta Doğu Hattı (İran–Irak–Türkiye)', from: [35.7, 51.4], to: [39.9, 32.9], km: 2400, cost: 5e11, kwhFee: .055 },
+  { nm: 'Ukrayna → Norveç Kuzey Hattı', from: [50.4, 30.5], to: [59.9, 10.7], km: 3100, cost: 6.5e11, kwhFee: .06 },
+];
+window.proposeConsortium = i => {
+  const r = CONSORTIUM_ROUTES[i];
+  if (!G.ally || G.ally.consortium) return;
+  const partner = ['Kuzey Şebeke Birliği', 'Avrupa Enerji Konseyi', 'Akdeniz Grid Paktı', 'Baltık Volt Birliği'][i % 4];
+  $('modal').innerHTML = `
+    <h2>🌍 Konsorsiyum Teklifi</h2>
+    <p><b>${r.nm}</b><br>Mesafe: <b>${fmtN(r.km)} km</b> · Toplam maliyet: <b>${fmt(r.cost)}</b><br>
+    Bu hat tek ittifakın kaldırabileceği bir yatırım değil — <b>${partner}</b> ile ortak finansman gerekiyor.</p>
+    <p class="sub">Onlar maliyetin yarısını üstlenir. Sizin payınız <b>${fmt(r.cost / 2)}</b> ve ittifak KASASINDAN ödenir.
+    Hat bittiğinde taşınan her MWh için <b>${fmt(r.kwhFee * 1000)}</b> ittifak kasanıza gelir.</p>
+    <p>Kasanız: <b class="${(G.ally.treasury || 0) >= r.cost / 2 ? 'pos' : 'neg'}">${fmt(G.ally.treasury || 0)}</b></p>
+    <button class="primary" onclick="closeModal();sendConsortium(${i},'${partner}')">📤 Teklifi Gönder</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.sendConsortium = (i, partner) => {
+  const r = CONSORTIUM_ROUTES[i];
+  G.ally.consortium = { route: i, partner, status: 'pending', since: Date.now() };
+  toast('📤 ' + partner + ' ittifakına konsorsiyum teklifi gönderildi — yanıt bekleniyor', '', null, 0, true);
+  addMail('🌍 ' + partner, 'Konsorsiyum teklifiniz', `${r.nm} projesi için teklifinizi aldık, yönetim kurulumuz değerlendiriyor. En geç birkaç saat içinde dönüş yapacağız.`);
+  setTimeout(() => {
+    if (!G.ally || !G.ally.consortium || G.ally.consortium.status !== 'pending') return;
+    G.ally.consortium.status = 'accepted';
+    addMail('🌍 ' + partner, 'Konsorsiyum KABUL', `${r.nm} projesinde ortağız! Maliyetin yarısını üstleniyoruz. Sizin payınız ${fmt(r.cost / 2)} — kasanızdan aktardığınızda inşaat başlar (3 gün).`);
+    toast('🤝 ' + partner + ' konsorsiyumu KABUL ETTİ — kasadan payınızı aktarın', '', null, 0, true);
+    save(); refreshAllyUI();
+  }, 20000);
+  save(); refreshAllyUI();
+};
+window.fundConsortium = () => {
+  const c = G.ally && G.ally.consortium;
+  if (!c || c.status !== 'accepted') return;
+  const r = CONSORTIUM_ROUTES[c.route], share = r.cost / 2;
+  if ((G.ally.treasury || 0) < share) { toast('Kasada ' + fmt(share) + ' olmalı — bağış çağrısı aç', 'warn'); return; }
+  G.ally.treasury -= share;
+  c.status = 'building';
+  c.done = Date.now() + 3 * 864e5 / (G.demo ? 60 : 1); // kıtalararası: 3 gün (patron)
+  toast('🏗️ Kıtalararası hat inşaatı başladı — 3 gün', '', null, 0, true);
+  addMail('🌍 ' + c.partner, 'İnşaat başladı', `${r.nm} hattının inşaatı başladı. 3 gün içinde devreye girecek; gelir paylaşımı otomatik işleyecek.`);
+  save(); refreshAllyUI();
+};
+function consortiumTick() {
+  const c = G.ally && G.ally.consortium;
+  if (!c || c.status !== 'building' || Date.now() < c.done) return;
+  c.status = 'live';
+  G.ally.pts += 3;
+  const r = CONSORTIUM_ROUTES[c.route];
+  toast('🌍 KITALARARASI HAT DEVREDE! ' + r.nm + ' — +3 ittifak puanı, kasaya kWh geliri akmaya başladı', '', null, 0, true);
+  addMail('🌍 ' + c.partner, 'Hat devrede', `${r.nm} hattı devrede! Taşınan her MWh için kasanıza pay yazılıyor. Hayırlı olsun.`);
+  save(); refreshAllyUI();
+}
+const consortiumLive = () => G.ally && G.ally.consortium && G.ally.consortium.status === 'live';
+
 window.foundAlly = () => {
   if (G.ally) return;
   const nm = ['Enerji Birliği', 'Güç Konseyi', 'Watt Kardeşliği', 'Şebeke Paktı', 'Anadolu Grid'][Math.floor(Math.random() * 5)];
-  G.ally = { name: nm, pts: 0, members: 1 + ALLY_BOTS.length, tender: null, wins: 0 };
+  G.ally = { name: nm, pts: 0, members: 1 + ALLY_BOTS.length, tender: null, wins: 0, treasury: 0, call: null, donations: {}, consortium: null };
   toast('🤝 "' + nm + '" ittifakı kuruldu — ' + G.ally.members + ' üye (prototipte bot arkadaşlar)', '', null, 0, true);
   beep(700, .12);
   save(); renderMenu(); refreshAllyUI();
@@ -2020,6 +2195,40 @@ function allyHTML() {
     const t = G.ally.tender;
     h += `<div class="qline" style="font-size:11.5px"><span>🏰 <b>${G.ally.name}</b></span><span>👥 ${G.ally.members}/${allyCap()}</span><span>⭐ ${G.ally.pts} puan</span><span>🏆 ${G.ally.wins || 0} teslim</span></div>`;
     if (allyBuffOn()) h += `<p class="pos" style="font-size:12px">🌟 +%50 alım fiyatı AKTİF — kalan ${fmtHrs((G.allyBuffUntil - Date.now()) / 36e5)}</p>`;
+    // ── 💰 KASA + BAĞIŞ ÇAĞRISI ──
+    const c = G.ally.call, mine = myDonation();
+    h += `<div style="font-size:12px;margin:10px 0 2px">💰 <b>İTTİFAK KASASI</b> <span class="sub">bireysel çekim YOK — yalnız ortak projeler</span></div>
+      <div class="qline" style="font-size:11.5px"><span>Kasa: <b class="pos">${fmt(G.ally.treasury || 0)}</b></span><span>Senin bağışın: <b>${fmt(mine.total)}</b> <span class="sub">(bu hafta ${fmt(mine.week)})</span></span></div>`;
+    if (c) {
+      const p = Math.min(100, 100 * c.raised / c.goal);
+      h += `<div style="border:1px solid ${callColor(p)};border-radius:10px;padding:8px 10px;margin:6px 0">
+        <div style="font-size:12.5px;font-weight:700">📣 Bağış Çağrısı <span class="sub">⏳ ${fmtHrs(Math.max(0, c.until - Date.now()) / 36e5)}</span></div>
+        <div class="rsbar" style="height:12px;margin:6px 0"><i style="width:${p}%;background:${callColor(p)}"></i></div>
+        <div class="sub" style="color:${callColor(p)}"><b>${fmt(c.raised)} / ${fmt(c.goal)}</b> — %${Math.round(p)}</div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          ${[.05, .15, .4].map(f => { const a = Math.round(G.cash * f); return `<button onclick="donateAlly(${a})" style="flex:1;padding:9px 4px;border-radius:8px;border:none;background:var(--acc);color:#071018;font-weight:800;font-size:11px;cursor:pointer">💚 ${fmt(a)}</button>`; }).join('')}
+        </div>
+      </div>`;
+    } else h += `<button class="bigsell half" onclick="startCall()">📣 Bağış Çağrısı Aç (24 saat)</button>`;
+    // üye bağış listesi (patron: "herkesin haftalık ve toplam bağışı isminin yanında")
+    const dons = Object.entries(G.ally.donations || {}).sort((a, b) => b[1].total - a[1].total).slice(0, 6);
+    if (dons.length) h += `<div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">👥 ÜYE BAĞIŞLARI</div>` +
+      dons.map(([nm, d]) => `<div class="mrow"><span class="mid"><div>${nm === G.company ? '<b>' + nm + ' (SEN)</b>' : nm}</div><div class="d">bu hafta ${fmt(d.week)}</div></span><b>${fmt(d.total)}</b></div>`).join('');
+    // ── 🌍 KONSORSİYUM / KITALARARASI HAT ──
+    h += `<div style="font-size:12px;margin:12px 0 2px">🌍 <b>KITALARARASI HAT</b> <span class="sub">tek ittifak kaldıramaz — konsorsiyum şart</span></div>`;
+    const cs = G.ally.consortium;
+    if (!cs) {
+      h += CONSORTIUM_ROUTES.map((r, i) => `<button class="bigsell half" style="text-align:left" onclick="proposeConsortium(${i})">
+        🌍 <b>${r.nm}</b><div class="sub">${fmtN(r.km)} km · payınız ${fmt(r.cost / 2)} · MWh geliri ${fmt(r.kwhFee * 1000)}</div></button>`).join('');
+    } else {
+      const r = CONSORTIUM_ROUTES[cs.route];
+      h += `<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin:6px 0">
+        <div style="font-size:12.5px;font-weight:700">${r.nm}</div>
+        <div class="sub">Ortak: ${cs.partner} · durum: <b>${cs.status === 'pending' ? '⏳ yanıt bekleniyor' : cs.status === 'accepted' ? '✅ kabul edildi — finansman bekliyor' : cs.status === 'building' ? '🏗️ inşa: ' + fmtHrs(Math.max(0, cs.done - Date.now()) / 36e5) : '🌍 DEVREDE'}</b></div>
+        ${cs.status === 'accepted' ? `<button class="bigsell" onclick="fundConsortium()" ${(G.ally.treasury || 0) < r.cost / 2 ? 'disabled' : ''}>💰 Kasadan Payı Öde — ${fmt(r.cost / 2)}${(G.ally.treasury || 0) < r.cost / 2 ? ' (kasa yetersiz)' : ''}</button>` : ''}
+        ${cs.status === 'live' ? `<div class="sub pos">Taşınan her MWh için kasaya ${fmt(r.kwhFee * 1000)} geliyor. Satışlarında otomatik işler.</div>` : ''}
+      </div>`;
+    }
     if (t) {
       h += `<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin:6px 0">
         <div style="font-size:12px;font-weight:700">🚨 ACİL İHALE — ${nearestCityName(t.cell) ? nearestCityName(t.cell) + ' · ' : ''}${cellCode(t.cell)} <span class="sub">⏳ ${fmtHrs(Math.max(0, t.until - Date.now()) / 36e5)}</span></div>
@@ -2042,7 +2251,9 @@ function allyHTML() {
 // doluysa GERÇEK çok oyuncu: tesisler, sohbet, posta, arkadaşlar ve çevrimiçi durumu paylaşılır.
 // Adres boşsa oyun aynen çalışır — tek fark, diğer oyuncular simülasyondan gelir.
 const NET = {
-  db: null, id: null, ready: false, players: {}, units: {}, chat: {}, lastPull: 0,
+  db: null, key: null, id: null, ready: false, players: {}, units: {}, chat: {}, lastPull: 0,
+  auth: null,   // { kind:'guest'|'google', uid, token, refresh, email, name }
+  cloudAt: 0,   // son bulut kaydı zamanı
   on() { return !!this.db; },
   async init() {
     try {
@@ -2051,12 +2262,58 @@ const NET = {
       const c = await r.json();
       if (!c.db) return;
       this.db = c.db.replace(/\/$/, '');
-      this.id = localStorage.getItem('ec_netid') || ('p' + Math.random().toString(36).slice(2, 10));
+      this.key = c.apiKey || null;      // Firebase Web API anahtarı (hesap girişi için)
+      this.clientId = c.clientId || null; // Google OAuth istemci kimliği
+      try { this.auth = JSON.parse(localStorage.getItem('ec_auth') || 'null'); } catch (e) {}
+      this.id = (this.auth && this.auth.uid) || localStorage.getItem('ec_netid') || ('p' + Math.random().toString(36).slice(2, 10));
       localStorage.setItem('ec_netid', this.id);
       this.ready = true;
       console.log('[NET] online sunucu bağlı');
       this.loop();
     } catch (e) { /* çevrimdışı/config yok — simülasyon sürer */ }
+  },
+  // ── 🔐 HESAP: misafir (anonim) veya Google ──
+  saveAuth() { try { localStorage.setItem('ec_auth', JSON.stringify(this.auth)); } catch (e) {} },
+  async guestLogin() { // Firebase Anonymous Auth (REST)
+    if (!this.key) { this.auth = { kind: 'guest', uid: this.id, local: true }; this.saveAuth(); return this.auth; }
+    const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${this.key}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnSecureToken: true }) });
+    const j = await r.json();
+    if (!j.idToken) throw new Error(j.error && j.error.message || 'giriş hatası');
+    this.auth = { kind: 'guest', uid: j.localId, token: j.idToken, refresh: j.refreshToken, at: Date.now() };
+    this.id = j.localId; this.saveAuth();
+    return this.auth;
+  },
+  googleUrl() { // Google ile giriş (yönlendirme akışı)
+    if (!this.key) return null;
+    const redirect = location.origin + location.pathname;
+    return `https://accounts.google.com/o/oauth2/auth?client_id=${encodeURIComponent(this.clientId || '')}` +
+      `&redirect_uri=${encodeURIComponent(redirect)}&response_type=id_token&scope=email%20profile&nonce=${Date.now()}`;
+  },
+  async googleFinish(idToken) { // Google kimliğini Firebase hesabına çevir
+    const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${this.key}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postBody: `id_token=${idToken}&providerId=google.com`, requestUri: location.origin, returnSecureToken: true }),
+    });
+    const j = await r.json();
+    if (!j.idToken) throw new Error(j.error && j.error.message || 'Google girişi başarısız');
+    this.auth = { kind: 'google', uid: j.localId, token: j.idToken, refresh: j.refreshToken, email: j.email, name: j.displayName, at: Date.now() };
+    this.id = j.localId; this.saveAuth();
+    return this.auth;
+  },
+  // ── ☁️ BULUT KAYIT: oyuncunun tüm verisi sunucuda (cihaz değişse de kaybolmaz) ──
+  async cloudSave(force) {
+    if (!this.on() || !G || !G.company) return;
+    if (!force && Date.now() - this.cloudAt < 20000) return; // 20 sn'de bir
+    this.cloudAt = Date.now();
+    const { _tcd, _aucT, _started, ...s } = G;
+    s.units = G.units.map(({ _lastIcon, ...u }) => u);
+    s._sv = Date.now();
+    try { await this.put('saves/' + this.id, s); } catch (e) {}
+  },
+  async cloudLoad() {
+    if (!this.on()) return null;
+    try { return await this.get('saves/' + this.id); } catch (e) { return null; }
   },
   async req(path, method, body) {
     const o = { method, cache: 'no-store' };
@@ -2075,9 +2332,11 @@ const NET = {
         em: co2Avg(), mw: installedMW(), ally: G.ally ? G.ally.name : null, ts: Date.now(),
       });
       // kendi tesislerini paylaş (harita üzerinde diğerleri görsün)
+      // PAYLAŞIM KURALI (patron): hediye/eğitim birimleri DİĞER oyunculara görünmez —
+      // yoksa başlangıç şehirleri milyonlarca aynı türbinle dolar. Merkez ofis görünür.
       const mine = {};
-      for (const u of G.units) if (u.kind !== 'office' && u.buildDone <= Date.now())
-        mine[u.id] = { k: u.kind, t: u.t, ll: u.ll, c: u.cell, s: u.buildDone };
+      for (const u of G.units) if (!u.hidden && u.buildDone <= Date.now())
+        mine[u.id] = { k: u.kind, t: u.t, ll: u.ll, c: u.cell, s: u.buildDone, hq: !!u.hq };
       await this.put('units/' + this.id, mine);
       const [pl, un] = await Promise.all([this.get('players'), this.get('units')]);
       this.players = pl || {}; this.units = un || {};
@@ -2150,13 +2409,17 @@ function drawOthers() {
   for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
     for (const o of othersInCell(cy + '_' + cx)) {
       if (G.boughtOthers && G.boughtOthers[o.oid]) continue; // satın aldıysan artık senin
-      const T = o.kind === 'store' ? STORE_TYPES[o.t] : PLANT_TYPES[o.t];
-      const px = o.kind === 'store' ? 22 : 26;
-      const vis = o.kind === 'store' ? containerSVG(px, .5, T.tip)
-        : PLANT_TYPES[o.t].kind === 'wind' ? turbineSVG(px, true, false, '#e6edf5')
-        : PLANT_TYPES[o.t].kind === 'sun' ? solarSVG(px, false, false)
+      const T = TYPE_OF(o.kind, o.t);
+      if (!T) continue; // bilinmeyen tür (eski sunucu kaydı) çizimi çökertmesin
+      const px = o.kind === 'office' ? 26 : o.kind === 'store' ? 22 : 26;
+      const P = o.kind === 'plant' ? PLANT_TYPES[o.t] : null;
+      const vis = o.kind === 'office' ? `<span style="font-size:${px}px">🏢</span>`
+        : o.kind === 'store' ? containerSVG(px, .5, T.tip)
+        : P && P.kind === 'wind' ? turbineSVG(px, true, false, '#e6edf5')
+        : P && P.kind === 'sun' ? solarSVG(px, false, false)
         : o.t.startsWith('coal') ? coalSVG(px) : `<span style="font-size:${px}px">${T.ico}</span>`;
-      const m = L.marker(o.ll, { icon: divIcon(`<div class="umark" style="opacity:.72;filter:saturate(.7)">${vis}</div>`, [px + 10, px + 14]) }).addTo(map);
+      const lbl = o.kind === 'office' ? `<div class="bd" style="background:#000a">${(o.owner || '').slice(0, 12)}</div>` : '';
+      const m = L.marker(o.ll, { icon: divIcon(`<div class="umark" style="opacity:.72;filter:saturate(.7)">${vis}${lbl}</div>`, [px + 10, px + 20]) }).addTo(map);
       m.on('click', () => openOtherSheet(o));
       othersLayer.push(m);
     }
@@ -2167,11 +2430,13 @@ window.toggleOthers = () => {
   toast(G.showOthers ? '👥 Diğer oyuncuların tesisleri GÖRÜNÜR' : '🙈 Diğer oyuncuların tesisleri gizlendi', '');
   othersDrawn = ''; drawOthers(); save(); openViewSheet();
 };
-const otherValue = o => { const [cy, cx] = o.cell.split('_').map(Number); return Math.round((o.kind === 'store' ? STORE_TYPES[o.t] : PLANT_TYPES[o.t]).cost * (1.15 + hash01(cy, cx, 141) * .7)); };
+const otherValue = o => { const [cy, cx] = o.cell.split('_').map(Number); const T = TYPE_OF(o.kind, o.t); return Math.round((T ? T.cost : 1e6) * (1.15 + hash01(cy, cx, 141) * .7)); };
 window.openOtherSheet = o => {
   hideSheets();
-  const T = o.kind === 'store' ? STORE_TYPES[o.t] : PLANT_TYPES[o.t];
-  const on = playerOnline(o.ownerIdx), ask = otherValue(o);
+  const T = TYPE_OF(o.kind, o.t);
+  if (!T) return;
+  const on = o.net ? !!(NET.list().find(p => p.id === o.netOwner) || {}).online : playerOnline(o.ownerIdx);
+  const ask = otherValue(o);
   window.__lastUnit = null; window.__lastOther = o;
   $('us_title').innerHTML = `${T.ico} ${T.nm} <span class="sub">— başka oyuncunun tesisi</span>`;
   $('us_body').innerHTML = `
@@ -2544,6 +2809,7 @@ function scheduleFillNotifs() {
 // ── Kayıt ──
 function save() {
   if (!G || !G.company) return;
+  NET.cloudSave(); // ☁️ bulut kaydı (hile/cihaz değişimi koruması) — 20 sn'de bir
   // BUGFIX: lastSeen artık BURADA güncellenmez — gizli sekmede otokayıt "son görülme"yi tazeleyip
   // çevrimdışı üretim telafisini iptal ediyordu. lastSeen'i yalnız sim tiki (frame) günceller.
   const { _tcd, _aucT, _started, ...s } = G; // geçici alanlar kayda girmez
@@ -3608,8 +3874,10 @@ function renderHUD() {
 
 // ═══════════ ONBOARDING: gerçek dünya haritasından Ülke → İl → Şirket ═══════════
 function wizardStart() {
-  // KAYIT VARSA DİREKT YÜKLE (patron isteği): her açılışta "Yeni Oyun / Devam" SORULMAZ.
-  // Sıfırlama şirket ekranındaki "⚠️ Hesabı Sıfırla" ile yapılır (çift onaylı).
+  // 🔐 HESAP EKRANI (patron): ilk girişte Google hesabı bağla ya da misafir olarak oyna.
+  // Google'a bağlayan oyuncu telefon değiştirse bile kaydını kaybetmez (kayıt sunucuda).
+  if (NET.on() && !NET.auth) { showLoginScreen(); return; }
+  // KAYIT VARSA DİREKT YÜKLE: her açılışta "Yeni Oyun / Devam" SORULMAZ.
   const has = load();
   if (has) { G = has; startGame(true); return; }
   $('app').classList.add('wiz'); // kuruluşta üst/alt menüler gizli
@@ -3624,6 +3892,55 @@ function wizardStart() {
 }
 // İki adımlı kuruluş: 1) Ülke (liste VEYA haritadan) 2) İl/şehir (liste VEYA haritadaki noktadan) — rakiple aynı akış
 const WIZ = { step: 0 };
+// ── 🔐 GİRİŞ EKRANI ──
+function showLoginScreen() {
+  $('app').classList.add('wiz');
+  $('modal').innerHTML = `
+    <div class="biglogo">⚡</div>
+    <h2 style="text-align:center">ENERGY COMPANY</h2>
+    <p style="text-align:center;font-size:11px;color:var(--gold)">Development of Company games</p>
+    <p style="text-align:center">Şirketin ve tüm ilerlemen <b>sunucuda</b> saklanır.<br>Google hesabı bağlarsan telefonunu değiştirsen bile kaybolmaz.</p>
+    <button class="primary" style="background:#fff;color:#1a1a1a" onclick="loginGoogle()">🔓 Google Hesabıyla Devam Et</button>
+    <button class="primary ghostbtn" onclick="loginGuest()">👤 Misafir Olarak Oyna</button>
+    <p style="text-align:center;font-size:10.5px;color:var(--dim);margin-top:10px">Misafir kaydı da sunucuda tutulur; ancak yalnız bu cihazdan erişilir.<br>Sonradan menüden Google hesabına bağlayabilirsin.</p>
+    <p style="text-align:center;font-size:10px;margin-top:8px">${BUILD_TAG}</p>`;
+  $('overlay').classList.add('show');
+}
+window.loginGuest = async () => {
+  $('modal').innerHTML = '<h2>👤 Misafir girişi</h2><p>Sunucuya bağlanılıyor...</p>';
+  try { await NET.guestLogin(); } catch (e) { toast('Giriş hatası: ' + e.message, 'bad'); }
+  closeModal();
+  await afterLogin();
+};
+window.loginGoogle = async () => {
+  if (!NET.key || !NET.clientId) {
+    $('modal').innerHTML = `
+      <h2>🔓 Google Girişi</h2>
+      <p>Google ile giriş için sunucuda tek seferlik bir ayar gerekiyor (Firebase → Authentication → Google'ı etkinleştir).</p>
+      <p class="sub">Bu ayar açılana kadar misafir olarak oynayabilirsin; ilerlemen sunucuda saklanır ve sonradan Google hesabına bağlanabilir.</p>
+      <button class="primary" onclick="closeModal();loginGuest()">👤 Misafir Olarak Devam Et</button>`;
+    $('overlay').classList.add('show');
+    return;
+  }
+  location.href = NET.googleUrl();
+};
+async function afterLogin() {
+  // bulut kaydı varsa onu kullan (cihaz değişse bile ilerleme gelir)
+  const cloud = await NET.cloudLoad();
+  const local = load();
+  let s = null;
+  if (cloud && cloud.company) s = (local && local.lastSeen > (cloud.lastSeen || 0)) ? local : cloud;
+  else if (local && local.company) s = local;
+  if (s) { G = migrate(s); startGame(true); return; }
+  $('app').classList.add('wiz');
+  $('modal').innerHTML = `
+    <div class="biglogo">⚡</div>
+    <h2 style="text-align:center">ENERGY COMPANY</h2>
+    <p style="text-align:center">Gerçek dünya haritasında enerji imparatorluğunu kur.<br>Adil · Şeffaf · Günde ~2 saat yeter.</p>
+    <button class="primary" onclick="wizMapStart()">🌍 Yeni Oyun — Haritadan Başla</button>
+    <p style="text-align:center;font-size:10px;margin-top:10px">${BUILD_TAG} · ${NET.auth && NET.auth.kind === 'google' ? '🔓 ' + (NET.auth.email || 'Google') : '👤 Misafir'}</p>`;
+  $('overlay').classList.add('show');
+}
 window.wizMapStart = () => {
   G = freshState();
   closeModal();
@@ -3739,9 +4056,10 @@ window.wizDone = () => {
   const hcell = cellId(IL_COORD[G.il]);
   G.licenses[hcell] = true;
   const cc = cellCenter(hcell);
-  addUnit('plant', 'wind_2', [cc[0] + .012, cc[1] - .015], 0);
-  addUnit('store', 'bat', [cc[0] - .01, cc[1] + .015], 0);
-  addUnit('office', 'office', [cc[0] - .022, cc[1] - .022], 0).hq = true; // merkez ofis hediye — ofis kuralının başlangıç kapısı
+  // hediye kit: haritada BAŞKALARINA görünmez (hidden) — kalabalık önleme (patron kararı)
+  addUnit('plant', 'wind_2', [cc[0] + .012, cc[1] - .015], 0).hidden = true;
+  addUnit('store', 'bat', [cc[0] - .01, cc[1] + .015], 0).hidden = true;
+  const hq = addUnit('office', 'office', [cc[0] - .022, cc[1] - .022], 0); hq.hq = true; // merkez ofis GÖRÜNÜR
   startGame(false);
 };
 
@@ -3894,7 +4212,7 @@ function frameBody(ts) {
         save();
         if ($('companysheet').classList.contains('show')) openCompanySheet();
       }
-      allyTick(); // 🤝 acil ihale: bot katkısı + sonuçlandırma
+      allyTick(); allyCallTick(); consortiumTick(); // 🤝 ihale · 💰 bağış çağrısı · 🌍 konsorsiyum
       // ⏫ depo kapasite inşaatı bitti mi?
       for (const d of G.units) {
         if (d.kind === 'fueldepot' && d.upgUntil && Date.now() >= d.upgUntil) {
@@ -3948,8 +4266,24 @@ try {
     });
   }
 } catch (e) {}
-NET.init(); // online sunucu (net-config.json varsa) — yoksa simülasyon sürer
-wizardStart();
+// Google yönlendirmesinden dönüş (id_token adres çubuğunda gelir)
+(function handleGoogleReturn() {
+  const h = location.hash || '';
+  if (h.includes('id_token=')) {
+    const tok = new URLSearchParams(h.slice(1)).get('id_token');
+    history.replaceState(null, '', location.pathname);
+    if (tok) window.__googleToken = tok;
+  }
+})();
+NET.init().then(async () => { // online sunucu (net-config.json varsa) — yoksa simülasyon sürer
+  if (window.__googleToken && NET.on()) {
+    try { await NET.googleFinish(window.__googleToken); toast('🔓 Google hesabıyla giriş yapıldı', '', null, 0, true); } catch (e) { toast('Google girişi başarısız: ' + e.message, 'bad'); }
+    window.__googleToken = null;
+    await afterLogin();
+    return;
+  }
+  wizardStart();
+});
 requestAnimationFrame(frame);
 // debug/test
 window.G_get = () => G; window.__step = step; window.__sellAll = sellAll; window.__addUnit = addUnit; window.__cellQuality = cellQuality; window.__cellId = cellId; window.__setSel = (c, ll) => { SEL.cell = c; SEL.ll = ll; };
