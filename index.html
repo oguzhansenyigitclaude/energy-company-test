@@ -29,8 +29,11 @@
   .lvlrow{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:10.5px;color:var(--dim)}
   #lvlbar{flex:1;height:6px;background:#2a3346;border-radius:4px;overflow:hidden}
   #lvlfill{height:100%;background:var(--acc2);width:0%;transition:width .4s}
-  #evbanner{flex:0 0 auto;padding:4px 12px;font-size:11px;background:#1c2a3e;border-bottom:1px solid var(--line);z-index:20;white-space:nowrap;overflow-x:auto;scrollbar-width:none}
-  #evbanner::-webkit-scrollbar{display:none} /* "gri çizgi" bug'ı: bandın kaydırma çubuğuydu — gizlendi */
+  /* üst bant: KAYAN YAZI (patron isteği) — taşan içerik sürekli akar, kaydırma çubuğu yok */
+  #evbanner{flex:0 0 auto;padding:4px 0;font-size:11px;background:#1c2a3e;border-bottom:1px solid var(--line);z-index:20;overflow:hidden;white-space:nowrap}
+  #evtext{display:inline-block;padding-left:100%;animation:evscroll 26s linear infinite}
+  #evbanner:hover #evtext{animation-play-state:paused}
+  @keyframes evscroll{to{transform:translateX(-100%)}}
   #evbanner b{color:var(--gold)}
 
   /* ── HARİTA = ANA EKRAN ── */
@@ -49,7 +52,10 @@
   #drawer button{display:flex;flex-direction:column;align-items:center;gap:2px;width:66px;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--cream);font-size:10px;font-weight:700;cursor:pointer}
   #drawer button .big{font-size:19px}
   /* çekmecenin SOL kulpu: kapatma (rakip paraleli) */
-  #drawer #drawerclose{position:absolute;left:-26px;top:50%;transform:translateY(-50%);display:block;width:26px;height:58px;padding:0;border-radius:12px 0 0 12px;border:1px solid var(--line);border-right:none;background:var(--cream);color:#13213a;font-size:14px;font-weight:800;box-shadow:-2px 2px 10px #0006}
+  /* kapatma kulpu YALNIZ çekmece açıkken (kapalıyken açma kulpuyla üst üste biniyordu — patron bildirimi) */
+  #drawer #drawerclose{position:absolute;left:-30px;top:50%;transform:translateY(-50%);display:none;width:30px;height:58px;padding:0;border-radius:12px 0 0 12px;border:1px solid var(--line);border-right:none;background:var(--cream);color:#13213a;font-size:14px;font-weight:800;box-shadow:-2px 2px 10px #0006}
+  #drawer.open #drawerclose{display:block}
+  #drawer.open ~ #drawerhandle, #drawer.open + #drawerhandle{display:none}
   #maploading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:13px;z-index:2;flex-direction:column;gap:8px}
 
   .umark{text-align:center;line-height:1;filter:drop-shadow(0 1px 3px #0008);position:relative}
@@ -98,8 +104,7 @@
   /* ── alt bar ── */
   #bottombar{flex:0 0 auto;display:flex;gap:5px;padding:7px 8px 10px;background:var(--panel);border-top:1px solid var(--line);z-index:20}
   #bottombar button{flex:1;min-height:46px;padding:11px 2px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
-  #maintbtn,#homebtn,#menubtn{flex:0 0 46px;font-size:15px}
-  #pricebtn{color:var(--acc);flex:1.3}
+  #viewbtn,#allybtn{color:var(--cream)}
   #bottombar button.on{border-color:var(--acc2);color:var(--acc2);background:#16283e}
   #bottombar button:disabled{opacity:.3;cursor:default}
   #modehint{position:absolute;left:10px;right:10px;bottom:8px;z-index:1150;display:none;align-items:center;gap:8px;background:#0b2038f0;border:1px solid var(--acc2);border-radius:12px;padding:11px 14px;font-size:13px;font-weight:700;box-shadow:0 4px 16px #000a}
@@ -236,11 +241,11 @@
   <div id="hdr">
     <div class="row1">
       <div><div id="coname">—</div><div id="coloc">—</div></div>
-      <div style="text-align:right"><div id="cash">$0</div><div style="font-size:10px;color:var(--dim)" id="clockline">—</div></div>
+      <div style="text-align:right"><div id="cash">$0</div><div style="font-size:10px;color:var(--dim)" id="clockline">—</div><div style="font-size:10px;color:var(--acc2)" id="hudprice">—</div></div>
     </div>
     <div class="lvlrow"><span id="lvltxt">🚀</span><div id="lvlbar"><div id="lvlfill"></div></div><span id="xptxt"></span></div>
   </div>
-  <div id="evbanner">📅 <span id="evtext">—</span></div>
+  <div id="evbanner"><span id="evtext">—</span></div>
 
   <div id="mapwrap">
     <div id="mapdiv"></div>
@@ -305,7 +310,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-16 00:21) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-16 13:02) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -319,29 +324,37 @@
       <h3><span id="comp_title">🏢 ŞİRKET</span><span class="x" onclick="hideSheets()">✕</span></h3>
       <div id="comp_body"></div>
     </div>
+    <!-- HARİTA GÖRÜNÜMLERİ (patron isteği) -->
+    <div class="sheet" id="viewsheet">
+      <h3>🗺️ HARİTA GÖRÜNÜMÜ<span class="x" onclick="hideSheets()">✕</span></h3>
+      <div id="view_body"></div>
+    </div>
+    <!-- İTTİFAK (alt bardan açılır) -->
+    <div class="sheet" id="allysheet">
+      <h3>🤝 İTTİFAK<span class="x" onclick="hideSheets()">✕</span></h3>
+      <div id="ally_body"></div>
+    </div>
     <div id="tuthint"></div>
 
     <!-- Sağ çekmece menü: hızlı erişim (rakip paraleli, ayna tasarım) -->
     <button id="drawerhandle" title="Menü">⚡</button>
     <div id="drawer">
       <button id="drawerclose" title="Menüyü kapat">▶</button>
-      <button data-act="build"><span class="big">🏗️</span>İnşa Et</button>
-      <button data-act="info"><span class="big">ℹ️</span>Bilgi</button>
-      <button data-act="market"><span class="big">💰</span>Satış</button>
-      <button data-act="maint"><span class="big">🔧</span>Bakım</button>
+      <button data-act="market"><span class="big">💰</span><span id="drawerprice">Satış</span></button>
+      <button data-act="maint"><span class="big">🔧</span><span id="drawermaint">Bakım</span></button>
       <button data-act="company"><span class="big">🏢</span>Şirket</button>
       <button data-act="menu"><span class="big">📋</span>Görevler</button>
+      <button data-act="home"><span class="big">🏠</span>Merkez</button>
       <button data-act="help"><span class="big">❓</span>Yardım</button>
     </div>
   </div>
 
+  <!-- ALT BAR SADELEŞTİ (patron): diğer her şey sağ çekmecede — burada sadece 4 ana eylem -->
   <div id="bottombar">
-    <button id="pricebtn">💰 $—</button>
     <button id="buildbtn">🏗️ İnşa</button>
     <button id="infobtn">ℹ️ Bilgi</button>
-    <button id="maintbtn" title="Toplu Bakım">🔧</button>
-    <button id="homebtn" title="Merkeze git">🏠</button>
-    <button id="menubtn" title="Menü">☰</button>
+    <button id="viewbtn">🗺️ Görünüm</button>
+    <button id="allybtn">🤝 İttifak</button>
   </div>
 
   <div id="toasts"></div>
@@ -357,7 +370,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-16 00:21)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-16 13:02)'; // deploy.js yayında tarih damgası ekler
 // Büyük ekonomi gösterimi: $1,2M · $3,4B · $1,1T (milyar-trilyon seviyelerine çıkan kasalar okunur kalsın)
 function fmt(n) {
   const a = Math.abs(n), s = n < 0 ? '-' : '';
@@ -829,6 +842,7 @@ function freshState() {
     offers: {}, maintDiscount: 1, starterClaimed: false, founded: Date.now(),
     research: { lvl: { coalcap: 0, gascap: 0, office: 0, liccap: 0 }, active: null },
     capLic: {}, // kapasite lisansları (patron): kategori → kademe (0=başlangıç; gaz/nükleer 0'da kilitli)
+    lines: [], // ⚡ enerji nakil hatları
     ally: null, allyBuffUntil: 0, // 🤝 ittifak (prototipte bot üyelerle simülasyon) + %50 alım bonusu penceresi
     resPts: { daily: 1, weekly: 0, dailyKey: '' }, // araştırma puanları (patron): Sv1-10 günlük, Sv11+ haftalık puan ister; 1 başlangıç hediyesi
     cellEarned: {}, cellSpent: {}, // ofis bölge raporu için kare bazlı kazanç/harcama
@@ -839,9 +853,17 @@ function freshState() {
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
   };
 }
-const BOOST_CAP = 5e8, BOOST_MULT = 10; // prototip: $500M — tam oyunda $5B
+const BOOST_CAP = 5e7, BOOST_MULT = 10; // patron ayarı: $50M ($500M çok fazlaydı)
+// 🌱 YENİ ŞİRKET TAKVİYESİ (patron tasarımı): ilk $50M'a kadar hava koşulları acımasız olmasın —
+// rüzgara +m/s, güneşte bulut etkisine indirim. Kazanç arttıkça DOĞRUSAL azalır, $50M'da biter.
+// (Rakip bunu GİZLİCE yapıyor; biz ŞEFFAF gösteriyoruz — panelde "🌱 takviye" satırı görünür.)
+const newbieAid = () => (G && !G.demo) ? Math.max(0, 1 - G.totalEarned / BOOST_CAP) : 0;
+const NEWBIE_WIND = 3.5;   // en fazla +3,5 m/s rüzgar
+const NEWBIE_CLOUD = .65;  // bulut etkisi en fazla %65 azalır
 const boostFactor = () => (G && G.totalEarned < BOOST_CAP && !G.demo) ? BOOST_MULT : 1;
-function nowMin() { return Date.now() / 60000 + (G ? G.demoOffsetMin : 0); }
+// BUGFIX: nowMin UTC dakikası döndürüyordu → güneş eğrisi ve puant fiyat saatleri TR'de 3 saat kaymıştı
+// (HUD saati yerel, sim UTC). Artık ikisi de YEREL saat.
+function nowMin() { return Date.now() / 60000 - new Date().getTimezoneOffset() + (G ? G.demoOffsetMin : 0); }
 function clockDate() { return new Date(Date.now() + (G ? G.demoOffsetMin : 0) * 60000); }
 const homeCell = () => cellId(IL_COORD[G.il] || [39, 35]);
 const jitter = ll => [ll[0] + (Math.random() - .5) * CELL * .5, ll[1] + (Math.random() - .5) * CELL * .5];
@@ -1000,11 +1022,11 @@ const smoothNoise = (t, s) => (Math.sin(t * .9 + s * 7.3) + Math.sin(t * .23 + s
 function sunFactor(q, atMin) {
   const m = atMin ?? nowMin(), h = (m / 60) % 24, ev = todayEvent();
   if (h < 6 || h > 19.5) return 0;
-  return Math.max(0, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), 1.4) * (.8 + .2 * smoothNoise(m / 90, 2)) * q.sun * (ev.sun || 1));
+  return Math.max(0, Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) * (.8 + .2 * smoothNoise(m / 90, 2)) * q.sun * (ev.sun || 1) * (1 + .4 * newbieAid()));
 }
 function windFactor(q, atMin) {
   const m = atMin ?? nowMin(), ev = todayEvent();
-  return Math.max(.1, (.72 + .5 * smoothNoise(m / 55, 5)) * q.wind * (ev.wind || 1));
+  return Math.max(.1, (.72 + .5 * smoothNoise(m / 55, 5)) * q.wind * (ev.wind || 1) * (1 + .5 * newbieAid())); // 🌱 takviye
 }
 function hydroFactor(q, atMin) {
   const m = atMin ?? nowMin(), ev = todayEvent();
@@ -1036,11 +1058,14 @@ function plantOutput(u, atMin) {
   if (T.kind === 'sun') {
     if (wx) {
       const h = (nowMin() / 60) % 24;
-      const bell = (h >= 6 && h <= 19.5) ? Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), 1.2) : 0;
-      f = wx.day ? bell * (1 - .75 * (wx.cloud || 0) / 100) : 0;
+      // gündüz eğrisi: sabah/akşam düşer ama dibe vurmaz (gündüz tabanı .62 — patron: "10 MW panel 0,8 MW üretmesin")
+      let bell = (h >= 6 && h <= 19.5) ? Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) : 0;
+      // bulut etkisi DOĞRUSAL (patron: %59 bulut → ~%41 üretim), üstüne yeni şirket takviyesi
+      const cloud = (wx.cloud || 0) * (1 - NEWBIE_CLOUD * newbieAid());
+      f = wx.day ? bell * Math.max(.05, 1 - cloud / 100) : 0;
     } else f = sunFactor(q, atMin);
   } else if (T.kind === 'wind') {
-    const wc = wx ? windCurve(wx.w, T) : null;
+    const wc = wx ? windCurve(wx.w + NEWBIE_WIND * newbieAid(), T) : null; // takviyeli rüzgar
     f = wc != null ? wc : windFactor(q, atMin) * .55; // sim fallback nominali aşmasın
   } else if (T.kind === 'hydro') f = hydroFactor(q, atMin);
   else if (T.kind === 'geo') f = .95;
@@ -1058,6 +1083,19 @@ function greenBonus() {
   const em = co2Avg();
   return em <= 50 ? .15 : em <= 150 ? .10 : em <= 300 ? .05 : 0;
 }
+// 🌿 EMİSYON ROZETİ (patron isteği): şirket adının yanında, DİĞER OYUNCULAR DA GÖRÜR (ittifak üye seçimi için).
+// Simge emisyona göre değişir: temiz → çiçek, orta → yaprak/duman, kirli → fabrika bacası.
+function emBadgeOf(em) {
+  if (em <= 50) return { ico: '🌿', nm: 'Düşük emisyon', col: 'var(--acc)' };
+  if (em <= 150) return { ico: '🍃', nm: 'Temiz sayılır', col: '#8ec9ff' };
+  if (em <= 300) return { ico: '💨', nm: 'Orta emisyon', col: 'var(--warn)' };
+  if (em <= 600) return { ico: '🏭', nm: 'Yüksek emisyon', col: 'var(--danger)' };
+  return { ico: '☠️', nm: 'Çok kirli', col: 'var(--danger)' };
+}
+const emBadge = () => emBadgeOf(co2Avg());
+const emBadgeHTML = (em, big) => { const b = emBadgeOf(em); return `<span style="color:${b.col};font-size:${big ? 12 : 10.5}px;white-space:nowrap">${b.ico} ${b.nm}</span>`; };
+// botların emisyon karnesi (liderlik tablosunda görünür — deterministik)
+const botEm = i => Math.round(hash01(i, 7, 3) * 700);
 const plants = () => G.units.filter(u => u.kind === 'plant');
 const stores = () => G.units.filter(u => u.kind === 'store');
 const readyStores = c => G.units.filter(u => u.kind === 'store' && u.cell === c && u.buildDone <= Date.now());
@@ -1141,6 +1179,18 @@ function sellChunk(st, mwh, targetCell, mult) {
   const cell = targetCell || st.cell;
   let gain;
   const at = G.ally && G.ally.tender;
+  const line = targetCell && targetCell !== st.cell ? (G.lines || []).find(l => l.from === st.cell && l.to === targetCell && lineReady(l)) : null;
+  if (line) {
+    // ⚡ NAKİL HATTI: hedef bölgenin fiyatı, mesafe kaybı düşülür (aktarım bedeli YOK — hattı zaten sen kurdun)
+    const r = sellRevenue(cell, mwh);
+    gain = r.gain * (mult || 1) * (1 - lineLoss(line) / 100);
+    st.stored = Math.max(0, st.stored - mwh);
+    noteSold(cell, mwh);
+    G.cash += gain;
+    G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain;
+    G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
+    return gain;
+  }
   if (at && cell === at.cell && Date.now() < at.until) {
     // 🚨 ACİL İHALE TESLİMATI: tam bölge fiyatı (talep sınırsız), aktarım kesintisi YOK;
     // adalet: üye başına katkı tavanı %40 — tavan üstü normal satış sayılır
@@ -1719,6 +1769,140 @@ function startMinigame() {
   }, 50);
 }
 
+// ═══ ⚡ ENERJİ NAKİL HATTI (patron tasarımı) ═══
+// Uzaktaki pahalı pazara sat: Urfa'da üret → İstanbul'a taşı. Ama mesafe KAYIP demek:
+//   her 100 km %10 kayıp · 300 km'den uzun segment = hat çalışmaz (%100)
+//   TRANSFER MERKEZİ segmenti böler → her 100 km'de bir merkez = en iyi durum %10
+// Maliyet: kablo (km) + iki uç trafo + geçilen bölgelerin izin bedeli + işçilik. Hat yıpranır, bakım ister.
+const LINE = { cableKm: 80000, transformer: 15e6, permitPer100: 2e6, laborRate: .2, hub: 25e6, wearPer10d: 5 };
+function lineLossPct(km, hubs) {
+  const seg = km / ((hubs || 0) + 1);
+  if (seg > 300) return 100;              // taşınamaz — daha çok transfer merkezi gerekiyor
+  return Math.min(90, 10 * Math.ceil(seg / 100)); // 100 km'de %10, en iyi durum %10
+}
+function lineCost(km, hubs) {
+  const cable = km * LINE.cableKm;
+  const permit = Math.ceil(km / 100) * LINE.permitPer100;
+  const base = cable + LINE.transformer * 2 + permit + (hubs || 0) * LINE.hub;
+  return Math.round(base * (1 + LINE.laborRate));
+}
+const lineBuildSec = km => Math.min(86400, Math.round(60 + km * 6)); // en fazla 1 gün (kıtalararası tam sürümde 3 gün)
+const lineWear = l => Math.max(0, 100 - (Date.now() - l.built) / 864e6 * LINE.wearPer10d * 10); // 10 günde %5
+const lineReady = l => l.done <= Date.now();
+const lineLoss = l => Math.min(100, lineLossPct(l.km, l.hubs) + (100 - lineWear(l)) * .5); // yıpranma kaybı artırır
+const linesOf = cell => (G.lines || []).filter(l => l.from === cell && lineReady(l) && lineLoss(l) < 100);
+window.startLineFrom = cell => { // hedef seçme moduna geç
+  LINE_SRC = cell;
+  hideSheets();
+  setMode('line');
+  toast('⚡ Hattın VARACAĞI noktaya dokun (uzak şehir = pahalı pazar)', '', null, 0, true);
+};
+let LINE_SRC = null;
+function lineConfirm(toCell) {
+  const km = Math.round(kmDist(cellCenter(LINE_SRC), cellCenter(toCell)));
+  if (km < 20) { toast('Çok yakın — hat gerekmez, doğrudan satabilirsin', 'warn'); return; }
+  const need = Math.max(0, Math.ceil(km / 300) - 1); // %100 kaybı önleyen asgari merkez
+  const opt = Math.max(0, Math.ceil(km / 100) - 1);  // en iyi (%10) için gereken merkez
+  const rows = [need, Math.ceil((need + opt) / 2), opt].filter((v, i, a) => a.indexOf(v) === i);
+  $('modal').innerHTML = `
+    <h2>⚡ Enerji Nakil Hattı</h2>
+    <p><b>${nearestCityName(LINE_SRC) || cellCode(LINE_SRC)}</b> → <b>${nearestCityName(toCell) || cellCode(toCell)}</b><br>
+    Mesafe: <b>${fmtN(km)} km</b> · Hedef bölge alım fiyatı: <b class="pos">${fmt(cellPriceNow(toCell))}</b>/MWh
+    <span class="sub">(senin bölgen: ${fmt(cellPriceNow(LINE_SRC))})</span></p>
+    <p class="sub">Kayıp kuralı: her 100 km %10 · 300 km'den uzun bölüm taşınamaz → <b>Enerji Transfer Merkezi</b> hattı böler.</p>
+    <table class="ledger">
+      <tr><td>🔌 Kablo (${fmtN(km)} km × ${fmt(LINE.cableKm)})</td><td>${fmt(km * LINE.cableKm)}</td></tr>
+      <tr><td>⚙️ Trafo (2 uç)</td><td>${fmt(LINE.transformer * 2)}</td></tr>
+      <tr><td>📜 Geçilen bölge izinleri</td><td>${fmt(Math.ceil(km / 100) * LINE.permitPer100)}</td></tr>
+      <tr><td>👷 İşçilik (%${LINE.laborRate * 100})</td><td>~${fmt(lineCost(km, 0) - (km * LINE.cableKm + LINE.transformer * 2 + Math.ceil(km / 100) * LINE.permitPer100))}</td></tr>
+      <tr><td>⏱ Kurulum süresi</td><td>${fmtHrs(lineBuildSec(km) / 3600)}</td></tr>
+    </table>
+    <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">TRANSFER MERKEZİ SEÇ <span class="sub">(her biri ${fmt(LINE.hub)} — kaybı düşürür)</span></div>
+    ${rows.map(h => {
+      const loss = lineLossPct(km, h), cost = lineCost(km, h);
+      const net = cellPriceNow(toCell) * (1 - loss / 100);
+      return `<button class="bigsell ${loss <= 10 ? '' : 'half'}" onclick="closeModal();buildLine('${toCell}',${km},${h})" ${G.cash < cost ? 'disabled' : ''}>
+        ${h} merkez · kayıp %${loss} · net ${fmt(net)}/MWh — ${fmt(cost)}${G.cash < cost ? ' (bakiye yetersiz)' : ''}</button>`;
+    }).join('')}
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+}
+window.buildLine = (toCell, km, hubs) => {
+  if (!LINE_SRC || !toCell) { toast('Hat başlangıcı seçilmedi', 'warn'); return; } // bozuk hat kaydı oluşmasın
+  const cost = lineCost(km, hubs);
+  if (G.cash < cost) { toast('Hat için ' + fmt(cost) + ' gerekli', 'warn'); return; }
+  G.cash -= cost;
+  G.cellSpent[LINE_SRC] = (G.cellSpent[LINE_SRC] || 0) + cost;
+  G.lines = G.lines || [];
+  G.lines.push({ id: G.nextId++, from: LINE_SRC, to: toCell, km, hubs, built: Date.now(), done: Date.now() + lineBuildSec(km) * 1000 / (G.demo ? 60 : 1) });
+  toast('⚡ Hat inşaatı başladı: ' + fmtN(km) + ' km — ' + fmtHrs(lineBuildSec(km) / 3600), '', null, 0, true);
+  beep(500, .12);
+  LINE_SRC = null; setMode(null);
+  save(); drawOverlay();
+};
+window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça aralara yeni merkez alıp kaybı azalt")
+  const l = (G.lines || []).find(x => x.id === id);
+  if (!l) return;
+  if (G.cash < LINE.hub) { toast('Transfer merkezi için ' + fmt(LINE.hub) + ' gerekli', 'warn'); return; }
+  G.cash -= LINE.hub; l.hubs++;
+  toast('🏗️ Transfer merkezi eklendi — kayıp %' + lineLossPct(l.km, l.hubs), '');
+  save(); openViewSheet(); drawOverlay();
+};
+window.repairLine = id => {
+  const l = (G.lines || []).find(x => x.id === id);
+  if (!l) return;
+  const c = Math.round((100 - lineWear(l)) * l.km * 900);
+  if (c < 1 || G.cash < c) { if (G.cash < c) toast('Hat bakımı için ' + fmt(c) + ' gerekli', 'warn'); return; }
+  G.cash -= c; l.built = Date.now();
+  toast('🔧 Hat bakımı yapıldı — ' + fmt(c), '');
+  save(); openViewSheet();
+};
+window.demolishLine = id => {
+  const i = (G.lines || []).findIndex(x => x.id === id);
+  if (i < 0) return;
+  G.cash += Math.round(lineCost(G.lines[i].km, G.lines[i].hubs) * .3);
+  G.lines.splice(i, 1);
+  toast('🗑️ Hat söküldü — %30 hurda değeri iade', 'warn');
+  save(); openViewSheet(); drawOverlay();
+};
+function gridPanelHTML() {
+  const ls = G.lines || [];
+  let h = `<div style="font-size:12px;margin:12px 0 4px">⚡ <b>NAKİL HATLARIN</b> <span class="sub">${ls.length} hat</span></div>`;
+  if (!ls.length) h += '<p class="sub">Henüz hattın yok. Uzaktaki pahalı pazarlara satmak için depolu bir bölgenden hat çek.</p>';
+  h += ls.map(l => {
+    const rdy = lineReady(l), loss = Math.round(lineLoss(l)), wear = Math.round(100 - lineWear(l));
+    return `<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0">
+      <div style="font-size:12.5px;font-weight:700">${nearestCityName(l.from) || cellCode(l.from)} → ${nearestCityName(l.to) || cellCode(l.to)} <span class="sub">${fmtN(l.km)} km</span></div>
+      ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · ${l.hubs} transfer merkezi · yıpranma %${wear} · net ${fmt(cellPriceNow(l.to) * (1 - loss / 100))}/MWh</div>
+      <button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(LINE.hub)} (kayıp %${lineLossPct(l.km, l.hubs + 1)}'e iner)</button>
+      ${wear > 5 ? `<button class="bigsell half" onclick="repairLine(${l.id})">🔧 Hat Bakımı — ${fmt(Math.round(wear * l.km * 900))}</button>` : ''}
+      <button class="bigsell half" style="color:var(--danger)" onclick="demolishLine(${l.id})">🗑️ Hattı Sök</button>`
+      : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
+    </div>`;
+  }).join('');
+  const cells = [...new Set(stores().map(s => s.cell))];
+  h += `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">YENİ HAT ÇEK <span class="sub">(depolu bölgenden başlar)</span></div>`;
+  h += cells.length ? cells.map(c => `<button class="bigsell half" onclick="startLineFrom('${c}')">⚡ ${nearestCityName(c) || cellCode(c)} bölgesinden hat çek</button>`).join('')
+    : '<p class="sub">Önce bir bölgeye pil istasyonu kur.</p>';
+  return h;
+}
+function drawLines() {
+  if (G.lines) G.lines = G.lines.filter(l => l && l.from && l.to); // eksik veri çizimi çökertmesin
+  for (const l of (G.lines || [])) {
+    const rdy = lineReady(l), loss = rdy ? lineLoss(l) : 100;
+    const a = cellCenter(l.from), b = cellCenter(l.to);
+    const col = !rdy ? '#8b95a8' : loss >= 50 ? '#ff5c5c' : loss <= 15 ? '#3ddc97' : '#ffd166';
+    overlayLayer.push(L.polyline([a, b], { color: col, weight: MAPVIEW === 'grid' ? 4 : 2, opacity: .85, dashArray: rdy ? null : '6 6', interactive: false }).addTo(map));
+    if (MAPVIEW === 'grid') { // transfer merkezleri hat üzerinde eşit aralıkla
+      for (let i = 1; i <= l.hubs; i++) {
+        const t = i / (l.hubs + 1);
+        overlayLayer.push(L.marker([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t],
+          { icon: divIcon('<div style="font-size:15px;filter:drop-shadow(0 1px 2px #000)">🗼</div>', [18, 18]), interactive: false }).addTo(map));
+      }
+    }
+  }
+}
+
 // ═══ 🤝 İTTİFAK SİSTEMİ (patron tasarımı — prototipte bot üyelerle simülasyon, gerçek MP tam sürümde) ═══
 // Üye tavanı 10'dan başlar, ittifak PUANIYLA 50'ye çıkar (her 3 puan = +5 üye).
 // Puan: devletin ACİL İHALELERİNİ kazanıp 24 saatte teslim etmekle kazanılır.
@@ -1734,7 +1918,7 @@ window.foundAlly = () => {
   G.ally = { name: nm, pts: 0, members: 1 + ALLY_BOTS.length, tender: null, wins: 0 };
   toast('🤝 "' + nm + '" ittifakı kuruldu — ' + G.ally.members + ' üye (prototipte bot arkadaşlar)', '', null, 0, true);
   beep(700, .12);
-  save(); renderMenu();
+  save(); renderMenu(); refreshAllyUI();
 };
 // ACİL İHALE TEKLİFİ: bölge + ihtiyaç + kefalet + koşul (deterministik değil — her bakışta güncel ölçek)
 function allyOffer() {
@@ -1755,7 +1939,7 @@ window.enterAllyTender = () => {
   G.ally.tender = { ...o, delivered: 0, mine: 0, until: Date.now() + winSec * 1000, winSec, _bt: Date.now() };
   toast('🚨 ACİL İHALE alındı: ' + cellCode(o.cell) + ' bölgesine 24 saatte ' + fmtN(o.need) + ' MWh! Kefalet bloke: ' + fmt(o.stake), '', null, 0, true);
   beep(880, .12);
-  save(); renderMenu(); hideSheets();
+  save(); renderMenu(); hideSheets(); openAllySheet();
 };
 function allyTick() { // 2 sn'lik ana tikten çağrılır: bot katkısı + sonuçlandırma
   const t = G.ally && G.ally.tender;
@@ -1772,17 +1956,19 @@ function allyTick() { // 2 sn'lik ana tikten çağrılır: bot katkısı + sonu�
     G.allyBuffUntil = now + 86400e3 / (G.demo ? 60 : 1);
     toast('🏆 İHALE TESLİM EDİLDİ! +1 ittifak puanı, kefalet iade, TÜM ÜYELERE 24 saat +%50 alım fiyatı! (Üye tavanı: ' + allyCap() + ')', '', null, 0, true);
     beep(880, .12); setTimeout(() => beep(1320, .15), 140);
-    save(); renderMenu();
+    save(); renderMenu(); refreshAllyUI();
   } else if (now > t.until) {
     G.ally.tender = null;
     toast('💥 İhale BAŞARISIZ — teslim ' + fmtN(t.delivered) + '/' + fmtN(t.need) + ' MWh kaldı. Kefalet yandı: ' + fmt(t.stake), 'bad', null, 0, true);
-    save(); renderMenu();
+    save(); renderMenu(); refreshAllyUI();
   }
 }
-function renderAlly() {
-  const el = $('allysec');
-  if (!el) return;
-  let h = '<div style="font-size:12px;margin:12px 0 2px">🤝 <b>İTTİFAK</b> <span class="sub">prototip: bot üyelerle simülasyon — gerçek MP tam sürümde</span></div>';
+function openAllySheet() { $('ally_body').innerHTML = allyHTML(); showSheet('allysheet'); }
+window.openAllySheet = openAllySheet;
+function refreshAllyUI() { if ($('allysheet').classList.contains('show')) $('ally_body').innerHTML = allyHTML(); }
+function renderAlly() { const el = $('allysec'); if (el) el.innerHTML = ''; } // ittifak artık kendi ekranında (alt bar 🤝)
+function allyHTML() {
+  let h = '<p class="sub">Prototip: bot üyelerle simülasyon — gerçek çok oyunculu tam sürümde.</p>';
   if (!G.ally) {
     h += `<p class="sub">Birlik ol, devletin ACİL İHALELERİNİ birlikte teslim et: tüm üyelere <b>24 saat +%50 alım fiyatı</b> + ittifak puanı. Üye tavanı 10 → puanla 50.</p>
     <button class="bigsell half" onclick="foundAlly()">🤝 İttifak Kur (ücretsiz)</button>`;
@@ -1805,7 +1991,7 @@ function renderAlly() {
       </div>`;
     }
   }
-  el.innerHTML = h;
+  return h;
 }
 const BOTS = ['Voltera Enerji', 'MegaWatt A.Ş.', 'Kuzey Rüzgarı', 'Solaris Group', 'Anadolu Elektrik', 'PowerMax Ltd', 'Ege Güneş', 'Hidro Global'];
 const botWorth = i => { const days = Math.floor(Date.now() / 864e5) - 20655; return (8000 + (i * 13777 % 12000) + days * (700 + (i * 7919) % 1400)) * 1000; };
@@ -1980,6 +2166,7 @@ function setMode(m) {
     hideSheets();
     $('modehinttxt').textContent = m === 'build'
       ? '🏗️ ' + (PENDING ? TYPE_OF(PENDING.kind, PENDING.t).nm + ' — kurmak istediğin yere dokun' : 'Kurmak istediğin yere dokun')
+      : m === 'line' ? '⚡ Hattın varacağı uzak noktaya dokun'
       : 'ℹ️ Bilgi almak istediğin konuma dokun';
   }
   $('buildbtn').classList.toggle('on', m === 'build');
@@ -2021,11 +2208,14 @@ function initMap(center, zoom) {
   setTimeout(() => map.invalidateSize(), 600);
   try { new ResizeObserver(() => map && map.invalidateSize()).observe($('mapwrap')); } catch (e) {}
   window.addEventListener('resize', () => map && map.invalidateSize());
+  map.on('zoomend', () => { if (G && G._started) { G.units.forEach(u => u._lastIcon = null); refreshUnitMarkers(); drawOverlay(); } });
+  map.on('moveend', () => { if (G && G._started && MAPVIEW !== 'normal') drawOverlay(); });
   map.on('click', e => {
     if (!G || !G._started) return;
     if (!MODE) return; // mod seçili değilse harita serbest gezinti — panel açılmaz
     SEL.cell = cellId([e.latlng.lat, e.latlng.lng]);
     SEL.ll = [e.latlng.lat, e.latlng.lng];
+    if (MODE === 'line') { const src = LINE_SRC; setMode(null); if (src) lineConfirm(SEL.cell); return; } // hat hedefi seçildi
     if (MODE === 'build') { // YERLEŞTİRME: satın alınan ürün bu konuma kurulur
       if (PENDING) placeAt(SEL.cell, SEL.ll);
       else { setMode(null); openBuildSheet(); }
@@ -2037,6 +2227,7 @@ function initMap(center, zoom) {
 }
 const divIcon = (html, size) => L.divIcon({ html, className: '', iconSize: size, iconAnchor: [size[0] / 2, size[1] / 2] });
 function unitIconPx(u) {
+  if (zoomNow() < 10 && u.kind !== 'office') return u.kind === 'store' ? 22 : 26; // uzakta küçült
   if (u.kind === 'office') return 30;
   if (u.kind === 'fueldepot') return 34;
   const T = u.kind === 'plant' ? PLANT_TYPES[u.t] : STORE_TYPES[u.t];
@@ -2110,6 +2301,7 @@ function turbineSVG(px, spinning, fast, col) {
 function unitIconHTML(u) {
   const T = TYPE_OF(u.kind, u.t);
   const now = Date.now();
+  const far = zoomNow() < 10; // uzaktan bakışta rozet yazıları kalkar (üst üste binme önlemi)
   const building = u.buildDone > now;
   const out = building ? 0 : plantOutput(u);
   const producing = u.kind === 'plant' && u.on && out > 0.05;
@@ -2124,6 +2316,7 @@ function unitIconHTML(u) {
   else if (u.kind === 'plant' && !assignedStoreOf(u)) badge = '🔌 BAĞLANTI YOK';
   else if (u.cond < 50) badge = '%' + Math.round(u.cond);
   const noconn = badge === '🔌 BAĞLANTI YOK'; // KIRMIZI uyarı (patron isteği — oyuncu fark etsin)
+  if (far && !(u.kind === 'office')) badge = ''; // uzakta yalnız simge, yazı yok
   const cls = 'umark' + (building ? ' building' : '') + (u.kind === 'plant' && !u.on ? ' off' : '') + (noconn ? ' noconn' : '') + (tutTargetUnit(u) ? ' tut' : '');
   // Boyut kapasiteyle büyür — türbinler NET görünür (3 kat büyütüldü), dev üniteler haritada heybetli
   const px = unitIconPx(u);
@@ -2151,9 +2344,17 @@ function addUnitMarker(u) {
   m.on('click', () => openUnitSheet(u.id));
   unitMarkers[u.id] = m;
 }
+// ZOOM SEYRELTME (patron: "ekran küçülünce simgeler iç içe giriyor, sadece merkez görünsün"):
+// z>=10 hepsi · z 8-9 rozetsiz/küçük · z<8 yalnız ofisler (MERKEZ)
+const zoomNow = () => (map ? map.getZoom() : 11);
+const unitVisibleAtZoom = u => { const z = zoomNow(); return z >= 8 || u.kind === 'office'; };
 function refreshUnitMarkers() {
   if (!map) return;
   for (const u of G.units) {
+    const vis = unitVisibleAtZoom(u);
+    const m = unitMarkers[u.id];
+    if (!vis) { if (m && map.hasLayer(m)) map.removeLayer(m); continue; }
+    if (m && !map.hasLayer(m)) m.addTo(map);
     const html = unitIconHTML(u);
     if (!unitMarkers[u.id]) addUnitMarker(u);
     else if (u._lastIcon !== html) unitMarkers[u.id].setIcon(divIcon(html, unitIconSize(u)));
@@ -2196,6 +2397,41 @@ function highlightCell(c) {
   if (selRect) selRect.remove();
   selRect = L.rectangle(cellBounds(c), { color: '#4ea8ff', weight: 1.5, fillOpacity: .06, dashArray: '4 4' }).addTo(map);
 }
+// ═══ 🗺️ HARİTA GÖRÜNÜMLERİ (patron isteği): normal · rüzgar verimliliği · güneş verimliliği · nakil hattı ═══
+let MAPVIEW = 'normal', overlayLayer = [];
+const VIEWS = {
+  normal: { nm: 'Normal', ico: '🗺️', d: 'Sade harita — tesislerin ve ruhsatların.' },
+  wind: { nm: 'Rüzgar Verimliliği', ico: '🌬️', d: 'Kareler rüzgar potansiyeline göre renklenir: koyu mavi = türbin cenneti.' },
+  sun: { nm: 'Güneş Verimliliği', ico: '☀️', d: 'Kareler güneş potansiyeline göre renklenir: koyu turuncu = panel cenneti.' },
+  grid: { nm: 'Enerji Nakil Hattı', ico: '⚡', d: 'Hatların, transfer merkezlerin ve kayıp oranların.' },
+};
+window.setMapView = v => { MAPVIEW = v; drawOverlay(); openViewSheet(); toast(VIEWS[v].ico + ' ' + VIEWS[v].nm + ' görünümü', ''); };
+function openViewSheet() {
+  hideSheets();
+  $('view_body').innerHTML = Object.entries(VIEWS).map(([k, v]) => `
+    <button class="bigsell ${k === MAPVIEW ? '' : 'half'}" style="text-align:left" onclick="setMapView('${k}')">
+      ${v.ico} <b>${v.nm}</b>${k === MAPVIEW ? ' ✓' : ''}<div class="sub" style="margin-top:2px">${v.d}</div>
+    </button>`).join('') +
+    (MAPVIEW === 'grid' ? gridPanelHTML() : '');
+  showSheet('viewsheet');
+}
+function drawOverlay() {
+  if (!map) return;
+  overlayLayer.forEach(l => l.remove()); overlayLayer = [];
+  drawLines(); // nakil hatları her görünümde çizilir (grid'te kalın)
+  if (MAPVIEW !== 'wind' && MAPVIEW !== 'sun') return;
+  if (zoomNow() < 8) return; // çok uzakta karo ızgarası anlamsız
+  const b = map.getBounds(), step = CELL;
+  const y0 = Math.floor(b.getSouth() / step), y1 = Math.floor(b.getNorth() / step);
+  const x0 = Math.floor(b.getWest() / step), x1 = Math.floor(b.getEast() / step);
+  if ((y1 - y0 + 1) * (x1 - x0 + 1) > 420) return; // performans emniyeti
+  for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+    const id = cy + '_' + cx, q = cellQuality(id);
+    const v = MAPVIEW === 'wind' ? (q.wind - .7) / .75 : (q.sun - .5) / .95; // 0..1
+    const col = MAPVIEW === 'wind' ? `rgba(30,90,200,${.12 + .5 * v})` : `rgba(255,150,20,${.12 + .5 * v})`;
+    overlayLayer.push(L.rectangle(cellBounds(id), { color: '#ffffff', weight: .4, opacity: .25, fillColor: col, fillOpacity: 1, interactive: false }).addTo(map));
+  }
+}
 // RUHSATLI KARELER: haritada kalıcı şeffaf mavi karolar (patron isteği — "burada kurabilirim" görünsün)
 let licLayer = {};
 function refreshLicenseTiles() {
@@ -2232,7 +2468,7 @@ function openCellSheet(c, ll, mode) {
   if (infoOnly) {
     // KONUM DETAYLARI YALNIZ BİLGİ EKRANINDA (patron isteği) — inşa ekranı sade katalog
     $('cs_quality').innerHTML = wx ?
-      `<span>🛰️ <b>CANLI:</b></span><span>🌬️ <b>${(wx.w ?? 0).toFixed(1)} m/s</b> (100m${windCurve(wx.w) === 0 && wx.w > 25 ? ' — FIRTINA!' : windCurve(wx.w) < .1 ? ' — türbin dönmez' : ''})</span><span>☁️ <b>%${wx.cloud ?? 0}</b></span><span>${wx.day ? '☀️ gündüz' : '🌙 gece'}</span>${q.geo ? '<span>♨️ <b>JEOTERMAL</b></span>' : ''}` :
+      `<span>🛰️ <b>CANLI:</b></span><span>🌬️ <b>${(wx.w ?? 0).toFixed(1)} m/s</b> (100m${windCurve(wx.w + NEWBIE_WIND * newbieAid()) === 0 && wx.w > 25 ? ' — FIRTINA!' : windCurve(wx.w + NEWBIE_WIND * newbieAid()) < .1 ? ' — türbin dönmez' : ''})</span><span>☁️ <b>%${wx.cloud ?? 0}</b></span><span>${wx.day ? '☀️ gündüz' : '🌙 gece'}</span>${newbieAid() > .01 ? `<span style="color:var(--acc)">🌱 <b>Yeni şirket takviyesi: +${(NEWBIE_WIND * newbieAid()).toFixed(1)} m/s · bulut etkisi -%${Math.round(NEWBIE_CLOUD * newbieAid() * 100)}</b></span>` : ''}${q.geo ? '<span>♨️ <b>JEOTERMAL</b></span>' : ''}` :
       `<span>💧 su ×${q.hydro.toFixed(2)}</span>${q.geo ? '<span>♨️ <b>JEOTERMAL</b></span>' : ''}<span class="sub">(canlı hava: kurulumdan sonra yüklenir)</span>`;
     const sv = WX.survey && WX.survey[c];
     let svRows;
@@ -2434,6 +2670,7 @@ function openUnitSheet(id) {
       </div>` : `
       <button class="bigsell" onclick="sellUnit(${u.id},1)" ${u.stored < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(u.stored)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * u.stored / T.cap))} sn)</button>
       ${alt ? `<button class="bigsell" style="background:${alt.emergency ? 'var(--danger);color:#fff' : 'var(--gold);color:#131313'}" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${u.stored < .005 ? 'disabled' : ''}>${alt.emergency ? '🚨 ACİL İHALEYE SAT — ' + cellCode(alt.c) + ' (tam fiyat, kesinti yok)' : '🔁 ' + cellCode(alt.c) + ' pazarına SAT — ' + fmt(alt.p) + '/MWh (-%10 aktarım dahil)'}</button>` : ''}
+      ${linesOf(u.cell).map(l => { const net = cellPriceNow(l.to) * (1 - lineLoss(l) / 100); return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || net <= base ? 'disabled' : ''}>⚡ HAT ile ${nearestCityName(l.to) || cellCode(l.to)}'e SAT — ${fmt(net)}/MWh (kayıp %${Math.round(lineLoss(l))})</button>`; }).join('')}
       ${adAvail() > 0 ? (u.stored >= T.cap * .9
         ? `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="sellUnitAd(${u.id})">🎬 Reklam İzle & SAT — ${fmt(rAll.gain * AD_BONUS)} (+%15) · hak ${adAvail()}/${AD_MAX}</button>`
         : `<button class="bigsell" style="background:#8a6cff33;color:var(--dim)" disabled>🎬 Reklam bonusu (+%15) — depo %90 dolunca · hak ${adAvail()}/${AD_MAX}</button>`) : ''}
@@ -2664,7 +2901,7 @@ function tutTargetUnit(u) { // satış görevlerinde dolu depolar altın parlar
   return (i === 1 || i === 5) && u.kind === 'store' && u.buildDone <= Date.now() && u.stored > .05;
 }
 // her 500 ms: ipucu çubuğu + hedef öğe parlatma + hedef dışı KİLİT + bitiş kontrolü (ödül otomatik)
-const TUT_BAR = ['pricebtn', 'buildbtn', 'infobtn', 'maintbtn', 'homebtn', 'menubtn'];
+const TUT_BAR = ['buildbtn', 'infobtn', 'viewbtn', 'allybtn'];
 // 📜 Ruhsat görevi: KOMŞU kare haritada yanıp söner (patron isteği — oyuncu nereye tıklayacağını görsün)
 let tutCellRect = null, tutCellIdCur = null;
 function clearTutCell() { if (tutCellRect) { tutCellRect.remove(); tutCellRect = null; tutCellIdCur = null; } }
@@ -2683,7 +2920,7 @@ function tutCellTarget4() {
   return Object.keys(G.licenses).slice(1).find(c => !G.units.some(u => u.kind === 'store' && u.t === 'bat' && u.cell === c)) || null;
 }
 function tutTick() {
-  ['buildbtn', 'coname', 'pricebtn'].forEach(id => $(id).classList.remove('tut'));
+  TUT_BAR.concat('coname').forEach(id => $(id).classList.remove('tut')); // BUGFIX: infobtn listede yoktu → eğitim bitince de yanıp sönüyordu
   $('coname').classList.remove('attn');
   TUT_BAR.forEach(id => $(id).disabled = false);
   $('drawerhandle').disabled = false;
@@ -2719,12 +2956,9 @@ function tutTick() {
   } else clearTutCell();
   if (tutActive()) { // patron isteği: eğitimde hedef seçenek dışındaki butonlar KİLİTLİ
     // İnşa her zaman açık kalır (soft-lock önleme: deposunu satan oyuncu kilitli kalmasın)
-    // 🏠 Merkeze git HER ZAMAN açık (haritayı kaydıran oyuncu tesislerini kaybetmesin) + İnşa hep açık
-    const allow = ['homebtn', 'buildbtn'].concat(task.el ? [task.el] : []).concat(i === 5 ? ['pricebtn'] : []);
+    const allow = ['buildbtn'].concat(task.el ? [task.el] : []); // İnşa hep açık; 🏠 çekmecede (çekmece eğitimde kilitli değil)
     TUT_BAR.forEach(id => { if (!allow.includes(id)) $(id).disabled = true; });
-    $('drawerhandle').disabled = true;
-    $('drawer').classList.remove('open');
-    if (!allow.includes('coname')) $('coname').style.pointerEvents = 'none';
+    if (!allow.includes('coname')) $('coname').style.pointerEvents = 'none'; // çekmece eğitimde AÇIK (🏠 merkez oradan)
   }
   const hint = $('tuthint');
   hint.innerHTML = `🎓 <b>GÖREV ${i + 1}/${STARTER_TASKS.length}:</b> ${task.hint}`;
@@ -2768,7 +3002,7 @@ function openCompanySheet() {
   const lifeProd = plants().reduce((s, u) => s + (u.lifeProd || 0), 0);
   const bySrc = {};
   plants().forEach(u => { const T = PLANT_TYPES[u.t]; bySrc[T.cat] = (bySrc[T.cat] || 0) + T.mw; });
-  $('comp_title').textContent = '🏢 ' + G.company;
+  $('comp_title').innerHTML = '🏢 ' + G.company + ' ' + emBadgeHTML(co2Avg(), true); // rozet şirket sayfasında da (patron)
   const R = G.research;
   const resRow = key => {
     const D = RESEARCH[key], lvl = R.lvl[key] || 0;
@@ -2863,10 +3097,11 @@ function renderMenu() {
   $('mgdesc').innerHTML = w.open ? `<b>${w.why}:</b> 30 sn refleks vardiyası — bantta kal, para kazan. Hak: <b>${mgAvail()}/${MG_MAX}</b>` : `Mini oyunlar ${w.why} açılır — kısa, tatlı, ekstra kazanç.`;
   $('mgbtn2').disabled = !w.open || mgAvail() <= 0;
   $('mgbtn2').textContent = mgAvail() <= 0 ? '🎮 Bugünkü haklar bitti' : '🎮 Frekans Nöbeti\'ni Oyna';
-  const rows = BOTS.map((b, i) => ({ nm: b, w: botWorth(i) }));
-  rows.push({ nm: G.company + ' (SEN)', w: myWorth(), me: true });
+  // liderlik: emisyon rozeti herkeste görünür (patron: "ittifaklar üyeleri ona göre seçer")
+  const rows = BOTS.map((b, i) => ({ nm: b, w: botWorth(i), em: botEm(i) }));
+  rows.push({ nm: G.company + ' (SEN)', w: myWorth(), em: co2Avg(), me: true });
   rows.sort((a, b) => b.w - a.w);
-  $('lb').innerHTML = rows.slice(0, 9).map((r, i) => `<div class="r ${r.me ? 'me' : ''}"><span>#${i + 1} ${r.nm}</span><span>${fmt(r.w)}</span></div>`).join('');
+  $('lb').innerHTML = rows.slice(0, 9).map((r, i) => `<div class="r ${r.me ? 'me' : ''}"><span>#${i + 1} ${r.nm} ${emBadgeHTML(r.em)}</span><span>${fmt(r.w)}</span></div>`).join('');
   // VIP Reklamsız satırı ($10B kazanç sonrası menüde kalıcı; aylık her ay yenilenebilir)
   if (G.totalEarned >= 1e10 || adFreeActive()) {
     $('modrow').innerHTML = `<div style="font-size:12px;margin:12px 0 2px">🚫 <b>REKLAMLARI KAPAT (VIP)</b></div>
@@ -2898,7 +3133,7 @@ function openHelp() {
 
 // ── HUD ──
 function renderHUD() {
-  $('coname').textContent = G.company || '—';
+  $('coname').innerHTML = (G.company || '—') + ' <span style="font-size:10px;font-weight:600">' + emBadge().ico + '</span>';
   $('coloc').textContent = G.country ? `${COUNTRIES[G.country].flag} ${G.il}, ${G.country}` : '—';
   $('cash').textContent = fmt(G.cash);
   const d = clockDate();
@@ -2912,9 +3147,13 @@ function renderHUD() {
     $('lvlfill').style.width = '100%';
     $('xptxt').textContent = fmt(myWorth());
   }
-  $('pricebtn').textContent = '💰 ' + fmt(priceNow()) + (totalStored() >= totalCap() - .5 && totalCap() > 0 ? ' · DEPO DOLU!' : '');
+  // fiyat/bakım göstergeleri artık HUD ve çekmecede (alt bar sadeleşti)
+  const full = totalStored() >= totalCap() - .5 && totalCap() > 0;
+  $('hudprice').innerHTML = '💰 ' + fmt(priceNow()) + '/MWh' + (full ? ' · <b style="color:var(--gold)">DEPO DOLU!</b>' : '');
   const mc = maintCost(); // sadece bakım — yakıt artık santral içinden, depodan (patron tasarımı)
-  $('maintbtn').textContent = '🔧 ' + (mc >= 1 ? fmt(mc) : '✓');
+  if ($('drawerprice')) $('drawerprice').textContent = full ? 'SAT!' : 'Satış';
+  if ($('drawermaint')) $('drawermaint').textContent = mc >= 1 ? fmt(mc) : 'Bakım';
+  $('allybtn').style.color = (G.ally && G.ally.tender) ? 'var(--danger)' : (allyBuffOn() ? 'var(--gold)' : '');
   tutTick(); // tutorial yönlendirmesi (hedef parlatma + ipucu çubuğu)
   const ev = todayEvent(), o = activeOffer();
   $('evtext').innerHTML = `🌫️ ${co2Avg()} g/kWh${greenBonus() > 0 ? ' · <span style="color:var(--acc)">🌿 teşvik +%' + Math.round(greenBonus() * 100) + '</span>' : ''} · <b>${ev.ico} ${ev.nm}</b> — ${ev.d}` +
@@ -3098,32 +3337,29 @@ function toggleBuild() {
 $('buildbtn').addEventListener('click', toggleBuild);
 $('infobtn').addEventListener('click', () => setMode(MODE === 'info' ? null : 'info'));
 $('modecancel').addEventListener('click', () => { PENDING = null; setMode(null); });
-$('maintbtn').addEventListener('click', () => { const open = $('maintsheet').classList.contains('show'); hideSheets(); if (!open) openMaintSheet(); });
+$('viewbtn').addEventListener('click', openViewSheet);
+$('allybtn').addEventListener('click', () => { const open = $('allysheet').classList.contains('show'); hideSheets(); if (!open) openAllySheet(); });
 $('coname').addEventListener('click', () => { if (!G || !G._started) return; const open = $('companysheet').classList.contains('show'); hideSheets(); if (!open) openCompanySheet(); });
-$('pricebtn').addEventListener('click', () => {
-  const open = $('pricesheet').classList.contains('show');
-  hideSheets();
-  if (!open) { renderPriceSheet(); showSheet('pricesheet'); }
-});
-$('menubtn').addEventListener('click', () => {
-  const open = $('menusheet').classList.contains('show');
-  hideSheets();
-  if (!open) { renderMenu(); showSheet('menusheet'); }
-});
-$('homebtn').addEventListener('click', () => { if (map && G && G.il) { try { map.flyTo(IL_COORD[G.il], 11); } catch (e) { map.setView(IL_COORD[G.il], 11); } } });
+function openMarket() { const open = $('pricesheet').classList.contains('show'); hideSheets(); if (!open) { renderPriceSheet(); showSheet('pricesheet'); } }
+function openTasks() { const open = $('menusheet').classList.contains('show'); hideSheets(); if (!open) { renderMenu(); showSheet('menusheet'); } }
+function goHome() { if (map && G && G.il) { try { map.flyTo(IL_COORD[G.il], 11); } catch (e) { map.setView(IL_COORD[G.il], 11); } } }
 // Sağ çekmece menü
-$('drawerhandle').addEventListener('click', () => { if (G && G._started) $('drawer').classList.toggle('open'); });
-$('drawerclose').addEventListener('click', e => { e.stopPropagation(); $('drawer').classList.remove('open'); });
+$('drawerhandle').addEventListener('click', () => {
+  if (!G || !G._started) return;
+  const open = $('drawer').classList.toggle('open');
+  $('drawerhandle').style.display = open ? 'none' : ''; // açma/kapama kulpları asla aynı anda görünmez
+});
+$('drawerclose').addEventListener('click', e => { e.stopPropagation(); $('drawer').classList.remove('open'); $('drawerhandle').style.display = ''; });
 document.querySelectorAll('#drawer button[data-act]').forEach(b => b.addEventListener('click', () => {
   if (!G || !G._started) return;
   const act = b.dataset.act;
   $('drawer').classList.remove('open');
-  if (act === 'build') toggleBuild();
-  else if (act === 'info') setMode(MODE === 'info' ? null : 'info');
-  else if (act === 'market') { hideSheets(); renderPriceSheet(); showSheet('pricesheet'); }
+  $('drawerhandle').style.display = '';
+  if (act === 'market') openMarket();
   else if (act === 'maint') { hideSheets(); openMaintSheet(); }
   else if (act === 'company') { hideSheets(); openCompanySheet(); }
-  else if (act === 'menu') { hideSheets(); renderMenu(); showSheet('menusheet'); }
+  else if (act === 'menu') openTasks();
+  else if (act === 'home') goHome();
   else if (act === 'help') openHelp();
 }));
 $('sellallbtn').addEventListener('click', () => { sellAll(1); renderPriceSheet(); });
