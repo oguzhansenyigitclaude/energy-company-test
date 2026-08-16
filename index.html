@@ -399,7 +399,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-16 22:13) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-16 22:44) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -501,7 +501,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-16 22:13)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-16 22:44)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -613,7 +613,29 @@ const CNAME_TR = { 'Turkey': 'Türkiye', 'Canada': 'Kanada', 'United States of A
   'Iraq': 'Irak', 'Kazakhstan': 'Kazakistan', 'Chile': 'Şili', 'Peru': 'Peru', 'Colombia': 'Kolombiya',
   'Morocco': 'Fas', 'Algeria': 'Cezayir', 'Portugal': 'Portekiz', 'Austria': 'Avusturya', 'Switzerland': 'İsviçre',
   'Belgium': 'Belçika', 'Denmark': 'Danimarka', 'Finland': 'Finlandiya', 'Ireland': 'İrlanda', 'Romania': 'Romanya',
-  'Bulgaria': 'Bulgaristan', 'Serbia': 'Sırbistan', 'Hungary': 'Macaristan', 'Czechia': 'Çekya', 'New Zealand': 'Yeni Zelanda' };
+  'Bulgaria': 'Bulgaristan', 'Serbia': 'Sırbistan', 'Hungary': 'Macaristan', 'Czechia': 'Çekya', 'New Zealand': 'Yeni Zelanda',
+  'United Arab Emirates': 'Birleşik Arap Emirlikleri', 'Qatar': 'Katar', 'Kuwait': 'Kuveyt', 'Oman': 'Umman',
+  'Bahrain': 'Bahreyn', 'Jordan': 'Ürdün', 'Lebanon': 'Lübnan', 'Syria': 'Suriye', 'Israel': 'İsrail',
+  'Azerbaijan': 'Azerbaycan', 'Georgia': 'Gürcistan', 'Armenia': 'Ermenistan', 'Uzbekistan': 'Özbekistan',
+  'Turkmenistan': 'Türkmenistan', 'Kyrgyzstan': 'Kırgızistan', 'Tajikistan': 'Tacikistan', 'Afghanistan': 'Afganistan',
+  'Bangladesh': 'Bangladeş', 'Sri Lanka': 'Sri Lanka', 'Nepal': 'Nepal', 'Myanmar': 'Myanmar',
+  'Malaysia': 'Malezya', 'Singapore': 'Singapur', 'Philippines': 'Filipinler', 'Cambodia': 'Kamboçya',
+  'Laos': 'Laos', 'North Korea': 'Kuzey Kore', 'Mongolia': 'Moğolistan', 'Taiwan': 'Tayvan',
+  'Angola': 'Angola', 'Ethiopia': 'Etiyopya', 'Kenya': 'Kenya', 'Tanzania': 'Tanzanya', 'Uganda': 'Uganda',
+  'Ghana': 'Gana', 'Ivory Coast': 'Fildişi Sahili', 'Senegal': 'Senegal', 'Mali': 'Mali', 'Niger': 'Nijer',
+  'Chad': 'Çad', 'Sudan': 'Sudan', 'Libya': 'Libya', 'Tunisia': 'Tunus', 'Cameroon': 'Kamerun',
+  'Zambia': 'Zambiya', 'Zimbabwe': 'Zimbabve', 'Mozambique': 'Mozambik', 'Madagascar': 'Madagaskar',
+  'Botswana': 'Botsvana', 'Namibia': 'Namibya', 'Democratic Republic of the Congo': 'Kongo Demokratik Cumhuriyeti',
+  'Republic of the Congo': 'Kongo Cumhuriyeti', 'Somalia': 'Somali', 'Eritrea': 'Eritre',
+  'Venezuela': 'Venezuela', 'Ecuador': 'Ekvador', 'Bolivia': 'Bolivya', 'Paraguay': 'Paraguay',
+  'Uruguay': 'Uruguay', 'Cuba': 'Küba', 'Dominican Republic': 'Dominik Cumhuriyeti', 'Guatemala': 'Guatemala',
+  'Panama': 'Panama', 'Costa Rica': 'Kosta Rika', 'Honduras': 'Honduras', 'Jamaica': 'Jamaika',
+  'Iceland': 'İzlanda', 'Estonia': 'Estonya', 'Latvia': 'Letonya', 'Lithuania': 'Litvanya',
+  'Belarus': 'Belarus', 'Moldova': 'Moldova', 'Slovakia': 'Slovakya', 'Slovenia': 'Slovenya',
+  'Croatia': 'Hırvatistan', 'Bosnia and Herzegovina': 'Bosna-Hersek', 'Albania': 'Arnavutluk',
+  'North Macedonia': 'Kuzey Makedonya', 'Montenegro': 'Karadağ', 'Kosovo': 'Kosova', 'Cyprus': 'Kıbrıs',
+  'Malta': 'Malta', 'Luxembourg': 'Lüksemburg', 'Greenland': 'Grönland', 'Papua New Guinea': 'Papua Yeni Gine',
+  'Fiji': 'Fiji', 'Northern Cyprus': 'Kuzey Kıbrıs' };
 // Natural Earth'te ISO_A2 = "-99" olan ülkeler (tartışmalı/özel statü kayıtları)
 const ISO_FIX = { 'France': 'FR', 'Norway': 'NO', 'Kosovo': 'XK', 'Somaliland': 'XS',
   'Northern Cyprus': 'XN', 'Indian Ocean Territories': 'XI', 'Ashmore and Cartier Islands': 'XA',
@@ -851,6 +873,22 @@ function nearestCityName(id) {
     if (d < bd) { bd = d; best = nm; }
   }
   return bd <= 80 ? best : null;
+}
+// İNSAN OKUNUR KONUM (patron: "HG-90 oyuncu için hiçbir şey ifade etmez").
+// Sırayla dener: yakın şehir → uzaktaki en yakın şehrin "civarı" → ülke → açık deniz.
+// Kare kodu (HG-90) artık yalnız teknik yerlerde, başlıklarda değil.
+function placeName(id) {
+  const yakin = nearestCityName(id);
+  if (yakin) return yakin;
+  const c = cellCenter(id);
+  let best = null, bd = 1e9;
+  for (const [nm, la, lo] of cityList()) {
+    const d = 111 * Math.sqrt((la - c[0]) ** 2 + ((lo - c[1]) * Math.cos(c[0] * Math.PI / 180)) ** 2);
+    if (d < bd) { bd = d; best = nm; }
+  }
+  if (best && bd <= 400) return best + ' civarı';
+  const ct = countryAt(c);
+  return ct ? ct.nm : '🌊 Açık deniz';
 }
 // Yerel piyasa (ŞEFFAF, parça parça): bugünkü talebin İÇİNDE kalan MWh tam fiyat,
 // talebi AŞAN kısım ×0.15 "yok pahasına" gider. Çöle kurarsan ilk satıştan itibaren hissedersin.
@@ -1090,7 +1128,17 @@ const speedMult = () => boostFactor() * (tutActive() ? TUT_MULT : 1); // TEK hı
 // oyuncu istediği an KESebilir ve başka istasyona BAĞLAyabilir (küçüğü kes, büyüğü bağla senaryosu).
 const storeById = id => G.units.find(x => x.id === id && x.kind === 'store');
 // Özel isim: oyuncu istasyonlarını yeniden adlandırabilir ("25'lik istasyon", "Güneş panellerinin istasyonu"...)
-const unitName = u => u.name || (u.kind === 'office' ? (u.hq ? 'Merkez Ofis' : 'Bölge Ofisi #' + u.id) : TYPE_OF(u.kind, u.t).nm + ' #' + u.id);
+// OFİS ADI (patron): "Bölge Ofisi #9" oyuncuya hiçbir şey anlatmıyordu. Artık ÜLKE + o ülkedeki
+// sıra numarası: "Angola Ofisi 1", aynı ülkede ikincisini açarsan "Angola Ofisi 2".
+// Ülke verisi henüz yüklenmediyse en yakın şehre düşer, oyun boş başlık göstermez.
+function officeLabel(u) {
+  const yer = o => { const c = countryAt(o.ll); return (c && c.nm) || nearestCityName(o.cell) || 'Kıyı'; };
+  const ad = yer(u);
+  const ayni = G.units.filter(x => x.kind === 'office' && !x.hq && yer(x) === ad).sort((a, b) => a.id - b.id);
+  const i = ayni.findIndex(x => x.id === u.id);
+  return ad + ' Ofisi ' + (i < 0 ? 1 : i + 1);
+}
+const unitName = u => u.name || (u.kind === 'office' ? (u.hq ? 'Merkez Ofis' : officeLabel(u)) : TYPE_OF(u.kind, u.t).nm + ' #' + u.id);
 window.renameUnit = id => {
   const u = G.units.find(x => x.id === id);
   if (!u) return;
@@ -2257,7 +2305,7 @@ window.startAllyLine = () => {
     kasa: <b class="pos">${fmt(G.ally.treasury || 0)}</b>.<br>
     Önce başlangıç bölgeni seç, sonra <b>haritada varış noktasına dokun</b>.</p>
     <p class="sub">🌍 Farklı KITAYA uzanan hat için ${CONS_MIN_ALLIES} ittifaklı konsorsiyum gerekir.</p>
-    ${cells.map(c => `<button class="bigsell half" onclick="closeModal();startLineFrom('${c}',true)">⚡ ${nearestCityName(c) || cellCode(c)} bölgesinden başlat</button>`).join('')}
+    ${cells.map(c => `<button class="bigsell half" onclick="closeModal();startLineFrom('${c}',true)">⚡ ${placeName(c)} bölgesinden başlat</button>`).join('')}
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
@@ -2318,7 +2366,7 @@ function lineConfirm(toCell) {
   const rows = [need, Math.ceil((need + opt) / 2), opt].filter((v, i, a) => a.indexOf(v) === i);
   $('modal').innerHTML = `
     <h2>⚡ Enerji Nakil Hattı</h2>
-    <p><b>${nearestCityName(LINE_SRC) || cellCode(LINE_SRC)}</b> → <b>${nearestCityName(toCell) || cellCode(toCell)}</b><br>
+    <p><b>${placeName(LINE_SRC)}</b> → <b>${placeName(toCell)}</b><br>
     Mesafe: <b>${fmtN(km)} km</b> · Hedef bölge alım fiyatı: <b class="pos">${fmt(cellPriceNow(toCell))}</b>/MWh
     <span class="sub">(senin bölgen: ${fmt(cellPriceNow(LINE_SRC))})</span></p>
     <p class="sub">Kayıp kuralı: her 100 km %10 · 300 km'den uzun bölüm taşınamaz → <b>Enerji Transfer Merkezi</b> hattı böler.</p>
@@ -2374,9 +2422,9 @@ window.buildLine = (toCell, km, hubs, brand) => {
     G.ally.lines.push(rec);
     if (allyOnline()) { // ortak kayda yaz → hat BÜTÜN üyelerin oyununda belirir
       NET.allyLineAdd(G.allyId, rec).catch(() => {});
-      NET.allyLedger(G.allyId, -cost, 'hat: ' + (nearestCityName(toCell) || cellCode(toCell))).catch(() => {});
+      NET.allyLedger(G.allyId, -cost, 'hat: ' + (placeName(toCell))).catch(() => {});
     }
-    addMail('🤝 ' + G.ally.name, 'İttifak hattı başlatıldı', `${G.company}, kasadan ${fmt(cost)} harcayarak ${nearestCityName(LINE_SRC) || cellCode(LINE_SRC)} → ${nearestCityName(toCell) || cellCode(toCell)} arasında ${fmtN(km)} km'lik ittifak hattı başlattı. Hat devreye girince ${ALLY_ACCESS_KM} km çevresinde deposu olan TÜM üyeler kullanabilecek.`, true);
+    addMail('🤝 ' + G.ally.name, 'İttifak hattı başlatıldı', `${G.company}, kasadan ${fmt(cost)} harcayarak ${placeName(LINE_SRC)} → ${placeName(toCell)} arasında ${fmtN(km)} km'lik ittifak hattı başlattı. Hat devreye girince ${ALLY_ACCESS_KM} km çevresinde deposu olan TÜM üyeler kullanabilecek.`, true);
   } else {
     G.lines = G.lines || [];
     G.lines.push(rec);
@@ -2419,7 +2467,7 @@ function gridPanelHTML() {
   h += ls.map(l => {
     const rdy = lineReady(l), loss = Math.round(lineLoss(l)), wear = Math.round(100 - lineWear(l));
     return `<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0">
-      <div style="font-size:12.5px;font-weight:700">${nearestCityName(l.from) || cellCode(l.from)} → ${nearestCityName(l.to) || cellCode(l.to)} <span class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</span></div>
+      <div style="font-size:12.5px;font-weight:700">${placeName(l.from)} → ${placeName(l.to)} <span class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</span></div>
       ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · ${l.hubs} transfer merkezi · yıpranma %${wear} · net ${fmt(cellPriceNow(l.to) * (1 - loss / 100))}/MWh</div>
       <button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))} (kayıp %${Math.max(5, lineLossPct(l.km, l.hubs + 1) + lineBrand(l).loss)}'e iner)</button>
       ${wear > 5 ? `<button class="bigsell half" onclick="repairLine(${l.id})">🔧 Hat Bakımı — ${fmt(Math.round(wear * l.km * 900))}</button>` : ''}
@@ -2436,7 +2484,7 @@ function gridPanelHTML() {
       const rdy = lineReady(l), loss = Math.round(lineLoss(l));
       const yakin = allyLineNodes(l).some(n => stores().some(s => kmDist(n, cellCenter(s.cell)) <= ALLY_ACCESS_KM));
       return `<div style="border:1px solid #1f7a5a;border-radius:10px;padding:8px 10px;margin:6px 0">
-        <div style="font-size:12.5px;font-weight:700">${nearestCityName(l.from) || cellCode(l.from)} → ${nearestCityName(l.to) || cellCode(l.to)}
+        <div style="font-size:12.5px;font-weight:700">${placeName(l.from)} → ${placeName(l.to)}
           <span class="sub">${fmtN(l.km)} km · ${l.by || '—'} kurdu</span></div>
         ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · ${l.hubs} transfer merkezi</div>
           <div class="sub ${yakin ? 'pos' : 'neg'}">${yakin ? '✅ Deponun bu hatta erişimi var — satış ekranında görünür' : '⚠️ Deponun uzak: hattın ucuna ya da bir transfer merkezine ' + ALLY_ACCESS_KM + ' km içinde depo kur'}</div>`
@@ -2446,7 +2494,7 @@ function gridPanelHTML() {
   }
   const cells = [...new Set(stores().map(s => s.cell))];
   h += `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">YENİ HAT ÇEK <span class="sub">(depolu bölgenden başlar · ÜLKE İÇİ)</span></div>`;
-  h += cells.length ? cells.map(c => `<button class="bigsell half" onclick="startLineFrom('${c}')">⚡ ${nearestCityName(c) || cellCode(c)} bölgesinden hat çek</button>`).join('')
+  h += cells.length ? cells.map(c => `<button class="bigsell half" onclick="startLineFrom('${c}')">⚡ ${placeName(c)} bölgesinden hat çek</button>`).join('')
     : '<p class="sub">Önce bir bölgeye pil istasyonu kur.</p>';
   h += `<p class="sub">🧍 Bireysel hat yalnız <b>ülke içindedir</b> (iller/eyaletler arası).
     🤝 Ülke sınırını aşan hat ittifak işidir — 🤝 İttifak ekranından başkan ya da yardımcısı başlatır.
@@ -3160,9 +3208,16 @@ const NET = {
   unitsInCell(cell) {
     const out = [];
     for (const [pid, us] of Object.entries(this.units)) {
-      if (pid === this.id || !us) continue;
-      for (const [uid, u] of Object.entries(us)) if (u.c === cell)
+      if (pid === this.id || typeof us !== 'object' || !us) continue;
+      for (const [uid, u] of Object.entries(us)) {
+        // ⚠️ TELEFON TESTİ ÇÖKMESİ: birim kimlikleri 1,2,3... sayısal olduğu için Firebase
+        // units/{oyuncu} düğümünü DİZİ olarak geri veriyor ve boş indeksler NULL geliyor
+        // ([null, {...}]). Eski kod doğrudan u.c okuyup çöküyordu → drawOthers her çağrıda
+        // patlıyor, bu yüzden ne diğer oyuncular çiziliyor ne de "göster/gizle" düğmesi
+        // işini bitirebiliyordu (istisna save() ve panel tazelemesinden ÖNCE atılıyordu).
+        if (!u || !u.c || u.c !== cell) continue;
         out.push({ oid: pid + '_' + uid, owner: (this.players[pid] || {}).nm || 'Oyuncu', ownerIdx: 0, netOwner: pid, kind: u.k, t: u.t, cell, ll: u.ll, since: u.s, net: true });
+      }
     }
     return out;
   },
@@ -3227,7 +3282,9 @@ function drawOthers() {
   othersDrawn = sig;
   othersLayer.forEach(m => m.remove()); othersLayer = [];
   if ((y1 - y0 + 1) * (x1 - x0 + 1) > 260) return; // performans emniyeti
-  for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+  for (let cy = y0; cy <= y1; cy++) {
+   const k = lonSteps(cy); // yüksek enlemde kare kimlikleri k'nin katı — 1'er artırırsak hiç eşleşmez
+   for (let cx = Math.floor(x0 / k) * k; cx <= x1; cx += k) {
     for (const o of othersInCell(cy + '_' + cx)) {
       if (G.boughtOthers && G.boughtOthers[o.oid]) continue; // satın aldıysan artık senin
       const T = TYPE_OF(o.kind, o.t);
@@ -3244,12 +3301,18 @@ function drawOthers() {
       m.on('click', () => openOtherSheet(o));
       othersLayer.push(m);
     }
+   }
   }
 }
 window.toggleOthers = () => {
   G.showOthers = !G.showOthers;
   toast(G.showOthers ? '👥 Diğer oyuncuların tesisleri GÖRÜNÜR' : '🙈 Diğer oyuncuların tesisleri gizlendi', '');
-  othersDrawn = ''; drawOthers(); save(); openViewSheet();
+  // Çizim hatası AYARI kilitlemesin: kaydetme ve panel tazeleme her hâlükârda çalışsın.
+  // (Telefon testinde drawOthers çöküyordu ve düğme hem değeri saklamıyor hem yazıyı
+  //  değiştirmiyordu — hata çizimdeydi ama belirti düğmede görünüyordu.)
+  othersDrawn = '';
+  try { drawOthers(); } catch (e) { console.warn('[drawOthers]', e); }
+  save(); openViewSheet();
 };
 const otherValue = o => { const [cy, cx] = o.cell.split('_').map(Number); const T = TYPE_OF(o.kind, o.t); return Math.round((T ? T.cost : 1e6) * (1.15 + hash01(cy, cx, 141) * .7)); };
 window.openOtherSheet = o => {
@@ -3341,7 +3404,7 @@ function aucAssets() { // satılabilir varlıkların listesi
     out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? T.mw + ' MW' : '' });
   }
   for (const l of (G.lines || [])) if (lineReady(l))
-    out.push({ kind: 'line', id: l.id, nm: (nearestCityName(l.from) || cellCode(l.from)) + ' → ' + (nearestCityName(l.to) || cellCode(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs) * .5), note: fmtN(l.km) + ' km' });
+    out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs) * .5), note: fmtN(l.km) + ' km' });
   (G.consRights || []).forEach((r, i) =>
     out.push({ kind: 'share', id: i, nm: CONSORTIUM_ROUTES[r.route].nm + ' — %' + r.share + ' hisse', ico: '⚖️', base: Math.round(CONSORTIUM_ROUTES[r.route].cost * r.share / 100 * .6), note: 'kıtalararası hat hissesi' }));
   return out;
@@ -4549,8 +4612,8 @@ function renderStorePanel() {
       const dolum = T.cap - s.stored;
       return `<div class="strow">
         <div class="top">
-          <span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${s.ll[0]},${s.ll[1]},11,'${(nearestCityName(s.cell) || cellCode(s.cell)).replace(/'/g, '')}')">${unitName(s)}</span>
-          <span class="cap">${nearestCityName(s.cell) || cellCode(s.cell)}</span></div>
+          <span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${s.ll[0]},${s.ll[1]},11,'${(placeName(s.cell)).replace(/'/g, '')}')">${unitName(s)}</span>
+          <span class="cap">${placeName(s.cell)}</span></div>
         <div class="bar"><i style="width:${Math.min(100, pct * 100)}%"></i></div>
         <div class="foot">
           <span class="val">${fmtE(s.stored)}/${T.cap} MWh · %${Math.round(pct * 100)}
@@ -4847,11 +4910,11 @@ function openUnitSheet(id) {
       </div>` : `
       <button class="bigsell" onclick="sellUnit(${u.id},1)" ${u.stored < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(u.stored)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * u.stored / T.cap))} sn)</button>
       ${alt ? `<button class="bigsell" style="background:${alt.emergency ? 'var(--danger);color:#fff' : 'var(--gold);color:#131313'}" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${u.stored < .005 ? 'disabled' : ''}>${alt.emergency ? '🚨 ACİL İHALEYE SAT — ' + cellCode(alt.c) + ' (tam fiyat, kesinti yok)' : '🔁 ' + cellCode(alt.c) + ' pazarına SAT — ' + fmt(alt.p) + '/MWh (-%10 aktarım dahil)'}</button>` : ''}
-      ${linesOf(u.cell).map(l => { const net = cellPriceNow(l.to) * (1 - lineLoss(l) / 100); return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || net <= base ? 'disabled' : ''}>⚡ HAT ile ${nearestCityName(l.to) || cellCode(l.to)}'e SAT — ${fmt(net)}/MWh (kayıp %${Math.round(lineLoss(l))})</button>`; }).join('')}
+      ${linesOf(u.cell).map(l => { const net = cellPriceNow(l.to) * (1 - lineLoss(l) / 100); return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || net <= base ? 'disabled' : ''}>⚡ HAT ile ${placeName(l.to)}'e SAT — ${fmt(net)}/MWh (kayıp %${Math.round(lineLoss(l))})</button>`; }).join('')}
       ${allyLinesFor(u.cell).map(l => { // 🤝 İTTİFAK HATTI — başkan çekti, HER ÜYE kullanır
         const net = cellPriceNow(l.to) * (1 - lineLoss(l) / 100);
         return `<button class="bigsell" style="background:#1f7a5a;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || net <= base ? 'disabled' : ''}>
-          🤝 İTTİFAK HATTI ile ${nearestCityName(l.to) || cellCode(l.to)}'e SAT — ${fmt(net)}/MWh
+          🤝 İTTİFAK HATTI ile ${placeName(l.to)}'e SAT — ${fmt(net)}/MWh
           <span style="font-size:10px">(kayıp %${Math.round(lineLoss(l))} · ÜCRETSİZ · MWh başına ${fmt(ALLY_LINE_FEE)} kasaya)</span></button>`;
       }).join('')}
       ${(() => { // 🌍 İTTİFAK KONSORSİYUM HATTI — üyelere ÜCRETSİZ (patron kuralı)
