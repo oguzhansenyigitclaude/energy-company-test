@@ -1,6 +1,8 @@
 {
-  "_aciklama": "GERÇEK ONLINE SUNUCU. db = Firebase Realtime Database adresi (bağlı). apiKey = Firebase Web API anahtarı (Proje ayarları > Genel > Web API Key) — girilince misafir hesapları sunucu kimliğiyle açılır. clientId = Google OAuth istemci kimliği (Firebase > Authentication > Sign-in method > Google etkinleştirilince oluşur) — girilince 'Google ile giriş' aktifleşir ve oyuncu telefon değiştirse bile kaydını taşır.",
+  "_aciklama": "GERÇEK ONLINE SUNUCU. db = Realtime Database adresi. apiKey = Firebase Web API anahtarı (misafir/Google girişi için). authDomain = Google giriş yönlendirmesi için alan adı.",
   "db": "https://energy-company-trk-default-rtdb.europe-west1.firebasedatabase.app",
-  "apiKey": "",
+  "apiKey": "AIzaSyAjEGs8-moGnXQPUBdW8grRDPLESWHhuds",
+  "authDomain": "energy-company-trk.firebaseapp.com",
+  "projectId": "energy-company-trk",
   "clientId": ""
 }

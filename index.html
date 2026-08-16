@@ -329,7 +329,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-16 14:07) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-16 14:36) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -404,6 +404,9 @@
 </div>
 
 <script src="vendor/leaflet.js"></script>
+<!-- Firebase Auth (yerel kopya): Google ile giriş — hesap telefon değişse de taşınır -->
+<script src="vendor/fb-app.js"></script>
+<script src="vendor/fb-auth.js"></script>
 <script>
 'use strict';
 // ═══════════ ENERJİ OYUNU — Prototip 0.5 ═══════════
@@ -412,7 +415,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-16 14:07)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-16 14:36)'; // deploy.js yayında tarih damgası ekler
 // Büyük ekonomi gösterimi: $1,2M · $3,4B · $1,1T (milyar-trilyon seviyelerine çıkan kasalar okunur kalsın)
 function fmt(n) {
   const a = Math.abs(n), s = n < 0 ? '-' : '';
@@ -2369,8 +2372,9 @@ const NET = {
       const c = await r.json();
       if (!c.db) return;
       this.db = c.db.replace(/\/$/, '');
-      this.key = c.apiKey || null;      // Firebase Web API anahtarı (hesap girişi için)
-      this.clientId = c.clientId || null; // Google OAuth istemci kimliği
+      this.key = c.apiKey || null;            // Firebase Web API anahtarı (hesap girişi için)
+      this.authDomain = c.authDomain || null; // Google giriş yönlendirmesi
+      this.projectId = c.projectId || null;
       try { this.auth = JSON.parse(localStorage.getItem('ec_auth') || 'null'); } catch (e) {}
       this.id = (this.auth && this.auth.uid) || localStorage.getItem('ec_netid') || ('p' + Math.random().toString(36).slice(2, 10));
       localStorage.setItem('ec_netid', this.id);
@@ -2381,31 +2385,50 @@ const NET = {
   },
   // ── 🔐 HESAP: misafir (anonim) veya Google ──
   saveAuth() { try { localStorage.setItem('ec_auth', JSON.stringify(this.auth)); } catch (e) {} },
-  async guestLogin() { // Firebase Anonymous Auth (REST)
-    if (!this.key) { this.auth = { kind: 'guest', uid: this.id, local: true }; this.saveAuth(); return this.auth; }
-    const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${this.key}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnSecureToken: true }) });
-    const j = await r.json();
-    if (!j.idToken) throw new Error(j.error && j.error.message || 'giriş hatası');
-    this.auth = { kind: 'guest', uid: j.localId, token: j.idToken, refresh: j.refreshToken, at: Date.now() };
-    this.id = j.localId; this.saveAuth();
-    return this.auth;
+  async guestLogin() { // Firebase Anonymous Auth (REST) — kapalıysa yerel kimliğe düşer
+    const localFallback = () => { this.auth = { kind: 'guest', uid: this.id, local: true }; this.saveAuth(); return this.auth; };
+    if (!this.key) return localFallback();
+    try {
+      const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${this.key}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnSecureToken: true }) });
+      const j = await r.json();
+      if (!j.idToken) { console.warn('[NET] anonim giriş kapalı:', j.error && j.error.message); return localFallback(); }
+      this.auth = { kind: 'guest', uid: j.localId, token: j.idToken, refresh: j.refreshToken, at: Date.now() };
+      this.id = j.localId; this.saveAuth();
+      return this.auth;
+    } catch (e) { return localFallback(); }
   },
-  googleUrl() { // Google ile giriş (yönlendirme akışı)
-    if (!this.key) return null;
-    const redirect = location.origin + location.pathname;
-    return `https://accounts.google.com/o/oauth2/auth?client_id=${encodeURIComponent(this.clientId || '')}` +
-      `&redirect_uri=${encodeURIComponent(redirect)}&response_type=id_token&scope=email%20profile&nonce=${Date.now()}`;
+  fbInit() { // Firebase Auth SDK (yerel) — Google girişi authDomain üzerinden, ayrı client ID gerekmez
+    if (this._fb || !window.firebase || !this.key || !this.authDomain) return this._fb;
+    firebase.initializeApp({ apiKey: this.key, authDomain: this.authDomain, projectId: this.projectId, databaseURL: this.db });
+    this._fb = firebase.auth();
+    return this._fb;
   },
-  async googleFinish(idToken) { // Google kimliğini Firebase hesabına çevir
-    const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${this.key}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ postBody: `id_token=${idToken}&providerId=google.com`, requestUri: location.origin, returnSecureToken: true }),
-    });
-    const j = await r.json();
-    if (!j.idToken) throw new Error(j.error && j.error.message || 'Google girişi başarısız');
-    this.auth = { kind: 'google', uid: j.localId, token: j.idToken, refresh: j.refreshToken, email: j.email, name: j.displayName, at: Date.now() };
-    this.id = j.localId; this.saveAuth();
+  googleAvailable() { return !!(window.firebase && this.key && this.authDomain); },
+  async googleLogin() {
+    const a = this.fbInit();
+    if (!a) throw new Error('Google girişi hazır değil');
+    const prov = new firebase.auth.GoogleAuthProvider();
+    // mobil/WebView'da popup engellenebilir → yönlendirme akışı daha güvenli
+    const mobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    if (mobile) { await a.signInWithRedirect(prov); return null; }
+    const res = await a.signInWithPopup(prov);
+    return this.adoptUser(res.user);
+  },
+  async googleCheckRedirect() { // yönlendirmeden dönüşte oturumu yakala
+    const a = this.fbInit();
+    if (!a) return null;
+    try {
+      const res = await a.getRedirectResult();
+      if (res && res.user) return this.adoptUser(res.user);
+      if (a.currentUser) return this.adoptUser(a.currentUser);
+    } catch (e) { console.warn('[NET] google redirect', e.message); }
+    return null;
+  },
+  async adoptUser(u) {
+    const tok = await u.getIdToken();
+    this.auth = { kind: u.isAnonymous ? 'guest' : 'google', uid: u.uid, token: tok, email: u.email, name: u.displayName, at: Date.now() };
+    this.id = u.uid; this.saveAuth();
     return this.auth;
   },
   // ── ☁️ BULUT KAYIT: oyuncunun tüm verisi sunucuda (cihaz değişse de kaybolmaz) ──
@@ -2483,8 +2506,13 @@ const WORLD_PLAYERS = ['Voltera Enerji', 'MegaWatt A.Ş.', 'Kuzey Rüzgarı', 'S
 const OTHER_TYPES = ['solar_2', 'solar_4', 'wind_3', 'wind_6', 'wind_9', 'coal_2', 'gas_2', 'hydro_2', 'geo_1'];
 const playerOnline = i => hash01(i, 3, Math.floor(Date.now() / 6e5)) > .45; // ~10 dk'da değişen çevrimiçi durumu
 function othersInCell(cell) {
-  if (NET.on()) return NET.unitsInCell(cell); // GERÇEK oyuncular (sunucu bağlıysa)
+  // Sunucu bağlıyken: GERÇEK oyuncular + yavaş gelişen bot şirketler (patron: "oyuncular yalnız hissetmesin")
+  if (NET.on()) return NET.unitsInCell(cell).concat(simUnitsInCell(cell));
   if (G.licenses[cell]) return []; // kendi ruhsatlı karende başkası kurmaz
+  return simUnitsInCell(cell);
+}
+function simUnitsInCell(cell) {
+  if (G.licenses[cell]) return [];
   const [cy, cx] = cell.split('_').map(Number);
   if (hash01(cy, cx, 91) < .72) return []; // karelerin ~%28'inde başka oyuncu var
   const n = 1 + Math.floor(hash01(cy, cx, 92) * 2.4);
@@ -2614,6 +2642,8 @@ const CHAT_ROOMS = {
 };
 let CHATROOM = 'world';
 const CHAT_LINES = [
+  'selam', 'kimse yok mu :)', 'merhaba arkadaşlar', 'gunaydin', 'nasil gidiyor', 'ben yeni basladim',
+  'burdan enerji satiyorum iyi para', 'kolay gelsin herkese', 'oyun guzelmis', 'iyi oyunlar',
   'Selam, yeni başlayan var mı? Kocaeli civarı nasıl?',
   'Rüzgar festivali başladı, türbinler tam gaz 🌬️',
   'Bugün emisyon karnem 12 g/kWh, teşvik +%15 aldım',
@@ -2628,12 +2658,15 @@ const CHAT_LINES = [
   'Acil ihale çıktı, katılan var mı?',
 ];
 function chatFeed(room) {
-  if (NET.on()) { // GERÇEK sohbet (sunucudan)
+  if (NET.on()) { // GERÇEK sohbet (sunucudan) + bot şirketlerin sohbeti (yalnızlık hissi olmasın)
     const live = (NET.chat[room] || []).map(m => ({ ...m, me: m.who === G.company }));
-    return live.concat((G.chat[room] || []).filter(m => !live.some(l => l.txt === m.txt && Math.abs(l.ts - m.ts) < 5000)))
-      .sort((a, b) => a.ts - b.ts).slice(-40);
+    const mine = (G.chat[room] || []).filter(m => !live.some(l => l.txt === m.txt && Math.abs(l.ts - m.ts) < 5000));
+    return live.concat(mine).concat(botChat(room)).sort((a, b) => a.ts - b.ts).slice(-40);
   }
-  // deterministik bot akışı (dakikada bir yeni mesaj) + oyuncunun kendi mesajları
+  return botChat(room).concat(G.chat[room] || []).sort((a, b) => a.ts - b.ts).slice(-40);
+}
+// 🤖 BOT ŞİRKETLER — sohbete ara ara basit mesajlar yazarlar (patron: "biraz düşük zekalı insan gibi")
+function botChat(room) {
   const out = [];
   const now = Math.floor(Date.now() / 60000);
   for (let i = 11; i >= 0; i--) {
@@ -2641,10 +2674,9 @@ function chatFeed(room) {
     const h = hash01(t, room.length, 17);
     if (h < .45) continue;
     const pi = Math.floor(hash01(t, 5, 23) * WORLD_PLAYERS.length);
-    out.push({ who: WORLD_PLAYERS[pi], idx: pi, txt: CHAT_LINES[Math.floor(hash01(t, 9, 31) * CHAT_LINES.length)], ts: t * 60000 });
+    out.push({ who: WORLD_PLAYERS[pi], idx: pi, bot: 1, txt: CHAT_LINES[Math.floor(hash01(t, 9, 31) * CHAT_LINES.length)], ts: t * 60000 });
   }
-  (G.chat[room] || []).forEach(m => out.push(m));
-  return out.sort((a, b) => a.ts - b.ts).slice(-40);
+  return out;
 }
 window.setChatRoom = r => { CHATROOM = r; renderChat(); };
 window.sendChat = () => {
@@ -2760,7 +2792,7 @@ window.sendFriendReq = nm => {
   save();
 };
 // arkadaş aramasında sunucudaki gerçek oyuncular öncelikli
-const searchPool = () => NET.on() ? NET.list().map(p => p.nm).filter(Boolean) : WORLD_PLAYERS;
+const searchPool = () => (NET.on() ? NET.list().map(p => p.nm).filter(Boolean) : []).concat(WORLD_PLAYERS);
 const onlineOf = nm => { if (!NET.on()) return playerOnline(WORLD_PLAYERS.indexOf(nm)); const p = NET.list().find(x => x.nm === nm); return !!(p && p.online); };
 window.openFriendsSheet = () => {
   hideSheets();
@@ -2795,7 +2827,8 @@ window.renderFriendSearch = () => {
     </div>`;
   }).join('');
 };
-const botWorth = i => { const days = Math.floor(Date.now() / 864e5) - 20655; return (8000 + (i * 13777 % 12000) + days * (700 + (i * 7919) % 1400)) * 1000; };
+// bot şirketler YAVAŞ gelişir (patron): günlük artış gerçek oyuncunun çok altında
+const botWorth = i => { const days = Math.floor(Date.now() / 864e5) - 20655; return (2000 + (i * 13777 % 6000) + days * (120 + (i * 7919) % 260)) * 1000; };
 const myWorth = () => G.cash + G.units.reduce((s, u) => s + TYPE_OF(u.kind, u.t).cost * .7, 0);
 const BOT_PLANTS = [
   { b: 3, nm: 'Taklamakan Çölü', ll: [38.9, 82.2], t: 'solar_2', n: 3 },
@@ -3920,8 +3953,9 @@ function renderMenu() {
   $('mgbtn2').textContent = mgAvail() <= 0 ? '🎮 Bugünkü haklar bitti' : '🎮 Frekans Nöbeti\'ni Oyna';
   // liderlik: emisyon rozeti herkeste görünür (patron: "ittifaklar üyeleri ona göre seçer")
   // sunucu bağlıysa GERÇEK oyuncular listelenir
-  const rows = NET.on() ? NET.list().map(p => ({ nm: p.nm + (p.online ? ' ●' : ''), w: p.worth || 0, em: p.em || 0 }))
-    : BOTS.map((b, i) => ({ nm: b, w: botWorth(i), em: botEm(i) }));
+  // gerçek oyuncular + bot şirketler (botlar YAVAŞ gelişir — gerçek oyuncu hep önde olabilir)
+  const rows = (NET.on() ? NET.list().map(p => ({ nm: p.nm + (p.online ? ' ●' : ''), w: p.worth || 0, em: p.em || 0 })) : [])
+    .concat(BOTS.map((b, i) => ({ nm: '🤖 ' + b, w: botWorth(i), em: botEm(i) })));
   rows.push({ nm: G.company + ' (SEN)', w: myWorth(), em: co2Avg(), me: true });
   rows.sort((a, b) => b.w - a.w);
   $('lb').innerHTML = rows.slice(0, 9).map((r, i) => `<div class="r ${r.me ? 'me' : ''}"><span>#${i + 1} ${r.nm} ${emBadgeHTML(r.em)}</span><span>${fmt(r.w)}</span></div>`).join('');
@@ -4030,16 +4064,23 @@ window.loginGuest = async () => {
   await afterLogin();
 };
 window.loginGoogle = async () => {
-  if (!NET.key || !NET.clientId) {
+  if (!NET.googleAvailable()) {
     $('modal').innerHTML = `
       <h2>🔓 Google Girişi</h2>
-      <p>Google ile giriş için sunucuda tek seferlik bir ayar gerekiyor (Firebase → Authentication → Google'ı etkinleştir).</p>
-      <p class="sub">Bu ayar açılana kadar misafir olarak oynayabilirsin; ilerlemen sunucuda saklanır ve sonradan Google hesabına bağlanabilir.</p>
+      <p>Google girişi şu an hazır değil. Misafir olarak oynayabilirsin — ilerlemen sunucuda saklanır.</p>
       <button class="primary" onclick="closeModal();loginGuest()">👤 Misafir Olarak Devam Et</button>`;
     $('overlay').classList.add('show');
     return;
   }
-  location.href = NET.googleUrl();
+  $('modal').innerHTML = '<h2>🔓 Google girişi</h2><p>Google hesabına yönlendiriliyorsun...</p>';
+  try {
+    const a = await NET.googleLogin();
+    if (a) { closeModal(); toast('🔓 Hoş geldin ' + (a.name || a.email || ''), '', null, 0, true); await afterLogin(); }
+    // mobilde yönlendirme olur; dönüşte NET.googleCheckRedirect yakalar
+  } catch (e) {
+    toast('Google girişi başarısız: ' + (e.message || ''), 'bad');
+    showLoginScreen();
+  }
 };
 async function afterLogin() {
   // bulut kaydı varsa onu kullan (cihaz değişse bile ilerleme gelir)
@@ -4384,21 +4425,10 @@ try {
     });
   }
 } catch (e) {}
-// Google yönlendirmesinden dönüş (id_token adres çubuğunda gelir)
-(function handleGoogleReturn() {
-  const h = location.hash || '';
-  if (h.includes('id_token=')) {
-    const tok = new URLSearchParams(h.slice(1)).get('id_token');
-    history.replaceState(null, '', location.pathname);
-    if (tok) window.__googleToken = tok;
-  }
-})();
 NET.init().then(async () => { // online sunucu (net-config.json varsa) — yoksa simülasyon sürer
-  if (window.__googleToken && NET.on()) {
-    try { await NET.googleFinish(window.__googleToken); toast('🔓 Google hesabıyla giriş yapıldı', '', null, 0, true); } catch (e) { toast('Google girişi başarısız: ' + e.message, 'bad'); }
-    window.__googleToken = null;
-    await afterLogin();
-    return;
+  if (NET.on() && NET.googleAvailable()) {
+    const a = await NET.googleCheckRedirect(); // Google yönlendirmesinden dönüş
+    if (a) { toast('🔓 Hoş geldin ' + (a.name || a.email || ''), '', null, 0, true); await afterLogin(); return; }
   }
   wizardStart();
 });
