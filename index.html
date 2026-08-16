@@ -329,7 +329,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-16 13:57) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-16 14:07) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -412,7 +412,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-16 13:57)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-16 14:07)'; // deploy.js yayında tarih damgası ekler
 // Büyük ekonomi gösterimi: $1,2M · $3,4B · $1,1T (milyar-trilyon seviyelerine çıkan kasalar okunur kalsın)
 function fmt(n) {
   const a = Math.abs(n), s = n < 0 ? '-' : '';
@@ -1223,6 +1223,20 @@ function sellChunk(st, mwh, targetCell, mult) {
   const cell = targetCell || st.cell;
   let gain;
   const at = G.ally && G.ally.tender;
+  // 🌍 Konsorsiyum hattı: ittifak üyesine (ve HİSSEDARA) ÜCRETSİZ taşıma
+  const cn = targetCell && targetCell !== st.cell ? consortiumFor(st.cell) : null;
+  if (cn && cn.cell === targetCell) {
+    const r = sellRevenue(cell, mwh);
+    gain = r.gain * (mult || 1) * (1 - CONS_LOSS / 100);
+    st.stored = Math.max(0, st.stored - mwh);
+    noteSold(cell, mwh);
+    G.cash += gain;
+    G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain;
+    G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
+    // kWh payı hattı İŞLETEN ittifakın kasasına; hissedar olarak kullanıyorsan kasan yoksa pay yanmaz, sende kalır
+    if (!cn.asShareholder && G.ally) G.ally.treasury = (G.ally.treasury || 0) + mwh * cn.route.kwhFee * 1000;
+    return gain;
+  }
   const line = targetCell && targetCell !== st.cell ? (G.lines || []).find(l => l.from === st.cell && l.to === targetCell && lineReady(l)) : null;
   if (line) {
     // ⚡ NAKİL HATTI: hedef bölgenin fiyatı, mesafe kaybı düşülür (aktarım bedeli YOK — hattı zaten sen kurdun)
@@ -1976,6 +1990,13 @@ function gridPanelHTML() {
   return h;
 }
 function drawLines() {
+  // 🌍 konsorsiyum hatları + ortak transfer merkezleri (ittifak hattı VE hissedarı olduğun hatlar)
+  for (const idx of activeRouteIdx()) {
+    const r = CONSORTIUM_ROUTES[idx];
+    overlayLayer.push(L.polyline([r.from, r.to], { color: '#8a6cff', weight: MAPVIEW === 'grid' ? 6 : 3, opacity: .9, interactive: false }).addTo(map));
+    if (MAPVIEW === 'grid') consortiumNodes(idx).forEach(n => overlayLayer.push(
+      L.marker(n.ll, { icon: divIcon(`<div style="font-size:${n.end ? 20 : 16}px;filter:drop-shadow(0 1px 3px #000)">${n.end ? '🌍' : '🗼'}</div>`, [20, 20]), interactive: false }).addTo(map)));
+  }
   if (G.lines) G.lines = G.lines.filter(l => l && l.from && l.to); // eksik veri çizimi çökertmesin
   for (const l of (G.lines || [])) {
     const rdy = lineReady(l), loss = rdy ? lineLoss(l) : 100;
@@ -2113,6 +2134,18 @@ window.fundConsortium = () => {
   const r = CONSORTIUM_ROUTES[c.route], share = r.cost / 2;
   if ((G.ally.treasury || 0) < share) { toast('Kasada ' + fmt(share) + ' olmalı — bağış çağrısı aç', 'warn'); return; }
   G.ally.treasury -= share;
+  // ⚖️ HİSSE SÖZLEŞMESİ (patron sorusu: "başkan parayı alıp üyeleri atarsa?"):
+  // Finansman anında bağış defteri DONDURULUR ve herkesin payı hatta HİSSE olarak yazılır.
+  // Hisse KİŞİYE aittir — ittifaktan ayrılsan/atılsan da hattı kullanma hakkın devam eder.
+  const dons = G.ally.donations || {};
+  const total = Object.values(dons).reduce((s, d) => s + d.total, 0) || 1;
+  c.shares = {};
+  for (const [nm, d] of Object.entries(dons)) c.shares[nm] = +(d.total / total * 100).toFixed(2);
+  const myShare = c.shares[G.company] || 0;
+  if (myShare > 0) { // kişisel hak defterine yaz (ittifaktan bağımsız saklanır)
+    G.consRights = G.consRights || [];
+    G.consRights.push({ route: c.route, share: myShare, ally: G.ally.name, since: Date.now() });
+  }
   c.status = 'building';
   c.done = Date.now() + 3 * 864e5 / (G.demo ? 60 : 1); // kıtalararası: 3 gün (patron)
   toast('🏗️ Kıtalararası hat inşaatı başladı — 3 gün', '', null, 0, true);
@@ -2130,7 +2163,71 @@ function consortiumTick() {
   save(); refreshAllyUI();
 }
 const consortiumLive = () => G.ally && G.ally.consortium && G.ally.consortium.status === 'live';
+// ⚖️ HİSSEDAR HAKKI: ittifaktan ayrılsan/atılsan bile finanse ettiğin hattı kullanmaya devam edersin.
+// (Patron: "başkan parayı toplayıp üyeleri atarsa bir dünya para verdikleri hattı kullanamazlar" — bu kapıyı kapatır.)
+const myRightRoutes = () => (G.consRights || []).map(r => r.route);
+function activeRouteIdx() { // kullanabildiğin rotalar: ittifakınınki + hissedarı olduklarımız
+  const out = new Set(myRightRoutes());
+  if (consortiumLive()) out.add(G.ally.consortium.route);
+  return [...out];
+}
+// ── 🌍 KONSORSİYUM HATTI ORTAK KULLANIMI (patron kuralı) ──
+// Hat, kuran İKİ İTTİFAĞIN ORTAK MALI: üyeler hattın erişim noktalarına (uçlar + transfer merkezleri)
+// yakın tesis kurup hattı ÜCRETSİZ kullanır — transfer merkezleri kendi binaları gibidir.
+// İttifaktan ayrılan/çıkarılan bu hakkı ANINDA kaybeder.
+const CONS_ACCESS_KM = 220;   // erişim noktasına bu mesafedeki tesisler hattı kullanabilir
+const CONS_HUBS = 6;          // hat boyunca ortak transfer merkezi sayısı
+const CONS_LOSS = 12;         // ortak hattın kaybı (bakımı ittifak kasası karşılar)
+function consortiumNodes(routeIdx) { // hat üzerindeki erişim noktaları (uçlar + ara merkezler)
+  const idx = routeIdx != null ? routeIdx : (consortiumLive() ? G.ally.consortium.route : null);
+  if (idx == null) return [];
+  const r = CONSORTIUM_ROUTES[idx];
+  const out = [];
+  for (let i = 0; i <= CONS_HUBS + 1; i++) {
+    const t = i / (CONS_HUBS + 1);
+    out.push({ ll: [r.from[0] + (r.to[0] - r.from[0]) * t, r.from[1] + (r.to[1] - r.from[1]) * t], end: i === 0 ? 'from' : i === CONS_HUBS + 1 ? 'to' : null });
+  }
+  return out;
+}
+// Depo hattı kullanabiliyor mu? (üyelik + yakınlık) → hattın KARŞI ucundaki pazara ücretsiz erişim
+function consortiumFor(cell) {
+  const routes = activeRouteIdx();
+  if (!routes.length) return null;
+  const c = cellCenter(cell);
+  let best = null;
+  for (const idx of routes) {
+    consortiumNodes(idx).forEach((n, i) => { const d = kmDist(n.ll, c); if (!best || d < best.d) best = { d, i, idx }; });
+  }
+  if (!best || best.d > CONS_ACCESS_KM) return null;
+  const r = CONSORTIUM_ROUTES[best.idx];
+  const target = best.i <= (CONS_HUBS + 1) / 2 ? r.to : r.from; // yakın olduğun ucun KARŞISI hedeftir
+  const asShareholder = !(consortiumLive() && G.ally.consortium.route === best.idx);
+  return { cell: cellId(target), km: Math.round(r.km), dist: Math.round(best.d), route: r, hubIdx: best.i, routeIdx: best.idx, asShareholder };
+}
 
+window.leaveAllyAsk = () => {
+  if (!G.ally) return;
+  const hasLine = consortiumLive();
+  const myShare = hasLine ? ((G.ally.consortium.shares || {})[G.company] || 0) : 0;
+  $('modal').innerHTML = `
+    <h2>🚪 İttifaktan Ayrıl — Emin misin?</h2>
+    <p><b>${G.ally.name}</b> ittifakından ayrılacaksın.</p>
+    ${hasLine ? (myShare > 0
+      ? `<p class="pos">⚖️ Konsorsiyum hattında <b>%${myShare} hissen</b> var — hattı ve transfer merkezlerini <b>kullanmaya devam edersin</b>. Hisse kişiye aittir, ittifak seni atsa bile geçerlidir.</p>`
+      : '<p class="neg">⚠️ Bu hatta hissen yok (finansman öncesi bağış yapmamışsın) — ayrılınca hattı kullanamazsın.</p>') : ''}
+    <p class="sub">İttifak puanların, +%50 alım bonusun ve acil ihale erişimin sona erer. Kasaya yaptığın bağışlar ittifakta kalır.</p>
+    <button class="primary" style="background:var(--danger);color:#fff" onclick="closeModal();leaveAlly()">🚪 Evet, Ayrıl</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.leaveAlly = () => {
+  if (!G.ally) return;
+  const nm = G.ally.name;
+  G.ally = null;
+  G.allyBuffUntil = 0; // ittifak avantajları anında biter
+  toast('🚪 ' + nm + ' ittifakından ayrıldın — ortak hat ve avantajlar kapandı', 'warn', null, 0, true);
+  save(); refreshAllyUI(); renderMenu();
+};
 window.foundAlly = () => {
   if (G.ally) return;
   const nm = ['Enerji Birliği', 'Güç Konseyi', 'Watt Kardeşliği', 'Şebeke Paktı', 'Anadolu Grid'][Math.floor(Math.random() * 5)];
@@ -2226,9 +2323,19 @@ function allyHTML() {
         <div style="font-size:12.5px;font-weight:700">${r.nm}</div>
         <div class="sub">Ortak: ${cs.partner} · durum: <b>${cs.status === 'pending' ? '⏳ yanıt bekleniyor' : cs.status === 'accepted' ? '✅ kabul edildi — finansman bekliyor' : cs.status === 'building' ? '🏗️ inşa: ' + fmtHrs(Math.max(0, cs.done - Date.now()) / 36e5) : '🌍 DEVREDE'}</b></div>
         ${cs.status === 'accepted' ? `<button class="bigsell" onclick="fundConsortium()" ${(G.ally.treasury || 0) < r.cost / 2 ? 'disabled' : ''}>💰 Kasadan Payı Öde — ${fmt(r.cost / 2)}${(G.ally.treasury || 0) < r.cost / 2 ? ' (kasa yetersiz)' : ''}</button>` : ''}
-        ${cs.status === 'live' ? `<div class="sub pos">Taşınan her MWh için kasaya ${fmt(r.kwhFee * 1000)} geliyor. Satışlarında otomatik işler.</div>` : ''}
+        ${cs.status === 'live' ? `<div class="sub pos">Taşınan her MWh için kasaya ${fmt(r.kwhFee * 1000)} geliyor.</div>
+        <div class="sub" style="margin-top:4px">🏗️ <b>ORTAK KULLANIM:</b> Hat iki ittifakın ortak malı. Üyeler hattın uçlarına ya da ${CONS_HUBS} transfer merkezinden birine <b>${CONS_ACCESS_KM} km</b> mesafede tesis kurarsa hattı <b>ücretsiz</b> kullanır (kayıp %${CONS_LOSS}); merkezler kendi binanız gibidir.</div>
+        ${(() => { // ⚖️ HİSSE DEFTERİ — kimin ne kadar payı var (atılsa bile geçerli)
+          const sh = Object.entries(cs.shares || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
+          if (!sh.length) return '';
+          return `<div style="font-size:11px;color:var(--gold);margin:8px 0 2px">⚖️ HİSSE DEFTERİ <span class="sub">finansman anında donduruldu</span></div>` +
+            sh.map(([nm, p]) => `<div class="mrow"><span class="mid">${nm === G.company ? '<b>' + nm + ' (SEN)</b>' : nm}</span><b>%${p}</b></div>`).join('') +
+            `<p class="sub">Hisse KİŞİYE aittir: ittifaktan ayrılan ya da ATILAN üye bu hattı kullanmaya devam eder. Böylece "parayı topla, sonra at" oyunu işlemez.</p>`;
+        })()}` : ''}
       </div>`;
     }
+    // ittifaktan ayrılma (patron: "çıkarsa ya da çıkarılırsa artık kullanamaz")
+    h += `<button class="bigsell half" style="color:var(--danger);margin-top:10px" onclick="leaveAllyAsk()">🚪 İttifaktan Ayrıl</button>`;
     if (t) {
       h += `<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin:6px 0">
         <div style="font-size:12px;font-weight:700">🚨 ACİL İHALE — ${nearestCityName(t.cell) ? nearestCityName(t.cell) + ' · ' : ''}${cellCode(t.cell)} <span class="sub">⏳ ${fmtHrs(Math.max(0, t.until - Date.now()) / 36e5)}</span></div>
@@ -3375,6 +3482,13 @@ function openUnitSheet(id) {
       <button class="bigsell" onclick="sellUnit(${u.id},1)" ${u.stored < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(u.stored)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * u.stored / T.cap))} sn)</button>
       ${alt ? `<button class="bigsell" style="background:${alt.emergency ? 'var(--danger);color:#fff' : 'var(--gold);color:#131313'}" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${u.stored < .005 ? 'disabled' : ''}>${alt.emergency ? '🚨 ACİL İHALEYE SAT — ' + cellCode(alt.c) + ' (tam fiyat, kesinti yok)' : '🔁 ' + cellCode(alt.c) + ' pazarına SAT — ' + fmt(alt.p) + '/MWh (-%10 aktarım dahil)'}</button>` : ''}
       ${linesOf(u.cell).map(l => { const net = cellPriceNow(l.to) * (1 - lineLoss(l) / 100); return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || net <= base ? 'disabled' : ''}>⚡ HAT ile ${nearestCityName(l.to) || cellCode(l.to)}'e SAT — ${fmt(net)}/MWh (kayıp %${Math.round(lineLoss(l))})</button>`; }).join('')}
+      ${(() => { // 🌍 İTTİFAK KONSORSİYUM HATTI — üyelere ÜCRETSİZ (patron kuralı)
+        const cn = consortiumFor(u.cell);
+        if (!cn) return '';
+        const net = cellPriceNow(cn.cell) * (1 - CONS_LOSS / 100);
+        return `<button class="bigsell" style="background:#7a5cff;color:#fff" onclick="startDischarge(${u.id},1,null,'${cn.cell}')" ${u.stored < .005 ? 'disabled' : ''}>
+          🌍 KONSORSİYUM HATTI ile SAT — ${fmt(net)}/MWh <span style="font-size:10px">(${cn.asShareholder ? '⚖️ HİSSEDAR hakkın' : 'ittifak hattı'} · ÜCRETSİZ · kayıp %${CONS_LOSS} · merkeze ${cn.dist} km)</span></button>`;
+      })()}
       ${adAvail() > 0 ? (u.stored >= T.cap * .9
         ? `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="sellUnitAd(${u.id})">🎬 Reklam İzle & SAT — ${fmt(rAll.gain * AD_BONUS)} (+%15) · hak ${adAvail()}/${AD_MAX}</button>`
         : `<button class="bigsell" style="background:#8a6cff33;color:var(--dim)" disabled>🎬 Reklam bonusu (+%15) — depo %90 dolunca · hak ${adAvail()}/${AD_MAX}</button>`) : ''}
@@ -3782,9 +3896,12 @@ window.resetAccountAsk = () => {
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
-window.resetAccount = () => {
+window.resetAccount = async () => {
+  const del = NET.on() ? NET.req('saves/' + NET.id, 'DELETE').catch(() => {}) : null; // bulut kaydı da silinir
+  const del2 = NET.on() ? NET.req('units/' + NET.id, 'DELETE').catch(() => {}) : null;
   G = null; // KRİTİK: otokayıt ve sayfa-kapanış kaydı sıfırlamayı geri yazmasın (telefon testi bug'ı)
   localStorage.removeItem(SAVE_KEY);
+  try { await Promise.race([Promise.all([del, del2]), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
   location.reload();
 };
 function renderMenu() {
