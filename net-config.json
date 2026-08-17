@@ -1,5 +1,6 @@
 {
-  "_aciklama": "GERÇEK ONLINE SUNUCU. db = Realtime Database adresi. apiKey = Firebase Web API anahtarı (misafir/Google girişi için). authDomain = Google giriş yönlendirmesi için alan adı.",
+  "_aciklama": "GERÇEK ONLINE SUNUCU. db = Realtime Database adresi. apiKey = Firebase Web API anahtarı (misafir/Google girişi için). authDomain = Firebase auth alan adı. clientId = Google Identity Services web istemci kimliği.",
+  "_clientId_nasil": "Firebase Console → Authentication → Sign-in method → Google → 'Web SDK yapılandırması' bölümündeki 'Web istemci kimliği' (…apps.googleusercontent.com ile biter). BU ALAN BOŞKEN mobil Chrome'da Google girişi popup engellenirse çalışmaz — signInWithRedirect bölünmüş depolamada kırık olduğu için yedek yol bilerek kaldırıldı.",
   "db": "https://energy-company-trk-default-rtdb.europe-west1.firebasedatabase.app",
   "apiKey": "AIzaSyAjEGs8-moGnXQPUBdW8grRDPLESWHhuds",
   "authDomain": "energy-company-trk.firebaseapp.com",

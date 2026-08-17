@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 22:40) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-17 23:06) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 22:40)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-17 23:06)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1645,6 +1645,11 @@ window.storeLinkAsk = (aId, bId) => {
 window.storeLink = (aId, bId) => {
   const A = storeById(aId), B = storeById(bId);
   if (!A || !B || A.id === B.id) return;
+  // ⛔ ZİNCİRLEME YASAK (patron kuralı): YALNIZ MASTER bağlantı kurar. Köle, master'ına bağlı
+  // olduğu sürece başka depoya bağlanamaz. Aksi hâlde A→B→C→D diye ucuz kısa atlamalarla
+  // kıtalar arası köprü kurulur, kimse ⚡ nakil hattı çekmez ve en pahalı pazara bedavaya satılır.
+  // Yıldız topolojisi zorunlu: her bağlantı master'dan TAM MESAFE üzerinden fiyatlanır.
+  if (A.link) { toast('⛔ ' + unitName(A) + ' bir KÖLE depo — bağlantıyı yalnız master kurar. Önce bağlantısını kes.', 'warn', null, 0, true); return; }
   if (B.link) { toast('🔗 ' + unitName(B) + ' zaten başka bir depoya bağlı — önce onu kes', 'warn'); return; }
   if (storeMaster(A).id === storeMaster(B).id) { toast('🔗 Bu iki depo zaten aynı grupta', 'warn'); return; } // döngü kalkanı
   if (connCount(A) >= STORE_TYPES[A.t].conn) { toast('🔗 ' + unitName(A) + ' bağlantı noktaları dolu', 'warn'); return; }
@@ -2901,6 +2906,7 @@ let LINK_SRC = null;
 window.startStoreLink = id => {
   const s = storeById(id);
   if (!s) return;
+  if (s.link) { toast('⛔ Bu depo KÖLE — bağlantıyı yalnız master kurar. Zincirleme bağlantı yok.', 'warn', null, 0, true); return; }
   if (connCount(s) >= STORE_TYPES[s.t].conn) { toast('🔗 Bağlantı noktaların dolu', 'warn'); return; }
   LINK_SRC = id;
   hideSheets();
@@ -4077,6 +4083,7 @@ const NET = {
       this.key = c.apiKey || null;            // Firebase Web API anahtarı (hesap girişi için)
       this.authDomain = c.authDomain || null; // Google giriş yönlendirmesi
       this.projectId = c.projectId || null;
+      this.clientId = c.clientId || null;      // GIS (Google Identity Services) web istemci kimliği
       try { this.auth = JSON.parse(localStorage.getItem('ec_auth') || 'null'); } catch (e) {}
       this.id = (this.auth && this.auth.uid) || localStorage.getItem('ec_netid') || ('p' + Math.random().toString(36).slice(2, 10));
       localStorage.setItem('ec_netid', this.id);
@@ -4115,22 +4122,56 @@ const NET = {
   // dönüyor ve oyuncu Google onayını verdiği hâlde giriş yapmamış olarak geri geliyordu.
   // Kalıcı çözüm auth handler'ı kendi köküne taşımak ama uygulama github.io'da bir ALT
   // YOLDA (/energy-company-test/) — alan adının kökü bizde değil. Bu yüzden POPUP birincil.
+  // 🔐 GIS (Google Identity Services): bölünmüş depolamalı tarayıcıda ÇALIŞAN TEK YOL.
+  // Kimlik jetonunu doğrudan sayfaya verir; çapraz köken iframe/çerez dansı yok.
+  async gisLoad() {
+    if (window.google && google.accounts && google.accounts.id) return true;
+    if (!this.clientId) return false;
+    return new Promise(res => {
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true; s.defer = true;
+      s.onload = () => res(!!(window.google && google.accounts && google.accounts.id));
+      s.onerror = () => res(false);
+      document.head.appendChild(s);
+    });
+  },
+  async googleLoginGIS() {
+    if (!(await this.gisLoad())) return null;
+    const a = this.fbInit();
+    if (!a) return null;
+    return new Promise((resolve, reject) => {
+      let bitti = false;
+      google.accounts.id.initialize({
+        client_id: this.clientId, auto_select: false, cancel_on_tap_outside: true,
+        callback: async resp => {
+          bitti = true;
+          try {
+            const cred = firebase.auth.GoogleAuthProvider.credential(resp.credential);
+            const r = await a.signInWithCredential(cred);
+            resolve(await this.adoptUser(r.user));
+          } catch (e) { reject(e); }
+        },
+      });
+      google.accounts.id.prompt(n => {
+        if (bitti) return;
+        const yok = n && ((n.isNotDisplayed && n.isNotDisplayed()) || (n.isSkippedMoment && n.isSkippedMoment()));
+        if (yok) resolve(null); // gösterilemedi → çağıran popup'a düşer
+      });
+    });
+  },
+  // ⚠️ signInWithRedirect KALDIRILDI. Patron canlıda şu hatayı aldı:
+  // "missing initial state ... Using signInWithRedirect in a storage-partitioned browser
+  // environment". Popup engellenince yönlendirmeye düşmek, oyuncuyu GARANTİLİ bozuk beyaz
+  // sayfaya götürüyordu. Yedek yol artık yok — GIS varsa o, yoksa popup, o da olmazsa NET hata.
   async googleLogin() {
     const a = this.fbInit();
     if (!a) throw new Error('Google girişi hazır değil');
-    const prov = new firebase.auth.GoogleAuthProvider();
-    try {
-      const res = await a.signInWithPopup(prov);
-      return this.adoptUser(res.user);
-    } catch (e) {
-      const kod = (e && e.code) || '';
-      if (/popup-closed-by-user|cancelled-popup-request/.test(kod)) throw e; // oyuncu kendi kapattı
-      if (/popup-blocked|operation-not-supported|web-storage-unsupported/.test(kod)) {
-        await a.signInWithRedirect(prov); // son çare: engellenmiş popup
-        return null;
-      }
-      throw e;
+    if (this.clientId) {
+      try { const g = await this.googleLoginGIS(); if (g) return g; } catch (e) { console.warn('[NET] GIS', e.message); }
     }
+    const res = await a.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    return this.adoptUser(res.user);
   },
   async googleCheckRedirect() { // yönlendirmeden dönüşte oturumu yakala
     const a = this.fbInit();
@@ -4190,21 +4231,12 @@ const NET = {
       return { mode: 'link', auth: await this.adoptUser(res.user) };
     }
     const oldId = this.id;
-    // googleLogin ile aynı sebep: yönlendirme akışı çapraz kökende kırık → POPUP birincil
-    let res;
-    try {
-      res = await a.signInWithPopup(prov);
-    } catch (e) {
-      const kod = (e && e.code) || '';
-      if (/popup-closed-by-user|cancelled-popup-request/.test(kod)) throw e;
-      if (/popup-blocked|operation-not-supported|web-storage-unsupported/.test(kod)) {
-        try { localStorage.setItem('ec_link_from', oldId); } catch (er) {} // dönüşte taşıma için
-        await a.signInWithRedirect(prov);
-        return null;
-      }
-      throw e;
+    // googleLogin ile aynı sebep: yönlendirme akışı bölünmüş depolamada KIRIK, yedek yol yok.
+    let auth = null;
+    if (this.clientId) {
+      try { auth = await this.googleLoginGIS(); } catch (e) { console.warn('[NET] GIS link', e.message); }
     }
-    const auth = await this.adoptUser(res.user);
+    if (!auth) auth = await this.adoptUser((await a.signInWithPopup(prov)).user);
     return { mode: 'move', auth, moved: await this.moveCloudData(oldId, auth.uid) };
   },
   // Bulut kaydını eski uid'den yenisine taşır. HEDEFTE ŞİRKET VARSA ÜZERİNE YAZMAZ —
