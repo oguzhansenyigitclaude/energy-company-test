@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 23:14) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-17 23:19) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 23:14)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-17 23:19)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2188,7 +2188,10 @@ window.startDischarge = (id, frac, adMult, targetCell, quiet) => {
   const st = G.units.find(x => x.id === id);
   if (!st || st.kind !== 'store' || st.buildDone > Date.now()) return;
   if (st.disch) { if (!quiet) toast('⚡ Bu depo zaten boşaltılıyor', 'warn'); return; }
-  const amt = st.stored * frac;
+  // 🔗 MASTER GRUP ADINA SATAR: kapasite birleştiği için enerji de birlikte satılır.
+  // Köle tek başına satamaz — çıkış ucu master'dır.
+  if (st.link) { if (!quiet) toast('🔗 Bu depo bir KÖLE — satış master depodan yapılır', 'warn', null, 0, true); return; }
+  const amt = (isLinked(st) ? groupStored(st) : st.stored) * frac;
   if (amt < .005) return;
   grantDailyResPt();
   st.disch = { left: amt, mult: adMult || 1, target: targetCell || null, sold: 0, gain: 0, full: frac >= .99 };
@@ -2206,6 +2209,12 @@ function dischargeTick(dtSec) {
     const d = st.disch;
     if (!d) continue;
     const T = STORE_TYPES[st.t];
+    // 🔗 master kendi deposu boşalınca kölelerden çeker — grup tek tank gibi boşalır
+    if (!st.link && d.left > st.stored + .001) for (const g2 of storeGroup(st)) {
+      if (g2.id === st.id || st.stored >= d.left) break;
+      const al = Math.min(g2.stored, d.left - st.stored);
+      if (al > 0) { g2.stored -= al; st.stored += al; }
+    }
     const chunk = Math.min(d.left, st.stored, (T.cap / dischSecOf(T)) * dtSec);
     if (chunk > 0) {
       d.gain += sellChunk(st, chunk, d.target, d.mult);
@@ -6013,27 +6022,35 @@ function renderNav() {
 // (ad+bölge · doluluk çubuğu · değer · eylem), kendi kelimelerimiz. Alınan yalnız FİKİR:
 // "bütün depoları tek listede gör ve tek dokunuşla sat".
 function renderStorePanel() {
-  const sts = stores().filter(s => s.buildDone <= Date.now());
+  // 🔗 KÖLE DEPOLAR LİSTEDE YOK (patron): kapasite master'da toplanır, satış master'dan yapılır.
+  const sts = stores().filter(s => s.buildDone <= Date.now() && !s.link);
   if (!sts.length) { $('navbody').innerHTML = '<p class="sub">Henüz deponun yok — bir kareye 🔋 pil istasyonu kur.</p>'; return; }
   // ⚠️ HATA AVI (orta): her depo için sellRevenue ayrı çağrılıyordu, yani AYNI KAREDEKİ her depo
   // günlük talebi sıfırdan tüketiyormuş gibi hesaplanıyordu. Gösterilen tutar gerçekte ödenenden
   // çok yüksek çıkıyor, oyuncu "vaat edilen para gelmedi" diyordu — rakibin en nefret edilen kusuru.
   // Çözüm: kare bazlı biriktirici. Sıra ekrandaki sırayla aynı olsun diye önce doluluğa göre gidiyoruz.
   const kareSatilan = {};
-  const rows = sts.slice().sort((a, b) => (b.stored / STORE_TYPES[b.t].cap) - (a.stored / STORE_TYPES[a.t].cap)).map(s => {
+  // Bağlıysa GRUP toplamı gösterilir; satış master'ın KENDİ karesinin fiyatından yapılır
+  // (başka bölgeye satmak için depo ekranına girip oradaki bölge butonu kullanılır).
+  const dolu = s => isLinked(s) ? groupStored(s) : s.stored;
+  const kapa = s => isLinked(s) ? groupCap(s) : STORE_TYPES[s.t].cap;
+  const rows = sts.slice().sort((a, b) => (dolu(b) / kapa(b)) - (dolu(a) / kapa(a))).map(s => {
     const T = STORE_TYPES[s.t];
+    const mwh = dolu(s), cap = kapa(s);
     const onceki = kareSatilan[s.cell] || 0;
-    const r = sellRevenueAfter(s.cell, s.stored, onceki);
-    kareSatilan[s.cell] = onceki + s.stored;
-    const inflow = plants().filter(p => assignedStoreOf(p) === s).reduce((a, p) => a + plantOutput(p), 0) * speedMult();
-    return { s, T, r, inflow, pct: s.stored / T.cap };
+    const r = sellRevenueAfter(s.cell, mwh, onceki);
+    kareSatilan[s.cell] = onceki + mwh;
+    const grup = storeGroup(s);
+    const inflow = plants().filter(p => { const st2 = assignedStoreOf(p); return st2 && grup.some(g2 => g2.id === st2.id); })
+      .reduce((a, p) => a + plantOutput(p), 0) * speedMult();
+    return { s, T, r, inflow, mwh, cap, bagli: isLinked(s), pct: cap ? mwh / cap : 0 };
   });
   const key = { dolu: (a, b) => b.pct - a.pct, deger: (a, b) => b.r.gain - a.r.gain, bolge: (a, b) => (nearestCityName(a.s.cell) || '').localeCompare(nearestCityName(b.s.cell) || '', 'tr') }[STSORT];
   rows.sort(key);
-  const satilabilir = rows.filter(x => !x.s.disch && x.s.stored >= .005);
-  const toplamMWh = rows.reduce((a, x) => a + x.s.stored, 0);
+  const satilabilir = rows.filter(x => !x.s.disch && x.mwh >= .005);
+  const toplamMWh = rows.reduce((a, x) => a + x.mwh, 0);
   const toplamPara = satilabilir.reduce((a, x) => a + x.r.gain, 0);
-  const kapasite = rows.reduce((a, x) => a + x.T.cap, 0);
+  const kapasite = rows.reduce((a, x) => a + x.cap, 0);
   $('navbody').innerHTML = `
     <div style="border:1px solid var(--acc);border-radius:11px;padding:9px 10px;margin:2px 0 8px;background:#0e1c33">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim);font-weight:700">
@@ -6048,26 +6065,26 @@ function renderStorePanel() {
       ${[['dolu', 'Doluluk'], ['deger', 'Değer'], ['bolge', 'Bölge']].map(([k, n]) =>
         `<button onclick="setStSort('${k}')" style="flex:1;padding:6px 2px;border-radius:8px;border:1px solid var(--line);background:${STSORT === k ? 'var(--acc2)' : 'var(--panel2)'};color:${STSORT === k ? '#071018' : 'var(--dim)'};font-size:10.5px;font-weight:800;cursor:pointer">${n} ↓</button>`).join('')}
     </div>
-    ${rows.map(({ s, T, r, inflow, pct }) => {
-      const dolum = T.cap - s.stored;
+    ${rows.map(({ s, T, r, inflow, pct, mwh, cap, bagli }) => {
+      const dolum = cap - mwh;
       return `<div class="strow">
         <div class="top">
           <span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${s.ll[0]},${s.ll[1]},11,'${(placeName(s.cell)).replace(/'/g, '')}')">${unitName(s)}</span>
           <span class="cap">${placeName(s.cell)}</span></div>
         <div class="bar"><i style="width:${Math.min(100, pct * 100)}%"></i></div>
         <div class="foot">
-          <span class="val">${fmtE(s.stored)}/${T.cap} MWh · %${Math.round(pct * 100)}
+          <span class="val">${fmtE(mwh)}/${cap} MWh${bagli ? ' <b style="color:var(--acc2)">👑 ' + storeGroup(s).length + ' depo</b>' : ''} · %${Math.round(pct * 100)}
             ${inflow > .05 ? ` · ⚡${inflow.toFixed(1)} MW` : ' · <span class="neg">üretim yok</span>'}
             ${s.disch ? '' : `<br><b style="color:var(--acc)">${fmt(r.gain)}</b>${r.excess > .5 ? ' <span class="neg">· talep aşımı</span>' : ''}`}</span>
           ${s.disch
             ? `<span style="font-size:10.5px;color:var(--gold);font-weight:800">⚡ %${Math.round(100 * s.disch.sold / (s.disch.sold + s.disch.left))}</span>`
-            : `<button onclick="sellUnit(${s.id},1);renderNav()" ${s.stored < .005 ? 'disabled' : ''}>SAT</button>`}
+            : `<button onclick="sellUnit(${s.id},1);renderNav()" ${mwh < .005 ? 'disabled' : ''}>SAT</button>`}
         </div></div>`;
     }).join('')}
     <p class="sub" style="margin-top:8px">Depo adına dokun → harita oraya uçar. Satış her zaman senin kararın — oto-satış yok.</p>`;
 }
 window.sellAllStoresAsk = () => {
-  const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && s.stored >= .005);
+  const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && !s.link && (isLinked(s) ? groupStored(s) : s.stored) >= .005);
   if (!sts.length) return;
   // ⚠️ HATA AVI: burada da her depo günlük talebi sıfırdan tüketiyormuş gibi sayılıyordu.
   // Aynı kare biriktiricisi — onay ekranındaki rakam gerçekte ödenecek tutar olsun.
