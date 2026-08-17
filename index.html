@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 20:51) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-17 21:13) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 20:51)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-17 21:13)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1396,6 +1396,103 @@ const STORE_TYPES = {
   h2:      { nm: 'Hidrojen Mega Tesisi', ico: '⚗️', tip: 'P2X', cost: 45e6, cap: 500, conn: 10, build: 300, d: 'Kategorinin amiral gemisi — şehir ölçeğinde depolama.' },
 };
 
+// ═══════════ 🏭 MARKA SİSTEMİ 2.0 (patron tasarımı — docs/marka-sistemi.md) ═══════════
+// DENGENİN OMURGASI: markalar HER ÜRÜNÜ ÜRETMEZ. Güneş uzmanının kömürü, rüzgar uzmanının
+// nükleeri yoktur. "Hepsini tek markadan al" fiziksel olarak mümkün değil — sadakat tek yere
+// aktığı için portföyü çeşitlendiren sadakatini böler, sadakati yığan portföyünü daraltır.
+// CEZA VE ÜRÜN YOKLUĞU SADAKATLE DEĞİŞMEZ: geç oyunda tek markanın her şeyi yapmasını
+// engelleyen asıl fren budur.
+// Kurulum süresi bilerek AVANTAJ DEĞİL (patron: "kimse 3 dk için marka seçmez").
+const BRAND_ARCH = {
+  ortac: {
+    ico: '⚙️', col: '#9aa4b5', kisa: 'Ortaç',
+    cost: .88, wear: 1.15, cap: 1, conn: 0, fuel: 1, lineCost: 1, lineLoss: 0,
+    out: {}, outDef: 1, // hiçbir sektörde bonus YOK ama cezası da yok — ucuzluk karşılığı
+    sectors: ['Güneş', 'Rüzgar', 'Kömür', 'Gaz', 'Hidro', 'Jeotermal', 'Depo'],
+    d: 'Ucuz giriş seviyesi — her sektörde ürünü var, hiçbirinde verim bonusu yok. Daha hızlı yıpranır.',
+  },
+  gunara: {
+    ico: '☀️', col: '#ffc24a', kisa: 'Günara',
+    cost: 1.06, wear: 1, cap: 1, conn: 0, fuel: 1, lineCost: 1, lineLoss: 0,
+    out: { 'Güneş': 1.12 }, outDef: .94, cloudTol: 1.20, // uzmanlık dışında verim DÜŞÜK
+    sectors: ['Güneş', 'Rüzgar', 'Kömür', 'Gaz', 'Hidro', 'Jeotermal', 'Depo'],
+    d: 'Güneş uzmanı — zirve verim ve bulut toleransı. Uzmanlık dışı sektörlerde verimi düşük, nükleer ÜRETMEZ.',
+  },
+  yelkora: {
+    ico: '🌬️', col: '#4ea8ff', kisa: 'Yelkora',
+    cost: 1.05, wear: 1, cap: 1, conn: 0, fuel: 1, lineCost: 1, lineLoss: 0,
+    out: { 'Rüzgar': 1.06 }, outDef: .94, cutIn: -0.5, storm: 3, // erken döner, fırtınaya geç kapanır
+    sectors: ['Güneş', 'Rüzgar', 'Kömür', 'Gaz', 'Hidro', 'Jeotermal', 'Depo'],
+    d: 'Rüzgar uzmanı — düşük rüzgarda erken devreye girer, fırtınada geç durur. Uzmanlık dışında verimi düşük, nükleer ÜRETMEZ.',
+  },
+  demirkor: {
+    ico: '⬛', col: '#8b95a8', kisa: 'Demirkor',
+    cost: 1.15, wear: .5, cap: 1.15, conn: 0, fuel: .85, lineCost: 1, lineLoss: 0,
+    out: { 'Kömür': 1.06, 'Gaz': 1.06, 'Nükleer': 1.06 }, outDef: .97,
+    sectors: ['Güneş', 'Rüzgar', 'Kömür', 'Gaz', 'Nükleer', 'Hidro', 'Jeotermal', 'Depo'],
+    d: 'Ağır sanayi — yakıt tüketimi düşük, ömrü İKİ KAT uzun, deposu geniş. NÜKLEERİN TEK ÜRETİCİSİ. Yenilenebilirde verimi düşük, ekipmanı pahalı.',
+  },
+  meridan: {
+    ico: '🔷', col: '#3ddc97', kisa: 'Meridan',
+    cost: 1.02, wear: 1, cap: 1, conn: 1, fuel: 1, lineCost: .75, lineLoss: -3, lineIntl: 1.15,
+    out: {}, outDef: .97,
+    sectors: ['Güneş', 'Rüzgar', 'Kömür', 'Gaz', 'Hidro', 'Jeotermal', 'Depo'],
+    d: 'Şebeke uzmanı — DEPOYA +1 BAĞLANTI, ülke içi hat ucuz ve az kayıplı. Üretimde bonusu yok, ülkeler arası hat PAHALI, nükleer ÜRETMEZ.',
+  },
+};
+// 🌍 İSİMLER ÜLKEYE GÖRE (patron: "Amerikalı oyuncu Türkçe isim görmesin").
+// Arketip sabit, isim değişir — 52 ülke için ayrı denge tablosu tutulamaz.
+// Yeni ülke seti eklerken gerçek şirketlerle çakışma kontrolü ŞART (bkz. docs/marka-sistemi.md).
+const BRAND_NAMES = {
+  _default: { ortac: 'Baseworks Industrial', gunara: 'Solmara Power', yelkora: 'Aerovane Power', demirkor: 'Ironhall Industries', meridan: 'Nodeline Grid' },
+  'Türkiye': { ortac: 'Ortaç Sanayi', gunara: 'Günara Solar', yelkora: 'Yelkora Rüzgar', demirkor: 'Demirkor Ağır Sanayi', meridan: 'Meridan Ağ' },
+};
+const brandSet = () => BRAND_NAMES[(G && G.country) || ''] || BRAND_NAMES._default;
+const brandNm = k => (BRAND_ARCH[k] ? (brandSet()[k] || BRAND_ARCH[k].kisa) : k);
+const brandKisa = k => { const n = brandNm(k); return n.split(' ')[0]; }; // kartlarda kısa ad
+const brandOf = t => { const i = String(t).indexOf('__'); return i < 0 ? null : String(t).slice(i + 2); };
+const baseTypeOf = t => { const i = String(t).indexOf('__'); return i < 0 ? String(t) : String(t).slice(0, i); };
+// 🏭 MARKALI ÜRÜN TÜRETİCİ: taban tipler DOKUNULMADAN kalır (eski kayıtlar bozulmasın),
+// üstüne her arketip için ayrı ürün eklenir. Anahtar: "solar_2__gunara" — startsWith('coal')
+// gibi mevcut kontroller bozulmaz.
+(() => {
+  const yuvarla = (v, adim) => Math.round(v / adim) * adim;
+  for (const [bk, B] of Object.entries(BRAND_ARCH)) {
+    for (const [t, base] of Object.entries(PLANT_TYPES)) {
+      if (t.includes('__') || !B.sectors.includes(base.cat)) continue;
+      // uzmanlık sektöründe bonus, DIŞINDA ceza (outDef). Böylece her üründen 5 sürüm olur
+      // ama uzmanı olmayan marka o sektörde kazanamaz — "tek marka her şeyi domine etmesin".
+      const carp = B.out[base.cat] || B.outDef || 1;
+      const v = Object.assign({}, base);
+      v.brand = bk;
+      // ⚠️ İsim TEMBEL hesaplanır: burada brandKisa() çağırmak `G`'ye dokunur ve `let G`
+      // bu satırdan SONRA tanımlı olduğu için TDZ hatası verir (yaşandı — script yarıda kalıyordu).
+      // Getter sayesinde isim ilk okunduğunda, yani oyun yüklendikten sonra çözülür.
+      Object.defineProperty(v, 'nm', { get: () => brandKisa(bk) + ' ' + base.nm, enumerable: true, configurable: true });
+      v.mw = Math.round(base.mw * carp * 10) / 10;
+      v.cost = Math.max(1e5, yuvarla(base.cost * B.cost, 1e5));
+      v.decay = (base.decay || 1) * B.wear;
+      if (base.fuel) v.fuel = Math.round(base.fuel * B.fuel);
+      if (base.kind === 'sun' && B.cloudTol) v.cloudTol = B.cloudTol;
+      if (base.kind === 'wind') {
+        if (B.cutIn) v.cutIn = Math.max(2, Math.round((base.cutIn + B.cutIn) * 10) / 10);
+        if (B.storm) v.storm = base.storm + B.storm;
+      }
+      PLANT_TYPES[t + '__' + bk] = v;
+    }
+    if (B.sectors.includes('Depo')) for (const [t, base] of Object.entries(STORE_TYPES)) {
+      if (t.includes('__')) continue;
+      const v = Object.assign({}, base);
+      v.brand = bk;
+      Object.defineProperty(v, 'nm', { get: () => brandKisa(bk) + ' ' + base.nm, enumerable: true, configurable: true });
+      v.cap = Math.round(base.cap * B.cap);
+      v.conn = base.conn + B.conn;
+      v.cost = Math.max(1e5, yuvarla(base.cost * B.cost, 1e5));
+      STORE_TYPES[t + '__' + bk] = v;
+    }
+  }
+})();
+
 // ═══ YAKIT DEPOLARI + OFİS + ARAŞTIRMA (patron tasarımı — 14 Ağustos telefon testi) ═══
 // Yakıt artık anında parayla değil: önce yakıt deposu kur → depoya ton bazında yakıt al →
 // santrale dokunup DEPODAN elle ikmal et (12 saatlik stok). Nükleer istisna: yakıt çubuğu direkt parayla.
@@ -1862,7 +1959,8 @@ function plantOutput(u, atMin) {
       // gündüz eğrisi: sabah/akşam düşer ama dibe vurmaz (gündüz tabanı .62 — patron: "10 MW panel 0,8 MW üretmesin")
       let bell = (h >= 6 && h <= 19.5) ? Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) : 0;
       // bulut etkisi DOĞRUSAL (patron: %59 bulut → ~%41 üretim), üstüne yeni şirket takviyesi
-      const cloud = (wx.cloud || 0) * (1 - NEWBIE_CLOUD * newbieAid());
+      // ☀️ MARKA: güneş uzmanının bulut toleransı bulut kaybını azaltır (T.cloudTol > 1)
+      const cloud = (wx.cloud || 0) * (1 - NEWBIE_CLOUD * newbieAid()) / (T.cloudTol || 1);
       f = wx.day ? bell * Math.max(.05, 1 - cloud / 100) : 0;
     } else f = sunFactor(q, atMin);
   } else if (T.kind === 'wind') {
@@ -2286,6 +2384,10 @@ function addUnit(kind, t, ll, buildSec) {
   if (tutActive()) bs = Math.min(bs, 4); // tutorial: kurulumlar ~anında ("zamandan muaf" — patron isteği)
   const u = { id: G.nextId++, kind, t, ll: [+ll[0].toFixed(5), +ll[1].toFixed(5)], cell: cellId(ll), cond: 100, on: true, buildDone: Date.now() + bs * 1000, stored: 0, fuel: 0, capLvl: 0, fuelH: (kind === 'plant' && PLANT_TYPES[t].fuel) ? FUEL_HOURS : 0 };
   if (bs === 0) u._ann = true; // hediye/anlık kurulumlar "tamamlandı!" anons yağmuru yapmasın
+  // 🏭 MARKA SADAKATİ: markalı ürün alındığında o markaya +12, diğerlerine -4.
+  // Hatlarla aynı havuz — oyuncu tek bir tedarikçi ilişkisi yönetir.
+  const bmk = brandOf(t);
+  if (bmk && BRAND_ARCH[bmk]) { u.brand = bmk; brandBuy(bmk); }
   G.units.push(u);
   addUnitMarker(u);
   return u;
@@ -2663,19 +2765,28 @@ const LINE = { cableKm: 80000, transformer: 15e6, permitPer100: 2e6, laborRate: 
 // Aynı trafoyu farklı markalardan alabilirsin. Sadık kaldıkça İLİŞKİ artar (max 100) →
 // %25'e varan iskonto. Başka markadan alınca o markayla ilişki düşer: hepsiyle 100 olamazsın.
 // Her markanın KENDİ avantajı var — hangi oyun tarzına yatırım yaptığın seçim demek.
-const BRANDS = {
-  voltas:  { nm: 'Voltaş Trafo', ico: '🔷', d: 'Ekonomik seri — liste fiyatı %12 ucuz.', price: .88, loss: 0, build: 1, wear: 1 },
-  anadolu: { nm: 'Anadolu Elektromekanik', ico: '🔶', d: 'Düşük kayıplı sargı — hat kaybı 3 puan azalır.', price: 1, loss: -3, build: 1, wear: 1 },
-  eurogrid:{ nm: 'EuroGrid Systems', ico: '🔵', d: 'Hızlı montaj — kurulum süresi %35 kısalır.', price: 1.06, loss: 0, build: .65, wear: 1 },
-  nordic:  { nm: 'Nordic PowerTech', ico: '⬜', d: 'Dayanıklı gövde — yıpranma yarı yarıya yavaş.', price: 1.12, loss: 0, build: 1, wear: .5 },
-};
-const brandRel = b => (G.brandRel && G.brandRel[b]) || 0;
+// TEK MARKA SİSTEMİ: hatlar da artık BRAND_ARCH kullanıyor. BRANDS, arketiplerden türetilen
+// bir uyumluluk görünümü — eski kayıtlardaki voltas/anadolu/eurogrid/nordic anahtarları
+// BRAND_OLD ile yeni arketiplere eşlenir ki mevcut oyuncuların hatları bozulmasın.
+const BRANDS = (() => {
+  const o = {};
+  for (const [k, B] of Object.entries(BRAND_ARCH))
+    o[k] = { get nm() { return brandNm(k); }, ico: B.ico, d: B.d, price: B.cost, loss: B.lineLoss || 0, build: 1, wear: B.wear };
+  return o;
+})();
+const BRAND_OLD = { voltas: 'ortac', anadolu: 'meridan', eurogrid: 'ortac', nordic: 'demirkor' };
+const brandKey = b => BRAND_ARCH[b] ? b : (BRAND_OLD[b] || 'ortac');
+const brandRel = b => (G.brandRel && G.brandRel[brandKey(b)]) || 0;
 const brandDisc = b => 1 - .25 * (brandRel(b) / 100);              // 100 ilişki = %25 iskonto
-const brandPrice = (b, base) => Math.round(base * BRANDS[b].price * brandDisc(b));
+const brandPrice = (b, base) => Math.round(base * BRAND_ARCH[brandKey(b)].cost * brandDisc(b));
 function brandBuy(b) { // sadakat: seçtiğin marka +12, diğerleri -4 (hepsiyle 100 olunamaz)
+  const k = brandKey(b);
   G.brandRel = G.brandRel || {};
-  for (const k of Object.keys(BRANDS)) G.brandRel[k] = Math.max(0, Math.min(100, (G.brandRel[k] || 0) + (k === b ? 12 : -4)));
+  for (const x of Object.keys(BRAND_ARCH)) G.brandRel[x] = Math.max(0, Math.min(100, (G.brandRel[x] || 0) + (x === k ? 12 : -4)));
 }
+// Sadakatin İKİ etkisi: maliyet iskontosu (yukarıda) + avantajın yarısının açılması.
+// Avantajın yarısı taban, yarısı sadakatle gelir. CEZA sadakatle KÜÇÜLMEZ (denge freni).
+const brandGain = (b, tabanEtki) => { const r = brandRel(b) / 100; return 1 + (tabanEtki - 1) * (.5 + .5 * r); };
 // ⚙️ MARKA PANELİ (patron: "marka olayını bitir, oyuna dahil et") — sistem çalışıyordu ama
 // YALNIZ hat kurma modalının içinde görünüyordu; oyuncu sadakatini hiçbir yerde takip edemiyordu.
 // Artık şirket ekranında kalıcı: hangi markayla nerede olduğunu ve ne kazandığını görüyor.
@@ -2683,7 +2794,7 @@ function brandPanelHTML() {
   const hatlar = (G.lines || []);
   const say = {};
   hatlar.forEach(l => { const b = l.brand || 'voltas'; say[b] = (say[b] || 0) + 1; });
-  const enIyi = Object.keys(BRANDS).reduce((a, b) => brandRel(b) > brandRel(a) ? b : a, 'voltas');
+  const enIyi = Object.keys(BRANDS).reduce((a, b) => brandRel(b) > brandRel(a) ? b : a, 'ortac');
   return `<div style="font-size:12px;margin:10px 0 2px">⚙️ <b>TRAFO MARKALARI</b> <span class="sub">sadakat = iskonto</span></div>
     <p class="sub" style="margin:2px 0 6px">Hat çekerken seçtiğin marka +12 ilişki kazanır, diğerleri -4 kaybeder —
     <b>hepsiyle 100 olamazsın</b>. 100 ilişki = <b>%25 iskonto</b>. Her markanın ayrı bir üstünlüğü var.</p>
@@ -2720,7 +2831,7 @@ function lineCost(km, hubs) {
   return Math.round(base * (1 + LINE.laborRate));
 }
 const lineBuildSec = km => Math.min(86400, Math.round(60 + km * 6)); // en fazla 1 gün (kıtalararası tam sürümde 3 gün)
-const lineBrand = l => BRANDS[l.brand] || BRANDS.voltas;
+const lineBrand = l => BRANDS[brandKey(l && l.brand)] || BRANDS.ortac;
 const lineWear = l => Math.max(0, 100 - (Date.now() - l.built) / 864e6 * LINE.wearPer10d * 10 * lineBrand(l).wear); // marka dayanıklılığı
 const lineReady = l => l.done <= Date.now();
 const lineLoss = l => Math.max(5, Math.min(100, lineLossPct(l.km, l.hubs) + lineBrand(l).loss + (100 - lineWear(l)) * .5)); // marka + yıpranma
