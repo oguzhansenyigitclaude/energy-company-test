@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 17:08) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-17 20:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 17:08)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-17 20:26)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1363,6 +1363,17 @@ function sellRevenue(cell, mwh) {
   const excess = mwh - inD;
   const gb = 1 + greenBonus(); // 🌿 devlet teşviki: temiz portföye alımda +%5/%10/%15
   return { gain: (inD * base + excess * base * DUMP_RATE) * gb, inD, excess, remaining, price: base, green: gb - 1 };
+}
+// 🔁 ALTERNATİF PAZAR BUTONLARI (patron: "butonda MWh fiyatı değil KAZANILACAK TUTAR yazsın,
+// parantezden sonra da yerel satışa göre '%25 daha kârlı' / '%15 zarar' desin").
+// Kesinti çarpanı: komşu pazarda aktarım kesintisi, hatta hat kaybı, acil ihalede 1 (kesintisiz).
+const altSatGain = (cell, mwh, kesintiCarpani) => sellRevenue(cell, mwh).gain * kesintiCarpani;
+function karRozeti(gain, yerelGain) {
+  if (!(yerelGain > 0)) return '';
+  const p = Math.round((gain / yerelGain - 1) * 100);
+  if (p >= 1) return ` <b class="pos">(%${p} daha kârlı)</b>`;
+  if (p <= -1) return ` <b class="neg">(%${Math.abs(p)} zarar)</b>`;
+  return ' <span class="sub">(fark yok)</span>';
 }
 function noteSold(cell, mwh) {
   ensureCellSold();
@@ -3846,15 +3857,30 @@ const NET = {
     return this._fb;
   },
   googleAvailable() { return !!(window.firebase && this.key && this.authDomain); },
+  // ⚠️ KRİTİK (patron bildirdi: "onay verdiğim hâlde bağlanmadı"):
+  // signInWithRedirect ARTIK ÇALIŞMIYOR. Uygulama oguzhansenyigitclaude.github.io'da,
+  // authDomain ise energy-company-trk.firebaseapp.com → ÇAPRAZ KÖKEN. SDK dönüşteki
+  // oturumu authDomain kökenindeki depolamadan okuyor; Chrome M115+ / Safari 16.1+ /
+  // Firefox 109+ üçüncü taraf depolamayı engellediği için getRedirectResult() null
+  // dönüyor ve oyuncu Google onayını verdiği hâlde giriş yapmamış olarak geri geliyordu.
+  // Kalıcı çözüm auth handler'ı kendi köküne taşımak ama uygulama github.io'da bir ALT
+  // YOLDA (/energy-company-test/) — alan adının kökü bizde değil. Bu yüzden POPUP birincil.
   async googleLogin() {
     const a = this.fbInit();
     if (!a) throw new Error('Google girişi hazır değil');
     const prov = new firebase.auth.GoogleAuthProvider();
-    // mobil/WebView'da popup engellenebilir → yönlendirme akışı daha güvenli
-    const mobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (mobile) { await a.signInWithRedirect(prov); return null; }
-    const res = await a.signInWithPopup(prov);
-    return this.adoptUser(res.user);
+    try {
+      const res = await a.signInWithPopup(prov);
+      return this.adoptUser(res.user);
+    } catch (e) {
+      const kod = (e && e.code) || '';
+      if (/popup-closed-by-user|cancelled-popup-request/.test(kod)) throw e; // oyuncu kendi kapattı
+      if (/popup-blocked|operation-not-supported|web-storage-unsupported/.test(kod)) {
+        await a.signInWithRedirect(prov); // son çare: engellenmiş popup
+        return null;
+      }
+      throw e;
+    }
   },
   async googleCheckRedirect() { // yönlendirmeden dönüşte oturumu yakala
     const a = this.fbInit();
@@ -3914,13 +3940,20 @@ const NET = {
       return { mode: 'link', auth: await this.adoptUser(res.user) };
     }
     const oldId = this.id;
-    const mobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (mobile) { // yönlendirme: dönüşte hangi uid'den taşıyacağımızı hatırla
-      try { localStorage.setItem('ec_link_from', oldId); } catch (e) {}
-      await a.signInWithRedirect(prov);
-      return null;
+    // googleLogin ile aynı sebep: yönlendirme akışı çapraz kökende kırık → POPUP birincil
+    let res;
+    try {
+      res = await a.signInWithPopup(prov);
+    } catch (e) {
+      const kod = (e && e.code) || '';
+      if (/popup-closed-by-user|cancelled-popup-request/.test(kod)) throw e;
+      if (/popup-blocked|operation-not-supported|web-storage-unsupported/.test(kod)) {
+        try { localStorage.setItem('ec_link_from', oldId); } catch (er) {} // dönüşte taşıma için
+        await a.signInWithRedirect(prov);
+        return null;
+      }
+      throw e;
     }
-    const res = await a.signInWithPopup(prov);
     const auth = await this.adoptUser(res.user);
     return { mode: 'move', auth, moved: await this.moveCloudData(oldId, auth.uid) };
   },
@@ -4275,10 +4308,11 @@ function aucAssets() { // satılabilir varlıkların listesi
     if (aucListed('unit', u.id)) continue;
     const T = TYPE_OF(u.kind, u.t);
     if (!T) continue;
-    out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? T.mw + ' MW' : '' });
+    // 📍 KONUM (patron: "bilmediğim yerdeki santrali almam") — ilanda taşınır
+    out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, loc: placeName(u.cell) + ' · ' + cellCode(u.cell), note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? T.mw + ' MW' : '' });
   }
   for (const l of (G.lines || [])) if (lineReady(l) && !aucListed('line', l.id))
-    out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs) * .5), note: fmtN(l.km) + ' km' });
+    out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs) * .5), loc: placeName(l.from) + ' → ' + placeName(l.to), note: fmtN(l.km) + ' km' });
   (G.consRights || []).forEach((r, i) => { if (aucListed('share', i)) return;
     out.push({ kind: 'share', id: i, nm: CONSORTIUM_ROUTES[r.route].nm + ' — %' + r.share + ' hisse', ico: '⚖️', base: Math.round(CONSORTIUM_ROUTES[r.route].cost * r.share / 100 * .6), note: 'kıtalararası hat hissesi' }); });
   return out;
@@ -4302,6 +4336,9 @@ function aucCard(a) {
   return `<div style="border:1px solid ${a.mine ? 'var(--gold)' : 'var(--line)'};border-radius:10px;padding:8px 10px;margin:6px 0">
     <div style="font-size:12.5px;font-weight:700">${a.ico} ${a.nm}</div>
     <div class="sub">${a.note ? a.note + ' · ' : ''}satıcı: ${a.seller} · ⏳ ${fmtHrs(left / 36e5)} · vergi %${term.tax * 100}</div>
+    ${a.loc ? `<div class="sub">📍 <b>${a.loc}</b></div>` : ''}
+    ${a.assetKind === 'unit' && !a.mine
+      ? `<div class="sub">📍 Devralınca <b>senin merkez ofisinin bölgesine</b> kurulur — bilmediğin sahaya bağlı kalmazsın.</div>` : ''}
     <div class="qline" style="font-size:11.5px"><span>Açılış: <b>${fmt(a.start)}</b></span><span>En yüksek: <b class="${a.top ? 'pos' : ''}">${a.top ? fmt(a.top) + ' — ' + a.topBy : 'teklif yok'}</b></span></div>
     ${a.mine ? `<div class="sub">Satılırsa eline geçecek: <b>${fmt(Math.round((a.top || 0) * (1 - term.tax)))}</b></div>
       ${a.top
@@ -4386,7 +4423,7 @@ window.aucCreate = (i, hours) => {
   G.cash -= fee;
   G.auctionsMkt = G.auctionsMkt || [];
   G.auctionsMkt.push({
-    id: G.nextId++, mine: true, seller: G.company, ico: x.ico, nm: x.nm, note: x.note,
+    id: G.nextId++, mine: true, seller: G.company, ico: x.ico, nm: x.nm, note: x.note, loc: x.loc || '',
     assetKind: x.kind, assetId: x.id, start, top: 0, topBy: null, term: hours,
     until: Date.now() + hours * 36e5 / (G.demo ? 60 : 1), _bt: Date.now(),
   });
@@ -6004,13 +6041,18 @@ function openUnitSheet(id) {
         <div class="sub">Satılan: ${fmtE(u.disch.sold)} MWh · +${fmt(u.disch.gain)} · kalan ${fmtE(u.disch.left)} MWh</div>
       </div>` : `
       <button class="bigsell" onclick="sellUnit(${u.id},1)" ${u.stored < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(u.stored)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * u.stored / T.cap))} sn)</button>
-      ${alt ? `<button class="bigsell" style="background:${alt.emergency ? 'var(--danger);color:#fff' : 'var(--gold);color:#131313'}" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${u.stored < .005 ? 'disabled' : ''}>${alt.emergency ? '🚨 ACİL İHALEYE SAT — ' + cellCode(alt.c) + ' (tam fiyat, kesinti yok)' : '🔁 ' + cellCode(alt.c) + ' pazarına SAT — ' + fmt(alt.p) + '/MWh (-%10 aktarım dahil)'}</button>` : ''}
-      ${linesOf(u.cell).map(l => { const net = cellPriceNow(l.to) * (1 - lineLoss(l) / 100); return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || net <= base ? 'disabled' : ''}>⚡ HAT ile ${placeName(l.to)}'e SAT — ${fmt(net)}/MWh (kayıp %${Math.round(lineLoss(l))})</button>`; }).join('')}
+      ${alt ? (() => { // patron: fiyat/MWh değil KAZANILACAK TUTAR + yerele göre kâr/zarar
+        const g = altSatGain(alt.c, u.stored, alt.emergency ? 1 : 1 - TRANSFER_FEE);
+        return `<button class="bigsell" style="background:${alt.emergency ? 'var(--danger);color:#fff' : 'var(--gold);color:#131313'}" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${u.stored < .005 ? 'disabled' : ''}>${alt.emergency
+          ? '🚨 ACİL İHALEYE SAT — ~' + fmt(g) + karRozeti(g, rAll.gain) + '<br><span style="font-size:10px">' + cellCode(alt.c) + ' · tam fiyat, kesinti yok</span>'
+          : '🔁 ' + cellCode(alt.c) + ' pazarına SAT — ~' + fmt(g) + karRozeti(g, rAll.gain) + '<br><span style="font-size:10px">-%' + Math.round(TRANSFER_FEE * 100) + ' aktarım dahil</span>'}</button>`;
+      })() : ''}
+      ${linesOf(u.cell).map(l => { const g = altSatGain(l.to, u.stored, 1 - lineLoss(l) / 100); return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || g <= rAll.gain ? 'disabled' : ''}>⚡ HAT ile ${placeName(l.to)}'e SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">hat kaybı %${Math.round(lineLoss(l))}</span></button>`; }).join('')}
       ${allyLinesFor(u.cell).map(l => { // 🤝 İTTİFAK HATTI — başkan çekti, HER ÜYE kullanır
-        const net = cellPriceNow(l.to) * (1 - lineLoss(l) / 100);
-        return `<button class="bigsell" style="background:#1f7a5a;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || net <= base ? 'disabled' : ''}>
-          🤝 İTTİFAK HATTI ile ${placeName(l.to)}'e SAT — ${fmt(net)}/MWh
-          <span style="font-size:10px">(kayıp %${Math.round(lineLoss(l))} · ÜCRETSİZ · MWh başına ${fmt(ALLY_LINE_FEE)} kasaya)</span></button>`;
+        const g = altSatGain(l.to, u.stored, 1 - lineLoss(l) / 100);
+        return `<button class="bigsell" style="background:#1f7a5a;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || g <= rAll.gain ? 'disabled' : ''}>
+          🤝 İTTİFAK HATTI ile ${placeName(l.to)}'e SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}
+          <span style="font-size:10px">(hat kaybı %${Math.round(lineLoss(l))} · ÜCRETSİZ · MWh başına ${fmt(ALLY_LINE_FEE)} kasaya)</span></button>`;
       }).join('')}
       ${(() => { // 🌍 İTTİFAK KONSORSİYUM HATTI — üyelere ÜCRETSİZ (patron kuralı)
         const cn = consortiumFor(u.cell);
