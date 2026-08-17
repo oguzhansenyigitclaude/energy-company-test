@@ -121,6 +121,9 @@
   /* tutorial: hedef öğe yanıp söner + altın ipucu çubuğu */
   @keyframes tutpulse{0%,100%{box-shadow:0 0 0 0 #ffd16600}50%{box-shadow:0 0 12px 4px #ffd166aa}}
   .tut{animation:tutpulse 1s infinite;border-color:var(--gold)!important;color:var(--gold)!important}
+  /* katalog kartı hedefken çerçeve ince kalıyordu — telefonda fark edilmiyordu (patron bildirdi) */
+  .pcard.tut{border-width:2px;background:#241d08}
+  .pcard.tut .pname{color:var(--gold)}
   .umark.tut .ic{filter:drop-shadow(0 0 9px #ffd166) drop-shadow(0 0 3px #ffd166)}
   #tuthint{position:absolute;left:10px;right:10px;bottom:8px;z-index:1140;display:none;background:#241a02f0;border:1px solid var(--gold);border-radius:12px;padding:10px 12px;font-size:12.5px;font-weight:700;pointer-events:none;box-shadow:0 4px 16px #000a;color:var(--gold)}
   #tuthint.show{display:block}
@@ -273,14 +276,34 @@
   /* z-index 60'tı → giriş ekranı (#overlay, 80) ve panellerin (1200) ARKASINDA kalıyordu:
      telefon testinde Google giriş hatası okunamıyordu. Artık her şeyin üstünde. */
   /* ── AÇILIŞ EKRANI ── */
-  #boot{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:18px;transition:opacity .55s}
+  /* AÇILIŞ EKRANI — patron: "2010 oyunu gibi duruyor, tam ekrana sığan güzel bir tasarım istiyorum".
+     Sahne artık 520px'lik bir kart değil, TÜM EKRANI kaplıyor; marka üstte, yükleme altta,
+     ikisinin arkasında okunabilirlik için karartma perdesi var. */
+  #boot{position:fixed;inset:0;z-index:9999;background:var(--bg);overflow:hidden;transition:opacity .55s}
   #boot.gone{opacity:0;pointer-events:none}
-  #bootscene{width:min(520px,100%);aspect-ratio:16/10;border-radius:16px;overflow:hidden;box-shadow:0 10px 40px #0009;border:1px solid var(--line)}
+  #bootscene{position:absolute;inset:0}
   #bootscene svg{display:block;width:100%;height:100%}
-  #bootbar{width:min(320px,82%);height:6px;border-radius:4px;background:#0c1526;overflow:hidden;margin-top:20px}
-  #bootfill{display:block;height:100%;width:4%;border-radius:4px;background:linear-gradient(90deg,#ffc24a,#ff8a1f);transition:width .45s ease}
-  #bootstep{margin-top:9px;font-size:12px;font-weight:800;color:var(--cream);letter-spacing:.3px}
-  #boottip{margin-top:6px;font-size:11.5px;color:var(--dim);text-align:center;max-width:min(420px,90%);line-height:1.5;min-height:34px}
+  /* img/splash.webp konursa foto-gerçekçi arka plan; yoksa çizim sahne kullanılır */
+  #bootphoto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s}
+  #bootphoto.on{opacity:1}
+  /* üstten ve alttan karartma: hangi sahne gelirse gelsin yazılar okunur kalsın */
+  #bootveil{position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,#060b14e6 0%,#060b1466 22%,#060b1400 45%,#060b14b3 74%,#060b14fa 100%)}
+  #bootwrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:space-between;padding:max(34px,env(safe-area-inset-top)) 20px max(30px,env(safe-area-inset-bottom))}
+  #bootbrand{display:flex;flex-direction:column;align-items:center;gap:8px;animation:bootin .7s ease both}
+  #bootbrand .bolt{width:48px;height:48px;filter:drop-shadow(0 3px 12px #ff8a1f88)}
+  #bootbrand .nm{font-size:clamp(23px,7.4vw,36px);font-weight:900;letter-spacing:clamp(3px,1.5vw,7px);
+    color:#fff;text-shadow:0 2px 18px #000c;line-height:1}
+  #bootbrand .tag{font-size:clamp(9.5px,2.7vw,12px);font-weight:700;letter-spacing:2.2px;color:#ffc24a;text-shadow:0 2px 10px #000c}
+  @keyframes bootin{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+  #bootfoot{width:100%;display:flex;flex-direction:column;align-items:center;animation:bootin .7s .15s ease both}
+  #bootbar{width:min(340px,84%);height:5px;border-radius:4px;background:#ffffff26;overflow:hidden}
+  #bootfill{display:block;height:100%;width:4%;border-radius:4px;background:linear-gradient(90deg,#ffc24a,#ff8a1f);
+    transition:width .45s ease;box-shadow:0 0 10px #ff8a1f99}
+  #bootstep{margin-top:10px;font-size:12px;font-weight:800;color:#fff;letter-spacing:.3px;text-shadow:0 1px 8px #000}
+  #boottip{margin-top:7px;font-size:11.5px;color:#c9d4e4;text-align:center;max-width:min(430px,92%);
+    line-height:1.55;min-height:34px;text-shadow:0 1px 8px #000}
   #toasts{position:absolute;top:70px;left:0;right:0;display:flex;flex-direction:column;gap:5px;align-items:center;z-index:1300;pointer-events:none}
   .toast{background:#000d;border:1px solid var(--acc);color:var(--ink);padding:7px 14px;border-radius:18px;font-size:12px;max-width:92%;animation:pop .25s;backdrop-filter:blur(4px)}
   .toast.warn{border-color:var(--warn)} .toast.bad{border-color:var(--danger)}
@@ -322,9 +345,20 @@
 <!-- AÇILIŞ EKRANI (patron: "her seferinde farklı bir görsel şölen") — sahne JS ile çizilir -->
 <div id="boot">
   <div id="bootscene"></div>
-  <div id="bootbar"><i id="bootfill"></i></div>
-  <div id="bootstep">Motor hazırlanıyor…</div>
-  <div id="boottip"></div>
+  <img id="bootphoto" alt="" src="img/splash.webp" onerror="this.remove()" onload="this.classList.add('on')">
+  <div id="bootveil"></div>
+  <div id="bootwrap">
+    <div id="bootbrand">
+      <svg class="bolt" viewBox="0 0 120 100" aria-hidden="true"><defs><linearGradient id="bbolt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc24a"/><stop offset="1" stop-color="#e0491a"/></linearGradient></defs><path d="M60 4.8 L26.2 55.6 H45.6 L39.8 95.2 L73.8 44.4 H54.4 Z" fill="url(#bbolt)"/></svg>
+      <div class="nm">ENERGY COMPANY</div>
+      <div class="tag">GERÇEK DÜNYA · GERÇEK ENERJİ</div>
+    </div>
+    <div id="bootfoot">
+      <div id="bootbar"><i id="bootfill"></i></div>
+      <div id="bootstep">Motor hazırlanıyor…</div>
+      <div id="boottip"></div>
+    </div>
+  </div>
 </div>
 <div id="app">
   <div id="hdr">
@@ -405,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 06:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-17 17:08) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -507,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 06:26)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-17 17:08)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2883,8 +2917,13 @@ function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
   a.name = rec.meta.name;
   a.founder = rec.meta.founder;
   a.role = me.role || 'uye';
-  a.roster = Object.entries(mem).map(([pid, m]) => ({ pid, nm: m.nm, role: ALLY_ROLES[m.role] ? m.role : 'uye', since: m.since, me: pid === NET.id }));
+  a.roster = Object.entries(mem).map(([pid, m]) => ({ pid, nm: m.nm, role: ALLY_ROLES[m.role] ? m.role : 'uye', since: m.since, seen: m.seen || m.since || 0, me: pid === NET.id }));
   a.members = a.roster.length;
+  // meta'dan gelen ORTAK alanlar — açıklama ve dost/düşman listesini her üye aynı görür
+  a.desc = rec.meta.desc || '';
+  a.friends = rec.meta.friends || [];
+  a.foes = rec.meta.foes || [];
+  a.election = rec.meta.election || null;
   // kasa = defterin toplamı (tek yazılan sayı değil → eşzamanlı bağışlar birbirini silmez)
   a.treasury = Math.max(0, led.reduce((s, e) => s + (e.amt || 0), 0));
   a.donations = {};
@@ -2896,7 +2935,21 @@ function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
   a.lines = Object.values(rec.lines || {});
   a.pts = a.pts || 0;
 }
-async function allySync() { if (!allyOnline()) return; try { allyApply(await NET.allyGet(G.allyId)); } catch (e) {} }
+async function allySync() {
+  if (!allyOnline()) return;
+  // 👁️ "son görülme" damgası: başkanlık seçimi (1 ay yokluk) bu damgaya bakıyor
+  NET.allySeen(G.allyId).catch(() => {});
+  try { allyApply(await NET.allyGet(G.allyId)); } catch (e) {}
+  allyDirPush();
+}
+// 📇 İttifak rehberine küçük özet yaz — "en iyi 20" listesi bunu okur (tüm allies düğümünü
+// çekmek yerine; büyük düğümü indirmek Blaze'de boşuna kota yakıyor).
+let ALLYDIR_PUSH = 0;
+function allyDirPush() {
+  if (!allyOnline() || !G.ally || Date.now() - ALLYDIR_PUSH < 3e5) return; // 5 dk'da bir yeter
+  ALLYDIR_PUSH = Date.now();
+  NET.allyDirSet(G.allyId, { name: G.ally.name, pts: G.ally.pts || 0, members: G.ally.members || 1, wins: G.ally.wins || 0, ts: Date.now() }).catch(() => {});
+}
 // Davet POSTA ile gider (ayrı bir tarama gerekmez, güvenlik kuralı da değişmez)
 function allyInviteMail(aid, name) { return ALLY_INV_TAG + aid + '|' + name; }
 window.acceptAllyInvite = async (aid, name) => {
@@ -2911,18 +2964,58 @@ window.acceptAllyInvite = async (aid, name) => {
   save(); hideSheets(); openAllySheet();
 };
 window.rejectAllyInvite = () => { G.mail = (G.mail || []).filter(m => !m.allyInv); save(); openMailSheet(); };
+// 🎖️ YARDIMCI TEK KİŞİDİR (patron kuralı) — ve rütbe yalnız daveti KABUL ETMİŞ üyeye verilir.
+// Eskiden "davet bekliyor" durumundaki üyeye yardımcı rütbesi verilebiliyordu: oyuncu daha
+// ittifağa girmeden yetki sahibi görünüyordu.
+const allyDeputy = () => allyRoster().find(x => x.role === 'yardimci') || null;
 window.allySetRole = (nm, role) => {
   if (!isAllyBoss() || !ALLY_ROLES[role]) return;
   const m = allyRoster().find(x => x.nm === nm);
   if (!m || m.nm === G.company) { toast('Kendi rütbeni değiştiremezsin', 'warn'); return; }
+  if (m.invited) { toast('⏳ ' + nm + ' daveti henüz kabul etmedi — kabul edince rütbe verebilirsin', 'warn', null, 0, true); return; }
+  if (role === 'yardimci') {
+    const cur = allyDeputy();
+    if (cur && cur.nm === nm) return;
+    if (cur) { allyDeputySwapAsk(cur.nm, nm); return; } // önceki yardımcı düşecek — açıkça sor
+  }
+  allySetRoleDo(nm, role);
+};
+function allySetRoleDo(nm, role) {
+  const m = allyRoster().find(x => x.nm === nm);
+  if (!m) return;
   m.role = role;
   if (allyOnline() && m.pid) NET.allyRoleSet(G.allyId, m.pid, role).catch(() => {});
   toast(ALLY_ROLES[role].ico + ' ' + nm + ' artık ' + ALLY_ROLES[role].nm, '', null, 0, true);
   addMail('🤝 ' + G.ally.name, 'Rütbe değişikliği', `${nm} üyesinin rütbesi ${ALLY_ROLES[role].nm} olarak güncellendi.`, true);
   save(); refreshAllyUI();
+}
+window.allyDeputySwapAsk = (curNm, newNm) => {
+  $('modal').innerHTML = `
+    <h2>🎖️ Yardımcı değişsin mi?</h2>
+    <p>İttifakta <b>tek yardımcı</b> olur. <b>${newNm}</b> yardımcı yapılırsa
+    <b>${curNm}</b> normal 👤 Üye'ye düşer.</p>
+    <p class="sub">Yardımcı, başkanla birlikte ⚡ ülkeler arası İttifak Hattı başlatabilen kişidir.</p>
+    <button class="primary" onclick="closeModal();allyDeputySwapDo('${curNm.replace(/'/g, '')}','${newNm.replace(/'/g, '')}')">🎖️ Evet, ${newNm} olsun</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.allyDeputySwapDo = (curNm, newNm) => {
+  if (!isAllyBoss()) return;
+  allySetRoleDo(curNm, 'uye');
+  allySetRoleDo(newNm, 'yardimci');
 };
 window.allyKickAsk = nm => {
   if (!isAllyBoss()) return;
+  const mm = allyRoster().find(x => x.nm === nm);
+  if (mm && mm.invited) { // henüz katılmamış — "çıkarma" değil DAVET İPTALİ
+    $('modal').innerHTML = `
+      <h2>✖️ ${nm} daveti iptal edilsin mi?</h2>
+      <p>Bu oyuncu daveti henüz kabul etmedi. İptal edersen listeden düşer, sonra yeniden davet edebilirsin.</p>
+      <button class="primary" style="background:var(--danger);color:#fff" onclick="closeModal();allyKick('${nm.replace(/'/g, '')}')">✖️ Daveti İptal Et</button>
+      <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+    $('overlay').classList.add('show');
+    return;
+  }
   $('modal').innerHTML = `
     <h2>🚪 ${nm} ittifaktan çıkarılsın mı?</h2>
     <p>Üye ittifaktan çıkarıldığında ortak hat ve avantajlar kapanır.</p>
@@ -3207,7 +3300,7 @@ window.foundAlly = async () => {
   const el = $('allynm');
   const nm = ((el && el.value) || 'Enerji Birliği').replace(/[<>&"']/g, '').trim().slice(0, 28) || 'Enerji Birliği';
   closeModal();
-  G.ally = { name: nm, pts: 0, members: 1, tender: null, wins: 0, treasury: 0, call: null, donations: {}, consortium: null, role: 'lider', since: Date.now(), lines: [] };
+  G.ally = { name: nm, pts: 0, members: 1, tender: null, wins: 0, treasury: 0, call: null, donations: {}, consortium: null, role: 'lider', since: Date.now(), lines: [], desc: '', friends: [], foes: [], election: null };
   if (NET.on()) {
     // sunucuda ORTAK kayıt aç — böylece davet ettiğin gerçek oyuncular aynı ittifağı görür
     const aid = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -3269,11 +3362,306 @@ function allyTick() { // 2 sn'lik ana tikten çağrılır: bot katkısı + sonu�
     save(); renderMenu(); refreshAllyUI();
   }
 }
+// ═══ 🤝 AÇIKLAMA · TOPLU MESAJ · DOST/DÜŞMAN · KONSORSİYUM · BAŞKANLIK SEÇİMİ (patron tasarımı) ═══
+let ALLYVIEW = 'main', ALLYTAB = 'dost';
+window.allyView = v => { ALLYVIEW = v; refreshAllyUI(); };
+window.allyTab = t => { ALLYTAB = t; refreshAllyUI(); };
+const allyFriends = () => (G.ally && G.ally.friends) || [];
+const allyFoes = () => (G.ally && G.ally.foes) || [];
+// Dost/düşman listesini başkan VE yardımcı düzenler; TÜM üyeler görür (patron isteği).
+const canAllyEditRel = () => canAllyLine();
+const esc = s => String(s || '').replace(/[<>&"']/g, '').trim();
+function allySaveMeta(key, val) { // yereli hemen yaz, sunucuya da gönder — herkes aynı şeyi görsün
+  if (!G.ally) return;
+  G.ally[key] = val;
+  if (allyOnline()) NET.allyMetaSet(G.allyId, key, val).catch(() => {});
+  save(); refreshAllyUI();
+}
+
+// ── 📜 İTTİFAK AÇIKLAMASI (yalnız başkan düzenler) ──
+window.allyDescAsk = () => {
+  if (!isAllyBoss()) { toast('📜 Açıklamayı yalnız 👑 başkan düzenler', 'warn'); return; }
+  $('modal').innerHTML = `
+    <h2>📜 İttifak Açıklaması</h2>
+    <p class="sub">Üyelerin ve seni inceleyen diğer ittifakların göreceği tanıtım yazısı.
+    Kurallarını, hedefini, hangi saatlerde aktif olduğunuzu yazabilirsin.</p>
+    <textarea id="allydesc" maxlength="400" rows="5" placeholder="Örn: Anadolu merkezli, yenilenebilir ağırlıklı ittifak. Akşam 20:00-24:00 aktifiz. İhalelerde herkesin katkısı beklenir."
+      style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:11px;font-size:13px;resize:vertical">${esc(G.ally.desc || '')}</textarea>
+    <p class="sub" id="alldesc_n"></p>
+    <button class="primary" onclick="allyDescSave()">📜 Kaydet</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.allyDescSave = () => {
+  const el = $('allydesc');
+  allySaveMeta('desc', esc(el ? el.value : '').slice(0, 400));
+  closeModal();
+  toast('📜 İttifak açıklaması güncellendi', '', null, 0, true);
+};
+
+// ── 📣 BAŞKANDAN TOPLU MESAJ (patron: "başkan ittifak üyelerine toplu mesaj atabilsin") ──
+window.allyBroadcastAsk = () => {
+  if (!isAllyBoss()) { toast('📣 Toplu mesajı yalnız 👑 başkan atar', 'warn'); return; }
+  const n = allyRoster().filter(m => !m.me && !m.invited).length;
+  $('modal').innerHTML = `
+    <h2>📣 Üyelere Toplu Mesaj</h2>
+    <p class="sub">Mesaj <b>${n} üyenin</b> postasına düşer. Bilgilendirme içindir — duyuru, ihale çağrısı, saat sözü.</p>
+    <input id="allybc_s" maxlength="40" placeholder="Başlık (ör. Bu akşam ihale var)"
+      style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:11px;font-size:13px;font-weight:700">
+    <textarea id="allybc_b" maxlength="400" rows="4" placeholder="Mesajın..."
+      style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:11px;font-size:13px;margin-top:6px;resize:vertical"></textarea>
+    <button class="primary" onclick="allyBroadcastSend()">📣 ${n} Üyeye Gönder</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.allyBroadcastSend = async () => {
+  if (!isAllyBoss()) return;
+  const s = esc(($('allybc_s') || {}).value).slice(0, 40) || 'İttifak duyurusu';
+  const b = esc(($('allybc_b') || {}).value).slice(0, 400);
+  if (!b) { toast('Mesaj boş olamaz', 'warn'); return; }
+  closeModal();
+  const hedef = allyRoster().filter(m => !m.me && !m.invited);
+  let gitti = 0;
+  for (const m of hedef) {
+    if (allyOnline() && m.pid) { try { await NET.sendMail(m.pid, '📣 ' + G.ally.name + ': ' + s, b); gitti++; } catch (e) {} }
+    else gitti++; // çevrimdışı/bot simülasyonu
+  }
+  addMail('📣 ' + G.ally.name, 'Toplu mesaj gönderildi: ' + s, `${gitti} üyeye iletildi.\n\n"${b}"`, true);
+  toast('📣 ' + gitti + ' üyeye gönderildi', '', null, 0, true);
+  save(); refreshAllyUI();
+};
+
+// ── 🤝 DOST / ⚔️ DÜŞMAN İTTİFAKLAR ──
+window.allyRelAdd = key => {
+  if (!canAllyEditRel()) { toast('Bu listeyi 👑 başkan ve 🎖️ yardımcı düzenler', 'warn'); return; }
+  const el = $('allyrel_q');
+  const nm = esc(el ? el.value : '').slice(0, 28);
+  if (!nm) { toast('İttifak adı yaz', 'warn'); return; }
+  if (G.ally.name && nm.toLowerCase() === G.ally.name.toLowerCase()) { toast('Kendi ittifakını ekleyemezsin', 'warn'); return; }
+  const other = key === 'friends' ? 'foes' : 'friends';
+  const cur = (G.ally[key] || []).slice();
+  if (cur.some(x => x.toLowerCase() === nm.toLowerCase())) { toast('Zaten listede', 'warn'); return; }
+  // aynı ittifak hem dost hem düşman olamaz — diğer listeden düşer
+  const kars = (G.ally[other] || []).filter(x => x.toLowerCase() !== nm.toLowerCase());
+  if (kars.length !== (G.ally[other] || []).length) allySaveMeta(other, kars);
+  cur.push(nm);
+  allySaveMeta(key, cur.slice(0, 20));
+  if (el) el.value = '';
+  toast((key === 'friends' ? '🤝 Dost' : '⚔️ Düşman') + ' listesine eklendi: ' + nm, '', null, 0, true);
+};
+window.allyRelDel = (key, nm) => {
+  if (!canAllyEditRel()) return;
+  allySaveMeta(key, (G.ally[key] || []).filter(x => x !== nm));
+};
+// en iyi 20 listesinden tek dokunuşla dost/düşman işaretleme
+window.allyRelQuick = (key, nm) => {
+  if (!canAllyEditRel()) { toast('Bu listeyi 👑 başkan ve 🎖️ yardımcı düzenler', 'warn'); return; }
+  const other = key === 'friends' ? 'foes' : 'friends';
+  const cur = (G.ally[key] || []).slice();
+  if (cur.some(x => x.toLowerCase() === nm.toLowerCase())) { // ikinci dokunuş = listeden çıkar
+    allySaveMeta(key, cur.filter(x => x.toLowerCase() !== nm.toLowerCase()));
+    toast(nm + ' listeden çıkarıldı', '');
+    return;
+  }
+  const kars = (G.ally[other] || []).filter(x => x.toLowerCase() !== nm.toLowerCase());
+  if (kars.length !== (G.ally[other] || []).length) allySaveMeta(other, kars);
+  cur.push(nm);
+  allySaveMeta(key, cur.slice(0, 20));
+  toast((key === 'friends' ? '🤝 Dost' : '⚔️ Düşman') + ': ' + nm, '', null, 0, true);
+};
+
+// ── ⚖️ KONSORSİYUM İSTEĞİ (isimden ara → o ittifağa istek gönder) ──
+window.allyConsSend = async () => {
+  if (!canAllyEditRel()) { toast('Konsorsiyum isteğini 👑 başkan ve 🎖️ yardımcı gönderir', 'warn'); return; }
+  const nm = esc(($('allycons_q') || {}).value).slice(0, 28);
+  const msg = esc(($('allycons_m') || {}).value).slice(0, 140);
+  if (!nm) { toast('İttifak adı yaz', 'warn'); return; }
+  const dir = await loadAllyDir();
+  const hit = (dir || []).find(d => d.name && d.name.toLowerCase() === nm.toLowerCase());
+  if (!hit) { toast('"' + nm + '" adlı ittifak bulunamadı — listeden adı birebir yaz', 'warn', null, 0, true); return; }
+  if (hit.aid === G.allyId) { toast('Kendi ittifakına istek gönderemezsin', 'warn'); return; }
+  try {
+    if (allyOnline()) await NET.allyConsReq(hit.aid, G.allyId, G.ally.name, msg);
+    toast('⚖️ ' + hit.name + ' ittifakına konsorsiyum isteği gönderildi', '', null, 0, true);
+    addMail('⚖️ Konsorsiyum', 'İstek gönderildi: ' + hit.name, `${hit.name} ittifakına konsorsiyum isteği gönderdin.${msg ? '\n\n"' + msg + '"' : ''}\n\nKıtalar arası hat için 3 ittifak gerekir.`, true);
+    const el = $('allycons_q'); if (el) el.value = '';
+    save(); refreshAllyUI();
+  } catch (e) { toast('İstek gönderilemedi — bağlantını kontrol et', 'bad'); }
+};
+
+// ── 📇 EN İYİ 20 İTTİFAK ──
+let ALLYDIR = null, ALLYDIR_AT = 0;
+async function loadAllyDir(force) {
+  if (!force && ALLYDIR && Date.now() - ALLYDIR_AT < 60000) return ALLYDIR;
+  let out = [];
+  if (NET.on()) {
+    try {
+      const raw = await NET.allyDirList();
+      out = Object.entries(raw || {}).map(([aid, d]) => ({ aid, name: d.name, pts: d.pts || 0, members: d.members || 1, wins: d.wins || 0 }));
+    } catch (e) {}
+  }
+  if (!out.length) out = ALLY_SIM_DIR(); // çevrimdışı/boş sunucu: simülasyon listesi
+  out.sort((a, b) => b.pts - a.pts || b.wins - a.wins || b.members - a.members);
+  ALLYDIR = out.slice(0, 20); ALLYDIR_AT = Date.now();
+  return ALLYDIR;
+}
+function ALLY_SIM_DIR() { // prototip simülasyonu — sunucuda dizin yokken liste boş kalmasın
+  const ad = ['Anadolu Grid', 'Watt Kardeşliği', 'Şebeke Paktı', 'Kuzey Enerji Birliği', 'Güç Konseyi',
+    'Ege Rüzgar Birliği', 'Toros Enerji Ligi', 'Marmara Şebekesi', 'Bosphorus Power', 'Solaris Group',
+    'MegaWatt A.Ş.', 'Hidro Global', 'Likya Solar', 'Fırat Hidro', 'Volt Birliği',
+    'Trakya Grid', 'Karadeniz Enerji', 'İç Anadolu Paktı', 'Akdeniz Watt', 'Doğu Şebeke'];
+  const me = G.ally ? [{ aid: G.allyId || 'me', name: G.ally.name, pts: G.ally.pts || 0, members: G.ally.members || 1, wins: G.ally.wins || 0, me: true }] : [];
+  return me.concat(ad.filter(n => !G.ally || n !== G.ally.name).map((name, i) => ({
+    aid: 'sim' + i, name, pts: Math.round(hash01(i, 7, 31) * 400), members: 3 + Math.floor(hash01(i, 11, 5) * 20), wins: Math.floor(hash01(i, 13, 9) * 12),
+  })));
+}
+window.allyDirRefresh = async () => { await loadAllyDir(true); refreshAllyUI(); };
+
+// ── 🗳️ BAŞKANLIK SEÇİMİ: başkan 1 AY girmezse aday olunabilir (patron tasarımı) ──
+const ALLY_ABSENT_MS = 30 * 864e5;  // 1 ay yokluk
+const ALLY_VOTE_MS = 12 * 36e5;     // 12 saatlik pencere
+function allyBossOf() { return allyRoster().find(m => m.role === 'lider') || null; }
+function allyBossAbsentMs() {
+  const b = allyBossOf();
+  if (!b) return Infinity;            // başkansız kalmış ittifak
+  if (b.me) return 0;                 // başkan BENSEM buradayım
+  return Date.now() - (b.seen || b.since || Date.now());
+}
+const allyElectionOpen = () => !!G.ally && allyBossAbsentMs() >= ALLY_ABSENT_MS;
+const allyElection = () => (G.ally && G.ally.election) || null;
+const allyIAmCand = () => { const e = allyElection(); return !!e && e.cands.some(c => c.nm === G.company); };
+window.allyRunAsk = () => {
+  if (!allyElectionOpen()) { toast('Başkan aktif — seçim açılmadı', 'warn'); return; }
+  if (allyIAmCand()) { toast('Zaten adaysın', ''); return; }
+  const e = allyElection();
+  $('modal').innerHTML = `
+    <h2>🗳️ Başkanlığa aday ol</h2>
+    <p>Başkan <b>${Math.floor(allyBossAbsentMs() / 864e5)} gündür</b> oyuna girmedi. İttifak yönetimsiz kalmasın diye adaylık açık.</p>
+    <p class="sub">${e
+      ? `Seçim zaten başladı — oylama <b>${fmtHrs(Math.max(0, e.until - Date.now()) / 36e5)}</b> sonra bitiyor. Sen de aday olursan üyeler ikinizden birini seçer.`
+      : `Aday olursan <b>12 saatlik</b> pencere açılır. Bu sürede başka aday çıkmazsa <b>otomatik başkan olursun</b>. Başka aday da olursa üyelere seçim mesajı gider, en çok oyu alan kazanır.`}</p>
+    <button class="primary" onclick="closeModal();allyRun()">🗳️ Adaylığımı Koy</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.allyRun = () => {
+  if (!allyElectionOpen() || allyIAmCand()) return;
+  const me = allyRoster().find(m => m.me) || { nm: G.company };
+  let e = allyElection();
+  const ilk = !e;
+  if (!e) e = { started: Date.now(), until: Date.now() + ALLY_VOTE_MS, cands: [], votes: {} };
+  e.cands.push({ nm: G.company, pid: NET.id || G.company, at: Date.now() });
+  allySaveMeta('election', e);
+  if (ilk) {
+    toast('🗳️ Adaylığın açıldı — 12 saat içinde başka aday çıkmazsa başkan olursun', '', null, 0, true);
+    addMail('🗳️ ' + G.ally.name, 'Başkanlık seçimi başladı', `Başkan uzun süredir yok. ${G.company} adaylığını koydu. 12 saat içinde başka aday çıkmazsa otomatik başkan olur.`, true);
+  } else { // ikinci aday → SEÇİM: tüm üyelere mesaj (patron isteği)
+    toast('🗳️ Seçim başladı — üyeler oy verecek', '', null, 0, true);
+    allyElectionMail(e);
+  }
+  save(); refreshAllyUI();
+};
+async function allyElectionMail(e) {
+  const gövde = `Başkanlık seçimi başladı. Adaylar:\n${e.cands.map(c => '• ' + c.nm).join('\n')}\n\nİttifak ekranından oyunu kullan. En çok oyu alan başkan olur; hiç oy kullanılmazsa ilk adaylığını koyan seçilir.`;
+  for (const m of allyRoster()) {
+    if (m.me || m.invited) continue;
+    if (allyOnline() && m.pid) { try { await NET.sendMail(m.pid, '🗳️ ' + G.ally.name + ' — başkanlık seçimi', gövde); } catch (er) {} }
+  }
+  addMail('🗳️ ' + G.ally.name, 'Başkanlık seçimi', gövde, true);
+}
+window.allyVote = nm => {
+  const e = allyElection();
+  if (!e) return;
+  if (Date.now() >= e.until) { toast('Oylama süresi bitti', 'warn'); return; }
+  e.votes = e.votes || {};
+  e.votes[NET.id || G.company] = nm;
+  allySaveMeta('election', e);
+  toast('🗳️ Oyun kaydedildi: ' + nm, '', null, 0, true);
+};
+function allyElectionTick() { // ana tikten — süre dolunca sonucu uygula
+  const e = allyElection();
+  if (!e || Date.now() < e.until) return;
+  const say = {};
+  Object.values(e.votes || {}).forEach(nm => say[nm] = (say[nm] || 0) + 1);
+  // en çok oy; berabere ya da HİÇ OY YOKSA ilk adaylığını koyan kazanır (patron kuralı)
+  let kazanan = e.cands[0] && e.cands[0].nm, enCok = -1;
+  for (const c of e.cands) { const v = say[c.nm] || 0; if (v > enCok) { enCok = v; kazanan = c.nm; } }
+  const eski = allyBossOf();
+  if (eski && eski.nm !== kazanan) allySetRoleDo(eski.nm, 'uye');
+  const yeni = allyRoster().find(m => m.nm === kazanan);
+  if (yeni) {
+    yeni.role = 'lider';
+    if (allyOnline() && yeni.pid) NET.allyRoleSet(G.allyId, yeni.pid, 'lider').catch(() => {});
+    if (yeni.me) G.ally.role = 'lider';
+  }
+  allySaveMeta('election', null);
+  const nasıl = enCok > 0 ? `${enCok} oyla` : 'oy kullanılmadığı için ilk aday olarak';
+  toast('🗳️ Yeni başkan: ' + kazanan + ' (' + nasıl + ')', '', null, 0, true);
+  addMail('🗳️ ' + G.ally.name, 'Yeni başkan seçildi', `${kazanan} ${nasıl} başkan seçildi.`, true);
+  save(); refreshAllyUI();
+}
+
 function openAllySheet() { $('ally_body').innerHTML = allyHTML(); showSheet('allysheet'); }
 window.openAllySheet = openAllySheet;
 function refreshAllyUI() { if ($('allysheet').classList.contains('show')) $('ally_body').innerHTML = allyHTML(); }
 function renderAlly() { const el = $('allysec'); if (el) el.innerHTML = ''; } // ittifak artık kendi ekranında (alt bar 🤝)
+// 🌐 DİĞER İTTİFAKLAR EKRANI: üstte 3 sekme, altta en iyi 20 (patron tasarımı)
+function allyOthersHTML() {
+  const dost = allyFriends(), dus = allyFoes(), yetki = canAllyEditRel();
+  let h = `<div class="qline" style="margin-bottom:6px"><span class="lnk" style="cursor:pointer;color:var(--acc2);text-decoration:underline" onclick="allyView('main')">‹ İttifağa dön</span></div>
+    <div class="catrow">
+      <button class="${ALLYTAB === 'dost' ? 'on' : ''}" onclick="allyTab('dost')">🤝 Dost</button>
+      <button class="${ALLYTAB === 'dusman' ? 'on' : ''}" onclick="allyTab('dusman')">⚔️ Düşman</button>
+      <button class="${ALLYTAB === 'kons' ? 'on' : ''}" onclick="allyTab('kons')">⚖️ Konsorsiyum</button>
+    </div>`;
+  const liste = (key, arr, ico, bos) => arr.length
+    ? arr.map(nm => `<div class="mrow"><span class="mid"><div>${ico} ${nm}</div></span>
+        ${yetki ? `<button onclick="allyRelDel('${key}','${nm.replace(/'/g, '')}')" style="padding:7px 9px;border-radius:8px;border:none;background:#2a3346;color:var(--cream);font-weight:800;font-size:11px;cursor:pointer">✖️</button>` : ''}</div>`).join('')
+    : `<p class="sub">${bos}</p>`;
+  const arama = (key, ph, btn) => yetki
+    ? `<div style="display:flex;gap:6px;margin:8px 0">
+        <input id="allyrel_q" maxlength="28" placeholder="${ph}" style="flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px;font-size:13px">
+        <button onclick="allyRelAdd('${key}')" style="padding:10px 14px;border-radius:8px;border:none;background:var(--acc2);color:#071018;font-weight:800;font-size:12px;cursor:pointer">${btn}</button>
+      </div>`
+    : `<p class="sub">Listeyi 👑 başkan ve 🎖️ yardımcı düzenler — sen görüntüleyebilirsin.</p>`;
+  if (ALLYTAB === 'dost') {
+    h += `<div style="font-size:12px;margin:10px 0 2px">🤝 <b>DOST İTTİFAKLAR</b> <span class="sub">${dost.length}/20 · tüm üyeler görür</span></div>
+      <p class="sub">Birlikte ihaleye girdiğiniz, hat paylaştığınız ittifaklar. Üyelerin kimi kollayacağını bilir.</p>
+      ${arama('friends', 'İttifak adı ara…', '➕ Ekle')}
+      ${liste('friends', dost, '🤝', 'Henüz dost ittifak eklenmedi.')}`;
+  } else if (ALLYTAB === 'dusman') {
+    h += `<div style="font-size:12px;margin:10px 0 2px">⚔️ <b>DÜŞMAN İTTİFAKLAR</b> <span class="sub">${dus.length}/20 · tüm üyeler görür</span></div>
+      <p class="sub">İhalede karşınıza çıkan, bölge kapan ittifaklar. Aynı ittifak hem dost hem düşman olamaz.</p>
+      ${arama('foes', 'İttifak adı ara…', '➕ Ekle')}
+      ${liste('foes', dus, '⚔️', 'Henüz düşman ittifak eklenmedi.')}`;
+  } else {
+    h += `<div style="font-size:12px;margin:10px 0 2px">⚖️ <b>KONSORSİYUM OLUŞTUR</b> <span class="sub">kıtalar arası hat için 3 ittifak şart</span></div>
+      <p class="sub">Tek ittifak kıtalar arası hattı kaldıramaz. Aşağıdan bir ittifak adı yazıp istek gönder — kabul ederlerse ortak yapıya geçersiniz.</p>
+      ${canAllyEditRel() ? `
+        <input id="allycons_q" maxlength="28" placeholder="İttifak adı (listeden birebir yaz)" style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px;font-size:13px">
+        <textarea id="allycons_m" maxlength="140" rows="2" placeholder="Kısa not (isteğe bağlı)" style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px;font-size:12.5px;margin-top:6px;resize:vertical"></textarea>
+        <button class="bigsell half" onclick="allyConsSend()">⚖️ Konsorsiyum İsteği Gönder</button>`
+        : '<p class="sub">İsteği 👑 başkan ve 🎖️ yardımcı gönderir.</p>'}`;
+  }
+  // ── 🏆 EN İYİ 20 (her sekmenin altında) ──
+  h += `<div style="font-size:12px;margin:14px 0 2px">🏆 <b>EN İYİ 20 İTTİFAK</b>
+    <span class="lnk" style="float:right;cursor:pointer;text-decoration:underline;color:var(--acc2)" onclick="allyDirRefresh()">↻ Yenile</span></div>`;
+  if (!ALLYDIR) { loadAllyDir().then(() => refreshAllyUI()); h += '<p class="sub">Liste yükleniyor…</p>'; }
+  else h += ALLYDIR.map((d, i) => {
+    const ben = G.ally && d.name === G.ally.name;
+    const rel = allyFriends().includes(d.name) ? '🤝' : allyFoes().includes(d.name) ? '⚔️' : '';
+    return `<div class="mrow"><span class="mid">
+      <div>${i + 1}. ${ben ? '<b>' + d.name + ' (BİZ)</b>' : d.name} ${rel}</div>
+      <div class="d">⭐ ${d.pts} puan · 👥 ${d.members} üye · 🏆 ${d.wins} teslim</div></span>
+      ${!ben && yetki ? `<span style="display:flex;gap:4px">
+        <button title="Dost ekle" onclick="allyRelQuick('friends','${d.name.replace(/'/g, '')}')" style="padding:7px 8px;border-radius:8px;border:none;background:var(--acc2);color:#071018;font-weight:800;font-size:11px;cursor:pointer">🤝</button>
+        <button title="Düşman ekle" onclick="allyRelQuick('foes','${d.name.replace(/'/g, '')}')" style="padding:7px 8px;border-radius:8px;border:none;background:var(--danger);color:#fff;font-weight:800;font-size:11px;cursor:pointer">⚔️</button>
+      </span>` : ''}</div>`;
+  }).join('');
+  return h;
+}
 function allyHTML() {
+  if (G.ally && ALLYVIEW === 'others') return allyOthersHTML();
   let h = '<p class="sub">Prototip: bot üyelerle simülasyon — gerçek çok oyunculu tam sürümde.</p>';
   if (!G.ally) {
     h += `<p class="sub">Birlik ol, devletin ACİL İHALELERİNİ birlikte teslim et: tüm üyelere <b>24 saat +%50 alım fiyatı</b> + ittifak puanı. Üye tavanı 10 → puanla 50.</p>
@@ -3282,6 +3670,40 @@ function allyHTML() {
     const t = G.ally.tender;
     h += `<div class="qline" style="font-size:11.5px"><span>🏰 <b>${G.ally.name}</b></span><span>👥 ${G.ally.members}/${allyCap()}</span><span>⭐ ${G.ally.pts} puan</span><span>🏆 ${G.ally.wins || 0} teslim</span></div>`;
     if (allyBuffOn()) h += `<p class="pos" style="font-size:12px">🌟 +%50 alım fiyatı AKTİF — kalan ${fmtHrs((G.allyBuffUntil - Date.now()) / 36e5)}</p>`;
+    // ── 📜 AÇIKLAMA (başkan düzenler, herkes görür) ──
+    h += `<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0">
+      <div style="font-size:11px;color:var(--acc2)">📜 İTTİFAK AÇIKLAMASI
+        ${isAllyBoss() ? `<span class="lnk" style="float:right;cursor:pointer;text-decoration:underline" onclick="allyDescAsk()">✏️ Düzenle</span>` : ''}</div>
+      <div style="font-size:12px;margin-top:4px;white-space:pre-wrap">${G.ally.desc
+        ? G.ally.desc
+        : `<span class="sub">${isAllyBoss() ? 'Henüz açıklama yok — üyelerin ve dışarıdan bakanların göreceği tanıtımı yaz.' : 'Başkan henüz açıklama yazmadı.'}</span>`}</div>
+    </div>`;
+    // ── 🗳️ BAŞKANLIK SEÇİMİ (başkan 1 aydır yoksa) ──
+    const el = allyElection();
+    if (el) {
+      const bitti = Date.now() >= el.until;
+      const say = {}; Object.values(el.votes || {}).forEach(n => say[n] = (say[n] || 0) + 1);
+      const oyum = (el.votes || {})[NET.id || G.company];
+      h += `<div style="border:1px solid var(--gold);border-radius:10px;padding:9px 11px;margin:8px 0">
+        <div style="font-size:12.5px;font-weight:800;color:var(--gold)">🗳️ BAŞKANLIK SEÇİMİ
+          <span class="sub">${bitti ? 'sonuçlanıyor…' : 'kalan ' + fmtHrs((el.until - Date.now()) / 36e5)}</span></div>
+        ${el.cands.length < 2
+          ? `<p class="sub">Tek aday: <b>${el.cands[0] ? el.cands[0].nm : '—'}</b>. Süre dolana kadar başka aday çıkmazsa otomatik başkan olur.</p>`
+          : `<p class="sub">En çok oyu alan başkan olur. Hiç oy kullanılmazsa ilk adaylığını koyan seçilir.</p>` +
+            el.cands.map(c => `<div class="mrow"><span class="mid"><div>${oyum === c.nm ? '✅' : '🗳️'} ${c.nm}</div>
+              <div class="d">${say[c.nm] || 0} oy</div></span>
+              ${!bitti && oyum !== c.nm ? `<button onclick="allyVote('${c.nm.replace(/'/g, '')}')" style="padding:7px 10px;border-radius:8px;border:none;background:var(--gold);color:#131313;font-weight:800;font-size:11px;cursor:pointer">Oy Ver</button>` : ''}
+            </div>`).join('')}
+        ${!allyIAmCand() && !bitti ? `<button class="bigsell half" style="background:var(--gold);color:#131313" onclick="allyRunAsk()">🗳️ Ben de Aday Olayım</button>` : ''}
+      </div>`;
+    } else if (allyElectionOpen()) {
+      h += `<div style="border:1px solid var(--gold);border-radius:10px;padding:9px 11px;margin:8px 0">
+        <div style="font-size:12.5px;font-weight:800;color:var(--gold)">🗳️ BAŞKANLIK BOŞTA</div>
+        <p class="sub">👑 ${allyBossOf() ? allyBossOf().nm : 'Başkan'} <b>${Math.floor(allyBossAbsentMs() / 864e5)} gündür</b> oyuna girmedi.
+        İttifak yönetimsiz kalmasın diye adaylık açıldı.</p>
+        <button class="bigsell half" style="background:var(--gold);color:#131313;margin:0" onclick="allyRunAsk()">🗳️ Başkanlığa Aday Ol</button>
+      </div>`;
+    }
     // ── 💰 KASA + BAĞIŞ ÇAĞRISI ──
     const c = G.ally.call, mine = myDonation();
     h += `<div style="font-size:12px;margin:10px 0 2px">💰 <b>İTTİFAK KASASI</b> <span class="sub">bireysel çekim YOK — yalnız ortak projeler</span></div>
@@ -3300,22 +3722,29 @@ function allyHTML() {
     // üye bağış listesi (patron: "herkesin haftalık ve toplam bağışı isminin yanında")
     // ── 👥 ÜYE LİSTESİ + RÜTBELER (patron isteği) ──
     const ros = allyRoster().slice().sort((a, b) => ALLY_ROLES[b.role].r - ALLY_ROLES[a.role].r || a.nm.localeCompare(b.nm, 'tr'));
+    if (isAllyBoss()) h += `<button class="bigsell half" onclick="allyBroadcastAsk()">📣 Üyelere Toplu Mesaj</button>`;
     h += `<div style="font-size:12px;margin:12px 0 2px">👥 <b>ÜYELER</b> <span class="sub">${ros.length}/${allyCap()}</span>
       ${isAllyBoss() ? `<span class="lnk" style="float:right;cursor:pointer;text-decoration:underline;color:var(--acc2)" onclick="allyInviteAsk()">✉️ Davet Et</span>` : ''}</div>`;
     h += ros.map(m => {
       const R = ALLY_ROLES[m.role], me = m.nm === G.company;
+      // davet bekleyen üye RÜTBE TAŞIMAZ: kabul edene kadar ⏳, kabul edince 👤 Üye olarak başlar
+      const ico = m.invited ? '⏳' : R.ico;
+      const roleTxt = m.invited ? 'Davet bekliyor — kabul edince 👤 Üye olur' : R.nm;
       return `<div class="mrow">
         <span class="mid" style="cursor:pointer" onclick="openPlayerCard('${m.nm.replace(/'/g, '')}')">
-          <div>${R.ico} ${me ? '<b>' + m.nm + ' (SEN)</b>' : m.nm}${m.invited ? ' <span class="sub">· davet bekliyor</span>' : ''}</div>
-          <div class="d">${R.nm}${m.since ? ' · ' + new Date(m.since).toLocaleDateString('tr-TR') + '\'den beri' : ''}</div></span>
+          <div>${ico} ${me ? '<b>' + m.nm + ' (SEN)</b>' : m.nm}${m.invited ? ' <span class="sub">· davet bekliyor</span>' : ''}</div>
+          <div class="d">${roleTxt}${!m.invited && m.since ? ' · ' + new Date(m.since).toLocaleDateString('tr-TR') + '\'den beri' : ''}</div></span>
         ${isAllyBoss() && !me ? `<span style="display:flex;gap:4px">
-          ${m.role !== 'yardimci' ? `<button title="Yardımcı yap" onclick="allySetRole('${m.nm.replace(/'/g, '')}','yardimci')" style="padding:7px 8px;border-radius:8px;border:none;background:var(--acc2);color:#071018;font-weight:800;font-size:11px;cursor:pointer">🎖️</button>` : ''}
-          ${m.role !== 'uye' ? `<button title="Üye yap" onclick="allySetRole('${m.nm.replace(/'/g, '')}','uye')" style="padding:7px 8px;border-radius:8px;border:none;background:#2a3346;color:var(--cream);font-weight:800;font-size:11px;cursor:pointer">👤</button>` : ''}
-          <button title="İttifaktan çıkar" onclick="allyKickAsk('${m.nm.replace(/'/g, '')}')" style="padding:7px 8px;border-radius:8px;border:none;background:var(--danger);color:#fff;font-weight:800;font-size:11px;cursor:pointer">🚪</button>
+          ${!m.invited && m.role !== 'yardimci' ? `<button title="Yardımcı yap" onclick="allySetRole('${m.nm.replace(/'/g, '')}','yardimci')" style="padding:7px 8px;border-radius:8px;border:none;background:var(--acc2);color:#071018;font-weight:800;font-size:11px;cursor:pointer">🎖️</button>` : ''}
+          ${!m.invited && m.role !== 'uye' ? `<button title="Üye yap" onclick="allySetRole('${m.nm.replace(/'/g, '')}','uye')" style="padding:7px 8px;border-radius:8px;border:none;background:#2a3346;color:var(--cream);font-weight:800;font-size:11px;cursor:pointer">👤</button>` : ''}
+          <button title="${m.invited ? 'Daveti iptal et' : 'İttifaktan çıkar'}" onclick="allyKickAsk('${m.nm.replace(/'/g, '')}')" style="padding:7px 8px;border-radius:8px;border:none;background:var(--danger);color:#fff;font-weight:800;font-size:11px;cursor:pointer">${m.invited ? '✖️' : '🚪'}</button>
         </span>` : ''}
       </div>`;
     }).join('');
     if (!isAllyBoss()) h += `<p class="sub">Davet ve üye çıkarma yetkisi 👑 başkandadır.</p>`;
+    // 🌐 DİĞER İTTİFAKLAR (patron: dost · düşman · konsorsiyum + en iyi 20)
+    h += `<button class="bigsell half" style="background:var(--panel2);color:var(--cream);border:1px solid var(--acc2)" onclick="allyView('others')">🌐 Diğer İttifaklar
+      <span class="sub">— 🤝 ${allyFriends().length} dost · ⚔️ ${allyFoes().length} düşman · 🏆 sıralama</span></button>`;
     const dons = Object.entries(G.ally.donations || {}).sort((a, b) => b[1].total - a[1].total).slice(0, 6);
     if (dons.length) h += `<div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">👥 ÜYE BAĞIŞLARI</div>` +
       dons.map(([nm, d]) => `<div class="mrow"><span class="mid"><div>${nm === G.company ? '<b>' + nm + ' (SEN)</b>' : nm}</div><div class="d">bu hafta ${fmt(d.week)}</div></span><b>${fmt(d.total)}</b></div>`).join('');
@@ -3437,11 +3866,82 @@ const NET = {
     } catch (e) { console.warn('[NET] google redirect', e.message); }
     return null;
   },
+  // 🔐 Geçerli idToken döndürür; süresi dolmuşsa YENİLER.
+  // idToken 1 saatte doluyor. Google (SDK) oturumunda SDK kendi yeniliyor; REST misafirinde
+  // refreshToken ile securetoken uç noktasından yeni jeton alınıyor. Jeton alınamazsa null
+  // döner ve istek jetonsuz gider — eski kurallarla çalışmaya devam eder (oyun kilitlenmez).
+  async token() {
+    const a = this.auth;
+    if (!a || a.local) return null;
+    const fa = (window.firebase && firebase.apps && firebase.apps.length) ? firebase.auth() : null;
+    if (fa && fa.currentUser) {
+      try { const t = await fa.currentUser.getIdToken(); a.token = t; a.at = Date.now(); this.saveAuth(); return t; } catch (e) {}
+    }
+    if (a.token && Date.now() - (a.at || 0) < 50 * 60e3) return a.token; // 50 dk taze say (1 sa ömür)
+    if (a.refresh && this.key) {
+      if (this._tokBusy) return a.token || null;  // eşzamanlı isteklerde tek yenileme
+      this._tokBusy = true;
+      try {
+        const r = await fetch('https://securetoken.googleapis.com/v1/token?key=' + this.key, {
+          method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(a.refresh),
+        });
+        const j = await r.json();
+        if (j.id_token) { a.token = j.id_token; a.refresh = j.refresh_token || a.refresh; a.at = Date.now(); this.saveAuth(); }
+        else console.warn('[NET] jeton yenilenemedi:', j.error && j.error.message);
+      } catch (e) { console.warn('[NET] jeton yenileme hatası', e.message); }
+      finally { this._tokBusy = false; }
+    }
+    return a.token || null;
+  },
   async adoptUser(u) {
     const tok = await u.getIdToken();
     this.auth = { kind: u.isAnonymous ? 'guest' : 'google', uid: u.uid, token: tok, email: u.email, name: u.displayName, at: Date.now() };
     this.id = u.uid; this.saveAuth();
     return this.auth;
+  },
+  // ── 🔗 MİSAFİR → GOOGLE BAĞLAMA (patron: "sonra oyunu sever, hesabı bağlamak isteyebilir") ──
+  // İki yol var, çünkü misafir girişi REST ile açılıyor (SDK'nın currentUser'ı boş kalıyor):
+  //  1) SDK'da anonim oturum varsa GERÇEK LINK — uid AYNI kalır, hiçbir şey taşınmaz (en temizi)
+  //  2) REST misafiri: Google'a girilir, uid DEĞİŞİR → bulut kaydı yeni uid'ye TAŞINIR
+  // Kayıt saves/<uid> altında durduğu için taşıma olmazsa oyuncu ilerlemesini kaybederdi.
+  async linkGoogle() {
+    const a = this.fbInit();
+    if (!a) throw new Error('Google girişi hazır değil');
+    const prov = new firebase.auth.GoogleAuthProvider();
+    if (a.currentUser && a.currentUser.isAnonymous) {
+      const res = await a.currentUser.linkWithPopup(prov);
+      return { mode: 'link', auth: await this.adoptUser(res.user) };
+    }
+    const oldId = this.id;
+    const mobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    if (mobile) { // yönlendirme: dönüşte hangi uid'den taşıyacağımızı hatırla
+      try { localStorage.setItem('ec_link_from', oldId); } catch (e) {}
+      await a.signInWithRedirect(prov);
+      return null;
+    }
+    const res = await a.signInWithPopup(prov);
+    const auth = await this.adoptUser(res.user);
+    return { mode: 'move', auth, moved: await this.moveCloudData(oldId, auth.uid) };
+  },
+  // Bulut kaydını eski uid'den yenisine taşır. HEDEFTE ŞİRKET VARSA ÜZERİNE YAZMAZ —
+  // 'conflict' döner, kararı oyuncu verir (iki ilerlemeden biri sessizce silinmesin).
+  async moveCloudData(oldId, newId, overwrite) {
+    if (!oldId || !newId || oldId === newId) return 'same';
+    try {
+      const mine = await this.get('saves/' + oldId);
+      if (!mine || !mine.company) return 'empty';
+      if (!overwrite) {
+        const there = await this.get('saves/' + newId);
+        if (there && there.company) return 'conflict';
+      }
+      await this.put('saves/' + newId, mine);
+      const p = await this.get('players/' + oldId);
+      if (p) await this.put('players/' + newId, p);
+      await this.req('saves/' + oldId, 'DELETE').catch(() => {});
+      await this.req('players/' + oldId, 'DELETE').catch(() => {});
+      return 'moved';
+    } catch (e) { console.warn('[NET] taşıma', e.message); return 'error'; }
   },
   // ── ☁️ BULUT KAYIT: oyuncunun tüm verisi sunucuda (cihaz değişse de kaybolmaz) ──
   async cloudSave(force) {
@@ -3460,7 +3960,12 @@ const NET = {
   async req(path, method, body) {
     const o = { method, cache: 'no-store' };
     if (body !== undefined) { o.headers = { 'Content-Type': 'application/json' }; o.body = JSON.stringify(body); }
-    const r = await fetch(this.db + '/' + path + '.json', o);
+    // 🔐 KİMLİK JETONU: istekler artık ?auth=<idToken> taşıyor. Kurallar hâlâ eski (şekil
+    // doğrulayan) olduğu için bu değişiklik GERİYE UYUMLU — jeton eklemek kimseyi kilitlemez.
+    // Kurallar auth.uid'ye geçirilmeden ÖNCE bu sürümün yayılmış olması şart, aksi halde
+    // eski sürümdeki oyuncular anında kilitlenir (devam notundaki sıra birebir bu).
+    const tok = await this.token();
+    const r = await fetch(this.db + '/' + path + '.json' + (tok ? '?auth=' + encodeURIComponent(tok) : ''), o);
     // ⚠️ HATA AVI (yüksek): başarısız YAZMA da null dönüyordu, yani "başarılı" sayılıyordu.
     // Oyuncu sunucuda var olmayan bir ittifağa katılmış gibi kilitleniyordu. Yazmalarda artık atıyoruz.
     if (!r.ok && method && method !== 'GET') throw new Error('HTTP ' + r.status + ' @ ' + path);
@@ -3551,6 +4056,14 @@ const NET = {
   allyRoleSet(aid, pid, role) { return this.put('allies/' + aid + '/members/' + pid + '/role', role); },
   allyRemove(aid, pid) { return this.req('allies/' + aid + '/members/' + pid, 'DELETE'); },
   allyLedger(aid, amt, note) { return this.push('allies/' + aid + '/ledger', { pid: this.id, nm: G.company, amt: Math.round(amt), note: (note || '').slice(0, 40), ts: Date.now() }); },
+  // 📜 açıklama · 🤝 dost/düşman listeleri: meta altında → TÜM üyeler aynı şeyi görür
+  allyMetaSet(aid, key, val) { return this.put('allies/' + aid + '/meta/' + key, val); },
+  allySeen(aid) { return this.put('allies/' + aid + '/members/' + this.id + '/seen', Date.now()); },
+  // 📇 İTTİFAK REHBERİ: "en iyi 20" için tüm allies düğümünü çekmek pahalı (üyeler+defter
+  // birlikte iner, Blaze'de kotayı yer). Bunun yerine küçük bir dizin düğümü tutuluyor.
+  allyDirSet(aid, rec) { return this.put('allydir/' + aid, rec); },
+  allyDirList() { return this.get('allydir'); },
+  allyConsReq(aid, from, fromName, msg) { return this.push('allies/' + aid + '/consreq', { aid: from, nm: fromName, msg: (msg || '').slice(0, 140), ts: Date.now() }); },
   // ⚠️ HATA AVI (yüksek): anahtar yerel G.nextId'den geliyordu; iki üyenin sayacı çakışınca
   // biri diğerinin hattını SESSİZCE eziyordu. Oyuncu kimliğiyle önekleyip benzersiz yapıyoruz.
   // Ek fayda: anahtar sayısal olmaktan çıkınca Firebase düğümü diziye çevirmiyor (null delik yok).
@@ -3743,6 +4256,14 @@ const AUC_TERMS = [
   { h: 24, tax: .12, nm: '24 saat', d: 'En çok teklif — en yüksek vergi' },
 ];
 const AUC_FEE = .01; // ilan bedeli (satılmasa da yanar — boş ilan spam'ini önler)
+// 💰 AÇILIŞ FİYATINI OYUNCU BELİRLER (patron) — ama TABAN zorunlu:
+// taban olmasaydı ikinci bir hesap açıp bütün santralleri $0'a devretmek mümkün olurdu.
+const AUC_MIN_RATIO = .6;    // taban: piyasa (elden çıkarma) değerinin %60'ı
+const AUC_MAX_RATIO = 5;     // tavan: saçma rakam engeli
+const AUC_CANCEL_FEE = .03;  // teklif GELMEDEN geri çekme: açılışın %3'ü cayma bedeli
+const aucMinPrice = base => Math.max(1e5, Math.round(base * AUC_MIN_RATIO / 1e5) * 1e5);
+const aucMaxPrice = base => Math.round(base * AUC_MAX_RATIO / 1e5) * 1e5;
+const aucCancelFee = a => Math.max(1e5, Math.round(a.start * AUC_CANCEL_FEE / 1e4) * 1e4);
 const aucList = () => (G.auctionsMkt || []).filter(a => !a.done);
 function aucAssets() { // satılabilir varlıkların listesi
   // ⚠️ HATA AVI: zaten AÇIK İLANDA olan varlık listeye girmemeli — yoksa aynı tesis
@@ -3782,7 +4303,10 @@ function aucCard(a) {
     <div style="font-size:12.5px;font-weight:700">${a.ico} ${a.nm}</div>
     <div class="sub">${a.note ? a.note + ' · ' : ''}satıcı: ${a.seller} · ⏳ ${fmtHrs(left / 36e5)} · vergi %${term.tax * 100}</div>
     <div class="qline" style="font-size:11.5px"><span>Açılış: <b>${fmt(a.start)}</b></span><span>En yüksek: <b class="${a.top ? 'pos' : ''}">${a.top ? fmt(a.top) + ' — ' + a.topBy : 'teklif yok'}</b></span></div>
-    ${a.mine ? `<div class="sub">Satılırsa eline geçecek: <b>${fmt(Math.round((a.top || 0) * (1 - term.tax)))}</b></div>`
+    ${a.mine ? `<div class="sub">Satılırsa eline geçecek: <b>${fmt(Math.round((a.top || 0) * (1 - term.tax)))}</b></div>
+      ${a.top
+        ? `<p class="sub">⛔ Teklif geldi — ilan artık geri çekilemez. Teklif verene karşı söz verilmiş sayılır.</p>`
+        : `<button class="bigsell half" style="background:#2a3346;color:var(--cream)" onclick="aucCancelAsk(${a.id})" ${G.cash < aucCancelFee(a) ? 'disabled' : ''}>✖️ İlanı Geri Çek — cayma ${fmt(aucCancelFee(a))}</button>`}`
       : `<button class="bigsell half" onclick="aucBid(${a.id})" ${G.cash < next - (a.myEscrow || 0) || a.topBy === G.company ? 'disabled' : ''}>${a.topBy === G.company ? '🏆 Öndesin' : '🔨 Teklif Ver — ' + fmt(next)}</button>`}
   </div>`;
 }
@@ -3791,7 +4315,7 @@ window.openAucNew = () => {
   if (!assets.length) { toast('Satılacak varlığın yok', 'warn'); return; }
   $('modal').innerHTML = `
     <h2>🔨 Yeni İlan</h2>
-    <p class="sub">Önce varlık, sonra süre seç. Açılış fiyatı piyasa değerine göre önerilir; ilan bedeli %${AUC_FEE * 100} (satılmasa da yanar).</p>
+    <p class="sub">Varlık → süre → <b>fiyat</b>. Açılış fiyatını sen belirlersin (öneri hazır gelir, taban ${AUC_MIN_RATIO * 100}%'tir); ilan bedeli %${AUC_FEE * 100} (satılmasa da yanar). Teklif gelmeden ilanı geri çekebilirsin — cayma bedeli %${AUC_CANCEL_FEE * 100}.</p>
     ${assets.map((x, i) => `<button class="bigsell half" style="text-align:left" onclick="aucPickTerm(${i})">
       ${x.ico} <b>${x.nm}</b><div class="sub">${x.note ? x.note + ' · ' : ''}önerilen açılış: ${fmt(x.base)}</div></button>`).join('')}
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
@@ -3803,24 +4327,101 @@ window.aucPickTerm = i => {
   $('modal').innerHTML = `
     <h2>⏳ Süre Seç — ${x.nm}</h2>
     <p class="sub">Uzun süre daha çok teklif çeker ama vergisi yüksektir.</p>
-    ${AUC_TERMS.map(t => `<button class="bigsell half" style="text-align:left" onclick="closeModal();aucCreate(${i},${t.h})">
+    ${AUC_TERMS.map(t => `<button class="bigsell half" style="text-align:left" onclick="aucPickPrice(${i},${t.h})">
       <b>${t.nm}</b> — vergi %${t.tax * 100}<div class="sub">${t.d} · net tahmini: ${fmt(Math.round(x.base * (1 - t.tax)))}</div></button>`).join('')}
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
+// 💰 3. ADIM: açılış fiyatını OYUNCU girer — öneri hazır dolu gelir, taban/tavan zorunlu
+window.aucPickPrice = (i, hours) => {
+  const x = window.__aucAssets[i];
+  const term = AUC_TERMS.find(t => t.h === hours) || AUC_TERMS[0];
+  const min = aucMinPrice(x.base), max = aucMaxPrice(x.base);
+  window.__aucPrice = { i, hours, min, max, base: x.base, tax: term.tax };
+  $('modal').innerHTML = `
+    <h2>💰 Açılış Fiyatı</h2>
+    <p style="text-align:center;font-size:12.5px">${x.ico} <b>${x.nm}</b>${x.note ? ' <span class="sub">· ' + x.note + '</span>' : ''}</p>
+    <p class="sub">Fiyatı <b>sen</b> belirlersin — kutuda piyasa değerine göre hesaplanan öneri hazır.
+    Teklifler bu rakamdan başlar.</p>
+    <input id="auc_price" type="number" value="${x.base}" min="${min}" max="${max}" step="100000" inputmode="numeric"
+      oninput="aucPriceEcho()"
+      style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--cream);font-size:18px;font-weight:800;text-align:center;margin:6px 0">
+    <div class="qline" style="font-size:11px">
+      <span class="sub">taban ${fmt(min)}</span>
+      <span class="sub" style="cursor:pointer;text-decoration:underline" onclick="aucPriceSet(${x.base})">öneri ${fmt(x.base)}</span>
+      <span class="sub">tavan ${fmt(max)}</span>
+    </div>
+    <div id="auc_price_info" style="font-size:11.5px;margin:6px 0;min-height:32px"></div>
+    <p class="sub">⛔ Taban fiyat kaldırılamaz: olmasaydı ikinci bir hesap açıp bütün tesisleri
+    bedavaya o hesaba devretmek mümkün olurdu.</p>
+    <button class="primary" id="auc_price_ok" onclick="aucCreate(${i},${hours})">🔨 İlanı Yayınla</button>
+    <button class="primary ghostbtn" onclick="aucPickTerm(${i})">‹ Geri</button>`;
+  $('overlay').classList.add('show');
+  aucPriceEcho();
+};
+window.aucPriceSet = v => { const el = $('auc_price'); if (el) { el.value = v; aucPriceEcho(); } };
+window.aucPriceEcho = () => {
+  const c = window.__aucPrice, el = $('auc_price'), info = $('auc_price_info'), ok = $('auc_price_ok');
+  if (!c || !el || !info) return;
+  const v = Math.round(Number(el.value) || 0);
+  const fee = Math.round(v * AUC_FEE);
+  const dusuk = v < c.min, yuksek = v > c.max, parasiz = G.cash < fee;
+  if (dusuk) info.innerHTML = `<b class="neg">Taban fiyatın altında.</b> En az <b>${fmt(c.min)}</b> yazmalısın.`;
+  else if (yuksek) info.innerHTML = `<b class="neg">Tavanın üstünde.</b> En çok <b>${fmt(c.max)}</b> yazabilirsin.`;
+  else info.innerHTML = `İlan bedeli: <b>${fmt(fee)}</b> <span class="sub">(satılmasa da yanar)</span><br>
+    Açılış fiyatından satarsa eline geçecek: <b class="pos">${fmt(Math.round(v * (1 - c.tax)))}</b>
+    <span class="sub">(vergi %${c.tax * 100})</span>${v < c.base ? ' · <span class="neg">öneriden düşük</span>' : v > c.base ? ' · <span class="sub">öneriden yüksek — teklif gelmeyebilir</span>' : ''}
+    ${parasiz ? '<br><b class="neg">İlan bedeli için paran yetmiyor.</b>' : ''}`;
+  if (ok) ok.disabled = dusuk || yuksek || parasiz;
+};
 window.aucCreate = (i, hours) => {
   const x = window.__aucAssets[i];
-  const fee = Math.round(x.base * AUC_FEE);
+  const min = aucMinPrice(x.base), max = aucMaxPrice(x.base);
+  const el = $('auc_price');
+  const start = Math.round(Number(el ? el.value : x.base) || x.base);
+  if (start < min || start > max) { toast('Açılış fiyatı ' + fmt(min) + ' – ' + fmt(max) + ' arasında olmalı', 'warn'); return; }
+  const fee = Math.round(start * AUC_FEE);
   if (G.cash < fee) { toast('İlan bedeli için ' + fmt(fee) + ' gerekli', 'warn'); return; }
+  closeModal();
   G.cash -= fee;
   G.auctionsMkt = G.auctionsMkt || [];
   G.auctionsMkt.push({
     id: G.nextId++, mine: true, seller: G.company, ico: x.ico, nm: x.nm, note: x.note,
-    assetKind: x.kind, assetId: x.id, start: x.base, top: 0, topBy: null, term: hours,
+    assetKind: x.kind, assetId: x.id, start, top: 0, topBy: null, term: hours,
     until: Date.now() + hours * 36e5 / (G.demo ? 60 : 1), _bt: Date.now(),
   });
-  toast('🔨 İlan yayınlandı — ' + hours + ' saat (ilan bedeli ' + fmt(fee) + ')', '', null, 0, true);
+  toast('🔨 İlan yayınlandı — açılış ' + fmt(start) + ' · ' + hours + ' saat (ilan bedeli ' + fmt(fee) + ')', '', null, 0, true);
   beep(600, .1);
+  save(); openAucSheet();
+};
+// ✖️ İLANI GERİ ÇEK — yalnız TEKLİF GELMEDEN, cayma bedeli karşılığı (patron kuralı)
+window.aucCancelAsk = id => {
+  const a = aucList().find(x => x.id === id);
+  if (!a || !a.mine) return;
+  if (a.top) { toast('⛔ Teklif gelmiş ilan geri çekilemez', 'warn', null, 0, true); return; }
+  const pen = aucCancelFee(a);
+  $('modal').innerHTML = `
+    <h2>✖️ İlan geri çekilsin mi?</h2>
+    <p style="text-align:center">${a.ico} <b>${a.nm}</b></p>
+    <p>İlan kapanır, <b>varlık sende kalır</b> ve yeniden ilana çıkarabilirsin.</p>
+    <p class="sub">Cayma bedeli <b class="neg">${fmt(pen)}</b> (açılışın %${AUC_CANCEL_FEE * 100}'ü) kasandan düşer.
+    Başta ödediğin ilan bedeli iade edilmez — piyasayı boş ilanla doldurmanın bir bedeli var.</p>
+    ${G.cash < pen ? '<p class="neg">Cayma bedeli için yeterli paran yok.</p>' : ''}
+    <button class="primary" style="background:var(--danger);color:#fff" ${G.cash < pen ? 'disabled' : ''} onclick="closeModal();aucCancel(${id})">✖️ Evet, Geri Çek</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.aucCancel = id => {
+  const a = aucList().find(x => x.id === id);
+  if (!a || !a.mine) return;
+  if (a.top) { toast('⛔ Teklif gelmiş ilan geri çekilemez', 'warn', null, 0, true); return; } // yarış koşulu kalkanı
+  const pen = aucCancelFee(a);
+  if (G.cash < pen) { toast('Cayma bedeli için ' + fmt(pen) + ' gerekli', 'warn'); return; }
+  G.cash -= pen;
+  a.done = true; a.cancelled = true; // aucList() done'ları eler → varlık yeniden ilana çıkabilir
+  toast('✖️ İlan geri çekildi — cayma bedeli ' + fmt(pen), 'warn', null, 0, true);
+  addMail('🔨 Müzayede', 'İlan geri çekildi', `${a.nm} ilanını teklif gelmeden geri çektin. Cayma bedeli ${fmt(pen)} kasandan düşüldü; varlık sende.`, true);
+  beep(420, .1);
   save(); openAucSheet();
 };
 window.aucBid = id => {
@@ -4690,8 +5291,15 @@ function unitIconHTML(u) {
   } else if (u.kind === 'plant' && u.t.startsWith('coal')) {
     // kömür ocağı BİNASI — çalışırken bacadan SİYAH duman (patron isteği)
     visual = `<span class="ic">${coalSVG(px)}${producing ? `<span class="puffs"><i></i><i></i><i></i></span>` : ''}</span>`;
+  } else if (u.kind === 'plant' && u.t.startsWith('gas')) {
+    // ⚠️ HATA: gasSVG/nukeSVG yazılmıştı ama ALTTA kaldıkları için hiç çağrılmıyordu —
+    // üstteki `T.fuel` dalı ikisini de yakalayıp emoji basıyordu (gaz 🔥, nükleer ⚛️).
+    // Gaz ve nükleer artık kendi çizimlerini kullanır; T.fuel dalı yalnız YEDEK.
+    visual = `<span class="ic">${gasSVG(px, u.id)}${producing ? `<span class="puffs gasp"><i></i><i></i><i></i></span>` : ''}</span>`;
+  } else if (u.kind === 'plant' && u.t.startsWith('nuke')) {
+    visual = `<span class="ic">${nukeSVG(px, u.id)}</span>`; // nükleer dumansız
   } else if (u.kind === 'plant' && T.fuel) {
-    visual = `<span class="ic" style="font-size:${px}px">${T.ico}${producing && !u.t.startsWith('nuke') ? `<span class="puffs${u.t.startsWith('gas') ? ' gasp' : ''}"><i></i><i></i><i></i></span>` : ''}</span>`; // gaz açık duman, nükleer dumansız
+    visual = `<span class="ic" style="font-size:${px}px">${T.ico}${producing ? `<span class="puffs"><i></i><i></i><i></i></span>` : ''}</span>`;
   } else if (u.kind === 'plant' && T.kind === 'sun') {
     visual = `<span class="ic">${solarSVG(px, producing, !u.on && !building)}</span>`; // panel çizimi: üretirken parlar, kapalıyken soluk
   } else if (u.kind === 'office') {
@@ -4700,10 +5308,6 @@ function unitIconHTML(u) {
     visual = `<span class="ic">${geoSVG(px, u.id)}</span>`;
   } else if (u.kind === 'plant' && u.t.startsWith('hydro')) {
     visual = `<span class="ic">${hydroSVG(px, u.id)}</span>`;
-  } else if (u.kind === 'plant' && u.t.startsWith('gas')) {
-    visual = `<span class="ic">${gasSVG(px, u.id)}${producing ? `<span class="puffs gasp"><i></i><i></i><i></i></span>` : ''}</span>`;
-  } else if (u.kind === 'plant' && u.t.startsWith('nuke')) {
-    visual = `<span class="ic">${nukeSVG(px, u.id)}</span>`;
   } else {
     visual = `<span class="ic" style="font-size:${px}px">${T.ico}</span>`;
   }
@@ -5251,17 +5855,23 @@ function openCellSheet(c, ll, mode) {
 function openBuildSheet() {
   hideSheets();
   SEL.buildGeneric = true;
-  const tutStepNow = tutActive() ? tutStep() : -1;
-  const tutLock = tutStepNow === 0 || tutStepNow === 3;
-  const tutPickT = tutStepNow === 0 ? 'solar_1' : 'bat';
-  const tutCatNm = tutStepNow === 0 ? 'Güneş' : 'Depo';
-  const cat = tutLock ? tutCatNm : (SEL.cat || 'Tümü');
+  // 🎓 EĞİTİM REHBERİ ile KİLİT ayrı: ipucu çubuğu tutGuide ile sürüyordu ama parlatma tutActive'e
+  // bağlıydı → 60 dk sonra "parlayan karta dokun" yazıp ortada parlayan kart kalmıyordu (patron bildirdi).
+  // Artık parlatma + yönlendirme eğitim bitene kadar; KİLİT (kategori/diğer kartlar) yalnız ilk 60 dk —
+  // parası biten oyuncu sonsuza dek tek ürüne kilitlenip soft-lock olmasın diye.
+  const tutStepNow = tutGuide() ? tutStep() : -1;
+  const tutGuideOn = tutStepNow === 0 || tutStepNow === 3;
+  const tutLock = tutGuideOn && tutActive();
+  const tutPickT = tutStepNow === 0 ? 'wind_1' : 'bat';        // patron: ilk santral RÜZGAR TÜRBİNİ
+  const tutCatNm = tutStepNow === 0 ? 'Rüzgar' : 'Depo';
+  const tutPickT_ = tutStepNow === 0 ? PLANT_TYPES.wind_1 : STORE_TYPES.bat;
+  const cat = tutLock ? tutCatNm : (SEL.cat || (tutGuideOn ? tutCatNm : 'Tümü'));
   $('cs_title').textContent = '🏗️ İnşa — ürün seç';
   $('cs_quality').innerHTML = '';
   $('cs_occupancy').innerHTML = '<span class="sub">Satın Al → sonra haritada kurulacak YERE dokun (ödeme yerleştirme anında). Saha raporu ℹ️ Bilgi ekranında.</span>';
   const CATS = ['Tümü', 'Güneş', 'Rüzgar', 'Kömür', 'Gaz', 'Hidro', 'Jeotermal', 'Nükleer', 'Depo', 'Yakıt'];
   let html = `<div class="catrow">${CATS.map(x => `<button class="${x === cat ? 'on' : ''}" ${tutLock && x !== tutCatNm ? 'disabled style="opacity:.35"' : `onclick="setCat('${x}')"`}>${x}</button>`).join('')}</div>`;
-  if (tutLock) html += `<p style="color:var(--gold);font-size:12.5px;font-weight:700;margin:4px 0">🎓 ${tutStepNow === 0 ? 'İlk santralin: ☀️ GES Çatı Paneli' : 'Yeni bölgene: 🔋 30 MWh Pil İstasyonu'} — 👇 parlayan karta dokun, Satın Al'dan sonra haritada YANIP SÖNEN kareye dokunacaksın.</p>`;
+  if (tutGuideOn) html += `<p style="color:var(--gold);font-size:12.5px;font-weight:700;margin:4px 0">🎓 ${tutStepNow === 0 ? 'İlk santralin' : 'Yeni bölgene'}: ${tutPickT_.ico} ${tutPickT_.nm} — 👇 <b>ALTIN ÇERÇEVELİ</b> karta dokun, Satın Al'dan sonra haritada YANIP SÖNEN kareye dokunacaksın.</p>`;
   // ⚡ KAPASİTE LİSANS BANDI: santral kategorisi seçiliyken kurulu güç / limit / sonraki lisans
   if (!tutLock && CAP_TIERS[cat]) {
     const used = catUsedMW(cat), cap = capMWOf(cat), nt = nextCapTier(cat);
@@ -5273,8 +5883,8 @@ function openBuildSheet() {
   const card = (t, T, mode) => { // mode: 'plant' | 'store' | 'depot' — konumdan bağımsız kart
     const isStore = mode === 'store', isDepot = mode === 'depot';
     const kind = isDepot ? 'fueldepot' : isStore ? 'store' : 'plant';
-    const tutPick = tutLock && t === tutPickT;
-    const tutOff = tutLock && t !== tutPickT;
+    const tutPick = tutGuideOn && t === tutPickT;   // hedef kart eğitim bitene kadar parlar
+    const tutOff = tutLock && t !== tutPickT;        // diğerlerini karartma yalnız ilk 60 dk
     const capLock = mode === 'plant' && capBlocked(t);
     const disabled = G.cash < T.cost || tutOff;
     const bt = `⏱ ${T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn'}`;
@@ -5301,12 +5911,17 @@ function openBuildSheet() {
       </div>
     </div>`;
   };
+  const rows = [];
   for (const [t, T] of Object.entries(PLANT_TYPES))
-    if (cat === 'Tümü' || T.cat === cat) html += card(t, T, 'plant');
+    if (cat === 'Tümü' || T.cat === cat) rows.push([t, card(t, T, 'plant')]);
   if (cat === 'Tümü' || cat === 'Depo')
-    for (const [t, T] of Object.entries(STORE_TYPES)) html += card(t, T, 'store');
+    for (const [t, T] of Object.entries(STORE_TYPES)) rows.push([t, card(t, T, 'store')]);
   if (cat === 'Tümü' || cat === 'Yakıt')
-    for (const [t, T] of Object.entries(DEPOT_TYPES)) html += card(t, T, 'depot');
+    for (const [t, T] of Object.entries(DEPOT_TYPES)) rows.push([t, card(t, T, 'depot')]);
+  // 🎓 eğitimde hedef kart EN ÜSTE: "Tümü" kategorisinde oyuncu parlayan kartı görmek için
+  // 8 kart aşağı kaydırmak zorunda kalıyordu (sort kararlıdır — kalan sıra bozulmaz).
+  if (tutGuideOn) rows.sort((a, b) => (b[0] === tutPickT) - (a[0] === tutPickT));
+  html += rows.map(r => r[1]).join('');
   $('cs_build').innerHTML = html;
   showSheet('cellsheet');
 }
@@ -5638,10 +6253,11 @@ function fmtHrs(h) { return h < 1 ? Math.round(h * 60) + ' dk' : h.toFixed(1) + 
 // "şuraya dokun" ipucu çubuğu gösterilir, ~10 dakikada biter, bitince $25M OTOMATİK verilir.
 // Tutorial boyunca: kurulumlar ~anında + üretim ekstra ×10 (zamandan muaf) — bitince oyuncu serbest.
 const STARTER_TASKS = [
-  { t: '☀️ Bir güneş paneli kur', ok: () => G.units.some(u => u.kind === 'plant' && PLANT_TYPES[u.t].kind === 'sun'), hint: '🏗️ İnşa\'ya bas → ☀️ parlayan paneli Satın Al → sonra YANIP SÖNEN karene dokun', el: 'buildbtn' },
-  { t: '💰 İlk enerji satışını yap', ok: () => G.totalSold >= .01, hint: '🔋 Haritada parlayan depona dokun → 💰 SAT butonuna bas', el: null },
+  // patron: ilk santral GÜNEŞ değil RÜZGAR — türbin gece de üretir, "ilk satış" görevi karanlıkta takılmaz
+  { t: '🌬️ Bir rüzgar türbini kur', ok: () => G.units.some(u => u.kind === 'plant' && PLANT_TYPES[u.t].kind === 'wind'), hint: '🏗️ İnşa\'ya bas → 🌬️ ALTIN ÇERÇEVELİ türbini Satın Al → sonra YANIP SÖNEN karene dokun', el: 'buildbtn' },
+  { t: '💰 İlk enerji satışını yap', ok: () => G.totalSold >= .01, hint: '🔋 Haritada ALTIN PARLAYAN depona dokun → 💰 SAT butonuna bas', el: null },
   { t: '📜 Yeni bir kare ruhsatı al', ok: () => Object.keys(G.licenses).length >= 2, hint: 'ℹ️ Bilgi\'ye bas → YANIP SÖNEN kareye dokun — yeni bölgeye ruhsat almak için dokun (📜 ' + fmt(licenseFee('')) + ')', el: 'infobtn' },
-  { t: '🔋 Yeni bölgene 30 MWh Pil İstasyonu kur', ok: () => Object.keys(G.licenses).slice(1).some(c => G.units.some(u => u.kind === 'store' && u.t === 'bat' && u.cell === c)), hint: '🏗️ İnşa\'ya bas → 🔋 parlayan Pil İstasyonu\'nu Satın Al → YANIP SÖNEN yeni bölgene dokun', el: 'buildbtn' },
+  { t: '🔋 Yeni bölgene 30 MWh Pil İstasyonu kur', ok: () => Object.keys(G.licenses).slice(1).some(c => G.units.some(u => u.kind === 'store' && u.t === 'bat' && u.cell === c)), hint: '🏗️ İnşa\'ya bas → 🔋 ALTIN ÇERÇEVELİ Pil İstasyonu\'nu Satın Al → YANIP SÖNEN yeni bölgene dokun', el: 'buildbtn' },
   { t: '🧪 İlk araştırmanı başlat', ok: () => G.research && (!!G.research.active || Object.values(G.research.lvl).some(v => v > 0)), hint: '🧪 YUKARIDA yanıp sönen şirket adına dokun → Araştırma bölümünden birini başlat', el: 'coname' },
   { t: '💰 Toplam 2 MWh satış yap', ok: () => G.totalSold >= 2, hint: '💰 Üretmeye ve satmaya devam — 2 MWh\'e ulaş (1 dakikada dolar)', el: null },
 ];
@@ -5671,18 +6287,24 @@ function tutCellTarget() {
 function tutCellTarget4() {
   return Object.keys(G.licenses).slice(1).find(c => !G.units.some(u => u.kind === 'store' && u.t === 'bat' && u.cell === c)) || null;
 }
+// sınıfı yalnız DEĞİŞTİĞİNDE yaz: her 500 ms remove+add yapmak CSS animasyonunu baştan
+// başlatıyor, 1 sn'lik tutpulse hiç tamamlanmadan sıfırlanıp yanıp sönme sönük görünüyordu.
+const setTutCls = (id, cls, on) => { const e = $(id); if (e && e.classList.contains(cls) !== on) e.classList.toggle(cls, on); };
+function tutClearMarks() { // BUGFIX: infobtn listede yoktu → eğitim bitince de yanıp sönüyordu
+  TUT_BAR.concat('coname').forEach(id => setTutCls(id, 'tut', false));
+  setTutCls('coname', 'attn', false);
+}
 function tutTick() {
-  TUT_BAR.concat('coname').forEach(id => $(id).classList.remove('tut')); // BUGFIX: infobtn listede yoktu → eğitim bitince de yanıp sönüyordu
-  $('coname').classList.remove('attn');
   TUT_BAR.forEach(id => $(id).disabled = false);
   $('drawerhandle').disabled = false;
   $('coname').style.pointerEvents = '';
-  if (!G || !G._started) return;
-  if (!tutGuide()) { $('tuthint').classList.remove('show'); clearTutCell(); return; }
+  if (!G || !G._started) { tutClearMarks(); return; }
+  if (!tutGuide()) { tutClearMarks(); $('tuthint').classList.remove('show'); clearTutCell(); return; }
   const i = tutStep();
   if (i < 0) { // 🎓 TAMAMLANDI — ödülü ver, oyuncuyu serbest bırak
     G.starterClaimed = true;
     G.cash += STARTER_REWARD;
+    tutClearMarks(); clearTutCell();
     $('tuthint').classList.remove('show');
     $('modal').innerHTML = `
       <h2>🎓 Eğitim Tamamlandı!</h2>
@@ -5696,7 +6318,9 @@ function tutTick() {
     return;
   }
   const task = STARTER_TASKS[i];
-  if (task.el) $(task.el).classList.add(task.el === 'coname' ? 'attn' : 'tut');
+  const wantTut = task.el && task.el !== 'coname' ? task.el : null;
+  TUT_BAR.forEach(id => setTutCls(id, 'tut', id === wantTut));
+  setTutCls('coname', 'attn', task.el === 'coname');
   // görev 1 (yerleştirme): merkez kare · görev 3 (ruhsat): komşu kare · görev 4: yeni bölge — altın yanıp söner
   const wantCell = map ? (i === 0 ? Object.keys(G.licenses)[0] : i === 2 ? tutCellTarget() : i === 3 ? tutCellTarget4() : null) : null;
   if (wantCell) {
@@ -5799,9 +6423,98 @@ function openCompanySheet() {
     <div style="font-size:12px;margin:10px 0 2px">🧪 <b>ARAŞTIRMA</b> <span class="sub">tek seferde 1 araştırma yürür</span></div>
     <p class="sub" style="margin:2px 0 4px">Puanların: <b>🌞 ${G.resPts.daily} günlük</b> · <b>📅 ${G.resPts.weekly} haftalık</b><br>Sv1-10: 1 günlük puan (günün İLK satışında +1) · Sv11+: 1 haftalık puan (📅 haftalık görev ödülüyle +1)</p>
     ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('liccap')}
-    <button class="bigsell half" onclick="resetAccountAsk()" style="color:var(--danger);margin-top:14px">⚠️ Hesabı Sıfırla</button>`;
+    ${accountRowHTML()}
+    <button class="bigsell half" onclick="resetAccountAsk()" style="color:var(--danger);margin-top:8px">⚠️ Hesabı Sıfırla</button>`;
   showSheet('companysheet');
 }
+// 🔗 HESAP SATIRI (patron: "hesabı sil butonunun üstüne 1 adet hesabı bağla butonu")
+function accountRowHTML() {
+  const A = NET.auth;
+  if (!NET.on() || !A) return '';
+  if (A.kind === 'google') return `<p class="sub" style="margin-top:14px">🔓 <b>Hesap bağlı:</b> ${A.email || A.name || 'Google'}
+    — telefonunu değiştirsen bile ilerlemen kaybolmaz.</p>`;
+  return `<div style="border:1px solid var(--acc2);border-radius:10px;padding:9px 11px;margin-top:14px">
+    <div style="font-size:12.5px;font-weight:800">👤 Misafir olarak oynuyorsun</div>
+    <p class="sub" style="margin:3px 0 6px">Kaydın sunucuda ama <b>yalnız bu cihazdan</b> erişilebiliyor.
+    Telefonu değiştirir ya da uygulamayı silersen şirketin geri gelmez.</p>
+    <button class="bigsell half" style="background:var(--acc2);color:#071018;margin:0" onclick="linkAccountAsk()">🔗 Hesabı Bağla — Google</button>
+  </div>`;
+}
+window.linkAccountAsk = () => {
+  if (!NET.auth || NET.auth.kind !== 'guest') { toast('Hesabın zaten bağlı', ''); return; }
+  if (!NET.googleAvailable()) {
+    $('modal').innerHTML = `<h2>🔗 Hesabı Bağla</h2>
+      <p>Google girişi şu an hazır değil (çevrimdışı olabilirsin). İnternete bağlıyken tekrar dene.</p>
+      <button class="primary" onclick="closeModal()">Tamam</button>`;
+    $('overlay').classList.add('show'); return;
+  }
+  $('modal').innerHTML = `
+    <h2>🔗 Hesabı Google'a Bağla</h2>
+    <p>Şirketin <b>${G.company}</b> ve tüm ilerlemen Google hesabına taşınır.</p>
+    <p class="sub">Bundan sonra hangi telefondan girersen gir aynı şirketle devam edersin.
+    Oyun içinde hiçbir şey değişmez — sadece kaydın sana bağlanır.</p>
+    <p class="sub">🔒 Şifreni biz görmeyiz; giriş tamamen Google ekranında yapılır.</p>
+    <button class="primary" onclick="linkAccountGo()">🔓 Google ile Bağla</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Şimdi değil</button>`;
+  $('overlay').classList.add('show');
+};
+window.linkAccountGo = async () => {
+  LOGIN_BUSY = true;
+  $('modal').innerHTML = '<h2>🔗 Bağlanıyor</h2><p>Google hesabına yönlendiriliyorsun...</p>';
+  try {
+    const r = await NET.linkGoogle();
+    if (!r) return; // mobil yönlendirme — dönüşte linkFinishAfterRedirect yakalar
+    linkAccountResult(r);
+  } catch (e) {
+    const kod = (e && e.code) || '';
+    $('modal').innerHTML = `<h2>🔗 Bağlanamadı</h2>
+      <p>${kod.includes('popup') ? 'Tarayıcı açılır pencereyi engelledi — izin verip tekrar dene.'
+        : kod.includes('credential-already-in-use') || kod.includes('email-already-in-use')
+        ? 'Bu Google hesabı başka bir oyuncuya bağlı. Farklı bir hesap dene.'
+        : 'Bir sorun çıktı: ' + (e.message || kod)}</p>
+      <p class="sub">Misafir kaydın olduğu gibi duruyor — hiçbir şey kaybolmadı.</p>
+      <button class="primary" onclick="closeModal()">Tamam</button>`;
+    $('overlay').classList.add('show');
+  } finally { LOGIN_BUSY = false; }
+};
+// Taşıma sonucunu oyuncuya anlat. 'conflict' = Google hesabında ZATEN bir şirket var →
+// hangisiyle devam edileceğini oyuncu seçer, hiçbir ilerleme sessizce silinmez.
+function linkAccountResult(r) {
+  if (r.moved === 'conflict') {
+    $('modal').innerHTML = `
+      <h2>⚠️ Bu hesapta zaten bir şirket var</h2>
+      <p>Bağladığın Google hesabında <b>başka bir kayıt</b> bulundu. Hangisiyle devam edeceksin?</p>
+      <p class="sub">Seçmediğin kayıt silinir — bu geri alınamaz.</p>
+      <button class="primary" onclick="linkKeepGuest()">👤 Misafir ilerlemem${G && G.company ? ' (' + G.company + ')' : ''} devam etsin</button>
+      <button class="primary ghostbtn" onclick="linkKeepCloud()">☁️ Google hesabındaki kayıt devam etsin</button>`;
+    $('overlay').classList.add('show');
+    return;
+  }
+  closeModal();
+  const A = NET.auth || {};
+  toast('🔗 Hesap bağlandı — ' + (A.email || A.name || 'Google'), '', null, 0, true);
+  // yönlendirmeden dönüşte oyun henüz başlamamış olabilir — kaydı normal giriş akışı yükler
+  if (!G || !G._started) { LOGIN_BUSY = true; afterLogin().finally(() => { LOGIN_BUSY = false; }); return; }
+  addMail('⚡ Energy Company', 'Hesabın bağlandı',
+    `Şirketin artık ${A.email || 'Google hesabına'} bağlı. Telefonunu değiştirsen bile aynı şirketle devam edersin.`, true);
+  beep(880, .12); setTimeout(() => beep(1320, .15), 140);
+  NET.cloudSave(true);
+  save(); renderMenu(); openCompanySheet();
+}
+window.linkKeepGuest = async () => {
+  const from = window.__linkFrom || (localStorage.getItem('ec_link_from') || null);
+  $('modal').innerHTML = '<h2>🔗 Aktarılıyor</h2><p>Misafir ilerlemen hesaba yazılıyor...</p>';
+  await NET.moveCloudData(from, NET.id, true); // overwrite: oyuncu açıkça seçti
+  try { localStorage.removeItem('ec_link_from'); } catch (e) {}
+  linkAccountResult({ moved: 'moved' });
+};
+window.linkKeepCloud = async () => {
+  try { localStorage.removeItem('ec_link_from'); } catch (e) {}
+  $('modal').innerHTML = '<h2>🔗 Yükleniyor</h2><p>Google hesabındaki kayıt getiriliyor...</p>';
+  const cloud = await NET.cloudLoad();
+  if (cloud && cloud.company) { G = migrate(cloud); startGame(true); toast('☁️ Google hesabındaki şirketle devam ediyorsun', '', null, 0, true); }
+  else linkAccountResult({ moved: 'empty' });
+};
 window.startResearch = key => {
   const R = G.research, D = RESEARCH[key];
   if (R.active) { toast('🧪 Zaten bir araştırma sürüyor — bitmesini bekle', 'warn'); return; }
@@ -6319,6 +7032,7 @@ function frameBody(ts) {
       }
       checkWeek(); // ⚠️ HATA AVI: yalnız menü açılınca çağrılıyordu — hafta dönümünden sonraki satışlar siliniyordu
       allyTick(); allyCallTick(); consortiumTick(); aucTick(); studyTick(); // 🤝 ihale · 💰 bağış · 🌍 konsorsiyum · 🔨 müzayede · 🔎 bölge araştırması
+      if (G.ally) allyElectionTick(); // 🗳️ başkanlık seçimi süresi doldu mu
       // ⏫ depo kapasite inşaatı bitti mi?
       for (const d of G.units) {
         if (d.kind === 'fueldepot' && d.upgUntil && Date.now() >= d.upgUntil) {
@@ -6394,7 +7108,15 @@ const BOOT_TIPS = [
 function bootScene() {
   const R = (a, b) => a + Math.random() * (b - a);
   const I = (a, b) => Math.floor(R(a, b + 1));
-  const W = 800, H = 500;
+  // Sahne artık TAM EKRAN. 16:10 sabit tuvali dikey telefonda "slice" ile ortadan kırpıyor
+  // ve manzaranın yalnız dar bir şeridi görünüyordu → tuval ekranın oranına uyarlanıyor.
+  const W = 800;
+  const H = Math.round(Math.min(1900, Math.max(480, W * ((window.innerHeight || 800) / (window.innerWidth || 500)))));
+  // Tuval uzayınca 16:10 için ölçülmüş nesneler minicik kalıyor ve orta kısım bomboş görünüyordu.
+  // k = nesne büyütme katsayısı (sınırlı), dar = dikey ekran → AZ ama BÜYÜK nesne (poster kompozisyonu).
+  const k = Math.min(2.4, Math.max(1, H / 500));
+  const dar = H / W > 1.25;
+  const az = a => dar ? Math.max(2, Math.round(a * .5)) : a; // dikeyde nesne sayısını kıs
   const gökler = [
     ['#1a2c4d', '#ff8a1f', '#e0491a'], // gün batımı
     ['#0d1626', '#213a63', '#3b6ea5'], // gece mavisi
@@ -6406,53 +7128,55 @@ function bootScene() {
     <linearGradient id="bolt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc24a"/><stop offset="1" stop-color="#e0491a"/></linearGradient>
   </defs><rect width="${W}" height="${H}" fill="url(#sk)"/>`;
   const yıldız = n => Array.from({ length: n }, () => `<circle cx="${R(0, W).toFixed(0)}" cy="${R(0, H * .5).toFixed(0)}" r="${R(.6, 1.7).toFixed(1)}" fill="#fff" opacity="${R(.25, .8).toFixed(2)}"/>`).join('');
-  const güneş = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r * 1.9}" fill="#ffb547" opacity=".13"/><circle cx="${x}" cy="${y}" r="${r * 1.35}" fill="#ffb547" opacity=".18"/><circle cx="${x}" cy="${y}" r="${r}" fill="#ffd166"/>`;
+  const güneş = (x, y0, r0) => { const y = y0 * (dar ? H / 500 * .55 : 1), r = r0 * k;
+    return `<circle cx="${x}" cy="${y}" r="${r * 1.9}" fill="#ffb547" opacity=".13"/><circle cx="${x}" cy="${y}" r="${r * 1.35}" fill="#ffb547" opacity=".18"/><circle cx="${x}" cy="${y}" r="${r}" fill="#ffd166"/>`; };
   const tepe = (y, col, op) => `<path d="M0 ${H} L0 ${y} Q ${W * .2} ${y - R(30, 70)} ${W * .42} ${y + R(-10, 25)} T ${W} ${y - R(10, 40)} L ${W} ${H} Z" fill="${col}" opacity="${op}"/>`;
-  const türbin = (x, yb, s, dur) => `<g transform="translate(${x} ${yb}) scale(${s})">
+  const türbin = (x, yb, s, dur) => `<g transform="translate(${x} ${yb}) scale(${s * k})">
     <path d="M-3 0 L-2 -95 L2 -95 L3 0 Z" fill="#eef3fa" opacity=".95"/>
     <g transform="translate(0 -95)"><animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="${dur}s" repeatCount="indefinite" additive="sum"/>
       ${[0, 120, 240].map(a => `<path d="M0 0 L-4 -52 L4 -52 Z" fill="#eef3fa" opacity=".95" transform="rotate(${a})"/>`).join('')}
     </g><circle cx="0" cy="-95" r="4.5" fill="#ff8a1f"/></g>`;
   const panelSırası = (y, n, s, op) => Array.from({ length: n }, (_, i) => {
     const x = (i + .5) * (W / n);
-    return `<g transform="translate(${x} ${y}) scale(${s})" opacity="${op}"><path d="M-42 0 L34 0 L46 -30 L-30 -30 Z" fill="#1d4e89" stroke="#9fc2ea" stroke-width="1.6"/>
+    return `<g transform="translate(${x} ${y}) scale(${s * k})" opacity="${op}"><path d="M-42 0 L34 0 L46 -30 L-30 -30 Z" fill="#1d4e89" stroke="#9fc2ea" stroke-width="1.6"/>
       <path d="M-30 -30 L46 -30" stroke="#9fc2ea" stroke-width="1.2"/><path d="M-16 0 L-4 -30 M2 0 L14 -30 M20 0 L32 -30" stroke="#9fc2ea" stroke-width="1"/>
       <rect x="-4" y="0" width="5" height="16" fill="#55677f"/></g>`;
   }).join('');
-  const direk = (x, yb, s) => `<g transform="translate(${x} ${yb}) scale(${s})" stroke="#e8eef7" stroke-width="3" fill="none" opacity=".92">
+  const direk = (x, yb, s) => `<g transform="translate(${x} ${yb}) scale(${s * k})" stroke="#e8eef7" stroke-width="3" fill="none" opacity=".92">
     <path d="M-22 0 L0 -110 L22 0 M-15 -35 L15 -35 M-9 -70 L9 -70 M-26 -12 L26 -12"/>
     <path d="M-30 -78 L30 -78" stroke-width="2.4"/></g>`;
-  const bina = (x, w2, h2, ışık) => {
+  const bina = (x, w2, h20, ışık) => {
+    const h2 = h20 * k, sr = 22 * k, taban = H - 60 * k; // yükseklik ve pencere aralığı tuvalle büyür
     let win = '';
-    for (let r = 0; r < Math.floor(h2 / 22); r++) for (let c = 0; c < Math.floor(w2 / 16); c++)
-      if (Math.random() < ışık) win += `<rect x="${x + 6 + c * 16}" y="${H - 60 - h2 + 10 + r * 22}" width="7" height="10" fill="#ffd166" opacity="${R(.5, 1).toFixed(2)}"/>`;
-    return `<rect x="${x}" y="${H - 60 - h2}" width="${w2}" height="${h2}" fill="#101c31"/>${win}`;
+    for (let r = 0; r < Math.floor(h2 / sr); r++) for (let c = 0; c < Math.floor(w2 / 16); c++)
+      if (Math.random() < ışık) win += `<rect x="${x + 6 + c * 16}" y="${(taban - h2 + 10 * k + r * sr).toFixed(1)}" width="7" height="${(10 * Math.min(k, 1.6)).toFixed(1)}" fill="#ffd166" opacity="${R(.5, 1).toFixed(2)}"/>`;
+    return `<rect x="${x}" y="${(taban - h2).toFixed(1)}" width="${w2}" height="${h2.toFixed(1)}" fill="#101c31"/>${win}`;
   };
   const sahneler = [
     () => { // 1) Rüzgâr tarlası
       let s = sky + güneş(R(120, 680), R(120, 200), R(34, 52)) + tepe(H * .68, '#0f2a1f', .55) + tepe(H * .78, '#123b28', .9);
-      for (let i = 0; i < I(5, 9); i++) s += türbin(R(50, W - 50), R(H * .74, H * .93), R(.5, 1.05), R(2.6, 5.4));
-      return s + `<rect y="${H - 26}" width="${W}" height="26" fill="#0b1f16"/>`;
+      for (let i = 0; i < az(I(5, 9)); i++) s += türbin(R(50, W - 50), R(H * .74, H * .93), R(.5, 1.05), R(2.6, 5.4));
+      return s + `<rect y="${H - 26 * k}" width="${W}" height="${26 * k}" fill="#0b1f16"/>`;
     },
     () => { // 2) Güneş tarlası
       let s = sky + güneş(R(150, 650), R(90, 160), R(40, 58)) + tepe(H * .62, '#3a2f16', .5);
       s += `<rect y="${H * .66}" width="${W}" height="${H * .34}" fill="#2b3a22"/>`;
-      s += panelSırası(H * .78, I(4, 6), R(.85, 1.05), .85) + panelSırası(H * .95, I(3, 5), R(1.1, 1.4), 1);
+      s += panelSırası(H * .78, az(I(4, 6)), R(.85, 1.05), .85) + panelSırası(H * .95, az(I(3, 5)), R(1.1, 1.4), 1);
       return s;
     },
     () => { // 3) Açık deniz rüzgârı
       let s = sky + yıldız(I(25, 60)) + güneş(R(120, 680), R(90, 150), R(26, 40));
       s += `<rect y="${H * .68}" width="${W}" height="${H * .32}" fill="#0e2f4a"/>`;
       for (let i = 0; i < 7; i++) s += `<path d="M0 ${H * .72 + i * 22} q ${R(40, 90)} ${R(-9, 9)} ${W} 0" stroke="#5ab0ff" stroke-width="1.5" fill="none" opacity="${(.32 - i * .035).toFixed(2)}"/>`;
-      for (let i = 0; i < I(4, 7); i++) s += türbin(R(60, W - 60), R(H * .70, H * .80), R(.55, .95), R(3, 6));
+      for (let i = 0; i < az(I(4, 7)); i++) s += türbin(R(60, W - 60), R(H * .70, H * .80), R(.55, .95), R(3, 6));
       return s;
     },
     () => { // 4) Gece şehri
       let s = sky + yıldız(I(40, 90));
       let x = R(10, 40);
       while (x < W - 30) { const w2 = R(38, 82), h2 = R(70, 240); s += bina(x, w2, h2, R(.25, .6)); x += w2 + R(6, 20); }
-      s += `<rect y="${H - 60}" width="${W}" height="60" fill="#0a1220"/>`;
-      s += direk(R(80, 260), H - 60, R(.5, .7)) + direk(R(520, 720), H - 60, R(.5, .7));
+      s += `<rect y="${H - 60 * k}" width="${W}" height="${60 * k}" fill="#0a1220"/>`;
+      s += direk(R(80, 260), H - 60 * k, R(.5, .7)) + direk(R(520, 720), H - 60 * k, R(.5, .7));
       return s;
     },
     () => { // 5) Baraj / hidro
@@ -6466,22 +7190,20 @@ function bootScene() {
     },
     () => { // 6) Nakil hattı
       let s = sky + güneş(R(100, 700), R(110, 190), R(30, 46)) + tepe(H * .66, '#1a3324', .6) + tepe(H * .76, '#14442c', .95);
-      const n = I(3, 5), yb = H * .82;
+      const n = az(I(3, 5)), yb = H * .82, ds = R(.75, 1);
       for (let i = 0; i < n; i++) {
         const x = (i + .5) * (W / n);
-        s += direk(x, yb, R(.75, 1));
-        if (i) { const px = (i - .5) * (W / n);
-          s += `<path d="M${px} ${yb - 78} Q ${(px + x) / 2} ${yb - 46} ${x} ${yb - 78}" stroke="#dbe6f5" stroke-width="1.6" fill="none" opacity=".75"/>`;
-          s += `<path d="M${px} ${yb - 62} Q ${(px + x) / 2} ${yb - 30} ${x} ${yb - 62}" stroke="#dbe6f5" stroke-width="1.6" fill="none" opacity=".6"/>`; }
+        s += direk(x, yb, ds);
+        if (i) { const px = (i - .5) * (W / n), t1 = 78 * ds * k, t2 = 62 * ds * k, sag = 32 * ds * k;
+          s += `<path d="M${px} ${yb - t1} Q ${(px + x) / 2} ${yb - t1 + sag} ${x} ${yb - t1}" stroke="#dbe6f5" stroke-width="${1.6 * k}" fill="none" opacity=".75"/>`;
+          s += `<path d="M${px} ${yb - t2} Q ${(px + x) / 2} ${yb - t2 + sag} ${x} ${yb - t2}" stroke="#dbe6f5" stroke-width="${1.6 * k}" fill="none" opacity=".6"/>`; }
       }
-      return s + `<rect y="${H - 22}" width="${W}" height="22" fill="#0d2418"/>`;
+      return s + `<rect y="${H - 22 * k}" width="${W}" height="${22 * k}" fill="#0d2418"/>`;
     },
   ];
   const gövde = sahneler[I(0, sahneler.length - 1)]();
-  // köşede marka şimşeği
-  const marka = `<g transform="translate(${W - 92} 30) scale(.46)"><path d="M60 4.8 L26.2 55.6 H45.6 L39.8 95.2 L73.8 44.4 H54.4 Z" fill="url(#bolt)"/></g>
-    <text x="${W - 100}" y="112" text-anchor="end" font-family="Segoe UI,system-ui,sans-serif" font-size="21" font-weight="700" fill="#f0e6d2" opacity=".95">ENERGY COMPANY</text>`;
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${gövde}${marka}</svg>`;
+  // marka artık SVG'nin köşesinde değil, HTML katmanında ortada (#bootbrand) — çift logo olmasın
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${gövde}</svg>`;
 }
 let BOOT_ON = true;
 function bootStep(pct, txt) {
@@ -6512,7 +7234,20 @@ NET.init().then(async () => { // online sunucu (net-config.json varsa) — yoksa
   bootStep(82, 'Hesap kontrol ediliyor…');
   if (NET.on() && NET.googleAvailable()) {
     const a = await NET.googleCheckRedirect(); // Google yönlendirmesinden dönüş
-    if (a) { toast('🔓 Hoş geldin ' + (a.name || a.email || ''), '', null, 0, true); bootDone(); await afterLogin(); return; }
+    if (a) {
+      // 🔗 "Hesabı Bağla" yönlendirmesinden dönüş: misafir kaydını yeni uid'ye taşı.
+      // Taşıma olmazsa oyuncu Google'a bağlanır ama şirketi eski uid'de kalıp kaybolurdu.
+      let from = null;
+      try { from = localStorage.getItem('ec_link_from'); } catch (e) {}
+      if (from && from !== a.uid) {
+        const moved = await NET.moveCloudData(from, a.uid);
+        if (moved === 'conflict') { window.__linkFrom = from; bootDone(); linkAccountResult({ moved }); return; }
+        try { localStorage.removeItem('ec_link_from'); } catch (e) {}
+        toast('🔗 Hesap bağlandı — ' + (a.email || a.name || 'Google'), '', null, 0, true);
+        bootDone(); await afterLogin(); return;
+      }
+      toast('🔓 Hoş geldin ' + (a.name || a.email || ''), '', null, 0, true); bootDone(); await afterLogin(); return;
+    }
   }
   bootDone();
   wizardStart();
