@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 20:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-17 20:29) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 20:26)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-17 20:29)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2585,6 +2585,29 @@ const brandPrice = (b, base) => Math.round(base * BRANDS[b].price * brandDisc(b)
 function brandBuy(b) { // sadakat: seçtiğin marka +12, diğerleri -4 (hepsiyle 100 olunamaz)
   G.brandRel = G.brandRel || {};
   for (const k of Object.keys(BRANDS)) G.brandRel[k] = Math.max(0, Math.min(100, (G.brandRel[k] || 0) + (k === b ? 12 : -4)));
+}
+// ⚙️ MARKA PANELİ (patron: "marka olayını bitir, oyuna dahil et") — sistem çalışıyordu ama
+// YALNIZ hat kurma modalının içinde görünüyordu; oyuncu sadakatini hiçbir yerde takip edemiyordu.
+// Artık şirket ekranında kalıcı: hangi markayla nerede olduğunu ve ne kazandığını görüyor.
+function brandPanelHTML() {
+  const hatlar = (G.lines || []);
+  const say = {};
+  hatlar.forEach(l => { const b = l.brand || 'voltas'; say[b] = (say[b] || 0) + 1; });
+  const enIyi = Object.keys(BRANDS).reduce((a, b) => brandRel(b) > brandRel(a) ? b : a, 'voltas');
+  return `<div style="font-size:12px;margin:10px 0 2px">⚙️ <b>TRAFO MARKALARI</b> <span class="sub">sadakat = iskonto</span></div>
+    <p class="sub" style="margin:2px 0 6px">Hat çekerken seçtiğin marka +12 ilişki kazanır, diğerleri -4 kaybeder —
+    <b>hepsiyle 100 olamazsın</b>. 100 ilişki = <b>%25 iskonto</b>. Her markanın ayrı bir üstünlüğü var.</p>
+    ${Object.keys(BRANDS).map(b => {
+      const B = BRANDS[b], rel = brandRel(b), isk = Math.round(25 * rel / 100);
+      return `<div style="border:1px solid ${b === enIyi && rel > 0 ? 'var(--acc2)' : 'var(--line)'};border-radius:10px;padding:7px 9px;margin:5px 0">
+        <div style="font-size:12.5px;font-weight:700">${B.ico} ${B.nm}
+          ${say[b] ? `<span class="sub">· ${say[b]} hat</span>` : ''}
+          <span style="float:right" class="${isk ? 'pos' : 'sub'}">${isk ? '-%' + isk : 'iskonto yok'}</span></div>
+        <div class="rsbar" style="margin:5px 0"><i style="width:${rel}%"></i></div>
+        <div class="sub">İlişki ${rel}/100 · ${B.d}</div>
+      </div>`;
+    }).join('')}
+    <p class="sub">Liste fiyatı farkı: ${Object.keys(BRANDS).map(b => BRANDS[b].ico + ' ' + (BRANDS[b].price === 1 ? 'standart' : (BRANDS[b].price < 1 ? '-' : '+') + '%' + Math.round(Math.abs(1 - BRANDS[b].price) * 100))).join(' · ')}</p>`;
 }
 function brandRow(b, base, onclick) {
   const B = BRANDS[b], rel = brandRel(b), p = brandPrice(b, base);
@@ -6465,6 +6488,7 @@ function openCompanySheet() {
     <div style="font-size:12px;margin:10px 0 2px">🧪 <b>ARAŞTIRMA</b> <span class="sub">tek seferde 1 araştırma yürür</span></div>
     <p class="sub" style="margin:2px 0 4px">Puanların: <b>🌞 ${G.resPts.daily} günlük</b> · <b>📅 ${G.resPts.weekly} haftalık</b><br>Sv1-10: 1 günlük puan (günün İLK satışında +1) · Sv11+: 1 haftalık puan (📅 haftalık görev ödülüyle +1)</p>
     ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('liccap')}
+    ${brandPanelHTML()}
     ${accountRowHTML()}
     <button class="bigsell half" onclick="resetAccountAsk()" style="color:var(--danger);margin-top:8px">⚠️ Hesabı Sıfırla</button>`;
   showSheet('companysheet');
