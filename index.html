@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 23:09) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-17 23:14) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 23:09)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-17 23:14)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -5601,7 +5601,15 @@ function unitIconHTML(u) {
   if (building) badge = '🏗️' + Math.ceil((u.buildDone - now) / 1000) + 's';
   else if (u.kind === 'office') badge = u.hq ? 'MERKEZ' : 'OFİS';
   else if (u.kind === 'fueldepot') badge = (u.upgUntil ? '⏫ ' : '') + fmtN(u.fuel || 0) + '/' + depotCap(u) + 't';
-  else if (u.kind === 'store') badge = (u.disch ? '💰 ' : '') + fmtE(u.stored) + '/' + STORE_TYPES[u.t].cap; // 💰 = boşaltılıyor
+  else if (u.kind === 'store') {
+    // 🔗 BAĞLI DEPOLAR (patron): köle kapasite göstermez — kapasite MASTER'da toplanır.
+    // Master 👑 işaretiyle ve GRUP toplamıyla görünür. Bağlantı kurulup kesildikçe kendiliğinden güncellenir.
+    const kole = !!u.link;
+    const master = !kole && G.units.some(x => x.kind === 'store' && x.link === u.id);
+    badge = kole ? '🔗'
+      : (u.disch ? '💰 ' : '') + (master ? '👑 ' : '') +
+        (master ? fmtE(groupStored(u)) + '/' + groupCap(u) : fmtE(u.stored) + '/' + STORE_TYPES[u.t].cap);
+  }
   else if (!u.on) badge = 'DURDU';
   else if (T.fuel && (u.fuelH || 0) <= 0) badge = '⛽ BİTTİ';
   else if (T.fuel && u.fuelH < 2) badge = '⛽ AZ';
