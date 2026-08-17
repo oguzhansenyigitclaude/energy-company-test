@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 23:19) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-17 23:31) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 23:19)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-17 23:31)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1586,10 +1586,10 @@ window.doRename = id => {
 // ═══ 🔗 DEPO-DEPO BAĞLANTISI (patron tasarımı) ═══
 // Santral TEK depoya bağlanır (eskisi gibi). Depolar ise kendi bağlantı NOKTALARINI kullanıp
 // BİRBİRLERİNE bağlanabilir; bağlanan depoların KAPASİTESİ BİRLEŞİR ve grup tek tank gibi dolar.
-// Bağlantıyı yapan = MASTER, bağlanılan = KÖLE (köle üzerinde link = master.id durur).
+// Bağlantıyı yapan = MERKEZ DEPO, bağlanılan = BAĞLI DEPO (bağlı depo üzerinde link = merkezin id'si durur).
 // Aynı ruhsat bölgesinde bağlantı ÜCRETSİZ; iller arası bağlantı mesafeyle artan HAT ÜCRETİ ister.
 // Bağlantı kesilince hat iptal olur — yeniden bağlamak ücreti yeniden ödetir.
-function storeMaster(s) { // zinciri yukarı yürü: kölenin kölesi de aynı gruptadır
+function storeMaster(s) { // zinciri yukarı yürü: bağlının bağlısı da aynı gruptadır
   let m = s, g = 0;
   while (m && m.link && g++ < 30) { const p = storeById(m.link); if (!p || p.id === m.id) break; m = p; }
   return m || s;
@@ -1621,7 +1621,7 @@ function ensureConnections() {
     if (st) p.st = st.id;
   }
 }
-// 🔗 DEPO → DEPO BAĞLA (a = bağlantıyı yapan MASTER, b = bağlanılan KÖLE)
+// 🔗 DEPO → DEPO BAĞLA (a = bağlantıyı yapan MERKEZ DEPO, b = bağlanılan BAĞLI DEPO)
 window.storeLinkAsk = (aId, bId) => {
   const A = storeById(aId), B = storeById(bId);
   if (!A || !B) return;
@@ -1631,8 +1631,8 @@ window.storeLinkAsk = (aId, bId) => {
     <h2>🔗 Depoları bağla</h2>
     <p><b>${unitName(A)}</b> → <b>${unitName(B)}</b></p>
     <p class="sub">Bağlanan depoların <b>kapasitesi birleşir</b> (${groupCap(A) + groupCap(B)} MWh) ve
-    enerji gruptaki boş depolara akar. Bağlantıyı sen kurduğun için <b>${unitName(A)} master</b>,
-    <b>${unitName(B)} köle</b> olur.</p>
+    enerji gruptaki boş depolara akar. Bağlantıyı sen kurduğun için <b>${unitName(A)} MERKEZ DEPO</b>,
+    <b>${unitName(B)} BAĞLI DEPO</b> olur.</p>
     <p class="sub">🌍 Bağlı depolar <b>her iki bölgeye de</b> satış yapabilir.</p>
     ${fee ? `<p>📏 ${km} km — <b>iller arası hat ücreti: <span class="neg">${fmt(fee)}</span></b>
       <br><span class="sub">Bağlantıyı kesersen hat iptal olur; yeniden bağlamak için ücret yeniden ödenir.</span></p>`
@@ -1645,11 +1645,11 @@ window.storeLinkAsk = (aId, bId) => {
 window.storeLink = (aId, bId) => {
   const A = storeById(aId), B = storeById(bId);
   if (!A || !B || A.id === B.id) return;
-  // ⛔ ZİNCİRLEME YASAK (patron kuralı): YALNIZ MASTER bağlantı kurar. Köle, master'ına bağlı
+  // ⛔ ZİNCİRLEME YASAK (patron kuralı): YALNIZ MERKEZ DEPO bağlantı kurar. Bağlı depo, merkezine bağlı
   // olduğu sürece başka depoya bağlanamaz. Aksi hâlde A→B→C→D diye ucuz kısa atlamalarla
   // kıtalar arası köprü kurulur, kimse ⚡ nakil hattı çekmez ve en pahalı pazara bedavaya satılır.
-  // Yıldız topolojisi zorunlu: her bağlantı master'dan TAM MESAFE üzerinden fiyatlanır.
-  if (A.link) { toast('⛔ ' + unitName(A) + ' bir KÖLE depo — bağlantıyı yalnız master kurar. Önce bağlantısını kes.', 'warn', null, 0, true); return; }
+  // Yıldız topolojisi zorunlu: her bağlantı merkezden TAM MESAFE üzerinden fiyatlanır.
+  if (A.link) { toast('⛔ ' + unitName(A) + ' bir BAĞLI DEPO — bağlantıyı yalnız MERKEZ DEPO kurar. Önce bağlantısını kes.', 'warn', null, 0, true); return; }
   if (B.link) { toast('🔗 ' + unitName(B) + ' zaten başka bir depoya bağlı — önce onu kes', 'warn'); return; }
   if (storeMaster(A).id === storeMaster(B).id) { toast('🔗 Bu iki depo zaten aynı grupta', 'warn'); return; } // döngü kalkanı
   if (connCount(A) >= STORE_TYPES[A.t].conn) { toast('🔗 ' + unitName(A) + ' bağlantı noktaları dolu', 'warn'); return; }
@@ -1665,14 +1665,14 @@ window.storeLink = (aId, bId) => {
 window.storeUnlinkAsk = id => {
   const s = storeById(id);
   if (!s) return;
-  // kesilecek bağlantı: ya kendi master'ına olan, ya da bu depoya bağlı köleler
+  // kesilecek bağlantı: ya kendi merkezine olan, ya da bu depoya bağlı bağlı depolar
   const m = s.link ? storeById(s.link) : null;
   const koleler = G.units.filter(x => x.kind === 'store' && x.link === s.id);
   $('modal').innerHTML = `
     <h2>🔌 Depo bağlantısını kes</h2>
     <p class="sub">Kesilen bağlantının <b>hattı iptal olur</b> — yeniden bağlamak için hat ücreti yeniden ödenir.
     Kapasite birleşimi de biter, depolar kendi kapasitesiyle kalır.</p>
-    ${m ? `<button class="bigsell half" onclick="closeModal();storeUnlink(${s.id},${m.id})">🔌 ${unitName(m)} bağlantısını kes <span class="sub">(bu deponun master'ı)</span></button>` : ''}
+    ${m ? `<button class="bigsell half" onclick="closeModal();storeUnlink(${s.id},${m.id})">🔌 ${unitName(m)} bağlantısını kes <span class="sub">(bu deponun merkezi)</span></button>` : ''}
     ${koleler.map(k => `<button class="bigsell half" onclick="closeModal();storeUnlink(${k.id},${s.id})">🔌 ${unitName(k)} bağlantısını kes <span class="sub">(bu depoya bağlı)</span></button>`).join('')}
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
@@ -2188,9 +2188,9 @@ window.startDischarge = (id, frac, adMult, targetCell, quiet) => {
   const st = G.units.find(x => x.id === id);
   if (!st || st.kind !== 'store' || st.buildDone > Date.now()) return;
   if (st.disch) { if (!quiet) toast('⚡ Bu depo zaten boşaltılıyor', 'warn'); return; }
-  // 🔗 MASTER GRUP ADINA SATAR: kapasite birleştiği için enerji de birlikte satılır.
-  // Köle tek başına satamaz — çıkış ucu master'dır.
-  if (st.link) { if (!quiet) toast('🔗 Bu depo bir KÖLE — satış master depodan yapılır', 'warn', null, 0, true); return; }
+  // 🔗 MERKEZ DEPO GRUP ADINA SATAR: kapasite birleştiği için enerji de birlikte satılır.
+  // Uydu tek başına satamaz — çıkış ucu merkezdir.
+  if (st.link) { if (!quiet) toast('🔗 Bu depo bir BAĞLI DEPO — satış MERKEZ DEPO üzerinden yapılır', 'warn', null, 0, true); return; }
   const amt = (isLinked(st) ? groupStored(st) : st.stored) * frac;
   if (amt < .005) return;
   grantDailyResPt();
@@ -2209,7 +2209,7 @@ function dischargeTick(dtSec) {
     const d = st.disch;
     if (!d) continue;
     const T = STORE_TYPES[st.t];
-    // 🔗 master kendi deposu boşalınca kölelerden çeker — grup tek tank gibi boşalır
+    // 🔗 merkez kendi deposu boşalınca bağlı depolardan çeker — grup tek tank gibi boşalır
     if (!st.link && d.left > st.stored + .001) for (const g2 of storeGroup(st)) {
       if (g2.id === st.id || st.stored >= d.left) break;
       const al = Math.min(g2.stored, d.left - st.stored);
@@ -2915,7 +2915,7 @@ let LINK_SRC = null;
 window.startStoreLink = id => {
   const s = storeById(id);
   if (!s) return;
-  if (s.link) { toast('⛔ Bu depo KÖLE — bağlantıyı yalnız master kurar. Zincirleme bağlantı yok.', 'warn', null, 0, true); return; }
+  if (s.link) { toast('⛔ Bu depo BAĞLI DEPO — bağlantıyı yalnız MERKEZ DEPO kurar. Zincirleme bağlantı yok.', 'warn', null, 0, true); return; }
   if (connCount(s) >= STORE_TYPES[s.t].conn) { toast('🔗 Bağlantı noktaların dolu', 'warn'); return; }
   LINK_SRC = id;
   hideSheets();
@@ -5611,13 +5611,13 @@ function unitIconHTML(u) {
   else if (u.kind === 'office') badge = u.hq ? 'MERKEZ' : 'OFİS';
   else if (u.kind === 'fueldepot') badge = (u.upgUntil ? '⏫ ' : '') + fmtN(u.fuel || 0) + '/' + depotCap(u) + 't';
   else if (u.kind === 'store') {
-    // 🔗 BAĞLI DEPOLAR (patron): köle kapasite göstermez — kapasite MASTER'da toplanır.
-    // Master 👑 işaretiyle ve GRUP toplamıyla görünür. Bağlantı kurulup kesildikçe kendiliğinden güncellenir.
-    const kole = !!u.link;
-    const master = !kole && G.units.some(x => x.kind === 'store' && x.link === u.id);
-    badge = kole ? '🔗'
-      : (u.disch ? '💰 ' : '') + (master ? '👑 ' : '') +
-        (master ? fmtE(groupStored(u)) + '/' + groupCap(u) : fmtE(u.stored) + '/' + STORE_TYPES[u.t].cap);
+    // 🔗 DEPO GRUBU (patron): BAĞLI DEPO kapasite göstermez — kapasite MERKEZ DEPO'da toplanır.
+    // Merkez 🏛️ işaretiyle ve GRUP toplamıyla görünür; bağlantı kurulup kesildikçe kendiliğinden güncellenir.
+    const bagliDepo = !!u.link;
+    const merkez = !bagliDepo && G.units.some(x => x.kind === 'store' && x.link === u.id);
+    badge = bagliDepo ? '🔗'
+      : (u.disch ? '💰 ' : '') + (merkez ? '🏛️ ' : '') +
+        (merkez ? fmtE(groupStored(u)) + '/' + groupCap(u) : fmtE(u.stored) + '/' + STORE_TYPES[u.t].cap);
   }
   else if (!u.on) badge = 'DURDU';
   else if (T.fuel && (u.fuelH || 0) <= 0) badge = '⛽ BİTTİ';
@@ -6022,7 +6022,7 @@ function renderNav() {
 // (ad+bölge · doluluk çubuğu · değer · eylem), kendi kelimelerimiz. Alınan yalnız FİKİR:
 // "bütün depoları tek listede gör ve tek dokunuşla sat".
 function renderStorePanel() {
-  // 🔗 KÖLE DEPOLAR LİSTEDE YOK (patron): kapasite master'da toplanır, satış master'dan yapılır.
+  // 🔗 BAĞLI DEPOLAR LİSTEDE YOK (patron): kapasite merkezde toplanır, satış merkezden yapılır.
   const sts = stores().filter(s => s.buildDone <= Date.now() && !s.link);
   if (!sts.length) { $('navbody').innerHTML = '<p class="sub">Henüz deponun yok — bir kareye 🔋 pil istasyonu kur.</p>'; return; }
   // ⚠️ HATA AVI (orta): her depo için sellRevenue ayrı çağrılıyordu, yani AYNI KAREDEKİ her depo
@@ -6030,7 +6030,7 @@ function renderStorePanel() {
   // çok yüksek çıkıyor, oyuncu "vaat edilen para gelmedi" diyordu — rakibin en nefret edilen kusuru.
   // Çözüm: kare bazlı biriktirici. Sıra ekrandaki sırayla aynı olsun diye önce doluluğa göre gidiyoruz.
   const kareSatilan = {};
-  // Bağlıysa GRUP toplamı gösterilir; satış master'ın KENDİ karesinin fiyatından yapılır
+  // Bağlıysa GRUP toplamı gösterilir; satış MERKEZ DEPO'nun KENDİ karesinin fiyatından yapılır
   // (başka bölgeye satmak için depo ekranına girip oradaki bölge butonu kullanılır).
   const dolu = s => isLinked(s) ? groupStored(s) : s.stored;
   const kapa = s => isLinked(s) ? groupCap(s) : STORE_TYPES[s.t].cap;
@@ -6170,7 +6170,7 @@ function openCellSheet(c, ll, mode) {
   if (infoOnly) {
     // KONUM DETAYLARI YALNIZ BİLGİ EKRANINDA (patron isteği) — inşa ekranı sade katalog
     $('cs_quality').innerHTML = wx ?
-      `<span>🛰️ <b>CANLI:</b></span><span>🌬️ <b>${(wx.w ?? 0).toFixed(1)} m/s</b> (100m${windCurve(wx.w + NEWBIE_WIND * newbieAid()) === 0 && wx.w > 25 ? ' — FIRTINA!' : windCurve(wx.w + NEWBIE_WIND * newbieAid()) < .1 ? ' — türbin dönmez' : ''})</span><span>☁️ <b>%${wx.cloud ?? 0}</b></span><span>${wx.day ? '☀️ gündüz' : '🌙 gece'}</span>${newbieAid() > .01 ? `<span style="color:var(--acc)">🌱 <b>Yeni şirket takviyesi: +${(NEWBIE_WIND * newbieAid()).toFixed(1)} m/s · bulut etkisi -%${Math.round(NEWBIE_CLOUD * newbieAid() * 100)}</b></span>` : ''}${q.geo ? '<span>♨️ <b>JEOTERMAL</b></span>' : ''}` :
+      `<span>🏢 <b>CANLI:</b></span><span>🌬️ <b>${(wx.w ?? 0).toFixed(1)} m/s</b> (100m${windCurve(wx.w + NEWBIE_WIND * newbieAid()) === 0 && wx.w > 25 ? ' — FIRTINA!' : windCurve(wx.w + NEWBIE_WIND * newbieAid()) < .1 ? ' — türbin dönmez' : ''})</span><span>☁️ <b>%${wx.cloud ?? 0}</b></span><span>${wx.day ? '☀️ gündüz' : '🌙 gece'}</span>${newbieAid() > .01 ? `<span style="color:var(--acc)">🌱 <b>Yeni şirket takviyesi: +${(NEWBIE_WIND * newbieAid()).toFixed(1)} m/s · bulut etkisi -%${Math.round(NEWBIE_CLOUD * newbieAid() * 100)}</b></span>` : ''}${q.geo ? '<span>♨️ <b>JEOTERMAL</b></span>' : ''}` :
       `<span>💧 su ×${q.hydro.toFixed(2)}</span>${q.geo ? '<span>♨️ <b>JEOTERMAL</b></span>' : ''}<span class="sub">(canlı hava: kurulumdan sonra yüklenir)</span>`;
     const sv = WX.survey && WX.survey[c];
     let svRows;
@@ -6181,8 +6181,8 @@ function openCellSheet(c, ll, mode) {
       <tr><td>⛰️ Rakım</td><td>${sv.elev != null ? fmtN(sv.elev) + ' m' : '—'}</td></tr>
       <tr><td>🌬️ Rüzgar 100m (7 gün ort.)</td><td class="${sv.wAvg >= 6 ? 'pos' : sv.wAvg < 4 ? 'neg' : ''}">${sv.wAvg != null ? sv.wAvg.toFixed(1) + ' m/s — ' + wNote : '—'}</td></tr>
       <tr><td>☀️ Güneşlenme (7 gün ort.)</td><td class="${sv.sunH >= 7 ? 'pos' : sv.sunH < 5 ? 'neg' : ''}">${sv.sunH != null ? sv.sunH.toFixed(1) + ' saat/gün — ' + sNote : '—'}</td></tr>`;
-    } else if (sv && sv.err) svRows = `<tr><td colspan="2">🛰️ Saha verisi alınamadı (çevrimdışı olabilirsin) — <span class="lnk" onclick="retrySurvey('${c}')">tekrar dene</span></td></tr>`;
-  else svRows = `<tr><td colspan="2">🛰️ Saha keşfi yükleniyor... (canlı rakım + rüzgar + güneş verisi)</td></tr>`;
+    } else if (sv && sv.err) svRows = `<tr><td colspan="2">🏢 Saha verisi alınamadı (çevrimdışı olabilirsin) — <span class="lnk" onclick="retrySurvey('${c}')">tekrar dene</span></td></tr>`;
+  else svRows = `<tr><td colspan="2">🏢 Saha keşfi yükleniyor... (canlı rakım + rüzgar + güneş verisi)</td></tr>`;
     $('cs_occupancy').innerHTML = `
     <table class="ledger" style="margin:4px 0">
       ${svRows}
@@ -6392,8 +6392,8 @@ function openUnitSheet(id) {
       ${isLinked(u) ? (() => { // 🔗 bağlı depo listesi (patron: "bağlı depo — diğer depo adı yazsın")
         const grup = storeGroup(u), mst = storeMaster(u);
         return `<div style="border:1px solid var(--acc2);border-radius:10px;padding:8px 10px;margin:6px 0">
-          <div style="font-size:11px;color:var(--acc2)">🔗 BAĞLI DEPOLAR <span class="sub">kapasite birleşik</span></div>
-          ${grup.map(g2 => `<div class="sub" style="margin-top:3px">${g2.id === mst.id ? '👑 <b>master</b>' : '🔗 köle'} ·
+          <div style="font-size:11px;color:var(--acc2)">🔗 DEPO GRUBU <span class="sub">kapasite birleşik</span></div>
+          ${grup.map(g2 => `<div class="sub" style="margin-top:3px">${g2.id === mst.id ? '🏛️ <b>Merkez depo</b>' : '🏢 Bağlı depo'} ·
             <b>${unitName(g2)}</b> — ${placeName(g2.cell)} · ${fmtE(g2.stored)}/${STORE_TYPES[g2.t].cap} MWh${g2.id === u.id ? ' <span style="color:var(--gold)">(bu depo)</span>' : ''}</div>`).join('')}
           <div class="sub" style="margin-top:4px">🌍 Satış yapılabilen bölgeler: <b>${groupCells(u).map(c => placeName(c)).join(' · ')}</b></div>
         </div>`;
