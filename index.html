@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 21:13) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-17 21:17) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 21:13)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-17 21:17)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2451,7 +2451,7 @@ window.openDetail = (t, mode) => {
   $('modal').innerHTML = `
     <h2>${T.nm}</h2>
     <div class="detimg" style="background:${CAT_GRAD[isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat]}">
-      <img src="img/${t}.webp" onerror="this.remove()">${T.ico}
+      <img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()">${T.ico}
     </div>
     <div class="detcols">
       <div><div class="l">Fiyat</div><div class="v" style="color:var(--acc)">${fmt(T.cost)}</div></div>
@@ -2523,7 +2523,7 @@ window.buildHere = (kind, t) => {
   if (G.cash < T.cost) { toast('Yetersiz bakiye — ' + fmt(T.cost) + ' gerekli', 'warn'); return; }
   $('modal').innerHTML = `
     <h2>🛒 Satın alma onayı</h2>
-    <div class="detimg" style="background:${CAT_GRAD[T.cat || 'Depo']};height:110px;font-size:52px"><img src="img/${t}.webp" onerror="this.remove()">${T.ico}</div>
+    <div class="detimg" style="background:${CAT_GRAD[T.cat || 'Depo']};height:110px;font-size:52px"><img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()">${T.ico}</div>
     <p><b>${T.nm}</b> — <b style="color:var(--acc)">${fmt(T.cost)}</b><br>Onaydan sonra haritada <b>kurmak istediğin yere dokunacaksın</b> — ödeme yerleştirme anında alınır.</p>
     <button class="primary" onclick="closeModal();doBuild('${kind}','${t}')">✅ Evet, Satın Al — ${fmt(T.cost)}</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
@@ -6146,9 +6146,10 @@ function openBuildSheet() {
   const tutStepNow = tutGuide() ? tutStep() : -1;
   const tutGuideOn = tutStepNow === 0 || tutStepNow === 3;
   const tutLock = tutGuideOn && tutActive();
-  const tutPickT = tutStepNow === 0 ? 'wind_1' : 'bat';        // patron: ilk santral RÜZGAR TÜRBİNİ
+  // eğitim hedefi MARKALI sürüm: katalogda artık yalnız markalı ürünler var. Ortaç en ucuz olan.
+  const tutPickT = tutStepNow === 0 ? 'wind_1__ortac' : 'bat__ortac';   // patron: ilk santral RÜZGAR TÜRBİNİ
   const tutCatNm = tutStepNow === 0 ? 'Rüzgar' : 'Depo';
-  const tutPickT_ = tutStepNow === 0 ? PLANT_TYPES.wind_1 : STORE_TYPES.bat;
+  const tutPickT_ = tutStepNow === 0 ? PLANT_TYPES.wind_1__ortac : STORE_TYPES.bat__ortac;
   const cat = tutLock ? tutCatNm : (SEL.cat || (tutGuideOn ? tutCatNm : 'Tümü'));
   $('cs_title').textContent = '🏗️ İnşa — ürün seç';
   $('cs_quality').innerHTML = '';
@@ -6179,11 +6180,13 @@ function openBuildSheet() {
       `<span>⚡ ${T.mw} MW</span><span>${bt}</span><span>🌫️ ${T.em || 0} g/kWh</span>${T.geoOnly ? '<span>♨️ jeotermal kare</span>' : ''}${T.fuel ? `<span>⛽ $${T.fuel}/MWh</span>` : ''}`;
     return `<div class="pcard${tutPick ? ' tut' : ''}"${tutOff ? ' style="opacity:.4;pointer-events:none"' : ''}>
       <div class="pimg" style="background:${CAT_GRAD[isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat]};position:relative;overflow:hidden" onclick="openDetail('${t}','${mode}')">
-        <img src="img/${t}.webp" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+        <img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
         ${T.ico}
       </div>
       <div class="pbody" onclick="openDetail('${t}','${mode}')">
         <div class="pname">${T.nm} <span class="pmw">${isDepot ? T.baseCap + ' ton' : isStore ? T.cap + ' MWh' : T.mw + ' MW'}</span></div>
+        ${T.brand && BRAND_ARCH[T.brand] ? (() => { const B = BRAND_ARCH[T.brand], rel = brandRel(T.brand);
+          return `<div style="font-size:10.5px;font-weight:800;color:${B.col};margin:1px 0 2px">${B.ico} ${brandNm(T.brand)}${rel > 0 ? ` <span class="sub">· sadakat ${rel} → -%${Math.round(25 * rel / 100)}</span>` : ''}</div>`; })() : ''}
         <div class="pspecs">${specs}</div>
         <div class="pdesc">${T.d}</div>
       </div>
@@ -6196,10 +6199,12 @@ function openBuildSheet() {
     </div>`;
   };
   const rows = [];
+  // Markasız TABAN tipler katalogda gösterilmez: her ürünün 5 markalı sürümü var, markasızı
+  // 6. bir seçenek olarak karışıklık yaratırdı. Tipler PLANT_TYPES'ta duruyor — eski kayıtlar bozulmasın.
   for (const [t, T] of Object.entries(PLANT_TYPES))
-    if (cat === 'Tümü' || T.cat === cat) rows.push([t, card(t, T, 'plant')]);
+    if (T.brand && (cat === 'Tümü' || T.cat === cat)) rows.push([t, card(t, T, 'plant')]);
   if (cat === 'Tümü' || cat === 'Depo')
-    for (const [t, T] of Object.entries(STORE_TYPES)) rows.push([t, card(t, T, 'store')]);
+    for (const [t, T] of Object.entries(STORE_TYPES)) if (T.brand) rows.push([t, card(t, T, 'store')]);
   if (cat === 'Tümü' || cat === 'Yakıt')
     for (const [t, T] of Object.entries(DEPOT_TYPES)) rows.push([t, card(t, T, 'depot')]);
   // 🎓 eğitimde hedef kart EN ÜSTE: "Tümü" kategorisinde oyuncu parlayan kartı görmek için
@@ -6580,7 +6585,7 @@ const STARTER_TASKS = [
   { t: '🌬️ Bir rüzgar türbini kur', ok: () => G.units.some(u => u.kind === 'plant' && PLANT_TYPES[u.t].kind === 'wind'), hint: '🏗️ İnşa\'ya bas → 🌬️ ALTIN ÇERÇEVELİ türbini Satın Al → sonra YANIP SÖNEN karene dokun', el: 'buildbtn' },
   { t: '💰 İlk enerji satışını yap', ok: () => G.totalSold >= .01, hint: '🔋 Haritada ALTIN PARLAYAN depona dokun → 💰 SAT butonuna bas', el: null },
   { t: '📜 Yeni bir kare ruhsatı al', ok: () => Object.keys(G.licenses).length >= 2, hint: 'ℹ️ Bilgi\'ye bas → YANIP SÖNEN kareye dokun — yeni bölgeye ruhsat almak için dokun (📜 ' + fmt(licenseFee('')) + ')', el: 'infobtn' },
-  { t: '🔋 Yeni bölgene 30 MWh Pil İstasyonu kur', ok: () => Object.keys(G.licenses).slice(1).some(c => G.units.some(u => u.kind === 'store' && u.t === 'bat' && u.cell === c)), hint: '🏗️ İnşa\'ya bas → 🔋 ALTIN ÇERÇEVELİ Pil İstasyonu\'nu Satın Al → YANIP SÖNEN yeni bölgene dokun', el: 'buildbtn' },
+  { t: '🔋 Yeni bölgene 30 MWh Pil İstasyonu kur', ok: () => Object.keys(G.licenses).slice(1).some(c => G.units.some(u => u.kind === 'store' && baseTypeOf(u.t) === 'bat' && u.cell === c)), hint: '🏗️ İnşa\'ya bas → 🔋 ALTIN ÇERÇEVELİ Pil İstasyonu\'nu Satın Al → YANIP SÖNEN yeni bölgene dokun', el: 'buildbtn' },
   { t: '🧪 İlk araştırmanı başlat', ok: () => G.research && (!!G.research.active || Object.values(G.research.lvl).some(v => v > 0)), hint: '🧪 YUKARIDA yanıp sönen şirket adına dokun → Araştırma bölümünden birini başlat', el: 'coname' },
   { t: '💰 Toplam 2 MWh satış yap', ok: () => G.totalSold >= 2, hint: '💰 Üretmeye ve satmaya devam — 2 MWh\'e ulaş (1 dakikada dolar)', el: null },
 ];
@@ -6608,7 +6613,7 @@ function tutCellTarget() {
 }
 // görev 4: YENİ ruhsatlı bölge (içinde henüz pil istasyonu olmayan) yanıp söner
 function tutCellTarget4() {
-  return Object.keys(G.licenses).slice(1).find(c => !G.units.some(u => u.kind === 'store' && u.t === 'bat' && u.cell === c)) || null;
+  return Object.keys(G.licenses).slice(1).find(c => !G.units.some(u => u.kind === 'store' && baseTypeOf(u.t) === 'bat' && u.cell === c)) || null;
 }
 // sınıfı yalnız DEĞİŞTİĞİNDE yaz: her 500 ms remove+add yapmak CSS animasyonunu baştan
 // başlatıyor, 1 sn'lik tutpulse hiç tamamlanmadan sıfırlanıp yanıp sönme sönük görünüyordu.
