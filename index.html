@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 21:17) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.8 (2026-08-17 22:40) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 21:17)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.8 (2026-08-17 22:40)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2393,6 +2393,20 @@ function addUnit(kind, t, ll, buildSec) {
   return u;
 }
 window.setCat = c => { SEL.cat = c; if (SEL.buildGeneric) openBuildSheet(); else openCellSheet(SEL.cell, SEL.ll); };
+window.setBrandFilter = b => { SEL.brand = b || ''; if (SEL.buildGeneric) openBuildSheet(); else openCellSheet(SEL.cell, SEL.ll); };
+// 🏭 MARKA LOGOSU — kart fotoğrafının sağ üstüne basılır (patron: "fotoğraflar da farklı olsun").
+// Inline SVG: dosya gerekmiyor, her boyutta net, marka renginde.
+function brandLogoSVG(b, px) {
+  const B = BRAND_ARCH[b]; if (!B) return '';
+  const c = B.col, mark = {
+    ortac:    `<circle cx="12" cy="12" r="4.2" fill="none" stroke="${c}" stroke-width="2.4"/>${[0,45,90,135].map(a=>`<line x1="12" y1="4.4" x2="12" y2="19.6" stroke="${c}" stroke-width="2.2" transform="rotate(${a} 12 12)"/>`).join('')}<circle cx="12" cy="12" r="2" fill="#0b1220"/>`,
+    gunara:   `<circle cx="12" cy="12" r="4" fill="${c}"/>${[0,45,90,135,180,225,270,315].map(a=>`<line x1="12" y1="5.2" x2="12" y2="2.4" stroke="${c}" stroke-width="2" transform="rotate(${a} 12 12)"/>`).join('')}`,
+    yelkora:  `<circle cx="12" cy="12" r="2.2" fill="${c}"/>${[0,120,240].map(a=>`<path d="M12 10.2 L13.4 3 L10.6 3 Z" fill="${c}" transform="rotate(${a} 12 12)"/>`).join('')}<line x1="12" y1="14" x2="12" y2="21" stroke="${c}" stroke-width="2"/>`,
+    demirkor: `<path d="M7 21 L8.6 9 H15.4 L17 21 Z" fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round"/><path d="M9 6.5 q3 -2.5 6 0" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/>`,
+    meridan:  `<circle cx="12" cy="5" r="2.4" fill="${c}"/><circle cx="5.5" cy="17" r="2.4" fill="${c}"/><circle cx="18.5" cy="17" r="2.4" fill="${c}"/><path d="M12 7.4 L5.5 14.6 M12 7.4 L18.5 14.6 M7.9 17 H16.1" stroke="${c}" stroke-width="2"/>`,
+  }[b] || '';
+  return `<svg width="${px}" height="${px}" viewBox="0 0 24 24">${mark}</svg>`;
+}
 
 // ── ÜRÜN DETAY SAYFASI (rakipteki "İncele" — görsel + teknik özellikler + karbon karşılaştırma) ──
 function carbonScatter(curKey) {
@@ -2881,6 +2895,18 @@ window.startAllyLine = () => {
   $('overlay').classList.add('show');
 };
 let LINE_SRC = null, LINE_ALLY = false; // LINE_ALLY: ittifak hattı modu (başkan/yardımcı)
+// 🔗 DEPO BAĞLAMA MODU (patron: "bağlan butonuna basınca harita açılacak, oyuncu bağlanmak
+// istediği depoyu seçecek, sonra maliyet ayrıntılı onay ekranı gelecek")
+let LINK_SRC = null;
+window.startStoreLink = id => {
+  const s = storeById(id);
+  if (!s) return;
+  if (connCount(s) >= STORE_TYPES[s.t].conn) { toast('🔗 Bağlantı noktaların dolu', 'warn'); return; }
+  LINK_SRC = id;
+  hideSheets();
+  setMode('link');
+  toast('🔗 Bağlanmak istediğin DEPOYA haritadan dokun', '', null, 0, true);
+};
 // ═══ ⚡ HAT HİYERARŞİSİ (patron: "kısaca büyük kazanç için birlik olmak şart olsun") ═══
 // 🧍 BİREYSEL oyuncu: yalnız ÜLKE İÇİNDE hat çeker — başlangıç ülkesinde ya da sonradan
 //    ofis açtığı başka bir ülkede, o ülkenin İÇİNDE (iller/eyaletler arası).
@@ -5357,8 +5383,10 @@ function setMode(m) {
     $('modehinttxt').textContent = m === 'build'
       ? '🏗️ ' + (PENDING ? TYPE_OF(PENDING.kind, PENDING.t).nm + ' — kurmak istediğin yere dokun' : 'Kurmak istediğin yere dokun')
       : m === 'line' ? '⚡ Hattın varacağı uzak noktaya dokun'
+      : m === 'link' ? '🔗 Bağlanacak DEPOYA haritadan dokun'
       : 'ℹ️ Bilgi almak istediğin konuma dokun';
   }
+  if (m !== 'link') LINK_SRC = null; // mod bırakılınca bağlama seçimi de iptal
   $('buildbtn').classList.toggle('on', m === 'build');
   $('infobtn').classList.toggle('on', m === 'info');
 }
@@ -5588,7 +5616,18 @@ function addUnitMarker(u) {
   if (!map) return;
   if (unitMarkers[u.id]) unitMarkers[u.id].remove(); // çift işaretçi bug'ı: eski marker haritada donuk kalıyordu
   const m = L.marker(u.ll, { icon: divIcon(unitIconHTML(u), unitIconSize(u)) }).addTo(map);
-  m.on('click', () => openUnitSheet(u.id));
+  m.on('click', () => {
+    // 🔗 bağlama modundaysak işaretçiye dokunmak HEDEF SEÇER, birim sayfasını açmaz
+    if (MODE === 'link' && LINK_SRC != null) {
+      const src = LINK_SRC;
+      if (u.kind !== 'store') { toast('🔗 Yalnız DEPO seçebilirsin', 'warn'); return; }
+      if (u.id === src) { toast('🔗 Kendisine bağlanamaz', 'warn'); return; }
+      LINK_SRC = null; setMode(null);
+      storeLinkAsk(src, u.id);   // maliyet ayrıntılı onay ekranı
+      return;
+    }
+    openUnitSheet(u.id);
+  });
   unitMarkers[u.id] = m;
 }
 // ZOOM SEYRELTME (patron: "ekran küçülünce simgeler iç içe giriyor, sadece merkez görünsün"):
@@ -6156,6 +6195,11 @@ function openBuildSheet() {
   $('cs_occupancy').innerHTML = '<span class="sub">Satın Al → sonra haritada kurulacak YERE dokun (ödeme yerleştirme anında). Saha raporu ℹ️ Bilgi ekranında.</span>';
   const CATS = ['Tümü', 'Güneş', 'Rüzgar', 'Kömür', 'Gaz', 'Hidro', 'Jeotermal', 'Nükleer', 'Depo', 'Yakıt'];
   let html = `<div class="catrow">${CATS.map(x => `<button class="${x === cat ? 'on' : ''}" ${tutLock && x !== tutCatNm ? 'disabled style="opacity:.35"' : `onclick="setCat('${x}')"`}>${x}</button>`).join('')}</div>`;
+  // 🏭 MARKA FİLTRESİ (patron: "üste marka seçimi butonu koy ne olur ne olmaz")
+  if (!tutLock) html += `<div class="catrow">
+    <button class="${!SEL.brand ? 'on' : ''}" onclick="setBrandFilter('')">🏭 Tüm markalar</button>
+    ${Object.keys(BRAND_ARCH).map(b => `<button class="${SEL.brand === b ? 'on' : ''}" onclick="setBrandFilter('${b}')">${BRAND_ARCH[b].ico} ${brandKisa(b)}</button>`).join('')}
+  </div>`;
   if (tutGuideOn) html += `<p style="color:var(--gold);font-size:12.5px;font-weight:700;margin:4px 0">🎓 ${tutStepNow === 0 ? 'İlk santralin' : 'Yeni bölgene'}: ${tutPickT_.ico} ${tutPickT_.nm} — 👇 <b>ALTIN ÇERÇEVELİ</b> karta dokun, Satın Al'dan sonra haritada YANIP SÖNEN kareye dokunacaksın.</p>`;
   // ⚡ KAPASİTE LİSANS BANDI: santral kategorisi seçiliyken kurulu güç / limit / sonraki lisans
   if (!tutLock && CAP_TIERS[cat]) {
@@ -6182,6 +6226,7 @@ function openBuildSheet() {
       <div class="pimg" style="background:${CAT_GRAD[isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat]};position:relative;overflow:hidden" onclick="openDetail('${t}','${mode}')">
         <img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
         ${T.ico}
+        ${T.brand && BRAND_ARCH[T.brand] ? `<span style="position:absolute;top:2px;right:2px;background:#0b1220e6;border-radius:6px;padding:2px;line-height:0;box-shadow:0 1px 4px #000a">${brandLogoSVG(T.brand, 18)}</span>` : ''}
       </div>
       <div class="pbody" onclick="openDetail('${t}','${mode}')">
         <div class="pname">${T.nm} <span class="pmw">${isDepot ? T.baseCap + ' ton' : isStore ? T.cap + ' MWh' : T.mw + ' MW'}</span></div>
@@ -6201,14 +6246,19 @@ function openBuildSheet() {
   const rows = [];
   // Markasız TABAN tipler katalogda gösterilmez: her ürünün 5 markalı sürümü var, markasızı
   // 6. bir seçenek olarak karışıklık yaratırdı. Tipler PLANT_TYPES'ta duruyor — eski kayıtlar bozulmasın.
+  const markaGec = T => !SEL.brand || T.brand === SEL.brand; // üstteki marka filtresi
   for (const [t, T] of Object.entries(PLANT_TYPES))
-    if (T.brand && (cat === 'Tümü' || T.cat === cat)) rows.push([t, card(t, T, 'plant')]);
+    if (T.brand && markaGec(T) && (cat === 'Tümü' || T.cat === cat)) rows.push([t, card(t, T, 'plant'), CATS.indexOf(T.cat), T.mw, T.brand]);
   if (cat === 'Tümü' || cat === 'Depo')
-    for (const [t, T] of Object.entries(STORE_TYPES)) if (T.brand) rows.push([t, card(t, T, 'store')]);
+    for (const [t, T] of Object.entries(STORE_TYPES)) if (T.brand && markaGec(T)) rows.push([t, card(t, T, 'store'), CATS.indexOf('Depo'), T.cap, T.brand]);
   if (cat === 'Tümü' || cat === 'Yakıt')
-    for (const [t, T] of Object.entries(DEPOT_TYPES)) rows.push([t, card(t, T, 'depot')]);
-  // 🎓 eğitimde hedef kart EN ÜSTE: "Tümü" kategorisinde oyuncu parlayan kartı görmek için
-  // 8 kart aşağı kaydırmak zorunda kalıyordu (sort kararlıdır — kalan sıra bozulmaz).
+    for (const [t, T] of Object.entries(DEPOT_TYPES)) rows.push([t, card(t, T, 'depot'), CATS.indexOf('Yakıt'), T.baseCap, '']);
+  // 📏 SIRALAMA (patron): markaya göre gruplama YOK. Kategori içinde EN DÜŞÜKTEN YÜKSEĞE
+  // boyuta göre sıralanır ve aynı boyutun bütün markaları YAN YANA gelir — oyuncu 5 MW'a
+  // kadar kaydırdığında oradaki tüm marka seçeneklerini bir arada görür.
+  const bSira = Object.keys(BRAND_ARCH);
+  rows.sort((a, b) => a[2] - b[2] || a[3] - b[3] || bSira.indexOf(a[4]) - bSira.indexOf(b[4]));
+  // 🎓 eğitimde hedef kart EN ÜSTE (sort kararlıdır — kalan sıra bozulmaz).
   if (tutGuideOn) rows.sort((a, b) => (b[0] === tutPickT) - (a[0] === tutPickT));
   html += rows.map(r => r[1]).join('');
   $('cs_build').innerHTML = html;
@@ -6334,22 +6384,18 @@ function openUnitSheet(id) {
         ? `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="sellUnitAd(${u.id})">🎬 Reklam İzle & SAT — ${fmt(rAll.gain * AD_BONUS)} (+%15) · hak ${adAvail()}/${AD_MAX}</button>`
         : `<button class="bigsell" style="background:#8a6cff33;color:var(--dim)" disabled>🎬 Reklam bonusu (+%15) — depo %90 dolunca · hak ${adAvail()}/${AD_MAX}</button>`) : ''}
       <button class="bigsell half" onclick="sellUnit(${u.id},.5)" ${u.stored < .01 ? 'disabled' : ''}>Yarısını Sat — ~${fmt(rHalf.gain)}</button>`}
-      ${(() => { // 🔗 DEPO BAĞLANTI YÖNETİMİ (patron: iki menüye de bağla/kes butonu)
+      ${(() => { // 🔗 DEPO BAĞLANTISI — patron: uzun buton listesi YOK, iki buton var.
+        // "Bağlan"a basınca harita açılır, oyuncu hedef depoyu HARİTADAN seçer, sonra
+        // maliyet ayrıntılı onay ekranı gelir.
         const bosSlot = STORE_TYPES[u.t].conn - connCount(u);
-        let h = `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🔗 DEPO BAĞLANTISI
-          <span class="sub">${connCount(u)}/${STORE_TYPES[u.t].conn} nokta dolu</span></div>`;
-        if (isLinked(u)) h += `<button class="bigsell half" onclick="storeUnlinkAsk(${u.id})">🔌 Bağlantıyı Kes</button>`;
-        // bağlanabilecek depolar: kendi grubunda olmayan, master'ı olmayan, slotu olan
         const aday = stores().filter(s2 => s2.id !== u.id && s2.buildDone <= Date.now()
           && !s2.link && storeMaster(s2).id !== storeMaster(u).id && connCount(s2) < STORE_TYPES[s2.t].conn);
-        if (bosSlot <= 0) h += '<p class="sub">Bu deponun bağlantı noktaları dolu — önce bir bağlantı kes.</p>';
-        else if (!aday.length) h += '<p class="sub">Bağlanabilecek başka depo yok (bağlantısı boş, başka gruba ait olmayan bir depo gerekli).</p>';
-        else h += aday.slice(0, 6).map(s2 => {
-          const fee = storeLinkFee(u, s2);
-          return `<button class="bigsell half" onclick="storeLinkAsk(${u.id},${s2.id})" ${G.cash < fee ? 'disabled' : ''}>🔗 Bağla → ${unitName(s2)}
-            <span style="font-size:10px">${placeName(s2.cell)} · ${fee ? 'hat ' + fmt(fee) : 'aynı bölge — ücretsiz'}</span></button>`;
-        }).join('');
-        return h;
+        return `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🔗 DEPO BAĞLANTISI
+            <span class="sub">${connCount(u)}/${STORE_TYPES[u.t].conn} nokta dolu</span></div>
+          <button class="bigsell half" onclick="startStoreLink(${u.id})" ${bosSlot <= 0 || !aday.length ? 'disabled' : ''}>🔗 Bağlan — haritadan depo seç</button>
+          ${isLinked(u) ? `<button class="bigsell half" onclick="storeUnlinkAsk(${u.id})">🔌 Bağlantıyı Kes</button>` : ''}
+          ${bosSlot <= 0 ? '<p class="sub">Bağlantı noktaların dolu — önce bir bağlantı kes.</p>'
+            : !aday.length ? '<p class="sub">Bağlanabilecek başka depo yok.</p>' : ''}`;
       })()}
       <details id="us_det" style="margin-top:6px"><summary>⚙️ Ayrıntılar</summary>
         <table class="ledger">
