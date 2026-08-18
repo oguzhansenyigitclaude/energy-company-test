@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-18 16:53) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-18 20:05) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-18 16:53)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-18 20:05)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -816,6 +816,68 @@ function cellQuality(id) {
   const c = cellCenter(id);
   const geo = GEO_SPOTS.some(g => Math.abs(g[0] - c[0]) < .35 && Math.abs(g[1] - c[1]) < .45) || hash01(cy, cx, 4) > .985;
   return { sun, wind, hydro, geo };
+}
+// ═══ 🎯 SAHA VERİMİ (patron 18 Ağu: "verimlilikler gerçek faktörlere bağlansın, ekranda yazsın") ═══
+// İlke: çarpanlar KAYDA YAZILMAZ, her hesapta keşif verisinden (rakım/7g rüzgar/7g güneşlenme)
+// türetilir; keşif yoksa nötr davranır. Toplam saha çarpanı ±%30 bandına kelepçeli — canlı
+// testteki hiçbir oyuncunun dengesi altüst olmaz. Ekrandaki döküm ile üretim AYNI fonksiyondan
+// beslenir: gördüğün çarpımların sonucu = gerçek üretim.
+const clampF = (a, b, x) => Math.max(a, Math.min(b, x));
+const SV = c => { const s = WX.survey && WX.survey[c]; return (s && s.ok) ? s : null; };
+const OFFSHORE_WIND = { wind_9: 1, wind_10: 1, wind_11: 1, wind_12: 1 }; // OS modelleri (taban tür)
+const COAST_CACHE = {};
+function isCoastal(cell) { // kara karesi + ~10 km içinde deniz — mevcut kıyı testi, yeni veri yok
+  if (cell in COAST_CACHE) return COAST_CACHE[cell];
+  const [la, lo] = cellCenter(cell); let r = false;
+  if (isLand([la, lo]))
+    for (const [dy, dx] of [[.1, 0], [-.1, 0], [0, .13], [0, -.13], [.07, .09], [-.07, -.09]])
+      if (!isLand([la + dy, lo + dx])) { r = true; break; }
+  return COAST_CACHE[cell] = r;
+}
+// 💧 HİDRO COĞRAFİ PUAN: rastgele hash yerine rakım (düşü) + iklim (7g güneşlenme tersi = yağış
+// vekili) + enlem (çöl kuşağı cezası). Eski hash değerinin ±%30 bandına kelepçeli — kayıt bozulmaz.
+function hydroQGeo(cell, qHash) {
+  const sv = SV(cell);
+  if (!sv) return qHash; // keşif gelmeden eski davranış — "tahmini" etiketiyle gösterilir
+  const lat = Math.abs(cellCenter(cell)[0]);
+  const fElev = .75 + .5 * Math.min(1200, Math.max(0, sv.elev || 0)) / 1200;   // düşü: deniz seviyesi ×0.75 → 1200m+ ×1.25
+  const fWet = sv.sunH != null ? 1.15 - .30 * Math.max(0, Math.min(1, sv.sunH / 11)) : 1; // bulutlu iklim hidro sever
+  const fLat = lat >= 15 && lat <= 35 ? .92 : 1.05;                            // çöl kuşağı cezası
+  const geo = clampF(.55, 1.45, fElev * fWet * fLat);
+  return clampF(qHash * .7, qHash * 1.3, geo);
+}
+// 📊 SAHA DÖKÜMÜ: her satır {ico, nm, f, sub} — plantOutput çarpar, birim ekranı listeler.
+function siteParts(u) {
+  const T = PLANT_TYPES[u.t] || {}, sv = SV(u.cell), P = [];
+  const add = (ico, nm, f, sub) => P.push({ ico, nm, f, sub: sub || '' });
+  const sea = !isLand(u.ll || cellCenter(u.cell));
+  if (T.kind === 'wind') {
+    if (sv && sv.wAvg != null) add('📍', `Saha: 7 gün ort. rüzgar ${sv.wAvg.toFixed(1)} m/s`, clampF(.88, 1.12, 1 + .04 * (sv.wAvg - 6)));
+    else add('📍', 'Saha kalitesi', 1, 'keşif bekleniyor — tahmini');
+    if (sv && sv.elev > 500) add('⛰️', `Rakım ${fmtN(sv.elev)} m — ince hava`, 1 - Math.min(.10, sv.elev / 10000));
+    if (sea && OFFSHORE_WIND[baseTypeOf(u.t)]) add('🌊', 'Açık deniz — güçlü, düzenli esinti', 1.10);
+    else if (!sea && isCoastal(u.cell)) add('⚓', 'Kıyı esintisi', 1.05);
+    const wake = G.units.filter(x => x.kind === 'plant' && x.cell === u.cell && x.id !== u.id
+      && PLANT_TYPES[x.t] && PLANT_TYPES[x.t].kind === 'wind' && x.buildDone <= Date.now()).length;
+    if (wake) add('🌀', `İz kaybı — karede ${wake} türbin daha`, 1 - .03 * Math.min(3, wake), 'türbinler birbirini gölgeler');
+  } else if (T.kind === 'sun') {
+    if (sv && sv.sunH != null) add('📍', `Saha: 7 gün ort. ${sv.sunH.toFixed(1)} sa güneşlenme`, clampF(.88, 1.12, .7 + sv.sunH / 30));
+    else add('📍', 'Saha kalitesi', 1, 'keşif bekleniyor — tahmini');
+    if (sea) add('🌊', 'Yüzer GES — su paneli serin tutar', 1.08);
+  } else if (u.t.startsWith('coal') || u.t.startsWith('gas')) {
+    if (isCoastal(u.cell)) add('⚓', 'Kıyı — deniz soğutması + liman lojistiği', 1.05);
+    else add('🏭', 'İç kara — kule soğutması', 1, 'kıyı santralleri %5 avantajlı');
+  } else if (u.t.startsWith('nuke')) {
+    add(isCoastal(u.cell) ? '⚓' : '🏞️', isCoastal(u.cell) ? 'Kıyı — deniz soğutması' : 'Nehir soğutması', 1);
+  } else if (T.kind === 'geo') add('♨️', 'Jeotermal buhar — gece gündüz sabit', 1);
+  return P;
+}
+function siteFactor(u) { // ±%30 GLOBAL KELEPÇE + 60 sn önbellek (tik başına dizi kurulmasın)
+  const now = Date.now();
+  if (u._sfAt && now - u._sfAt < 60000) return u._sf;
+  u._sf = clampF(.7, 1.3, siteParts(u).reduce((s, p) => s * p.f, 1));
+  u._sfAt = now;
+  return u._sf;
 }
 
 // ── Birim tipleri — SEVİYE YOK, tek kapı oyun parası. Kademeli katalog (rakipteki gibi S/M/L modeller) ──
@@ -1506,13 +1568,15 @@ const DEPOT_TYPES = {
   lngdepot:  { cat: 'Yakıt', nm: 'LNG Tankı', ico: '🛢️', fuel: 'gas', cost: 3e6, baseCap: 100, build: 90, d: 'Sıvı doğalgaz stoğu. Gaz santralleri ikmali buradan çeker. Kapasite araştırmayla büyür.' },
 };
 // OFİS: bir bölgede ruhsat almanın ÖN ŞARTI (rakipteki ofis kuralı). Kapsama yarıçapı ~80 km.
-const OFFICE = { nm: 'Bölge Ofisi', ico: '🏢', cost: 1e6, build: 0, radiusKm: 80, baseLimit: 5 }; // patron: ofis ANINDA açılır
+const OFFICE = { nm: 'Bölge Ofisi', ico: '🏢', cost: 1e6, build: 0, radiusKm: 100, baseLimit: 5 }; // patron: ofis ANINDA açılır; menzil TABANI 100 km
 // ARAŞTIRMA (şirket ekranından): süre bazlı — Sv1 30 dk, maks seviye 1 hafta (patron eğrisi).
+// 📡 'liccap' KALDIRILDI (patron 18 Ağu): ruhsat limiti artık sabit 20 — onun yerine OFİS MENZİLİ
+// araştırması geldi: taban 100 km, 20 kademe × +20 km = maksimum 500 km.
 const RESEARCH = {
   coalcap: { nm: 'Kömür Deposu Kapasitesi', ico: '⛏️', max: 20, d: l => `Depo başına +${DEPOT_STEP} ton kademesi açar (açık kademe: ${l})` },
   gascap:  { nm: 'LNG Tankı Kapasitesi', ico: '🛢️', max: 20, d: l => `Tank başına +${DEPOT_STEP} ton kademesi açar (açık kademe: ${l})` },
   office:  { nm: 'Ofis Ağı', ico: '🏢', max: 19, d: l => `Ofis limiti: ${OFFICE.baseLimit + l * 5} (maks 100)` },
-  liccap:  { nm: 'Ruhsat Kapasitesi', ico: '📜', max: 8, d: l => `Ofis başına ruhsat: ${10 + l * 5} (maks 50)` },
+  range:   { nm: 'Ofis Menzili', ico: '📡', max: 20, d: l => `Ofis kapsama menzili: ${OFFICE.radiusKm + l * 20} km (maks 500)` },
 };
 const resTimeMin = (key, lvl) => Math.round(30 * Math.pow(10080 / 30, (lvl - 1) / (RESEARCH[key].max - 1))); // 30dk → 1 hafta
 const TYPE_OF = (kind, t) => kind === 'plant' ? PLANT_TYPES[t] : kind === 'store' ? STORE_TYPES[t] : kind === 'fueldepot' ? DEPOT_TYPES[t] : OFFICE;
@@ -1533,11 +1597,14 @@ function consumeFuel(f, tons) {
 const fuelOf = u => u.t.startsWith('coal') ? 'coal' : u.t.startsWith('gas') ? 'gas' : null; // nükleer → null (direkt para)
 const tonsFor = (u, hours) => PLANT_TYPES[u.t].fuel * PLANT_TYPES[u.t].mw * hours / FUEL_TYPES[fuelOf(u)].price;
 const maxOffices = () => OFFICE.baseLimit + ((G.research && G.research.lvl.office) || 0) * 5;
-// Ofis başına ruhsat limiti (patron): 10'dan başlar, "Ruhsat Kapasitesi" araştırmasıyla 50'ye
-const licPerOffice = () => 10 + ((G.research && G.research.lvl.liccap) || 0) * 5;
-const licCap = () => offices().length * licPerOffice();
+// 📜 RUHSAT LİMİTİ (patron 18 Ağu): ofis sayısından BAĞIMSIZ, sabit 20. Limitin üstünde ruhsatı
+// olan eski oyuncu mağdur edilmez — yalnız YENİ alım engellenir.
+const LIC_MAX = 20;
+const licCap = () => LIC_MAX;
+// 📡 OFİS MENZİLİ: taban 100 km, "Ofis Menzili" araştırmasıyla kademe başına +20 km, tavan 500 km.
+const officeRadius = () => Math.min(500, OFFICE.radiusKm + 20 * ((G && G.research && G.research.lvl.range) || 0));
 const kmDist = (a, b) => 111 * Math.sqrt((a[0] - b[0]) ** 2 + ((a[1] - b[1]) * Math.cos(a[0] * Math.PI / 180)) ** 2);
-const officeCovers = cell => { const c = cellCenter(cell); return offices().some(o => o.buildDone <= Date.now() && kmDist(o.ll, c) <= OFFICE.radiusKm); };
+const officeCovers = cell => { const c = cellCenter(cell); return offices().some(o => o.buildDone <= Date.now() && kmDist(o.ll, c) <= officeRadius()); };
 // Tutorial (Başlarken): tutGuide = ipuçları + otomatik ödül; tutActive = hız ayrıcalıkları + UI kilidi.
 // Ayrıcalıklar yalnız kuruluşun İLK 60 DAKİKASINDA — eğitimi bilerek bitirmeyip süresiz ×10 sömürüsü kapalı.
 const tutGuide = () => G && G.company && !G.starterClaimed && !G.demo;
@@ -1739,7 +1806,7 @@ function freshState() {
     licenses: {}, // cellId -> true (oyuncu başına ruhsat — kimse kimseyi engellemez)
     leases: {}, // cellId -> bitiş ts (3 günlük imtiyaz: +%20 satış primi — YEKA tarzı alım garantisi)
     offers: {}, maintDiscount: 1, starterClaimed: false, founded: Date.now(),
-    research: { lvl: { coalcap: 0, gascap: 0, office: 0, liccap: 0 }, active: null },
+    research: { lvl: { coalcap: 0, gascap: 0, office: 0, range: 0 }, active: null },
     capLic: {}, // kapasite lisansları (patron): kategori → kademe (0=başlangıç; gaz/nükleer 0'da kilitli)
     lines: [], // ⚡ enerji nakil hatları
     showOthers: true, boughtOthers: {}, // 👥 diğer oyuncuların tesisleri (varsayılan GÖRÜNÜR — patron)
@@ -1931,9 +1998,11 @@ function windFactor(q, atMin) {
   const m = atMin ?? nowMin(), ev = todayEvent();
   return Math.max(.1, (.72 + .5 * smoothNoise(m / 55, 5)) * q.wind * (ev.wind || 1) * (1 + .5 * newbieAid())); // 🌱 takviye
 }
-function hydroFactor(q, atMin) {
+function hydroFactor(q, atMin, cell) {
   const m = atMin ?? nowMin(), ev = todayEvent();
-  return .72 * q.hydro * (ev.hydro || 1) * (.92 + .08 * smoothNoise(m / 300, 9));
+  // 💧 cell verilirse havza puanı coğrafi (rakım+iklim, hydroQGeo) — verilmezse eski hash davranışı
+  const qh = cell ? hydroQGeo(cell, q.hydro) : q.hydro;
+  return .72 * qh * (ev.hydro || 1) * (.92 + .08 * smoothNoise(m / 300, 9));
 }
 const PRICE_KEYS = [[0,.7],[5,.68],[7,.85],[9,1],[13,1.02],[17,1.28],[19,1.5],[21,1.3],[23,.82],[24,.7]];
 function priceAt(atMin) {
@@ -1971,8 +2040,11 @@ function plantOutput(u, atMin) {
   } else if (T.kind === 'wind') {
     const wc = wx ? windCurve(wx.w + NEWBIE_WIND * newbieAid(), T) : null; // takviyeli rüzgar
     f = wc != null ? wc : windFactor(q, atMin) * .55; // sim fallback nominali aşmasın
-  } else if (T.kind === 'hydro') f = hydroFactor(q, atMin);
+  } else if (T.kind === 'hydro') f = hydroFactor(q, atMin, u.cell);
   else if (T.kind === 'geo') f = .95;
+  // 🎯 SAHA ÇARPANI (rakım/kıyı/iz kaybı/keşif — ±%30 kelepçeli). Hidro kendi coğrafi
+  // puanını hydroFactor içinde alıyor, ikinci kez çarpılmaz.
+  if (T.kind !== 'hydro') f *= siteFactor(u);
   if (tutActive()) f = Math.max(f, .35); // tutorial: gece/rüzgarsızlıkta bile akış olsun — eğitim 10 dk'da bitsin
   return T.mw * f * (u.cond / 100);
 }
@@ -2534,7 +2606,7 @@ window.buyLicense = () => {
   const c = SEL.cell;
   if (G.licenses[c]) return;
   if (!officeCovers(c)) { toast('🏢 Bu bölgede ofisin yok — ruhsattan önce bölgeye ofis açmalısın', 'warn'); return; }
-  if (Object.keys(G.licenses).length >= licCap()) { toast('📜 Ruhsat limitin dolu (' + Object.keys(G.licenses).length + '/' + licCap() + ') — yeni ofis aç ya da 🧪 "Ruhsat Kapasitesi" araştır', 'warn'); return; }
+  if (Object.keys(G.licenses).length >= licCap()) { toast('📜 Ruhsat limitin dolu (' + Object.keys(G.licenses).length + '/' + licCap() + ') — limit sabittir, kullanmadığın bir karenin ruhsatını bırakabilirsin', 'warn'); return; }
   const fee = licenseFee(c);
   if (G.cash < fee) { toast('Ruhsat için ' + fmt(fee) + ' gerekli', 'warn'); return; }
   G.cash -= fee;
@@ -2622,6 +2694,12 @@ function placeAt(c, ll) {
       : '🌊 Burası deniz — ' + T.nm + ' karaya kurulur', 'warn', null, 7000);
     return;
   }
+  // 🌊 MODEL AYRIMI (patron: "gerçekte denize hangi tesis kurulabiliyorsa oyunda da"):
+  // kara türbini denize kurulamaz — temel/kule deniz için tasarlanmamıştır. Yalnız OS modelleri.
+  if (!isLand(ll) && kind === 'plant' && PLANT_TYPES[t].kind === 'wind' && !OFFSHORE_WIND[baseTypeOf(t)]) {
+    toast('🌊 ' + T.nm + ' bir KARA türbini — denize yalnız OS (Offshore) modeller kurulabilir', 'warn', null, 7000);
+    return;
+  }
   if (kind === 'plant' && capBlocked(t)) { toast('🔒 ' + T.cat + ' kurulu güç limitin dolu — İnşa ekranından lisans yükselt', 'warn'); PENDING = null; setMode(null); return; }
   const price = Math.round(T.cost * (PENDING.disc || 1)); // 🎬 reklam indirimi burada uygulanır
   if (G.cash < price) { toast('Yetersiz bakiye — ' + fmt(price) + ' gerekli', 'warn'); PENDING = null; setMode(null); return; }
@@ -2659,7 +2737,7 @@ window.buildOfficeAsk = () => {
   $('modal').innerHTML = `
     <h2>🏢 Ofis Aç — Emin misin?</h2>
     <p>Bu bölgeye <b>Bölge Ofisi</b> açılacak — <b style="color:var(--acc)">${fmt(OFFICE.cost)}</b>.<br>
-    Ofis, çevresinde (~${OFFICE.radiusKm} km) ruhsat almanı sağlar ve ofis başına ${licPerOffice()} ruhsat hakkı verir. Ofise dokununca bölge raporunu görürsün.<br>
+    Ofis, çevresinde (~${officeRadius()} km) ruhsat almanı sağlar. Toplam ruhsat limiti ${LIC_MAX} — menzili 📡 "Ofis Menzili" araştırmasıyla ${500} km'ye kadar büyütebilirsin. Ofise dokununca bölge raporunu görürsün.<br>
     <span class="sub">Ofis: ${offices().length}/${maxOffices()}</span></p>
     <button class="primary" onclick="closeModal();doBuildOffice()">✅ Evet, Ofisi Aç — ${fmt(OFFICE.cost)}</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
@@ -2671,7 +2749,7 @@ window.doBuildOffice = () => {
   const c = SEL.cell, ll = SEL.ll || cellCenter(c);
   G.cellSpent[c] = (G.cellSpent[c] || 0) + OFFICE.cost;
   addUnit('office', 'office', ll, 0);
-  toast('🏢 Bölge ofisi AÇILDI — artık bu çevrede (~' + OFFICE.radiusKm + ' km) ruhsat alabilirsin', '', null, 0, true);
+  toast('🏢 Bölge ofisi AÇILDI — artık bu çevrede (~' + officeRadius() + ' km) ruhsat alabilirsin', '', null, 0, true);
   beep(600, .1);
   save(); hideSheets();
 };
@@ -3171,7 +3249,7 @@ function drawLines() {
   // 🌍 konsorsiyum hatları + ortak transfer merkezleri (ittifak hattı VE hissedarı olduğun hatlar)
   for (const idx of activeRouteIdx()) {
     const r = CONSORTIUM_ROUTES[idx];
-    overlayLayer.push(L.polyline([r.from, r.to], { color: '#8a6cff', weight: MAPVIEW === 'grid' ? 6 : 3, opacity: .9, interactive: false }).addTo(map));
+    overlayLayer.push(L.polyline([r.from, r.to], { color: '#8a6cff', weight: MAPVIEW === 'grid' ? 6 : 3, opacity: .9, interactive: false, renderer: VEC || undefined }).addTo(map));
     if (MAPVIEW === 'grid') consortiumNodes(idx).forEach(n => overlayLayer.push(
       L.marker(n.ll, { icon: divIcon(`<div style="font-size:${n.end ? 20 : 16}px;filter:drop-shadow(0 1px 3px #000)">${n.end ? '🌍' : '🗼'}</div>`, [20, 20]), interactive: false }).addTo(map)));
   }
@@ -3182,7 +3260,7 @@ function drawLines() {
     const a = cellCenter(l.from), b = cellCenter(l.to);
     // 🤝 ittifak hattı ayrı renkte ve daha kalın çizilir — ortak mal olduğu bir bakışta anlaşılsın
     const col = !rdy ? '#8b95a8' : l.ally ? '#2fd6a0' : loss >= 50 ? '#ff5c5c' : loss <= 15 ? '#3ddc97' : '#ffd166';
-    overlayLayer.push(L.polyline([a, b], { color: col, weight: (MAPVIEW === 'grid' ? 4 : 2) + (l.ally ? 2 : 0), opacity: .85, dashArray: rdy ? null : '6 6', interactive: false }).addTo(map));
+    overlayLayer.push(L.polyline([a, b], { color: col, weight: (MAPVIEW === 'grid' ? 4 : 2) + (l.ally ? 2 : 0), opacity: .85, dashArray: rdy ? null : '6 6', interactive: false, renderer: VEC || undefined }).addTo(map));
     if (MAPVIEW === 'grid') { // transfer merkezleri hat üzerinde eşit aralıkla
       for (let i = 1; i <= l.hubs; i++) {
         const t = i / (l.hubs + 1);
@@ -5159,7 +5237,16 @@ window.suggestSend = async () => {
     NET.push('suggestions', {
       from: String(G.company || '?').slice(0, 28), fromId: String(NET.id || '').slice(0, 48),
       txt: tx.slice(0, 500), ts: Date.now(),
-    }).catch(() => {}); // kurallar yayınlanana dek sessizce düşebilir — posta kanalı asıl yol
+    }).catch(() => {}); // suggestions düğümü yedek kayıt — posta ve e-posta asıl kanallar
+    // 📧 E-POSTA KANALI (patron: "istekler mail adresime gelsin"): formsubmit.co ücretsiz
+    // form→e-posta aktarıcısı, sunucu gerektirmez. İLK gönderimde formsubmit adrese bir
+    // AKTİVASYON e-postası yollar — patron o bağlantıya bir kez tıklayınca kanal açılır.
+    // Adres kaynakta ikiye bölünmüş durumda — botların e-posta kazıyıcılarına kolay av olmasın.
+    fetch('https://formsubmit.co/ajax/' + ('apetoyun' + '@gm' + 'ail.com'), {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ _subject: '🎮 EC Öneri — ' + String(G.company || '?').slice(0, 28),
+        sirket: String(G.company || '?').slice(0, 28), oyuncuId: String(NET.id || ''), oneri: tx.slice(0, 500) }),
+    }).catch(() => {});
     toast('💡 Önerin yönetime iletildi — teşekkürler!', '', null, 0, true);
     beep(500, .08);
   } catch (e) { toast('⚠️ Gönderilemedi — bağlantını kontrol edip yeniden dene', 'warn'); }
@@ -5533,7 +5620,7 @@ function migrate(s) {
   const d = freshState();
   for (const k of Object.keys(d)) if (s[k] === undefined) s[k] = d[k];
   s.research = s.research || { lvl: {}, active: null };
-  s.research.lvl = Object.assign({ coalcap: 0, gascap: 0, office: 0, liccap: 0 }, s.research.lvl);
+  s.research.lvl = Object.assign({ coalcap: 0, gascap: 0, office: 0, range: 0 }, s.research.lvl); // eski kayıttaki liccap seviyesi zararsızca yok sayılır
   s.capLic = s.capLic || {};
   s.lines = s.lines || []; s.mail = s.mail || []; s.friends = s.friends || []; s.friendReqs = s.friendReqs || [];
   s.chat = s.chat || {}; s.boughtOthers = s.boughtOthers || {}; s.auctionsMkt = s.auctionsMkt || [];
@@ -5581,7 +5668,7 @@ function migrate(s) {
 setInterval(() => save(), 5000);
 
 // ═══════════ HARİTA (ana ekran) ═══════════
-let map = null, unitMarkers = {}, botLayer = [], connLines = [], selRect = null, wizLayer = [];
+let map = null, unitMarkers = {}, botLayer = [], connLines = [], selRect = null, wizLayer = [], VEC = null;
 const SEL = { cell: null, ll: null, mode: 'build' };
 // ── Harita modları: null=serbest gezinti · 'build'=satın alınan ürünü YERLEŞTİR · 'info'=bilgi konumu seç ──
 // YENİ AKIŞ (patron isteği): İnşa → katalog açılır → Satın Al → "kurmak istediğin yere dokun" → yerleştir (ödeme o anda)
@@ -5607,7 +5694,15 @@ function initMap(center, zoom) {
     zoomControl: false, attributionControl: false,
     minZoom: 2, maxZoom: 12,
     maxBounds: [[-85, -200], [85, 200]], maxBoundsViscosity: .8,
+    // 🚀 AKICILIK (patron: "rakipte kasma yok, bizde o akıcılık yok"): zoom animasyonunda
+    // DOM işaretçilerini tek tek dönüştürmek telefonda kare düşürüyordu — animasyon boyunca
+    // gizlenirler, zoom bitince refreshUnitMarkers zaten hepsini yeniden çizer.
+    markerZoomAnimation: false,
   });
+  // 🚀 Statik vektörler (ruhsat karoları, bağlantı/nakil çizgileri) tek CANVAS'ta çizilir —
+  // SVG'de her zoom sonunda yüzlerce path yeniden projeksiyonlanıyordu. Akan hat (flowline)
+  // CSS animasyonu için SVG'de kalmak zorunda; gerisi canvas'a taşındı.
+  VEC = L.canvas();
   L.control.zoom({ position: 'topright' }).addTo(map);
   // DETAYSIZ VEKTÖR HARİTA (patron isteği: yol/ilçe/dağ YOK — sadece ülke + il sınırları).
   // PARA YEŞİLİ tema (patron: "para yeşili harita çekici") — düz renk şeması telife takılmaz, kendi paletimiz.
@@ -5886,8 +5981,8 @@ function drawConnections() {
     if (!st) continue; // bağlantısız — işaretçideki 🔌 rozeti uyarır
     const flowing = p.on && plantOutput(p) > .05; // ÜRETİRKEN sarı enerji akışı, dururken düz gri çizgi
     const l = L.polyline([p.ll, st.ll], flowing ?
-      { color: '#ffd166', weight: 2.6, dashArray: '7 7', opacity: .95, className: 'flowline' } :
-      { color: '#7d8698', weight: 1.8, opacity: .55 }).addTo(map);
+      { color: '#ffd166', weight: 2.6, dashArray: '7 7', opacity: .95, className: 'flowline' } : // akış animasyonu SVG ister
+      { color: '#7d8698', weight: 1.8, opacity: .55, renderer: VEC || undefined }).addTo(map);
     connLines.push(l);
   }
   // 🔗 DEPO-DEPO HATLARI (patron: "hatlarla bağlı olanlar haritada görünsünler").
@@ -5898,8 +5993,8 @@ function drawConnections() {
     if (!m || m.buildDone > Date.now()) continue;
     const uzak = m.cell !== s.cell;
     connLines.push(L.polyline([s.ll, m.ll], uzak
-      ? { color: '#4ea8ff', weight: 3.4, opacity: .9 }
-      : { color: '#3ddc97', weight: 2.4, dashArray: '4 4', opacity: .8 }).addTo(map));
+      ? { color: '#4ea8ff', weight: 3.4, opacity: .9, renderer: VEC || undefined }
+      : { color: '#3ddc97', weight: 2.4, dashArray: '4 4', opacity: .8, renderer: VEC || undefined }).addTo(map));
   }
 }
 function drawBots() {
@@ -6136,7 +6231,7 @@ let licLayer = {};
 function refreshLicenseTiles() {
   if (!map || !G) return;
   for (const c of Object.keys(G.licenses))
-    if (!licLayer[c]) licLayer[c] = L.rectangle(cellBounds(c), { color: '#eaf6ff', weight: 1.3, opacity: .8, fillColor: '#bfe3ff', fillOpacity: .22, interactive: false }).addTo(map);
+    if (!licLayer[c]) licLayer[c] = L.rectangle(cellBounds(c), { color: '#eaf6ff', weight: 1.3, opacity: .8, fillColor: '#bfe3ff', fillOpacity: .22, interactive: false, renderer: VEC || undefined }).addTo(map);
   for (const c of Object.keys(licLayer))
     if (!G.licenses[c]) { licLayer[c].remove(); delete licLayer[c]; }
 }
@@ -6286,7 +6381,7 @@ function renderNavPanel() {
   let h = `<div class="sect">🏢 OFİSLERİN (${offs.length}/${maxOffices()})</div>`;
   h += offs.length ? offs.map(o => {
     const ct = countryAt(o.ll), city = nearestCityName(o.cell);
-    const inR = G.units.filter(x => x.kind !== 'office' && kmDist(o.ll, x.ll) <= OFFICE.radiusKm).length;
+    const inR = G.units.filter(x => x.kind !== 'office' && kmDist(o.ll, x.ll) <= officeRadius()).length;
     return `<button class="navrow" onclick="${jump(o.ll[0], o.ll[1], 11, o.hq ? 'MERKEZ' : unitName(o))}">
       <span class="ico">${o.hq ? '🏛️' : '🏢'}</span>
       <span class="t"><div>${o.hq ? 'MERKEZ OFİS' : unitName(o)}</div>
@@ -6350,7 +6445,11 @@ function openCellSheet(c, ll, mode) {
       svRows = `
       <tr><td>⛰️ Rakım</td><td>${sv.elev != null ? fmtN(sv.elev) + ' m' : '—'}</td></tr>
       <tr><td>🌬️ Rüzgar 100m (7 gün ort.)</td><td class="${sv.wAvg >= 6 ? 'pos' : sv.wAvg < 4 ? 'neg' : ''}">${sv.wAvg != null ? sv.wAvg.toFixed(1) + ' m/s — ' + wNote : '—'}</td></tr>
-      <tr><td>☀️ Güneşlenme (7 gün ort.)</td><td class="${sv.sunH >= 7 ? 'pos' : sv.sunH < 5 ? 'neg' : ''}">${sv.sunH != null ? sv.sunH.toFixed(1) + ' saat/gün — ' + sNote : '—'}</td></tr>`;
+      <tr><td>☀️ Güneşlenme (7 gün ort.)</td><td class="${sv.sunH >= 7 ? 'pos' : sv.sunH < 5 ? 'neg' : ''}">${sv.sunH != null ? sv.sunH.toFixed(1) + ' saat/gün — ' + sNote : '—'}</td></tr>
+      ${(() => { // 💧 HES verimi (patron: hidro verimi Bilgi ekranında yazmıyordu) — rakım + iklimden
+        const hq = hydroQGeo(c, cellQuality(c).hydro);
+        return `<tr><td>💧 Su kaynağı (HES verimi)</td><td class="${hq >= 1 ? 'pos' : hq < .75 ? 'neg' : ''}">×${hq.toFixed(2)} — ${hq >= 1.1 ? 'güçlü havza 🌟' : hq >= .9 ? 'iyi' : hq >= .75 ? 'orta' : 'zayıf — HES verimsiz'} <span class="sub">(rakım + yağışlı iklim)</span></td></tr>`;
+      })()}`;
     } else if (sv && sv.err) svRows = `<tr><td colspan="2">🏢 Saha verisi alınamadı (çevrimdışı olabilirsin) — <span class="lnk" onclick="retrySurvey('${c}')">tekrar dene</span></td></tr>`;
   else svRows = `<tr><td colspan="2">🏢 Saha keşfi yükleniyor... (canlı rakım + rüzgar + güneş verisi)</td></tr>`;
     $('cs_occupancy').innerHTML = `
@@ -6384,12 +6483,12 @@ function openCellSheet(c, ll, mode) {
   } else if (!licensed) {
     if (!officeCovers(c)) {
       // OFİS KURALI (patron, rakip paraleli): bölgede ofis yoksa ruhsat YOK — önce ofis aç
-      html = `<p style="font-size:12px;color:var(--dim);margin:4px 0">🏢 <b>Bu bölgede ofisin yok.</b> Kural: bir bölgede inşaat ruhsatı alabilmek için önce o bölgede ofis açmalısın (kapsama ~${OFFICE.radiusKm} km).</p>
-      <p class="sub">Ofis: ${offices().length}/${maxOffices()} · ofis başına ${licPerOffice()} ruhsat hakkı · 🧪 araştırmayla her ikisi de artar</p>
+      html = `<p style="font-size:12px;color:var(--dim);margin:4px 0">🏢 <b>Bu bölgede ofisin yok.</b> Kural: bir bölgede inşaat ruhsatı alabilmek için ${officeRadius()} km içinde bir ofisin olmalı.</p>
+      <p class="sub">Ofis: ${offices().length}/${maxOffices()} · toplam ruhsat limiti ${LIC_MAX} · 📡 menzil araştırmayla ${500} km'ye çıkar</p>
       <button class="bigsell" onclick="buildOfficeAsk()" ${G.cash < OFFICE.cost || offices().length >= maxOffices() ? 'disabled' : ''}>🏢 Buraya Ofis Aç — ${fmt(OFFICE.cost)}</button>`;
     } else {
       html = `<p style="font-size:12px;color:var(--dim);margin:4px 0">Bu karede kurulum için Devlet'ten ruhsat al. <b>Sabit şeffaf ücret</b> — ihale belirsizliği yok, herkes alabilir.</p>
-      <p class="sub">📜 Ruhsatların: ${Object.keys(G.licenses).length}/${licCap()} <span style="opacity:.7">(ofis başına ${licPerOffice()})</span></p>
+      <p class="sub">📜 Ruhsatların: ${Object.keys(G.licenses).length}/${licCap()} <span style="opacity:.7">(toplam limit sabit)</span></p>
       <button class="bigsell" onclick="buyLicense()" ${G.cash < licenseFee(c) || Object.keys(G.licenses).length >= licCap() ? 'disabled' : ''}>📜 Ruhsat Al — ${fmt(licenseFee(c))}${Object.keys(G.licenses).length >= licCap() ? ' (LİMİT DOLU)' : ''}</button>`;
     }
   } else {
@@ -6658,7 +6757,7 @@ function openUnitSheet(id) {
   } else if (u.kind === 'office') {
     // ── OFİS: bölge raporu (patron isteği — net kazanç/zarar + cihaz sayısı) ──
     $('us_title').innerHTML = '🏢 ' + unitName(u);
-    const R = OFFICE.radiusKm;
+    const R = officeRadius();
     const inR = G.units.filter(x => x.kind !== 'office' && kmDist(u.ll, x.ll) <= R);
     const mw = inR.filter(x => x.kind === 'plant').reduce((s, x) => s + PLANT_TYPES[x.t].mw, 0);
     let spent = 0, earned = 0;
@@ -6733,6 +6832,35 @@ function openUnitSheet(id) {
         <tr><td>Depo bağlantısı</td><td>${sts.length ? '🔗 ' + unitName(sts[0]) : '<span class="neg">YOK — bağlantı kur!</span>'}</td></tr>
         ${T.fuel ? `<tr><td>⛽ Yakıt stoku</td><td class="${(u.fuelH || 0) <= 0 ? 'neg' : u.fuelH < 3 ? 'neg' : ''}">${(u.fuelH || 0) <= 0 ? 'BİTTİ — üretim durdu!' : (u.fuelH).toFixed(1) + ' sa / ' + FUEL_HOURS + ' sa'}</td></tr>` : ''}
       </table>
+      ${(() => { // 📊 VERİM DÖKÜMÜ (patron: "neden az üretiyor bilgi ekranında yazmıyor") —
+        // canlı çarpanlar + saha çarpanları AYNI hesaptan; çarpımların sonucu = anlık üretim.
+        const wx2 = liveWx(u.cell), ev2 = todayEvent(), q2 = cellQuality(u.cell), sv2 = SV(u.cell);
+        const rows = [];
+        if (T.kind === 'sun') {
+          if (wx2) {
+            const h = (nowMin() / 60) % 24;
+            const bell = (h >= 6 && h <= 19.5) ? Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) : 0;
+            rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0,00')]);
+            if (wx2.day) rows.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0), '×' + Math.max(.05, 1 - (wx2.cloud || 0) / 100).toFixed(2)]);
+          }
+        } else if (T.kind === 'wind') {
+          if (wx2) rows.push(['🌬️ Canlı rüzgar ' + wx2.w.toFixed(1) + ' m/s → türbin eğrisi', '×' + (windCurve(wx2.w, T) ?? 0).toFixed(2)]);
+          rows.push(['⚙️ Bu modelin eğrisi', T.cutIn + ' m/s altı dönmez · ' + T.nom + ' m/s üstü tam güç · ' + T.storm + ' m/s fırtına kapatması']);
+        } else if (T.kind === 'hydro') {
+          rows.push(['💧 Havza puanı' + (sv2 ? ' (rakım + iklim)' : ''), '×' + hydroQGeo(u.cell, q2.hydro).toFixed(2) + (sv2 ? '' : ' <span class="sub">keşif bekleniyor — tahmini</span>')]);
+          if (sv2 && sv2.elev != null) rows.push(['⛰️ Rakım ' + fmtN(sv2.elev) + ' m — düşü yüksekliği', sv2.elev >= 400 ? '<span class="pos">dağlık — güçlü düşü</span>' : sv2.elev >= 100 ? 'orta' : '<span class="neg">alçak — zayıf düşü</span>']);
+          if (sv2 && sv2.sunH != null) rows.push(['🌦️ İklim: 7g güneşlenme ' + sv2.sunH.toFixed(1) + ' sa/gün', sv2.sunH < 8 ? '<span class="pos">yağışlı havza — hidro sever</span>' : 'kurak eğilimli']);
+          rows.push(['📅 Bugünkü hava: ' + (todayEvent().nm || 'normal'), '×' + (ev2.hydro || 1).toFixed(2)]);
+          rows.push(['🏞️ Mevsimsel akış dalgası', '×' + (.92 + .08 * smoothNoise(nowMin() / 300, 9)).toFixed(2)]);
+        } else if (T.fuel) {
+          rows.push(['⛽ Yakıt', (u.fuelH || 0) > 0 ? 'stok var — tam güç çalışır' : '<span class="neg">BİTTİ — üretim 0</span>']);
+        } else if (T.kind === 'geo') rows.push(['♨️ Jeotermal buhar', 'gece gündüz sabit — ×0,95']);
+        siteParts(u).forEach(p => rows.push([p.ico + ' ' + p.nm + (p.sub ? ' <span class="sub">' + p.sub + '</span>' : ''),
+          p.f > 1.001 ? '<span class="pos">×' + p.f.toFixed(2) + '</span>' : p.f < .999 ? '<span class="neg">×' + p.f.toFixed(2) + '</span>' : '—']));
+        rows.push(['🔧 Sağlamlık %' + Math.round(u.cond), '×' + (u.cond / 100).toFixed(2)]);
+        return `<div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">📊 VERİM DÖKÜMÜ <span class="sub">çarpanların sonucu = anlık üretim</span></div>
+          <table class="ledger">${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>`;
+      })()}
       ${T.fuel && (u.fuelH || 0) < FUEL_HOURS - .2 ? (() => {
         const f = fuelOf(u);
         if (!f) { const c2 = Math.round(T.fuel * T.mw * (FUEL_HOURS - (u.fuelH || 0))); return `<button class="bigsell" onclick="refuelUnit(${u.id})" ${G.cash < c2 ? 'disabled' : ''}>⚛️ Yakıt Çubuğu Değişimi — ${fmt(c2)} (${FUEL_HOURS} saatlik)</button>`; }
@@ -7038,7 +7166,7 @@ function openCompanySheet() {
       <tr><td>Enerji deposu</td><td>${stores().length} adet · ${totalCap()} MWh</td></tr>
       <tr><td>Yakıt deposu</td><td>${fuelDepots().length} adet</td></tr>
       <tr><td>🏢 Ofis</td><td>${offices().length} / ${maxOffices()}</td></tr>
-      <tr><td>📜 Ruhsat</td><td>${Object.keys(G.licenses).length} / ${licCap()} <span class="sub">(ofis başına ${licPerOffice()})</span></td></tr>
+      <tr><td>📜 Ruhsat</td><td>${Object.keys(G.licenses).length} / ${licCap()} <span class="sub">(toplam limit)</span></td></tr>
       <tr><td>Ömür üretimi</td><td>${fmtN(lifeProd)} MWh · 🌫️ ${co2Avg()} g/kWh</td></tr>
     </table>
     <div style="font-size:12px;margin:10px 0 2px">🧪 <b>ARAŞTIRMA</b> <span class="sub">tek seferde 1 araştırma yürür</span></div>
