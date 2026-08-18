@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.8 (2026-08-17 23:31) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-18 12:34) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.8 (2026-08-17 23:31)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-18 12:34)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2210,8 +2210,13 @@ function dischargeTick(dtSec) {
     if (!d) continue;
     const T = STORE_TYPES[st.t];
     // 🔗 merkez kendi deposu boşalınca bağlı depolardan çeker — grup tek tank gibi boşalır
+    // ⚠️ HATA AVI (kritik, patron bildirdi): "merkeze SAT dedim, kendi içindekini sattı,
+    // bağlı depolar satılmadı." Grubun İLK elemanı merkezin KENDİSİ olunca `break` döngüyü
+    // daha ilk adımda kırıyordu — bağlılardan hiç enerji çekilemiyordu. Kendini atlamak
+    // `continue` işidir; `break` yalnız "yeterince çekildi" durumuna aittir.
     if (!st.link && d.left > st.stored + .001) for (const g2 of storeGroup(st)) {
-      if (g2.id === st.id || st.stored >= d.left) break;
+      if (g2.id === st.id) continue;
+      if (st.stored >= d.left) break;
       const al = Math.min(g2.stored, d.left - st.stored);
       if (al > 0) { g2.stored -= al; st.stored += al; }
     }
@@ -4302,8 +4307,14 @@ const NET = {
     if (!this.on() || !G || !G._started) { setTimeout(() => this.loop(), 5000); return; }
     try {
       await this.put('players/' + this.id, {
-        nm: G.company, il: G.il, country: G.country, worth: Math.round(myWorth()),
-        em: co2Avg(), mw: installedMW(), ally: G.ally ? G.ally.name : null, ts: Date.now(),
+        // ⚠️ Kurallar alan uzunluk/aralıklarını doğruluyor — TEK alan taşsa TÜM kayıt reddediliyor
+        // ve oyuncunun adı sunucuya hiç düşmüyordu (tesisleri herkese "Oyuncu" görünüyordu).
+        // Bu yüzden her alan kurallardaki sınıra KIRPILARAK yazılır.
+        nm: String(G.company || '?').slice(0, 28), il: String(G.il || '').slice(0, 32),
+        country: String(G.country || '').slice(0, 32),
+        worth: Math.max(0, Math.min(1e15, Math.round(myWorth()) || 0)),
+        em: Math.max(0, Math.min(2000, co2Avg() || 0)), mw: Math.max(0, Math.min(5e6, installedMW() || 0)),
+        ally: G.ally ? String(G.ally.name).slice(0, 40) : null, ts: Date.now(),
         // 🏢 KAMUYA AÇIK KARNE (şirket kartı için). Kasa, ciro, stok ve araştırma
         // BİLEREK paylaşılmaz — rakibin nakit durumunu görmek oyunu bozar.
         off: offices().length, lic: Object.keys(G.licenses).length,
@@ -4352,6 +4363,20 @@ const NET = {
     const l = this.list(), now = Date.now();
     return { online: l.filter(p => p.online).length + 1, day: l.filter(p => now - (p.ts || 0) < 864e5).length + 1, total: l.length + 1 };
   },
+  // 🏷️ İSİM ÇÖZÜMÜ (patron: "Oyuncu yazmasın — o şirketin ismi yazsın, çevrede başka şirketler
+  // olduğu görülsün"): players kaydı düşmemiş oyuncunun adı, herkese açık saves/<uid>/company
+  // alanından BİR KEZ çekilip önbelleğe alınır; isim gelince harita etiketi kendiliğinden tazelenir.
+  nmCache: {},
+  nameOf(pid) {
+    const p = this.players[pid];
+    if (p && p.nm) return p.nm;
+    if (pid in this.nmCache) return this.nmCache[pid] || null;
+    this.nmCache[pid] = null; // tek istek — yanıt gelene dek 'Oyuncu' görünür
+    this.get('saves/' + pid + '/company').then(nm => {
+      if (typeof nm === 'string' && nm) { this.nmCache[pid] = nm.slice(0, 28); othersDrawn = ''; try { drawOthers(); } catch (e) {} }
+    }).catch(() => {});
+    return null;
+  },
   unitsInCell(cell) {
     const out = [];
     for (const [pid, us] of Object.entries(this.units)) {
@@ -4363,7 +4388,7 @@ const NET = {
         // patlıyor, bu yüzden ne diğer oyuncular çiziliyor ne de "göster/gizle" düğmesi
         // işini bitirebiliyordu (istisna save() ve panel tazelemesinden ÖNCE atılıyordu).
         if (!u || !u.c || u.c !== cell) continue;
-        out.push({ oid: pid + '_' + uid, owner: (this.players[pid] || {}).nm || 'Oyuncu', ownerIdx: 0, netOwner: pid, kind: u.k, t: u.t, cell, ll: u.ll, since: u.s, net: true });
+        out.push({ oid: pid + '_' + uid, owner: this.nameOf(pid) || 'Oyuncu', ownerIdx: 0, netOwner: pid, kind: u.k, t: u.t, cell, ll: u.ll, since: u.s, net: true });
       }
     }
     return out;
@@ -4524,7 +4549,8 @@ window.openOtherSheet = o => {
          Buraya sen de kendi ofisini açıp ruhsat alabilirsin; kareler kimseye kapanmaz.</p>`
       : `<button class="bigsell" onclick="offerBuy('${o.oid}')" ${G.cash < ask ? 'disabled' : ''}>💰 Satın Alma Teklifi Gönder — ${fmt(ask)}</button>`}
     ${sahipVar ? `<button class="bigsell half" onclick="openDM('${jsStr(o.owner)}')">✉️ Mesaj at</button>
-    <button class="bigsell half" onclick="sendFriendReq('${jsStr(o.owner)}')">🤝 Arkadaşlık isteği</button>`
+    <button class="bigsell half" onclick="sendFriendReq('${jsStr(o.owner)}')">🤝 Arkadaşlık isteği</button>
+    <button class="bigsell half" style="color:var(--warn)" onclick="reportPlayerAsk('${jsStr(o.owner)}')">🚩 Şikayet Et</button>`
     : '<p class="sub">⚠️ Bu tesisin sahibi sunucuda bulunamadı (oyuncu kaydı silinmiş ya da henüz eşitlenmemiş olabilir) — mesaj ve arkadaşlık seçenekleri kapalı.</p>'}
     <p class="sub">Diğer oyuncuların tesisleri 🗺️ Görünüm ekranından gizlenebilir.</p>`;
   showSheet('unitsheet');
@@ -4597,6 +4623,9 @@ function aucAssets() { // satılabilir varlıkların listesi
     if (u.kind === 'office' && u.hq) continue; // merkez ofis satılamaz
     if (u.buildDone > Date.now()) continue;
     if (aucListed('unit', u.id)) continue;
+    // 🔗 GRUP KİLİDİ (patron kuralı): bağlantılı depo müzayedeye/müzakereye KONULAMAZ —
+    // önce bağlantı kesilir. (Devirde link'ler çöp kalıyor, grup kapasitesi yanlış hesaplanıyordu.)
+    if (u.kind === 'store' && isLinked(u)) continue;
     const T = TYPE_OF(u.kind, u.t);
     if (!T) continue;
     // 📍 KONUM (patron: "bilmediğim yerdeki santrali almam") — ilanda taşınır
@@ -5010,8 +5039,48 @@ window.openPlayerCard = nm => {
     <p class="sub" style="margin-top:6px">Kasa, ciro ve stok bilgileri gizlidir — herkes için.</p>`}
     <button class="bigsell half" onclick="closeModal();openDM('${nm.replace(/'/g, '')}')">✉️ Mesaj Gönder</button>
     ${friend ? '' : `<button class="bigsell half" onclick="sendFriendReq('${nm.replace(/'/g, '')}');closeModal()">👥 Arkadaş Ekle</button>`}
+    <button class="bigsell half" style="color:var(--warn)" onclick="reportPlayerAsk('${nm.replace(/'/g, '')}')">🚩 Şikayet Et</button>
     <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
   $('overlay').classList.add('show');
+};
+// ── 🚩 ŞİKAYET SİSTEMİ (patron: "oyuncular hilecileri şikayet edebilsinler") ──
+// Şikayet sunucudaki reports/ düğümüne yazılır; düğümü YALNIZ yönetim okur (kurallarda .read yok).
+// Spam freni: aynı şirket aynı cihazdan bir kez şikayet edilir (G._reported kalıcı kayıtta durur).
+window.reportPlayerAsk = nm => {
+  nm = (nm || '').trim();
+  if (!nm || !G || nm === G.company) return;
+  const dis = !!(G._reported || {})[nm];
+  const n2 = nm.replace(/'/g, '');
+  $('modal').innerHTML = `
+    <h2>🚩 Şikayet Et — ${nm}</h2>
+    <p class="sub">Şikayetin yalnız yönetime gider; incelenir, gerekirse hesap kısıtlanır. Asılsız şikayet de ihlaldir.</p>
+    ${dis ? '<p class="sub" style="color:var(--warn)">Bu şirketi zaten şikayet ettin — incelemesi sırada.</p>' : ''}
+    <textarea id="repdetail" placeholder="İstersen ayrıntı yaz: ne gördün, ne zaman, hangi bölgede..." style="width:100%;height:70px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px;font-size:12px"></textarea>
+    <button class="bigsell half" ${dis ? 'disabled' : ''} onclick="reportPlayerDo('${n2}','hile')">🎮 Hile / adil olmayan kazanç</button>
+    <button class="bigsell half" ${dis ? 'disabled' : ''} onclick="reportPlayerDo('${n2}','isim')">🤬 Uygunsuz isim</button>
+    <button class="bigsell half" ${dis ? 'disabled' : ''} onclick="reportPlayerDo('${n2}','sohbet')">💬 Sohbet / mesaj ihlali</button>
+    <button class="bigsell half" ${dis ? 'disabled' : ''} onclick="reportPlayerDo('${n2}','diger')">📦 Başka bir sebep</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.reportPlayerDo = async (nm, kind) => {
+  const det = (($('repdetail') && $('repdetail').value) || '').trim().slice(0, 150); // modal kapanmadan oku
+  closeModal();
+  if (!NET.on()) { toast('🌐 Şikayet göndermek için çevrimiçi olman gerekiyor', 'warn'); return; }
+  G._reported = G._reported || {};
+  if (G._reported[nm]) { toast('🚩 Bu şirketi zaten şikayet ettin — incelemesi sırada', 'warn'); return; }
+  const REASONS = { hile: 'Hile / adil olmayan kazanç', isim: 'Uygunsuz isim', sohbet: 'Sohbet ihlali', diger: 'Diğer' };
+  const p = NET.list().find(x => x.nm === nm);
+  try {
+    await NET.push('reports', {
+      from: String(G.company || '?').slice(0, 28), fromId: String(NET.id || '').slice(0, 48),
+      target: String(nm).slice(0, 28), targetId: p ? String(p.id).slice(0, 48) : undefined,
+      reason: ((REASONS[kind] || kind) + (det ? ' — ' + det : '')).slice(0, 200), ts: Date.now(),
+    });
+    G._reported[nm] = Date.now(); save();
+    toast('🚩 Şikayetin yönetime iletildi — teşekkürler, incelenecek', '', null, 0, true);
+    beep(500, .08);
+  } catch (e) { toast('⚠️ Şikayet gönderilemedi — bağlantını kontrol edip yeniden dene', 'warn'); }
 };
 
 // ── 📬 POSTA ──
@@ -6360,8 +6429,12 @@ function openUnitSheet(id) {
     // ── DEPO SAYFASI: RAKİP GİBİ SADE (patron isteği) — büyük sayılar önde, gerisi "Ayrıntılar" altında ──
     const T = STORE_TYPES[u.t];
     const D = cellDemand(u.cell), left = demandLeft(u.cell);
-    const rAll = sellRevenue(u.cell, u.stored);
-    const rHalf = sellRevenue(u.cell, u.stored * .5);
+    // 🔗 MERKEZ DEPO grup adına satar — SAT butonları ve kazanç tahminleri GRUP toplamıyla
+    // hesaplanır (patron bildirdi: merkezde "0.4 MWh" yazıp satışta grubun tamamı akıyordu).
+    const satMwh = isLinked(u) && !u.link ? groupStored(u) : u.stored;
+    const satCap = isLinked(u) && !u.link ? groupCap(u) : T.cap;
+    const rAll = sellRevenue(u.cell, satMwh);
+    const rHalf = sellRevenue(u.cell, satMwh * .5);
     const base = rAll.price; // BU BÖLGENİN anlık alım fiyatı (bölge çarpanı + imtiyaz dahil)
     const myPlants = plants().filter(p2 => assignedStoreOf(p2) === u);
     const inflow = myPlants.reduce((s, p2) => s + plantOutput(p2), 0) * speedMult();
@@ -6404,29 +6477,39 @@ function openUnitSheet(id) {
         <span class="${rAll.green > 0 ? 'pos' : ''}">🌿 Devlet teşviki: <b>${rAll.green > 0 ? '+%' + Math.round(rAll.green * 100) : 'yok — emisyonun yüksek'}</b></span>
         <span class="${up ? 'pos' : dn ? 'neg' : ''}">1 saat sonra: <b>${fmt(fut)}</b> ${up ? '▲ bekle' : dn ? '▼ şimdi sat' : '►'}</span>
       </div>
-      ${u.disch ? `
+      ${u.link ? (() => { // 🔗 BAĞLI DEPO SATAMAZ (patron kuralı): satış YALNIZ merkez depodan yapılır.
+        // Eskiden burada da SAT butonları çıkıyor, basınca "yapamazsın" uyarısı geliyordu —
+        // yanıltıcıydı. Butonlar tamamen kalktı; oyuncu tek dokunuşla merkeze yönlenir.
+        const mst = storeMaster(u);
+        return `<div style="margin:8px 0;padding:10px;border:1px solid var(--acc2);border-radius:10px">
+          <div style="font-size:12.5px;font-weight:700">🔗 Bu depo bir BAĞLI DEPO</div>
+          <p class="sub" style="margin:4px 0">Grubun satışı yalnız <b>MERKEZ DEPO</b> üzerinden yapılır — buradaki enerji, merkezin SAT emriyle birlikte otomatik satılır.</p>
+          ${mst.disch ? `<p class="sub" style="color:var(--acc);margin:4px 0">⚡ Grup şu an boşaltılıyor — satış merkezden sürüyor (kalan ${fmtE(mst.disch.left)} MWh).</p>` : ''}
+          <button class="bigsell" onclick="openUnitSheet(${mst.id})">🏛️ Merkez depoya git — ${unitName(mst)}</button>
+        </div>`;
+      })() : u.disch ? `
       <div style="margin:8px 0;padding:10px;border:1px solid var(--acc);border-radius:10px">
         <div style="font-size:12.5px;font-weight:700">⚡ Boşaltılıyor${u.disch.target ? ' → 🔁 ' + cellCode(u.disch.target) + ' pazarı (-%10 aktarım)' : ''}</div>
         <div class="rsbar" style="margin:6px 0"><i style="width:${Math.min(100, 100 * u.disch.sold / (u.disch.sold + u.disch.left))}%"></i></div>
         <div class="sub">Satılan: ${fmtE(u.disch.sold)} MWh · +${fmt(u.disch.gain)} · kalan ${fmtE(u.disch.left)} MWh</div>
       </div>` : `
-      <button class="bigsell" onclick="sellUnit(${u.id},1)" ${u.stored < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(u.stored)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * u.stored / T.cap))} sn)</button>
+      <button class="bigsell" onclick="sellUnit(${u.id},1)" ${satMwh < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(satMwh)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * satMwh / T.cap))} sn)</button>
       ${alt ? (() => { // patron: fiyat/MWh değil KAZANILACAK TUTAR + yerele göre kâr/zarar
-        const g = altSatGain(alt.c, u.stored, alt.emergency ? 1 : 1 - TRANSFER_FEE);
-        return `<button class="bigsell" style="background:${alt.emergency ? 'var(--danger);color:#fff' : 'var(--gold);color:#131313'}" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${u.stored < .005 ? 'disabled' : ''}>${alt.emergency
+        const g = altSatGain(alt.c, satMwh, alt.emergency ? 1 : 1 - TRANSFER_FEE);
+        return `<button class="bigsell" style="background:${alt.emergency ? 'var(--danger);color:#fff' : 'var(--gold);color:#131313'}" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${satMwh < .005 ? 'disabled' : ''}>${alt.emergency
           ? '🚨 ACİL İHALEYE SAT — ~' + fmt(g) + karRozeti(g, rAll.gain) + '<br><span style="font-size:10px">' + cellCode(alt.c) + ' · tam fiyat, kesinti yok</span>'
           : '🔁 ' + cellCode(alt.c) + ' pazarına SAT — ~' + fmt(g) + karRozeti(g, rAll.gain) + '<br><span style="font-size:10px">-%' + Math.round(TRANSFER_FEE * 100) + ' aktarım dahil</span>'}</button>`;
       })() : ''}
-      ${/* 🔗 ÇAPRAZ SATIŞ (patron): bağlı depolar HER İKİ bölgeye de satabilir. Bağlantı
+      ${/* 🔗 ÇAPRAZ SATIŞ (patron): merkez depo grubun TÜM bölgelerine satabilir. Bağlantı
             hattı zaten ödendiği için aktarım kesintisi YOK. Bağlı değilse bu butonlar çıkmaz. */
         groupCells(u).filter(c => c !== u.cell).map(c => {
-          const g = altSatGain(c, u.stored, 1);
-          return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${c}')" ${u.stored < .005 ? 'disabled' : ''}>🔗 ${placeName(c)} bölgesine SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">bağlı depo hattı · kesinti yok</span></button>`;
+          const g = altSatGain(c, satMwh, 1);
+          return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${c}')" ${satMwh < .005 ? 'disabled' : ''}>🔗 ${placeName(c)} bölgesine SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">bağlı depo hattı · kesinti yok</span></button>`;
         }).join('')}
-      ${linesOf(u.cell).map(l => { const g = altSatGain(l.to, u.stored, 1 - lineLoss(l) / 100); return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || g <= rAll.gain ? 'disabled' : ''}>⚡ HAT ile ${placeName(l.to)}'e SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">hat kaybı %${Math.round(lineLoss(l))}</span></button>`; }).join('')}
+      ${linesOf(u.cell).map(l => { const g = altSatGain(l.to, satMwh, 1 - lineLoss(l) / 100); return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${satMwh < .005 || g <= rAll.gain ? 'disabled' : ''}>⚡ HAT ile ${placeName(l.to)}'e SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">hat kaybı %${Math.round(lineLoss(l))}</span></button>`; }).join('')}
       ${allyLinesFor(u.cell).map(l => { // 🤝 İTTİFAK HATTI — başkan çekti, HER ÜYE kullanır
-        const g = altSatGain(l.to, u.stored, 1 - lineLoss(l) / 100);
-        return `<button class="bigsell" style="background:#1f7a5a;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${u.stored < .005 || g <= rAll.gain ? 'disabled' : ''}>
+        const g = altSatGain(l.to, satMwh, 1 - lineLoss(l) / 100);
+        return `<button class="bigsell" style="background:#1f7a5a;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${satMwh < .005 || g <= rAll.gain ? 'disabled' : ''}>
           🤝 İTTİFAK HATTI ile ${placeName(l.to)}'e SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}
           <span style="font-size:10px">(hat kaybı %${Math.round(lineLoss(l))} · ÜCRETSİZ · MWh başına ${fmt(ALLY_LINE_FEE)} kasaya)</span></button>`;
       }).join('')}
@@ -6434,13 +6517,13 @@ function openUnitSheet(id) {
         const cn = consortiumFor(u.cell);
         if (!cn) return '';
         const net = cellPriceNow(cn.cell) * (1 - CONS_LOSS / 100);
-        return `<button class="bigsell" style="background:#7a5cff;color:#fff" onclick="startDischarge(${u.id},1,null,'${cn.cell}')" ${u.stored < .005 ? 'disabled' : ''}>
+        return `<button class="bigsell" style="background:#7a5cff;color:#fff" onclick="startDischarge(${u.id},1,null,'${cn.cell}')" ${satMwh < .005 ? 'disabled' : ''}>
           🌍 KONSORSİYUM HATTI ile SAT — ${fmt(net)}/MWh <span style="font-size:10px">(${cn.asShareholder ? '⚖️ HİSSEDAR hakkın' : 'ittifak hattı'} · ÜCRETSİZ · kayıp %${CONS_LOSS} · merkeze ${cn.dist} km)</span></button>`;
       })()}
-      ${adAvail() > 0 ? (u.stored >= T.cap * .9
+      ${adAvail() > 0 ? (satMwh >= satCap * .9
         ? `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="sellUnitAd(${u.id})">🎬 Reklam İzle & SAT — ${fmt(rAll.gain * AD_BONUS)} (+%15) · hak ${adAvail()}/${AD_MAX}</button>`
         : `<button class="bigsell" style="background:#8a6cff33;color:var(--dim)" disabled>🎬 Reklam bonusu (+%15) — depo %90 dolunca · hak ${adAvail()}/${AD_MAX}</button>`) : ''}
-      <button class="bigsell half" onclick="sellUnit(${u.id},.5)" ${u.stored < .01 ? 'disabled' : ''}>Yarısını Sat — ~${fmt(rHalf.gain)}</button>`}
+      <button class="bigsell half" onclick="sellUnit(${u.id},.5)" ${satMwh < .01 ? 'disabled' : ''}>Yarısını Sat — ~${fmt(rHalf.gain)}</button>`}
       ${(() => { // 🔗 DEPO BAĞLANTISI — patron: uzun buton listesi YOK, iki buton var.
         // "Bağlan"a basınca harita açılır, oyuncu hedef depoyu HARİTADAN seçer, sonra
         // maliyet ayrıntılı onay ekranı gelir.
@@ -6459,13 +6542,16 @@ function openUnitSheet(id) {
           <tr><td>📍 Konum</td><td>${nearestCityName(u.cell) ? nearestCityName(u.cell) + ' · ' : ''}${cellCode(u.cell)}</td></tr>
           <tr><td>🔗 Bağlantı</td><td class="${myPlants.length >= T.conn ? 'neg' : ''}">${myPlants.length} / ${T.conn} santral${myPlants.length >= T.conn ? ' — LİMİT DOLU' : ''}</td></tr>
           <tr><td>Bölge alım çarpanı</td><td>×${cellPriceFactor(u.cell).toFixed(2)}${myLease(u.cell) ? ' <span class="pos">· 🏛️ imtiyaz: fiyat +%20</span>' : ''}</td></tr>
-          <tr><td>Bölgede bugün kalan talep</td><td class="${left < u.stored ? 'neg' : ''}">${fmtN(left)} / ${fmtN(D)} MWh</td></tr>
+          <tr><td>Bölgede bugün kalan talep</td><td class="${left < satMwh ? 'neg' : ''}">${fmtN(left)} / ${fmtN(D)} MWh</td></tr>
           <tr><td>→ Talep içinde satılacak</td><td class="pos">${fmtE(rAll.inD)} MWh × ${fmt(base)}</td></tr>
           ${rAll.excess > .5 ? `<tr><td>→ Talebi aşan kısım</td><td class="neg">${fmtN(rAll.excess)} MWh × ${fmt(base * DUMP_RATE)} (yok pahasına)</td></tr>` : ''}
           <tr><td><b>Tümünü satarsan</b></td><td><b>${fmt(rAll.gain)}</b></td></tr>
         </table>
         <p class="sub" style="margin-top:6px">Şeffaf kural: gördüğün = hesabına geçen. Trafo kaybı YOK, sürpriz kesinti yok.${rAll.excess > .5 ? ' 💡 Fazlan yok pahasına gidiyor: kalabalık şehir yakınına depo kur ya da yarını bekle.' : ''}</p>
-        ${(() => { const r = resaleValue(u); return `<button class="bigsell half" onclick="demolishUnit(${u.id})" style="color:var(--danger)">🗑️ Depoyu Sat — ${fmt(r.value)} iade (%${100 - r.pct} zarar edilecek)</button>`; })()}
+        ${(() => { // 🔗 GRUP KİLİDİ (patron kuralı): bağlantılı depo (merkez ya da bağlı) bağlantı
+          // kesilmeden SATILAMAZ, satılığa/müzayedeye çıkarılamaz — uyarı butonun kendisinde.
+          if (isLinked(u)) return `<button class="bigsell half" style="color:var(--dim)" onclick="toast('🔗 Bu depo bir depo grubuna bağlı — bağlantı kesilmeden satılamaz ve müzayedeye konulamaz. Önce yukarıdan 🔌 Bağlantıyı Kes.','warn',null,0,true)">🔒 Depoyu Sat — önce bağlantıyı kes</button>`;
+          const r = resaleValue(u); return `<button class="bigsell half" onclick="demolishUnit(${u.id})" style="color:var(--danger)">🗑️ Depoyu Sat — ${fmt(r.value)} iade (%${100 - r.pct} zarar edilecek)</button>`; })()}
       </details>`;
     if (wasOpen) { const d = $('us_det'); if (d) d.open = true; }
   } else if (u.kind === 'office') {
@@ -6625,6 +6711,9 @@ window.demolishUnit = id => { // SATIŞ ONAYI (patron isteği — telefon testi)
   if (u.kind === 'office' && u.hq) { toast('🏢 Merkez ofis satılamaz', 'warn'); return; }
   // ⚠️ HATA AVI (kritik): açık ilandaki tesisi ayrıca bozdurmak ÇİFT ÖDEME açığıydı
   if (aucListed('unit', id)) { toast('🔨 Bu tesis açık artırmada — önce ilanı bekle ya da müzayededen çek', 'warn', null, 6000); return; }
+  // 🔗 GRUP KİLİDİ (patron kuralı): bağlantılı depo bağlantı kesilmeden satılamaz. Bağlı depo
+  // yıkılırsa grup defteri, merkez yıkılırsa bağlıların link'i çöp kalıyordu (satış kilitlenirdi).
+  if (u.kind === 'store' && isLinked(u)) { toast('🔗 Bu depo bir depo grubuna bağlı — satmadan önce 🔌 bağlantısını kes', 'warn', null, 0, true); return; }
   const r = resaleValue(u);
   const loss = 100 - r.pct;
   $('modal').innerHTML = `
