@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-18 12:34) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-18 16:53) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-18 12:34)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-18 16:53)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2081,6 +2081,39 @@ window.sellUnitAd = id => {
     }
   }, 1000);
 };
+// ── 🎬 ORTAK REKLAM KAPISI (patron: inşaat hızlandırma + satın alma indirimi reklamla) ──
+// sellUnitAd'daki simülasyon deseninin yeniden kullanılabilir hâli. Günlük satış-reklamı
+// hakkını (adAvail) TÜKETMEZ — hız/indirim reklamları sınırsızdır, ekonomiye para basmaz.
+// VIP Reklamsız kuralı burada da geçerli: reklam izletmeden ödül uygulanır.
+function adPlay(mesaj, cb) {
+  if (adFreeActive()) { toast('🚫 VIP Reklamsız: ödül reklamsız uygulandı', ''); cb(); return; }
+  let t = 3;
+  $('modal').innerHTML = `<h2>🎬 Reklam (simülasyon)</h2><p style="text-align:center;font-size:40px" id="adcnt">3</p><p style="text-align:center">Gerçek oyunda burada ödüllü reklam oynar — ${mesaj}</p>`;
+  $('overlay').classList.add('show');
+  const iv = setInterval(() => {
+    t--;
+    if ($('adcnt')) $('adcnt').textContent = t;
+    if (t <= 0) { clearInterval(iv); closeModal(); cb(); }
+  }, 1000);
+}
+// 🎬 İNŞAATI HEMEN BİTİR — inşa hâlindeki birim sayfasından ya da kurulum sonrası sorudan
+window.adFinishBuild = id => {
+  const u = G.units.find(x => x.id === id);
+  if (!u || u.buildDone <= Date.now()) return;
+  adPlay('izleyene inşaat HEMEN biter.', () => {
+    const u2 = G.units.find(x => x.id === id);
+    if (!u2 || u2.buildDone <= Date.now()) return;
+    u2.buildDone = Date.now();
+    u2._ann = true; // "tamamlandı" anonsu bir de buradan yağmasın — toast'ı biz veriyoruz
+    ensureConnections();
+    const T = TYPE_OF(u2.kind, u2.t);
+    toast('🎬 ' + (T ? T.ico + ' ' + T.nm : 'Tesis') + ' inşaatı reklamla TAMAMLANDI!', '', null, 0, true);
+    beep(880, .12);
+    save(); refreshUnitMarkers();
+    if ($('unitsheet').classList.contains('show') && window.__lastUnit === id) openUnitSheet(id);
+  });
+};
+const adFinishBtnHTML = u => `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="adFinishBuild(${u.id})">🎬 Reklam İzle — İnşaatı HEMEN Bitir</button>`;
 // ── BOŞALTMA SÜRELİ SATIŞ (patron tasarımı): SAT'a basınca depo süre içinde boşalır —
 // en küçük depo ~35 sn, en büyüğü TAM dolulukta 2 dk. Para akan enerjiyle birlikte akar.
 const dischSecOf = T => Math.round(30 + 90 * Math.min(1, T.cap / 500));
@@ -2559,11 +2592,12 @@ window.buildHere = (kind, t) => {
     <div class="detimg" style="background:${CAT_GRAD[T.cat || 'Depo']};height:110px;font-size:52px"><img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()">${T.ico}</div>
     <p><b>${T.nm}</b> — <b style="color:var(--acc)">${fmt(T.cost)}</b><br>Onaydan sonra haritada <b>kurmak istediğin yere dokunacaksın</b> — ödeme yerleştirme anında alınır.</p>
     <button class="primary" onclick="closeModal();doBuild('${kind}','${t}')">✅ Evet, Satın Al — ${fmt(T.cost)}</button>
+    <button class="primary" style="background:#8a6cff" onclick="closeModal();adPlay('izleyene bu alışverişte %10 indirim.', () => doBuild('${kind}','${t}', .9))">🎬 Reklam İzle — %10 İndirimli Al (${fmt(Math.round(T.cost * .9))})</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
-window.doBuild = (kind, t) => { // katalog onayı: ürünü eline al, yerleştirme moduna geç
-  PENDING = { kind, t };
+window.doBuild = (kind, t, disc) => { // katalog onayı: ürünü eline al, yerleştirme moduna geç
+  PENDING = { kind, t, disc: disc || 1 }; // disc: 🎬 reklam indirimi (ödeme yerleştirmede bu çarpanla)
   hideSheets();
   setMode('build'); // "🏗️ <ürün> — kurmak istediğin yere dokun"
 };
@@ -2589,9 +2623,11 @@ function placeAt(c, ll) {
     return;
   }
   if (kind === 'plant' && capBlocked(t)) { toast('🔒 ' + T.cat + ' kurulu güç limitin dolu — İnşa ekranından lisans yükselt', 'warn'); PENDING = null; setMode(null); return; }
-  if (G.cash < T.cost) { toast('Yetersiz bakiye — ' + fmt(T.cost) + ' gerekli', 'warn'); PENDING = null; setMode(null); return; }
-  G.cash -= T.cost;
-  G.cellSpent[c] = (G.cellSpent[c] || 0) + T.cost;
+  const price = Math.round(T.cost * (PENDING.disc || 1)); // 🎬 reklam indirimi burada uygulanır
+  if (G.cash < price) { toast('Yetersiz bakiye — ' + fmt(price) + ' gerekli', 'warn'); PENDING = null; setMode(null); return; }
+  G.cash -= price;
+  G.cellSpent[c] = (G.cellSpent[c] || 0) + price;
+  if (PENDING.disc && PENDING.disc < 1) toast('🎬 Reklam indirimi uygulandı: ' + fmt(T.cost - price) + ' cebinde kaldı', '');
   const nu = addUnit(kind, t, ll);
   if (tutActive()) nu.hidden = true; // eğitimde ZORUNLU kurulanlar da başkalarına görünmez (patron kuralı)
   ensureConnections(); // yeni santral boş slota otomatik bağlanır
@@ -2603,6 +2639,16 @@ function placeAt(c, ll) {
   PENDING = null;
   setMode(null);
   save();
+  // 🎬 İNŞAAT BAŞLAYINCA SOR (patron isteği): "reklam izle, hemen bitsin" + Vazgeç.
+  // Eğitimde ve saniyelik kısa inşaatlarda sorulmaz — soru zamandan kazandırmalı, bezdirmemeli.
+  if (!tutActive() && nu.buildDone - Date.now() >= 45000) {
+    $('modal').innerHTML = `
+      <h2>🎬 İnşaatı hemen bitir?</h2>
+      <p style="text-align:center">${T.ico} <b>${T.nm}</b> inşaatı sürüyor — <b>~${T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn'}</b>.<br>Reklam izlersen HEMEN tamamlanır.</p>
+      <button class="primary" style="background:#8a6cff" onclick="closeModal();adFinishBuild(${nu.id})">🎬 Reklam İzle — HEMEN Bitir</button>
+      <button class="primary ghostbtn" onclick="closeModal()">Vazgeç — beklerim</button>`;
+    $('overlay').classList.add('show');
+  }
 }
 // OFİS AÇ — ruhsatsız bölgede de kurulabilir (genişlemenin kapısı ofistir)
 window.buildOfficeAsk = () => {
@@ -4098,6 +4144,7 @@ const NET = {
       this.authDomain = c.authDomain || null; // Google giriş yönlendirmesi
       this.projectId = c.projectId || null;
       this.clientId = c.clientId || null;      // GIS (Google Identity Services) web istemci kimliği
+      this.adminId = c.adminId || null;        // 💡 öneri/istek postalarının düştüğü yönetici oyuncu kimliği
       try { this.auth = JSON.parse(localStorage.getItem('ec_auth') || 'null'); } catch (e) {}
       this.id = (this.auth && this.auth.uid) || localStorage.getItem('ec_netid') || ('p' + Math.random().toString(36).slice(2, 10));
       localStorage.setItem('ec_netid', this.id);
@@ -4150,39 +4197,53 @@ const NET = {
       document.head.appendChild(s);
     });
   },
-  async googleLoginGIS() {
-    if (!(await this.gisLoad())) return null;
-    const a = this.fbInit();
-    if (!a) return null;
-    return new Promise((resolve, reject) => {
+  // 🔐 GIS BUTON AKIŞI (patron 18 Ağu, telefonda hâlâ kırıktı): One Tap `prompt` mobil
+  // Chrome'da sık sık SUSTURULUYOR (çerez engeli / kapatma cezası) → akış signInWithPopup'a
+  // düşüyor → popup firebaseapp.com'daki auth handler'ını açıyor → bölünmüş depolamada
+  // "missing initial state" hatası (patronun ekran görüntüsündeki hata birebir bu).
+  // ÇÖZÜM: prompt yerine GERÇEK Google butonu (renderButton). Kullanıcı dokunuşuyla açıldığı
+  // için engellenmez, kimlik jetonunu doğrudan sayfaya verir — firebaseapp.com'a hiç gitmez.
+  // Buton akışında VAZGEÇEN kullanıcı popup'a DÜŞÜRÜLMEZ (garanti kırık sayfaya göndermek olurdu).
+  async gisCredential() {
+    if (!(await this.gisLoad())) return null; // GIS yüklenemedi → çağıran popup yoluna bakar
+    return new Promise(resolve => {
       let bitti = false;
+      const son = v => { if (!bitti) { bitti = true; window.__gisCancel = null; resolve(v); } };
       google.accounts.id.initialize({
-        client_id: this.clientId, auto_select: false, cancel_on_tap_outside: true,
-        callback: async resp => {
-          bitti = true;
-          try {
-            const cred = firebase.auth.GoogleAuthProvider.credential(resp.credential);
-            const r = await a.signInWithCredential(cred);
-            resolve(await this.adoptUser(r.user));
-          } catch (e) { reject(e); }
-        },
+        client_id: this.clientId, auto_select: false, cancel_on_tap_outside: false,
+        callback: resp => { closeModal(); son(resp && resp.credential || null); },
       });
-      google.accounts.id.prompt(n => {
-        if (bitti) return;
-        const yok = n && ((n.isNotDisplayed && n.isNotDisplayed()) || (n.isSkippedMoment && n.isSkippedMoment()));
-        if (yok) resolve(null); // gösterilemedi → çağıran popup'a düşer
-      });
+      window.__gisCancel = () => son(null);
+      $('modal').innerHTML = `
+        <h2>🔐 Google ile devam et</h2>
+        <p class="sub" style="text-align:center">Aşağıdaki Google butonuna dokun, hesabını seç — oyuna geri döneceksin.</p>
+        <div id="gisbtn" style="display:flex;justify-content:center;margin:14px 0;min-height:44px"></div>
+        <button class="primary ghostbtn" onclick="closeModal();window.__gisCancel&&window.__gisCancel()">Vazgeç</button>`;
+      $('overlay').classList.add('show');
+      try {
+        google.accounts.id.renderButton(document.getElementById('gisbtn'),
+          { theme: 'filled_blue', size: 'large', text: 'continue_with', shape: 'pill', locale: 'tr' });
+      } catch (e) { closeModal(); son(null); }
     });
   },
-  // ⚠️ signInWithRedirect KALDIRILDI. Patron canlıda şu hatayı aldı:
-  // "missing initial state ... Using signInWithRedirect in a storage-partitioned browser
-  // environment". Popup engellenince yönlendirmeye düşmek, oyuncuyu GARANTİLİ bozuk beyaz
-  // sayfaya götürüyordu. Yedek yol artık yok — GIS varsa o, yoksa popup, o da olmazsa NET hata.
+  async googleLoginGIS() {
+    const a = this.fbInit();
+    if (!a) return null;
+    const idTok = await this.gisCredential();
+    if (idTok === null) return null; // GIS yok ya da vazgeçti — karar çağırana ait
+    const r = await a.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(idTok));
+    return this.adoptUser(r.user);
+  },
+  // ⚠️ signInWithRedirect KALDIRILDI ("missing initial state" — bölünmüş depolama).
+  // Sıra: GIS butonu (her yerde çalışır) → GIS hiç yüklenemezse popup → o da olmazsa hata.
+  // GIS açılıp da kullanıcı VAZGEÇTİYSE popup denenmez — iptal iptaldir.
   async googleLogin() {
     const a = this.fbInit();
     if (!a) throw new Error('Google girişi hazır değil');
-    if (this.clientId) {
-      try { const g = await this.googleLoginGIS(); if (g) return g; } catch (e) { console.warn('[NET] GIS', e.message); }
+    if (this.clientId && (await this.gisLoad())) {
+      const g = await this.googleLoginGIS();
+      if (!g) throw new Error('Giriş iptal edildi — dilediğin zaman yeniden deneyebilirsin');
+      return g;
     }
     const res = await a.signInWithPopup(new firebase.auth.GoogleAuthProvider());
     return this.adoptUser(res.user);
@@ -4240,17 +4301,27 @@ const NET = {
     const a = this.fbInit();
     if (!a) throw new Error('Google girişi hazır değil');
     const prov = new firebase.auth.GoogleAuthProvider();
+    const gisVar = !!this.clientId && (await this.gisLoad());
     if (a.currentUser && a.currentUser.isAnonymous) {
+      // GERÇEK LINK — uid AYNI kalır, hiçbir şey taşınmaz. GIS butonu birincil:
+      // linkWithPopup da firebaseapp.com handler'ından geçiyor ve telefonda
+      // "missing initial state" ile kırılıyordu (patronun bildirdiği hata).
+      if (gisVar) {
+        const idTok = await this.gisCredential();
+        if (!idTok) throw new Error('Bağlama iptal edildi — dilediğin zaman yeniden deneyebilirsin');
+        const res = await a.currentUser.linkWithCredential(firebase.auth.GoogleAuthProvider.credential(idTok));
+        return { mode: 'link', auth: await this.adoptUser(res.user) };
+      }
       const res = await a.currentUser.linkWithPopup(prov);
       return { mode: 'link', auth: await this.adoptUser(res.user) };
     }
     const oldId = this.id;
-    // googleLogin ile aynı sebep: yönlendirme akışı bölünmüş depolamada KIRIK, yedek yol yok.
+    // REST misafiri: Google'a girilir, uid değişir → bulut kaydı taşınır. GIS butonu birincil.
     let auth = null;
-    if (this.clientId) {
-      try { auth = await this.googleLoginGIS(); } catch (e) { console.warn('[NET] GIS link', e.message); }
-    }
-    if (!auth) auth = await this.adoptUser((await a.signInWithPopup(prov)).user);
+    if (gisVar) {
+      auth = await this.googleLoginGIS();
+      if (!auth) throw new Error('Bağlama iptal edildi — dilediğin zaman yeniden deneyebilirsin');
+    } else auth = await this.adoptUser((await a.signInWithPopup(prov)).user);
     return { mode: 'move', auth, moved: await this.moveCloudData(oldId, auth.uid) };
   },
   // Bulut kaydını eski uid'den yenisine taşır. HEDEFTE ŞİRKET VARSA ÜZERİNE YAZMAZ —
@@ -4985,8 +5056,10 @@ function renderChat() {
   renderChatBody(room);
 }
 function renderChatBody(room) {
+  // 💡 patron isteği: İttifak sekmesinin yanında Öneri/İstek — oyuncu istekleri yönetime posta gider
   $('chat_rooms').innerHTML = Object.entries(CHAT_ROOMS).map(([k, v]) =>
-    `<button class="${k === room ? 'on' : ''}" onclick="setChatRoom('${k}')" ${k === 'ally' && !G.ally ? 'disabled' : ''}>${v.nm}</button>`).join('');
+    `<button class="${k === room ? 'on' : ''}" onclick="setChatRoom('${k}')" ${k === 'ally' && !G.ally ? 'disabled' : ''}>${v.nm}</button>`).join('')
+    + `<button style="color:var(--gold)" onclick="suggestAsk()">💡 Öneri/İstek</button>`;
   const msgs = room === 'ally' && !G.ally ? [] : chatFeed(room);
   $('chat_msgs').innerHTML = msgs.length ? msgs.map(m => {
     const on = m.me ? true : playerOnline(m.idx || 0);
@@ -5062,6 +5135,34 @@ window.reportPlayerAsk = nm => {
     <button class="bigsell half" ${dis ? 'disabled' : ''} onclick="reportPlayerDo('${n2}','diger')">📦 Başka bir sebep</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
+};
+// ── 💡 ÖNERİ / İSTEK (patron: "oyuncuların istekleri bana posta olarak gelsin") ──
+// İki kanal: 1) adminId ayarlıysa yönetimin OYUN İÇİ posta kutusuna düşer (mevcut mail/ kuralları
+// yeterli), 2) her durumda suggestions/ düğümüne de yazılır (konsoldan topluca okunur).
+window.suggestAsk = () => {
+  if (!G || !G.company) return;
+  $('modal').innerHTML = `
+    <h2>💡 Öneri / İstek</h2>
+    <p class="sub">Oyunda ne görmek istersin, ne rahatsız ediyor? Yaz — doğrudan yönetimin posta kutusuna düşer.</p>
+    <textarea id="sugtext" maxlength="500" placeholder="Önerin ya da isteğin..." style="width:100%;height:110px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px;font-size:13px"></textarea>
+    <button class="primary" onclick="suggestSend()">📤 Gönder</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+  $('overlay').classList.add('show');
+};
+window.suggestSend = async () => {
+  const tx = (($('sugtext') && $('sugtext').value) || '').replace(/[<>&"]/g, '').trim();
+  if (tx.length < 5) { toast('Birkaç kelime yaz — boş öneri gönderilmez', 'warn'); return; }
+  closeModal();
+  if (!NET.on()) { toast('🌐 Öneri göndermek için çevrimiçi olman gerekiyor', 'warn'); return; }
+  try {
+    if (NET.adminId) await NET.sendMail(NET.adminId, ('Öneri: ' + G.company).slice(0, 60), tx.slice(0, 550));
+    NET.push('suggestions', {
+      from: String(G.company || '?').slice(0, 28), fromId: String(NET.id || '').slice(0, 48),
+      txt: tx.slice(0, 500), ts: Date.now(),
+    }).catch(() => {}); // kurallar yayınlanana dek sessizce düşebilir — posta kanalı asıl yol
+    toast('💡 Önerin yönetime iletildi — teşekkürler!', '', null, 0, true);
+    beep(500, .08);
+  } catch (e) { toast('⚠️ Gönderilemedi — bağlantını kontrol edip yeniden dene', 'warn'); }
 };
 window.reportPlayerDo = async (nm, kind) => {
   const det = (($('repdetail') && $('repdetail').value) || '').trim().slice(0, 150); // modal kapanmadan oku
@@ -6364,7 +6465,7 @@ function openBuildSheet() {
       <div class="pbuy">
         <div class="pprice">${fmt(T.cost)}</div>
         ${capLock ? `<button onclick="buyCapLic('${T.cat}')" style="background:var(--gold);color:#131313">🔒 Lisans</button>`
-          : `<button onclick="buildHere('${kind}','${t}')" ${disabled ? 'disabled' : ''}>${(tutPick ? '👉 ' : '') + 'Satın al'}</button>`}
+          : `<button onclick="buildHere('${kind}','${t}')" ${disabled ? 'disabled' : ''} ${tutOff ? '' : `data-cost="${T.cost}"`}>${(tutPick ? '👉 ' : '') + 'Satın al'}</button>`}
         <button class="ghostmini" onclick="openDetail('${t}','${mode}')">İncele ›</button>
       </div>
     </div>`;
@@ -6455,7 +6556,7 @@ function openUnitSheet(id) {
     })();
     const wasOpen = !!($('us_det') && $('us_det').open); // canlı tazelemede Ayrıntılar açık kalsın
     $('us_title').innerHTML = `<b>${T.cap} MWh</b> <span style="font-weight:600">${unitName(u)}</span> <span style="cursor:pointer;font-size:13px;opacity:.8" onclick="renameUnit(${u.id})" title="Yeniden isimlendir">✏️</span>`;
-    $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` : `
+    $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` + adFinishBtnHTML(u) : `
       <div class="detcols">
         <div><div class="l">⚡ Dolum hızı</div><div class="v">${inflow.toFixed(1)} <span style="font-size:11px">MW</span>${speedMult() > 1 ? ' 🚀' : ''}</div></div>
         ${isLinked(u)
@@ -6600,7 +6701,7 @@ function openUnitSheet(id) {
     $('us_title').innerHTML = T.ico + ' ' + unitName(u) + ` <span style="cursor:pointer;font-size:13px;opacity:.8" onclick="renameUnit(${u.id})" title="Yeniden isimlendir">✏️</span>`;
     const maxT = Math.max(0, Math.floor(Math.min(cap - (u.fuel || 0), G.cash / F.price)));
     const buyRow = n => { const k = n === 'max' ? maxT : n; return `<button class="bigsell half" onclick="buyFuel(${u.id},${n === 'max' ? "'max'" : n})" ${k < 1 ? 'disabled' : ''}>${F.ico} ${n === 'max' ? 'Depoyu Doldur (' + k + ' t)' : '+' + n + ' ton'} — ${fmt(k * F.price)}</button>`; };
-    $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` : `
+    $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` + adFinishBtnHTML(u) : `
       <table class="ledger">
         <tr><td>${F.ico} Stok</td><td><b>${fmtN(u.fuel || 0)} / ${cap} ton</b></td></tr>
         <tr><td>Yakıt fiyatı</td><td>${fmt(F.price)}/ton</td></tr>
@@ -6622,7 +6723,7 @@ function openUnitSheet(id) {
     const repairCost = unitRepairCost(u); // toplu bakım paneliyle aynı fiyat (etkinlik indirimi dahil)
     // rüzgar panellerinde başlıkta emoji değil GERÇEK türbin çizimi (o mavi 🌬️ emojisi kafa karıştırıyordu)
     $('us_title').innerHTML = (T.kind === 'wind' ? turbineSVG(22, false) : T.ico) + ' ' + T.nm;
-    $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` : `
+    $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` + adFinishBtnHTML(u) : `
       <table class="ledger">
         <tr><td>Anlık üretim</td><td>${out.toFixed(1)} MW</td></tr>
         <tr><td>Kapasite</td><td>${T.mw} MW</td></tr>
@@ -6989,7 +7090,8 @@ window.linkAccountGo = async () => {
   } catch (e) {
     const kod = (e && e.code) || '';
     $('modal').innerHTML = `<h2>🔗 Bağlanamadı</h2>
-      <p>${kod.includes('popup') ? 'Tarayıcı açılır pencereyi engelledi — izin verip tekrar dene.'
+      <p>${(e.message || '').includes('iptal') ? 'Vazgeçtin — istediğin zaman Hesap ekranından yeniden deneyebilirsin.'
+        : kod.includes('popup') ? 'Tarayıcı açılır pencereyi engelledi — izin verip tekrar dene.'
         : kod.includes('credential-already-in-use') || kod.includes('email-already-in-use')
         ? 'Bu Google hesabı başka bir oyuncuya bağlı. Farklı bir hesap dene.'
         : 'Bir sorun çıktı: ' + (e.message || kod)}</p>
@@ -7231,7 +7333,7 @@ window.loginGoogle = async () => {
     };
     $('modal').innerHTML = `
       <h2>🔓 Google Girişi Yapılamadı</h2>
-      <p>${known[code] || (e && e.message) || 'Bilinmeyen bir hata oluştu.'}</p>
+      <p>${((e && e.message) || '').includes('iptal') ? 'Vazgeçtin — istediğin zaman yeniden deneyebilirsin.' : known[code] || (e && e.message) || 'Bilinmeyen bir hata oluştu.'}</p>
       ${code ? `<p class="sub">Hata kodu: <code>${code}</code></p>` : ''}
       <p class="sub">İlerlemen kaybolmaz — misafir olarak oynayıp sonradan menüden Google hesabına bağlayabilirsin.</p>
       <button class="primary" onclick="closeModal();loginGuest()">👤 Misafir Olarak Devam Et</button>
@@ -7569,6 +7671,11 @@ function frameBody(ts) {
     if (uiAcc > 500) {
       uiAcc = 0;
       renderHUD();
+      // 🛒 KATALOG CANLI BAKİYE (patron bildirdi: para geldiği hâlde "Satın al" kapalı kalıyordu).
+      // Katalog bir kez render ediliyor, kasa sonra değişince buton kilidi bayatlıyordu. Sayfayı
+      // yeniden kurmak kaydırmayı sıfırlar — bu yüzden yalnız kilit durumu yerinde tazelenir.
+      if ($('cellsheet').classList.contains('show') && SEL.buildGeneric)
+        document.querySelectorAll('#cellsheet [data-cost]').forEach(b => { b.disabled = G.cash < +b.dataset.cost; });
       if ($('pricesheet').classList.contains('show')) renderPriceSheet();
       // depo sayfası CANLI akar + inşaat sayacı işler; DOKUNUŞ SIRASINDA tazeleme atlanır
       // (bug avı bulgusu: yeniden kurulan buton parmak altındaki tıklamayı yutuyordu)

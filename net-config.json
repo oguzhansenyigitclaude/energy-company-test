@@ -5,5 +5,7 @@
   "apiKey": "AIzaSyAjEGs8-moGnXQPUBdW8grRDPLESWHhuds",
   "authDomain": "energy-company-trk.firebaseapp.com",
   "projectId": "energy-company-trk",
-  "clientId": "710710545324-c4ekt2e02if9e23b9gv8on0p23qs44qo.apps.googleusercontent.com"
+  "clientId": "710710545324-c4ekt2e02if9e23b9gv8on0p23qs44qo.apps.googleusercontent.com",
+  "_adminId_nasil": "Öneri/İstek butonunun postaları bu oyuncu kimliğine (uid) düşer. Kendi uid = Ekopark otomasyon hesabı (players düğümünden bulundu). Yanlışsa buraya doğru uid yazılır.",
+  "adminId": "VqmdqnJWy0fFRGjigXJcL3Hvhxp1"
 }
