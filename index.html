@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-18 21:49)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-19 00:58)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1262,7 +1262,10 @@ function placeName(id) {
 const DUMP_RATE = 0.15;
 function ensureCellSold() {
   const key = new Date().toISOString().slice(0, 10);
-  if (!G.cellSold || G.cellSold.day !== key) G.cellSold = { day: key, sold: {} };
+  // 🐞 BOT DÜZELTMESİ: RTDB boş {} nesneyi buluttan siliyor — bulut kayıtta "sold" alt-nesnesi
+  // olmadan sadece {day:bugün} dönebiliyordu. day eşleştiği için eskiden burası atlanıyor, sonra
+  // G.cellSold.sold[cell] undefined üzerinde patlayıp depo/satış ekranını sessizce çökertiyordu.
+  if (!G.cellSold || G.cellSold.day !== key || !G.cellSold.sold) G.cellSold = { day: key, sold: {} };
 }
 function demandLeft(cell) {
   ensureCellSold();
@@ -5555,8 +5558,12 @@ window.closeModal = () => {
   // ⚠️ HATA AVI (kritik): bu emniyet ağı, afterLogin() bulut kaydını BEKLERKEN tetikleniyordu —
   // oyun iki kez başlıyor ya da yüklü oyunun üstünde "Yeni Oyun" modalı kalıyordu.
   // LOGIN_BUSY bayrağı giriş akışı boyunca ağı bastırır.
-  if ($('app').classList.contains('wiz') && !$('wizsheet').classList.contains('show'))
-    setTimeout(() => { if (!LOGIN_BUSY && (!G || !G._started)) wizardStart(); }, 50);
+  // 🐞 BOT DÜZELTMESİ: wizsheet kontrolü ESKİDEN burada (zamanlayıcı KURULURKEN) yapılıyordu — ama
+  // wizMapStart() closeModal()'ı wizStep1()'den ÖNCE çağırıyor, o an wizsheet henüz "show" değil.
+  // 50ms sonra callback koşulsuz çalışıp wizardStart()'ı tetikliyor, harita/ülke seçim ekranının
+  // ÜSTÜNE "Yeni Oyun" modalını bindiriyordu. Kontrolü callback'İN İÇİNE (ateşlenme anına) taşıdık.
+  if ($('app').classList.contains('wiz'))
+    setTimeout(() => { if (!LOGIN_BUSY && (!G || !G._started) && !$('wizsheet').classList.contains('show')) wizardStart(); }, 50);
 };
 
 // ── 🔔 BİLDİRİM: İSTEĞE BAĞLI (rakip zorluyor ve nefret ediliyor — bizde hayır diyen de rahatça oynar) ──
