@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-19 07:08) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-19 15:53) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -510,7 +510,7 @@
       <button data-act="company"><span class="big">🏢</span>Şirket</button>
       <button data-act="menu"><span class="big">📋</span>Görevler</button>
       <button data-act="friends"><span class="big">👥</span>Arkadaş</button>
-      <button data-act="home"><span class="big">🏠</span>Merkez</button>
+      <button data-act="rank"><span class="big">🏆</span>Sıralama</button>
       <button data-act="help"><span class="big">❓</span>Yardım</button>
     </div>
   </div>
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-19 14:58)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-19 15:53)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1821,6 +1821,7 @@ function freshState() {
     cellEarned: {}, cellSpent: {}, // ofis bölge raporu için kare bazlı kazanç/harcama
     adFreeUntil: 0, adFreeLife: false,
     week: isoWeek(), weekSold: 0, weekClaimed: false,
+    olcek: 0, katkiOdenen: '', // 🏛️ resmî şirket ölçeği (Mikro→Holding) + son ödenen katkı haftası
     totalSold: 0, totalEarned: 0, demoOffsetMin: 0,
     lastSeen: Date.now(), muted: false, demo: false,
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
@@ -2790,7 +2791,62 @@ window.doBuildOffice = () => {
 
 // ── Haftalık görev ──
 const weekTarget = () => 150 + installedMW() * 25;
-function checkWeek() { const w = isoWeek(); if (G.week !== w) { G.week = w; G.weekSold = 0; G.weekClaimed = false; } }
+// ═══ 🏛️ DEVLET KATKI PROGRAMI + ŞİRKET ÖLÇEĞİ (patron tasarımı — "sezon"un gerçekçi hâli) ═══
+// Gerçek dünyada şirketler devlet nezdinde ÖLÇEĞE göre anılır: KOBİ Yönetmeliği'ndeki resmi
+// sınıflar Mikro/Küçük/Orta Ölçekli İşletme, üstü Büyük Ölçekli; şirketler topluluğunun
+// TTK'daki adı HOLDİNG. Şebekeye hafta içinde satılan enerji "devlet katkısı"dır: pazardan
+// pazara sıralanır, Bakanlık ödül öder, eşiği geçen şirket ÖLÇEK atlar. Lig/sezon YOK —
+// gerçek hayattaki isimlendirme var (patron: "sezon demek gerçekliğin dışında saçma durur").
+const OLCEK = [
+  { nm: 'Mikro İşletme', ico: '🏠', esik: 0 },
+  { nm: 'Küçük İşletme', ico: '🏢', esik: 300 },       // esik: bir ÜST ölçeğe geçmek için haftalık katkı (MWh)
+  { nm: 'Orta Ölçekli İşletme', ico: '🏬', esik: 1500 },
+  { nm: 'Büyük Ölçekli İşletme', ico: '🏭', esik: 6000 },
+  { nm: 'Enerji Holdingi', ico: '👑', esik: 20000 },
+];
+const olcekOf = i => OLCEK[Math.max(0, Math.min(OLCEK.length - 1, i || 0))];
+const olcekBadge = i => { const o = olcekOf(i); return `${o.ico} ${o.nm}`; };
+const kHafta = w => 'h' + String(w || isoWeek()).replace(/[^0-9]/g, '-'); // '2026-34' → 'h2026-34' (güvenli anahtar)
+function checkWeek() {
+  const w = isoWeek();
+  if (G.week !== w) {
+    katkiHaftaKapat(G.week, G.weekSold); // hafta kapanışı: ölçek değerlendirmesi + devlet ödülleri
+    G.week = w; G.weekSold = 0; G.weekClaimed = false;
+  }
+}
+function katkiHaftaKapat(eskiHafta, katki) {
+  const eski = G.olcek || 0;
+  if (eski < OLCEK.length - 1 && katki >= OLCEK[eski + 1].esik) {
+    // ⬆️ TERFİ: geçen haftaki katkı üst ölçeğin eşiğini aştı — resmî sınıf değişir, teşvik yatar
+    G.olcek = eski + 1;
+    const y = OLCEK[G.olcek], odul = y.esik * 20000;
+    G.cash += odul;
+    addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta şebekeye ${fmtN(katki)} MWh katkı sağladınız. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki hesabınıza yatırıldı: ${fmt(odul)}. Tebrikler!`, true);
+    toast(y.ico + ' Şirketin artık ' + y.nm + '! Devlet teşviki: +' + fmt(odul), '', null, 0, true);
+  } else if (eski > 0 && katki < OLCEK[eski].esik * .25) {
+    // ⬇️ KADEME KORUMA: mevcut ölçeğin eşiğinin çeyreğinin altında kalan hafta ölçeği bir düşürür
+    G.olcek = eski - 1;
+    const y = OLCEK[G.olcek];
+    addMail('🏛️ Enerji Bakanlığı', 'Ölçek güncellemesi: ' + y.nm, `Geçen hafta şebeke katkınız ${fmtN(katki)} MWh ile ölçeğinizin gerektirdiği düzeyin altında kaldı. Şirketiniz "${y.nm}" ${y.ico} olarak yeniden sınıflandırıldı. Katkınızı artırınca yeniden yükselirsiniz.`, true);
+    toast('🏛️ Ölçek düştü: ' + y.nm + ' — katkını artır, geri yüksel', 'warn', null, 0, true);
+  }
+  // 🏆 GEÇEN HAFTANIN SIRALAMA ÖDÜLÜ: kapanan haftanın katki/ tablosu DEĞİŞMEZ — herkes aynı
+  // tabloya bakar, aynı sıralamayı görür, ödül adil dağılır (istemci saat farkı sorun olmaz).
+  if (NET.on() && NET.auth && eskiHafta && G.katkiOdenen !== eskiHafta) {
+    G.katkiOdenen = eskiHafta;
+    NET.get('katki/' + kHafta(eskiHafta)).then(t => {
+      if (!t) return;
+      const sira = Object.entries(t).map(([uid, v]) => ({ uid, mwh: (v && v.mwh) || 0 })).sort((a, b) => b.mwh - a.mwh);
+      const ben = sira.findIndex(x => x.uid === NET.id);
+      if (ben < 0 || sira[ben].mwh < 1) return;
+      const odul = ben === 0 ? 3e7 : ben === 1 ? 2e7 : ben === 2 ? 1.2e7 : ben < 10 ? 5e6 : 2e6;
+      G.cash += odul;
+      addMail('🏛️ Enerji Bakanlığı', 'Haftalık katkı ödülü — #' + (ben + 1), `Geçen haftanın devlet katkı sıralamasında ${sira.length} şirket arasında #${ben + 1} oldunuz (${fmtN(sira[ben].mwh)} MWh). Ödülünüz: ${fmt(odul)}.`, true);
+      toast('🏛️ Haftalık katkı sıralaması #' + (ben + 1) + ' — +' + fmt(odul), '', null, 0, true);
+      save();
+    }).catch(() => {});
+  }
+}
 function claimWeek() {
   if (G.weekClaimed || G.weekSold < weekTarget()) return;
   const reward = weekTarget() * 15000;
@@ -2991,12 +3047,14 @@ function brandPanelHTML() {
     <b>hepsiyle 100 olamazsın</b>. 100 ilişki = <b>%25 iskonto</b>. Her markanın ayrı bir üstünlüğü var.</p>
     ${Object.keys(BRANDS).map(b => {
       const B = BRANDS[b], rel = brandRel(b), isk = Math.round(25 * rel / 100);
+      // patron düzeni: sağ üstte İLİŞKİ, çubuğun altında önce İNDİRİM, açıklama AYRI satırda
       return `<div style="border:1px solid ${b === enIyi && rel > 0 ? 'var(--acc2)' : 'var(--line)'};border-radius:10px;padding:7px 9px;margin:5px 0">
         <div style="font-size:12.5px;font-weight:700">${B.ico} ${B.nm}
           ${say[b] ? `<span class="sub">· ${say[b]} hat</span>` : ''}
-          <span style="float:right" class="${isk ? 'pos' : 'sub'}">${isk ? '-%' + isk : 'iskonto yok'}</span></div>
+          <span style="float:right" class="sub">İlişki <b style="color:var(--ink)">${rel}/100</b></span></div>
         <div class="rsbar" style="margin:5px 0"><i style="width:${rel}%"></i></div>
-        <div class="sub">İlişki ${rel}/100 · ${B.d}</div>
+        <div class="${isk ? 'pos' : 'sub'}" style="font-size:12px;font-weight:700">${isk ? '%' + isk + ' fiyat indirimi' : 'Fiyat indirimi yok'}</div>
+        <div class="sub" style="margin-top:2px">${B.d}</div>
       </div>`;
     }).join('')}
     <p class="sub">Liste fiyatı farkı: ${Object.keys(BRANDS).map(b => BRANDS[b].ico + ' ' + (BRANDS[b].price === 1 ? 'standart' : (BRANDS[b].price < 1 ? '-' : '+') + '%' + Math.round(Math.abs(1 - BRANDS[b].price) * 100))).join(' · ')}</p>`;
@@ -4503,6 +4561,11 @@ const NET = {
         off: offices().length, lic: Object.keys(G.licenses).length,
         pl: plants().length, st: stores().length, since: G.founded || null,
       });
+      // 🏛️ haftalık devlet katkısı tablosu — kapanan haftalar DEĞİŞMEZ kalır, ödüller oradan
+      // hesaplanır. (Kurallara 'katki' düğümü eklenene dek bu yazım sessizce reddedilir — zararsız.)
+      if (G.weekSold >= .5) this.put('katki/' + kHafta(G.week) + '/' + this.id, {
+        nm: String(G.company || '?').slice(0, 28), mwh: Math.round(G.weekSold), olcek: G.olcek || 0, ts: Date.now(),
+      }).catch(() => {});
       // kendi tesislerini paylaş (harita üzerinde diğerleri görsün)
       // PAYLAŞIM KURALI (patron): hediye/eğitim birimleri DİĞER oyunculara görünmez —
       // yoksa başlangıç şehirleri milyonlarca aynı türbinle dolar. Merkez ofis görünür.
@@ -5200,24 +5263,73 @@ function botCard(i) { // bot şirketlerin karnesi: servetiyle tutarlı ve determ
 // ── 🏆 TAM SIRALAMA (patron: "bir yerde sıralama olsa, en iyi şirketleri görelim, değeri yazsın") ──
 // Menüdeki 9'luk özet listenin tam hâli: gerçek oyuncular + bot şirketler, şirket değerine göre.
 // İsme dokununca şirket kartı açılır. Kendi satırın altın çerçeveli, sıran listede olmasa da altta görünür.
-window.openLeaderboard = () => {
+// 🕐 Son görülme metni (patron): 24 saat içindeyse "3 saat önce" gibi göreli, eskiyse tarih+saat
+function sonGorulme(t) {
+  if (!t) return '';
+  const fark = Date.now() - t;
+  if (fark < 90e3) return 'az önce';
+  if (fark < 3600e3) return Math.round(fark / 60e3) + ' dakika önce';
+  if (fark < 24 * 3600e3) return Math.round(fark / 3600e3) + ' saat önce';
+  return new Date(t).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+window.openLeaderboard = (tab) => {
   if (!G || !G.company) return;
-  const rows = (NET.on() ? NET.list().map(p => ({ raw: p.nm, w: p.worth || 0, em: p.em || 0, on: p.online })) : [])
-    .concat(WORLD_PLAYERS.map((b, i) => ({ raw: b, w: botWorth(i), em: botEm(i), bot: 1 })));
-  rows.push({ raw: G.company, w: Math.round(myWorth()), em: co2Avg(), me: true, on: true });
-  rows.sort((a, b) => b.w - a.w);
-  const benimSira = rows.findIndex(r => r.me) + 1;
+  tab = tab || 'bireysel';
+  const sekme = t => `<button onclick="openLeaderboard('${t.k}')" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid ${tab === t.k ? 'var(--acc2)' : 'var(--line)'};background:${tab === t.k ? 'var(--acc2)' : 'transparent'};color:${tab === t.k ? '#071018' : 'var(--ink)'};font-weight:800;font-size:11.5px;cursor:pointer">${t.nm}</button>`;
   const satir = (r, i) => `<tr${r.me ? ' style="outline:1.5px solid var(--gold);border-radius:6px"' : ''}>
     <td style="white-space:nowrap">#${i + 1}</td>
-    <td>${r.me ? `<b>${r.raw} (SEN)</b>` : `<span onclick="closeModal();openPlayerCard('${jsStr(r.raw)}')" style="cursor:pointer;text-decoration:underline">${r.bot ? '🤖 ' : ''}${r.raw}</span>`}
-      ${r.on ? ' <span style="color:var(--acc)">●</span>' : ''} ${emBadgeHTML(r.em)}</td>
-    <td style="text-align:right"><b>${fmt(r.w)}</b></td></tr>`;
-  $('modal').innerHTML = `
-    <h2>🏆 En İyi Şirketler</h2>
-    <p class="sub" style="margin-top:0">Şirket değerine göre · ● çevrimiçi · isme dokun: şirket kartı${benimSira > 20 ? ` · senin sıran: <b>#${benimSira}</b>` : ''}</p>
-    <table class="ledger">${rows.slice(0, 20).map(satir).join('')}${benimSira > 20 ? satir(rows[benimSira - 1], benimSira - 1) : ''}</table>
-    <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
-  $('overlay').classList.add('show');
+    <td>${r.me ? `<b>${r.raw} (SEN)</b>` : r.tik === false ? `${r.bot ? '🤖 ' : ''}${r.raw}` : `<span onclick="closeModal();openPlayerCard('${jsStr(r.raw)}')" style="cursor:pointer;text-decoration:underline">${r.bot ? '🤖 ' : ''}${r.raw}</span>`}
+      ${r.on ? ' <span style="color:var(--acc)">●</span>' : ''}${r.alt ? `<div class="sub">${r.alt}</div>` : ''}</td>
+    <td style="text-align:right"><b>${r.deger}</b></td></tr>`;
+  const cerceve = (aciklama, icHtml) => {
+    $('modal').innerHTML = `
+      <h2>🏆 Sıralama</h2>
+      <div style="display:flex;gap:6px;margin:6px 0">${[{ k: 'bireysel', nm: '🏢 Bireysel' }, { k: 'ittifak', nm: '🤝 İttifak' }, { k: 'katki', nm: '🏛️ Devlet Katkısı' }].map(sekme).join('')}</div>
+      <p class="sub" style="margin:4px 0">${aciklama}</p>
+      <div id="lbicerik">${icHtml}</div>
+      <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
+    $('overlay').classList.add('show');
+  };
+  if (tab === 'bireysel') {
+    const rows = (NET.on() ? NET.list().map(p => ({ raw: p.nm, w: p.worth || 0, em: p.em || 0, on: p.online })) : [])
+      .concat(WORLD_PLAYERS.map((b, i) => ({ raw: b, w: botWorth(i), em: botEm(i), bot: 1 })));
+    rows.push({ raw: G.company, w: Math.round(myWorth()), em: co2Avg(), me: true, on: true, alt: olcekBadge(G.olcek) });
+    rows.sort((a, b) => b.w - a.w);
+    rows.forEach(r => { r.deger = fmt(r.w); if (!r.alt && r.em !== undefined) r.alt = emBadgeHTML(r.em); });
+    const ben = rows.findIndex(r => r.me) + 1;
+    cerceve('Şirket değerine göre · ● çevrimiçi · isme dokun: şirket kartı' + (ben > 20 ? ` · senin sıran: <b>#${ben}</b>` : ''),
+      `<table class="ledger">${rows.slice(0, 20).map(satir).join('')}${ben > 20 ? satir(rows[ben - 1], ben - 1) : ''}</table>`);
+  } else if (tab === 'ittifak') {
+    cerceve('İttifaklar toplam puana göre — kur, katıl, birlikte yüksel.', '<p class="sub">🤝 İttifak dizini yükleniyor...</p>');
+    (NET.on() ? NET.allyDirList() : Promise.resolve(null)).then(d => {
+      const el = $('lbicerik');
+      if (!el) return;
+      const rows = d ? Object.values(d).filter(x => x && x.name).map(x => ({ raw: x.name, tik: false, deger: fmtN(x.pts || 0) + ' puan', alt: '👥 ' + (x.members || 1) + ' üye' + ((x.wins || 0) ? ' · 🏆 ' + x.wins : '') })) : [];
+      if (G.ally) rows.forEach(r => { if (r.raw === G.ally.name) { r.me = true; r.raw = r.raw; } });
+      rows.sort((a, b) => parseInt(String(b.deger).replace(/\D/g, '')) - parseInt(String(a.deger).replace(/\D/g, '')));
+      el.innerHTML = rows.length ? `<table class="ledger">${rows.slice(0, 20).map(satir).join('')}</table>`
+        : '<p class="sub">Henüz dizinde ittifak yok — ilk kuran sen ol! (🤝 İttifak ekranından)</p>';
+    }).catch(() => { const el = $('lbicerik'); if (el) el.innerHTML = '<p class="sub">Dizin okunamadı — bağlantını kontrol et.</p>'; });
+  } else {
+    // 🏛️ DEVLET KATKISI: bu haftanın (pazardan pazara) şebekeye satış tablosu + ölçek merdiveni
+    const benim = olcekOf(G.olcek);
+    const merdiven = OLCEK.map((o, i) => `${i === (G.olcek || 0) ? '<b>' : ''}${o.ico} ${o.nm}${i > 0 ? ' <span class="sub">(' + fmtN(o.esik) + '+ MWh/hafta)</span>' : ''}${i === (G.olcek || 0) ? '</b>' : ''}`).join(' → ');
+    cerceve(`Pazardan pazara şebekeye sattığın her MWh <b>devlet katkısıdır</b>. Hafta kapanınca 🏛️ Bakanlık sıralamaya göre ödül öder; eşiği aşan şirket <b>ölçek atlar</b>, çok altında kalan geriler.<br>
+      <span style="font-size:11px">${merdiven}</span><br>Senin bu hafta: <b>${fmtN(G.weekSold)} MWh</b> · ölçeğin: <b>${benim.ico} ${benim.nm}</b>`,
+      '<p class="sub">🏛️ Katkı tablosu yükleniyor...</p>');
+    (NET.on() ? NET.get('katki/' + kHafta(G.week)) : Promise.resolve(null)).then(t => {
+      const el = $('lbicerik');
+      if (!el) return;
+      const rows = t ? Object.entries(t).filter(([id]) => id !== NET.id).map(([id, v]) => ({ raw: (v && v.nm) || '?', mwh: (v && v.mwh) || 0, alt: olcekBadge(v && v.olcek) })) : [];
+      WORLD_PLAYERS.slice(0, 10).forEach((b, i) => rows.push({ raw: b, bot: 1, mwh: Math.round(hash01(i, weekIdx(), 77) * 1100 + 60), alt: olcekBadge(1 + Math.floor(hash01(i, 4, 9) * 2)) }));
+      rows.push({ raw: G.company, me: true, mwh: Math.round(G.weekSold), alt: olcekBadge(G.olcek) });
+      rows.sort((a, b) => b.mwh - a.mwh);
+      rows.forEach(r => r.deger = fmtN(r.mwh) + ' MWh');
+      const ben = rows.findIndex(r => r.me) + 1;
+      el.innerHTML = `<table class="ledger">${rows.slice(0, 20).map(satir).join('')}${ben > 20 ? satir(rows[ben - 1], ben - 1) : ''}</table>
+        <p class="sub">🎁 Hafta kapanış ödülleri: #1 ${fmt(3e7)} · #2 ${fmt(2e7)} · #3 ${fmt(1.2e7)} · ilk 10 ${fmt(5e6)} · katkısı olan herkese ${fmt(2e6)}</p>`;
+    }).catch(() => { const el = $('lbicerik'); if (el) el.innerHTML = '<p class="sub">Tablo okunamadı — bağlantını kontrol et.</p>'; });
+  }
 };
 window.openPlayerCard = nm => {
   nm = (nm || '').trim();
@@ -5227,7 +5339,7 @@ window.openPlayerCard = nm => {
   const wi = WORLD_PLAYERS.indexOf(nm);
   const c = net
     ? { nm, w: net.worth || 0, em: net.em || 0, off: net.off, lic: net.lic, pl: net.pl, st: net.st,
-        il: net.il, country: net.country, ally: net.ally, online: net.online, since: net.since }
+        il: net.il, country: net.country, ally: net.ally, online: net.online, since: net.since, ts: net.ts }
     : wi >= 0 ? botCard(wi) : { nm, unknown: true };
   const row = (l, v) => v === undefined || v === null ? '' : `<tr><td>${l}</td><td><b>${v}</b></td></tr>`;
   const friend = (G.friends || []).some(f => f.nm === nm);
@@ -5237,6 +5349,7 @@ window.openPlayerCard = nm => {
       ${c.online !== undefined ? `<span style="color:${c.online ? 'var(--acc)' : 'var(--dim)'}">●</span> ${c.online ? 'sahada' : 'çevrimdışı'} · ` : ''}
       ${c.country ? (COUNTRIES[c.country] ? COUNTRIES[c.country].flag + ' ' : '') + (c.il ? c.il + ', ' : '') + c.country : c.bot ? 'rakip şirket' : 'şirket'}
       ${c.em !== undefined ? ' · ' + emBadgeHTML(c.em) : ''}</p>
+    ${!c.online && c.ts ? `<p class="sub" style="margin-top:2px">🕐 Son çevrimiçi: <b>${sonGorulme(c.ts)}</b></p>` : ''}
     ${c.unknown ? '<p class="sub">Bu şirketin karnesi henüz sunucuya düşmedi.</p>' : `
     <table class="ledger">
       ${row('💼 Şirket değeri', fmt(c.w))}
@@ -6941,23 +7054,11 @@ function openUnitSheet(id) {
           if (wx2) {
             const h = (nowMin() / 60) % 24;
             const bell = (h >= 6 && h <= 19.5) ? Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) : 0;
-            // 🐞 BOT DÜZELTMESİ: burada virgüllü '0,00' yazılıyordu, tablodaki diğer tüm çarpanlar
-            // (bell.toFixed(2) dahil) nokta kullanıyor — biçim tutarsızlığı düzeltildi.
-            rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0.00')]);
-            if (wx2.day) {
-              // 🐞 bot bulgusu (-P-P3ghTOJp9tTk1ImXv): plantOutput() bulutu NEWBIE_CLOUD*newbieAid() ile azaltıyor
-              // ama tablo ham wx2.cloud kullanıyordu — gösterilen çarpan gerçek üretimle tutmuyordu.
-              const effCloud2 = (wx2.cloud || 0) * (1 - NEWBIE_CLOUD * newbieAid());
-              rows.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0) + (newbieAid() > .01 ? ' <span class="pos">🌱 takviyeli</span>' : ''), '×' + Math.max(.05, 1 - effCloud2 / 100).toFixed(2)]);
-            }
+            rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0,00')]);
+            if (wx2.day) rows.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0), '×' + Math.max(.05, 1 - (wx2.cloud || 0) / 100).toFixed(2)]);
           } else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + sunFactor(q2).toFixed(2)]); // 🐞 bot bulgusu: bu satır eksikti, tablo üretimi tutmuyordu
         } else if (T.kind === 'wind') {
-          if (wx2) {
-            // 🐞 bot bulgusu (-P-P3ghTOJp9tTk1ImXv): plantOutput() rüzgara NEWBIE_WIND*newbieAid() takviyesi ekliyor
-            // ama tablo ham wx2.w kullanıyordu — gösterilen çarpan gerçek üretimle tutmuyordu.
-            const boostedW2 = wx2.w + NEWBIE_WIND * newbieAid();
-            rows.push(['🌬️ Canlı rüzgar ' + wx2.w.toFixed(1) + ' m/s' + (newbieAid() > .01 ? ' <span class="pos">+' + (NEWBIE_WIND * newbieAid()).toFixed(1) + ' 🌱 takviye</span>' : '') + ' → türbin eğrisi', '×' + (windCurve(boostedW2, T) ?? 0).toFixed(2)]);
-          }
+          if (wx2) rows.push(['🌬️ Canlı rüzgar ' + wx2.w.toFixed(1) + ' m/s → türbin eğrisi', '×' + (windCurve(wx2.w, T) ?? 0).toFixed(2)]);
           else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + (windFactor(q2) * .55).toFixed(2)]); // 🐞 bot bulgusu: eksikti
           rows.push(['⚙️ Bu modelin eğrisi', T.cutIn + ' m/s altı dönmez · ' + T.nom + ' m/s üstü tam güç · ' + T.storm + ' m/s fırtına kapatması']);
         } else if (T.kind === 'hydro') {
@@ -7247,6 +7348,7 @@ function openCompanySheet() {
   const R = G.research;
   const resRow = key => {
     const D = RESEARCH[key], lvl = R.lvl[key] || 0;
+    if (!D) return ''; // 🐞 katalogdan kalkan araştırma (ör. eski liccap) ekranı ÇÖKERTMESİN
     const act = R.active && R.active.key === key ? R.active : null;
     if (act) {
       const total = act.dur || Math.max(1, act.until - Date.now());
@@ -7287,9 +7389,6 @@ function openCompanySheet() {
     </table>
     <div style="font-size:12px;margin:10px 0 2px">🧪 <b>ARAŞTIRMA</b> <span class="sub">tek seferde 1 araştırma yürür</span></div>
     <p class="sub" style="margin:2px 0 4px">Puanların: <b>🌞 ${G.resPts.daily} günlük</b> · <b>📅 ${G.resPts.weekly} haftalık</b><br>Sv1-10: 1 günlük puan (günün İLK satışında +1) · Sv11+: 1 haftalık puan (📅 haftalık görev ödülüyle +1)</p>
-    ${/* 🐞 BOT DÜZELTMESİ: 'liccap' araştırması 18 Ağu'da kaldırıldı (satır ~1576), yerine 'range'
-       (Ofis Menzili) geldi ama bu çağrı güncellenmemişti — RESEARCH['liccap'] undefined olduğu için
-       resRow() D.ico'ya erişirken TypeError fırlatıp Şirket panelini her açılışta çökertiyordu. */''}
     ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}
     ${brandPanelHTML()}
     ${accountRowHTML()}
@@ -7890,7 +7989,7 @@ document.querySelectorAll('#drawer button[data-act]').forEach(b => b.addEventLis
   else if (act === 'maint') { hideSheets(); openMaintSheet(); }
   else if (act === 'company') { hideSheets(); openCompanySheet(); }
   else if (act === 'menu') openTasks();
-  else if (act === 'home') goHome();
+  else if (act === 'rank') openLeaderboard(); // patron: Merkez kalktı, 🏆 Sıralama geldi
   else if (act === 'friends') openFriendsSheet();
   else if (act === 'help') openHelp();
 }));
@@ -7975,7 +8074,7 @@ function frameBody(ts) {
         const k = G.research.active.key;
         G.research.lvl[k] = (G.research.lvl[k] || 0) + 1;
         G.research.active = null;
-        toast('🧪 Araştırma tamamlandı: ' + RESEARCH[k].nm + ' Sv' + G.research.lvl[k] + '!', '', null, 0, true);
+        toast('🧪 Araştırma tamamlandı: ' + (RESEARCH[k] ? RESEARCH[k].nm : k) + ' Sv' + G.research.lvl[k] + '!', '', null, 0, true); // katalogdan kalkan anahtar (eski liccap) çökertmesin
         beep(880, .12);
         save();
         if ($('companysheet').classList.contains('show')) openCompanySheet();
