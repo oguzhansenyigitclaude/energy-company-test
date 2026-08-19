@@ -2,6 +2,23 @@
 
 Bu dosya, `suggestions` düğümünden okunup bakım botu tarafından değerlendirilen kayıtların anahtarlarını listeler. Sadece burada olmayan (yeni) anahtarlar bir sonraki turda işlenir.
 
+## 2026-08-19 21:56 turu
+
+| Anahtar | Zaman (UTC) | Özet | Sonuç |
+|---|---|---|---|
+| `-P-PWv1I-ulOrEc349h_` | 2026-08-19 14:57 | ClaudeBot: durum özeti (bug değil) — eğitim/araştırma başlangıcı, bağlı depo satış/yıkım kilidi, grup satışı, VERİM DÖKÜMÜ çarpanları test edildi, hepsi doğru | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-PWx-P3ajqJy5amNvz` | 2026-08-19 14:57 | ClaudeBot: kozmetik — `vendor/leaflet.css`'in referans verdiği varsayılan Leaflet ikonları (`vendor/images/layers.png`, `marker-icon.png` vb.) repo'da yok, canlı sitede de 404 veriyor; oyunun özel marker'ları kullanılıyor, görsel etkisi yok ama konsolu kirletiyor | Kod değiştirilmedi — düzeltme `index.html` dışında (CSS/görsel dosya ekleme) kalıyor, bu turun "index.html'de küçük hedefli değişiklik" kapsamı dışında. Bilgi notu olarak `patrona-sorulacak.md`'ye yazıldı. |
+| `-P-Pg6DF5TJSf5BTO6SX` | 2026-08-19 15:38 | ClaudeBot: durum özeti (bug değil) — grup depo toplamı ve SAT tahmini tutarlı, bildiren botun kendi proxy/tarayıcı kurulum notu | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-PvLBATe4a63GUNyHY` | 2026-08-19 16:49 | ClaudeBot: durum özeti (bug değil) — grup toplamı, bağlı depo tek başına satış engeli, VERİM DÖKÜMÜ, Şirket paneli/NaN taraması hepsi doğru | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-QBZ4V8ZlqvQw86GXq` | 2026-08-19 18:04 | ClaudeBot: durum özeti (bug değil) — bağlı depo demolish/discharge doğrudan engellendi, VERİM DÖKÜMÜ tutarlı, müzayede/NaN sorunu yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-QJxsC30FPkL3aeHNF` | 2026-08-19 18:40 | ClaudeBot: KRİTİK — `demolishUnit()` bağlı depoyu doğru engelliyor ama asıl mutasyonu yapan `demolishDo(id)`'de aynı kontrol yok; konsoldan `demolishDo(6)` çağrısı bağlı depoyu bağlantı kesilmeden/hat ücreti ödenmeden sessizce satıyor | **DÜZELTİLDİ.** Detay: `bot-notlar/duzeltmeler.md`. |
+| `-P-QLZjFn21-vrMKgFJO` | 2026-08-19 18:55 | ClaudeBot: gözlem (bildiren botun kendi ifadesiyle "kesin değil, doğrulama ister") — MERKEZ depoda SAT'a basmadan hemen önce okunan `stored` değeri ile gerçek satılan miktar arasında ~%43 fark, offline-catchup simülasyonu ile SAT anı arasında olası yarış durumu şüphesi | Kod değiştirilmedi — bildiren botun kendisi doğrulanmamış olduğunu belirtiyor, tek seferlik/doğrulanmamış bir gözlem için kod değişikliği riski almadık. Bilgi notu olarak `patrona-sorulacak.md`'ye yazıldı, gelecek turlarda tekrar ederse öncelik verilecek. |
+| `-P-QY_wAaRpycmWfhdxV` | 2026-08-19 19:45 | ClaudeBot: BUG (veri/gelir kaybı riski) — `startDischarge()` sadece başlangıçta ve tamamlanınca `save()` çağırıyor, ara tick'lerde kaydetmiyor; "Tüm Depoları Sat" tetiklenip sekme birkaç saniye içinde kapatılırsa satış istemcide görünüp sunucuya hiç yazılmıyor | Kod değiştirilmedi — patrona soruldu (bkz. `patrona-sorulacak.md`), boşaltma/kayıt akışının merkezine dokunan, dikkatli tasarım kararı gerektiren bir değişiklik. |
+| `-P-QlT1J-JcZyQyEjnGe` | 2026-08-19 20:44 | ClaudeBot: KRİTİK — aynı `demolishDo()` bağlı depo koruması eksikliği, ikinci bağımsız bildirim, aynı düzeltme önerisi | **DÜZELTİLDİ** (yukarıdaki `-P-QJxsC30FPkL3aeHNF` ile birlikte, tek düzeltme). |
+| `-P-QyM6fQi2C7kqr26Y-` | 2026-08-19 21:42 | ClaudeBot: durum özeti (bug değil) — toplu satış tahmini/gerçekleşen farkı tutarlı, bağlı depo satış/yıkım engeli doğru, VERİM DÖKÜMÜ tutarlı | Bilgi amaçlı, aksiyon gerekmiyor. |
+
+Bu turda 10 yeni kayıt işlendi. 1 kök nedenden (bağlı depo koruması `demolishDo()`'da eksikti, iki bağımsız bildirim) tek kod değişikliği yapıldı — mevcut ekonomi kuralını değiştirmeden bypass deliğini kapattı. 2 bulgu (bulut kayıt akışında ara tick eksikliği, VERİM DÖKÜMÜ ile ilgisiz vendor/leaflet ikon 404'leri) kapsam/risk nedeniyle patrona bırakıldı ya da bilgi notu olarak işlendi. 1 gözlem bildiren botun kendisi tarafından da doğrulanmamış olduğu için sadece not edildi. Kalan 5'i durum özeti/bilgi amaçlıydı. Doğrulama: tüm inline `<script>` blokları `new Function` ile sözdizimi kontrolünden geçti; Playwright (headless Chromium, hem `file://` hem yerel `http://` sunucu üzerinden) sayfa açılışında `pageerror` üretmedi. BUILD_TAG ve version.json `2026-08-19 21:56` olarak güncellendi.
+
 | Anahtar | Zaman (UTC) | Özet | Sonuç |
 |---|---|---|---|
 | `-P-LuNJCmDWvKqE3jQvR` | 2026-08-18 22:06 | ClaudeBot: headless Chromium tüm HTTPS hedeflerinde ERR_CONNECTION_RESET veriyor (proxy üzerinden curl çalışıyor) | Oyun koduyla ilgili değil, bildiren botun kendi test ortamı/proxy sorunu. Kod değişikliği yapılmadı. |

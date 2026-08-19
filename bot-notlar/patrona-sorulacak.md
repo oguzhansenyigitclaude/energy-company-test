@@ -1,5 +1,34 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-19 21:56 turu — karar bekleyen 1 konu, 2 bilgi notu
+
+### 1) 💾 "Tüm Depoları Sat" sonrası erken sekme kapatmada satış kayboluyor — ara tick kaydı eklensin mi?
+Kayıt: `-P-QY_wAaRpycmWfhdxV` (ClaudeBot, 19:45)
+
+Bot, "Tüm Depoları Sat" tetikleyip ~2sn sonra sekmeyi kapattığında, istemci tarafında kasa artışını (57.78M→58.44M) gördüğünü ama sunucudaki kaydın (`save/<uid>`) bu artışı hiç yansıtmadığını (kasa aynı kaldı, `disch=null`) doğruladı. Kök neden: `startDischarge()` (satır ~2415-2464) sadece boşaltma BAŞLARKEN ve TAMAMLANDIĞINDA `save()` çağırıyor; boşaltma süresince (saniyeler-dakikalar) ara tick'lerde kaydetmiyor. Süreç tamamlanmadan sekme kapatılırsa (veya tarayıcı/işlem sonlandırılırsa) o satışın geliri sessizce kayboluyor.
+
+**Neden kendim düzeltmedim:** Bu, boşaltma/kayıt akışının merkezine dokunuyor — ne sıklıkta ara `save()` çağrılacağı (her tick mi, throttle'lı mı?), bunun mevcut 20sn'lik `cloudSave` throttle'ıyla nasıl bir arada çalışacağı ve performans/ağ trafiği etkisi dikkatli bir tasarım kararı gerektiriyor. Ayrıca önceki turda size sorulan `pagehide`/`beforeunload` flush konusuyla (aşağıda "Önceki turlar") aynı kayıt-güvenilirliği ailesinden — birlikte değerlendirilmesi daha tutarlı olabilir.
+
+**Öneri (karar sizde):** En basit çözüm, `startDischarge()` içindeki periyodik tick döngüsüne (varsa) düşük sıklıklı bir `save()` eklemek (örn. her ~10-15sn'de bir) olabilir; daha sağlam bir çözüm, boşaltmanın ilerleyişini de kaydeden bir "devam eden işlem" durumu tutup sayfa yeniden açıldığında/`afterLogin`'de bunu tamamlamak olabilir — ama bu daha büyük bir değişiklik.
+
+---
+
+### Bilgi notu 1: `vendor/leaflet.css`'in referans verdiği varsayılan Leaflet ikonları repo'da yok (404, kozmetik)
+Kayıt: `-P-PWx-P3ajqJy5amNvz` (ClaudeBot, 14:57)
+
+`vendor/leaflet.css` her sayfa yüklemesinde `vendor/images/layers.png`, `marker-icon.png`, `marker-icon-2x.png`, `marker-shadow.png` gibi dosyalara `background-image: url(...)` ile referans veriyor ama bu dosyalar repo'da (ve canlı sitede) yok — her yükleme 4 adet 404 üretiyor. Oyun özel zoom butonları ve kendi marker ikonlarını kullandığı için görünür bir UI etkisi yok, sadece konsolu kirletiyor.
+
+Kod değiştirmedim çünkü gerçek düzeltme ya eksik görsel dosyaları eklemek ya da `vendor/leaflet.css`'i (bir `.css` dosyası, `index.html` değil) düzenlemek gerektiriyor — bu turun "index.html'de küçük hedefli değişiklik" kapsamının dışında. İsterseniz bir sonraki turda (görsel dosya eklemeye veya CSS'e küçük bir dokunuşa onay verirseniz) hallederiz.
+
+---
+
+### Bilgi notu 2: MERKEZ depoda `stored` okuması ile gerçek satılan miktar arasında ~%43 fark gözlemi (doğrulanmamış)
+Kayıt: `-P-QLZjFn21-vrMKgFJO` (ClaudeBot, 18:55)
+
+Bot, SAT'a basmadan hemen önce okunan `stored=10.65 MWh` değeri ile `startDischarge` tetiklendiğinde gerçekte satılan `15.25 MWh` arasında fark olduğunu bildirdi; olası neden olarak "X dk uzaktaydın" offline-catchup simülasyonunun SAT anında arka planda hâlâ dolum yapıyor olabileceğini öne sürdü. Botun kendi ifadesiyle bu "kesin değil, doğrulama ister" bir gözlem — tek seferlik, tekrarlanmadı. Bu turda kod değişikliği yapmadım; eğer gelecek turlarda benzer bir fark tekrar bildirilirse (ideal olarak repro adımlarıyla) önceliklendirip inceleyeceğim.
+
+---
+
 ## 2026-08-19 14:58 turu — karar bekleyen 1 konu
 
 ### 1) 💾 Bulut kaydı: `pagehide`/`beforeunload` olayında da zorunlu flush eklensin mi?

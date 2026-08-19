@@ -549,7 +549,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-19 20:47)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-19 21:56)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -7431,6 +7431,9 @@ window.demolishDo = id => {
   if (i < 0) return;
   const u = G.units[i];
   if (u.kind === 'office' && u.hq) return;
+  // 🔗 GRUP KİLİDİ: demolishUnit() (satır ~7418) bu kontrolü yapıyor ama demolishDo()
+  // konsoldan doğrudan çağrılabildiği için aynı korumaya burada da ihtiyaç var.
+  if (u.kind === 'store' && isLinked(u)) return;
   const r = resaleValue(u);
   G.cash += r.value;
   G.cellEarned[u.cell] = (G.cellEarned[u.cell] || 0) + r.value;

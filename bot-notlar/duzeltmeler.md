@@ -2,6 +2,39 @@
 
 Bu dosya, bakım botunun bu turda index.html üzerinde yaptığı düzeltmelerin ÖNCE/SONRA kod parçalarını ve gerekçesini listeler. Yerel geliştirici bunları ana projeye taşıyabilir / gözden geçirebilir.
 
+## 2026-08-19 21:56 turu
+
+### Düzeltme 1: `demolishDo()` bağlı depo koruması eksikti (konsoldan çağrıyla grup kilidi bypass edilebiliyordu)
+
+**Bulgu:** `-P-QJxsC30FPkL3aeHNF` (ClaudeBot, 18:40) ve `-P-QlT1J-JcZyQyEjnGe` (ClaudeBot, 20:44) — aynı kök nedenin iki bağımsız bildirimi. `demolishUnit(id)` (satış onayı akışı, UI butonu) bağlı depoyu doğru şekilde engelliyor, ama gerçek silme/ödeme işlemini yapan `demolishDo(id)` fonksiyonunda bu kontrol yoktu. Konsoldan doğrudan `demolishDo(6)` çağrılınca bağlı (linkli) depo, bağlantı kesilmeden ve hat ücreti ödenmeden sessizce satılıyor, içindeki enerji siliniyor ve iade kasaya geçiyordu.
+
+**Kök neden:** Grup kilidi kontrolü (`u.kind === 'store' && isLinked(u)`) sadece `demolishUnit()` içindeki onay-modalı açan yolda vardı (satır ~7418); asıl mutasyonu yapan `demolishDo()` bu kontrolü tekrarlamıyordu.
+
+**ÖNCESİ** (`index.html`, ~satır 7429):
+```js
+window.demolishDo = id => {
+  const i = G.units.findIndex(x => x.id === id);
+  if (i < 0) return;
+  const u = G.units[i];
+  if (u.kind === 'office' && u.hq) return;
+  const r = resaleValue(u);
+```
+
+**SONRASI:**
+```js
+window.demolishDo = id => {
+  const i = G.units.findIndex(x => x.id === id);
+  if (i < 0) return;
+  const u = G.units[i];
+  if (u.kind === 'office' && u.hq) return;
+  // 🔗 GRUP KİLİDİ: demolishUnit() (satır ~7418) bu kontrolü yapıyor ama demolishDo()
+  // konsoldan doğrudan çağrılabildiği için aynı korumaya burada da ihtiyaç var.
+  if (u.kind === 'store' && isLinked(u)) return;
+  const r = resaleValue(u);
+```
+
+**Etki:** Mevcut "bağlı depo tek başına satılamaz" kuralını (ekonomi/dengeyi DEĞİŞTİRMEDEN) zaten var olan UI yolunun dışına da genişletiyor — ekonomiye yeni bir kural eklemiyor, sadece var olan korumadaki bir bypass deliğini kapatıyor. Doğrulama: tüm inline `<script>` blokları `new Function` ile sözdizimi kontrolünden geçti; Playwright (headless Chromium, hem `file://` hem yerel `http://` sunucu üzerinden) sayfa açılışında `pageerror` üretmedi.
+
 ## 2026-08-19 14:58 turu
 
 ### Düzeltme 1: VERİM DÖKÜMÜ tablosu "yeni şirket takviyesi" (NEWBIE_WIND/NEWBIE_CLOUD) çarpanını göstermiyordu
