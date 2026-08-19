@@ -446,7 +446,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-19 17:13) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-19 20:41) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -549,7 +549,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-19 17:13)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-19 20:41)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1775,7 +1775,9 @@ window.disconnectUnit = id => {
 window.connectUnitTo = (id, stId) => {
   const u = G.units.find(x => x.id === id);
   const st = storeById(stId);
-  if (!u || !st || st.cell !== u.cell) return;
+  if (!u || !st) return;
+  // eskiden sessiz return'dü — harita modunda sessiz başarısızlık kafa karıştırıyor
+  if (st.cell !== u.cell) { toast('🔗 İstasyon santralla AYNI ruhsat karesinde olmalı', 'warn'); return; }
   if (connCount(st) >= STORE_TYPES[st.t].conn) { toast('Bu istasyonun bağlantı limiti dolu', 'warn'); return; }
   u.st = stId;
   u.noAuto = false;
@@ -2206,6 +2208,12 @@ const adFinishBtnHTML = u => `<button class="bigsell" style="background:#8a6cff;
 // Kazanma: 🏛️ Devlet Katkı Programı sıralaması + ölçek terfileri + haftalık görev.
 // Harcama: hızlandırma, 24 saatlik takviyeler, kalıcı anlaşmalar, VIP. Gerçek parayla satın
 // alma Play sürümünde (Play Billing) açılacak — düğmeler o güne dek "yakında" modunda.
+// 💰 FİYAT KALİBRASYONU (patron, 19 Ağu akşam): "Ömür Boyu VIP oyunun EN PAHALI eşyası —
+// gerçek parada ~500 TL; sıralamada 3 ay üst üste #1 olan ancak alabilsin." Hesap: #1 haftalık
+// 50💠 + haftalık görev 5💠 → 13 hafta ≈ 715💠 → Ömür Boyu = 700💠. Diğer kalemler orantılı,
+// paketlerde 700💠'ye en ucuz yol ₺499 paketi (500 TL sözü paket kombinasyonlarıyla da tutar).
+// İkinci ölçü (patron): ilk-10 oyuncu ~1 aylık birikimle 1 aylık VIP alabilsin — devamlılık
+// döngüsü. Hesap: ilk-10 haftalık 10💠 + görev 5💠 → 4 hafta = 60💠 → VIP Ay = 60💠.
 const ipBakiye = () => Math.max(0, Math.floor((G && G.ip) || 0));
 const ipProdBoost = () => G && G.ipBoost && G.ipBoost.t === 'prod' && Date.now() < G.ipBoost.until ? 1.15 : 1;
 const ipSatBoost = () => G && G.ipBoost && G.ipBoost.t === 'sat' && Date.now() < G.ipBoost.until ? 1.10 : 1;
@@ -2226,51 +2234,51 @@ window.openImtiyazShop = () => {
     </div>`;
   $('modal').innerHTML = `
     <h2 style="display:flex;align-items:center;gap:8px"><img src="img/imtiyaz.webp" onerror="this.remove()" style="width:34px;height:34px;border-radius:9px" alt="">İmtiyaz Mağazası</h2>
-    <p class="sub" style="margin-top:0">Bakiyen: <b style="color:#cfc2ff">💠 ${ipBakiye()} İmtiyaz Puanı</b> · kazanç yolları: 🏛️ Devlet Katkı sıralaması, ölçek terfileri, haftalık görev</p>
+    <p class="sub" style="margin-top:0">Bakiyen: <b style="color:#cfc2ff">💠 ${ipBakiye()} İmtiyaz Puanı</b> · kazanç yolları: 🏛️ Devlet Katkı sıralaması, ölçek terfileri, haftalık görev · 👑 Enerji Holdingi ligindekiler holding kaldıkça zaten REKLAMSIZ oynar</p>
     ${boost ? `<p class="sub" style="color:var(--acc)">Aktif takviye: ${boost.t === 'prod' ? '🚀 Üretim +%15' : '💰 Satış +%10'} — kalan ${fmtHrs((boost.until - Date.now()) / 36e5)}</p>` : ''}
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">⚡ HIZLANDIRMA</div>
-    ${urun('insaat', '🏗️', 'Tüm İnşaatları Anında Bitir', 8, insaSay ? insaSay + ' inşaat tamamlanır' : 'süren inşaat yok', !insaSay, 'inşaat yok')}
-    ${urun('arastirma', '🧪', 'Araştırmayı Anında Bitir', 10, G.research.active ? 'süren araştırma tamamlanır' : 'süren araştırma yok', !G.research.active, 'araştırma yok')}
+    ${urun('insaat', '🏗️', 'Tüm İnşaatları Anında Bitir', 10, insaSay ? insaSay + ' inşaat tamamlanır' : 'süren inşaat yok', !insaSay, 'inşaat yok')}
+    ${urun('arastirma', '🧪', 'Araştırmayı Anında Bitir', 12, G.research.active ? 'süren araştırma tamamlanır' : 'süren araştırma yok', !G.research.active, 'araştırma yok')}
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">📈 24 SAATLİK TAKVİYELER <span class="sub">aynı anda tek takviye</span></div>
-    ${urun('prod', '🚀', 'Üretim Takviyesi +%15', 15, 'tüm santraller 24 saat +%15 üretir', !!boost, 'takviye aktif')}
-    ${urun('sat', '💰', 'Satış Primi +%10', 15, 'tüm satışlar 24 saat +%10 kazandırır', !!boost, 'takviye aktif')}
+    ${urun('prod', '🚀', 'Üretim Takviyesi +%15', 20, 'tüm santraller 24 saat +%15 üretir', !!boost, 'takviye aktif')}
+    ${urun('sat', '💰', 'Satış Primi +%10', 20, 'tüm satışlar 24 saat +%10 kazandırır', !!boost, 'takviye aktif')}
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">📜 KALICI</div>
-    ${urun('bakim', '🔧', 'Bakım Anlaşması (KALICI)', 60, 'tüm bakım giderleri kalıcı -%20', !!G.bakimAnlasma, 'zaten var')}
-    ${urun('vipAy', '🎬', 'VIP Reklamsız — 1 Ay', 40, 'reklam butonları ödülü reklamsız verir', adFreeActive() && G.adFreeLife, 'ömür boyu var')}
-    ${urun('vipLife', '♾️', 'VIP Reklamsız — Ömür Boyu', 150, 'kalıcı reklamsız ödüller', !!G.adFreeLife, 'zaten var')}
+    ${urun('bakim', '🔧', 'Bakım Anlaşması (KALICI)', 120, 'tüm bakım giderleri kalıcı -%20', !!G.bakimAnlasma, 'zaten var')}
+    ${urun('vipAy', '🎬', 'VIP Reklamsız — 1 Ay', 60, 'reklam butonları ödülü reklamsız verir', adFreeActive() && G.adFreeLife, 'ömür boyu var')}
+    ${urun('vipLife', '♾️', 'VIP Reklamsız — Ömür Boyu', 700, 'oyunun en pahalı eşyası — kalıcı reklamsız ödüller', !!G.adFreeLife, 'zaten var')}
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">💳 İMTİYAZ PUANI SATIN AL</div>
     <p class="sub">Gerçek parayla satın alma <b>Google Play sürümünde</b> açılacak — test döneminde puan yalnız oyun içinden kazanılır.</p>
-    <div style="display:flex;gap:6px">${[['💠 60', '₺49'], ['💠 200', '₺129'], ['💠 550', '₺299']].map(([a, b]) => `<button disabled style="flex:1;padding:9px 4px;border-radius:8px;border:1px dashed var(--line);background:transparent;color:var(--dim);font-weight:800;font-size:11px">${a}<br>${b} · yakında</button>`).join('')}</div>
+    <div style="display:flex;gap:6px">${[['💠 50', '₺49'], ['💠 150', '₺129'], ['💠 380', '₺299'], ['💠 700', '₺499']].map(([a, b]) => `<button disabled style="flex:1;padding:9px 4px;border-radius:8px;border:1px dashed var(--line);background:transparent;color:var(--dim);font-weight:800;font-size:11px">${a}<br>${b} · yakında</button>`).join('')}</div>
     <button class="primary ghostbtn" onclick="closeModal()" style="margin-top:8px">Kapat</button>`;
   $('overlay').classList.add('show');
 };
 window.ipSatinAl = kod => {
   if (kod === 'insaat') {
     const liste = G.units.filter(u => u.buildDone > Date.now());
-    if (!liste.length || !ipHarca(8)) return;
+    if (!liste.length || !ipHarca(10)) return;
     liste.forEach(u => { u.buildDone = Date.now(); u._ann = true; });
     ensureConnections();
     toast('💠🏗️ ' + liste.length + ' inşaat anında tamamlandı!', '', null, 0, true);
   } else if (kod === 'arastirma') {
-    if (!G.research.active || !ipHarca(10)) return;
+    if (!G.research.active || !ipHarca(12)) return;
     G.research.active.until = Date.now(); // tamamlama anonsunu mevcut tik verir
     toast('💠🧪 Araştırma anında tamamlanıyor!', '', null, 0, true);
   } else if (kod === 'prod' || kod === 'sat') {
     if (G.ipBoost && Date.now() < G.ipBoost.until) { toast('💠 Zaten aktif bir takviyen var — bitmesini bekle', 'warn'); return; }
-    if (!ipHarca(15)) return;
+    if (!ipHarca(20)) return;
     G.ipBoost = { t: kod, until: Date.now() + 24 * 3600e3 };
     toast(kod === 'prod' ? '💠🚀 Üretim Takviyesi aktif: 24 saat +%15!' : '💠💰 Satış Primi aktif: 24 saat +%10!', '', null, 0, true);
   } else if (kod === 'bakim') {
-    if (G.bakimAnlasma || !ipHarca(60)) return;
+    if (G.bakimAnlasma || !ipHarca(120)) return;
     G.bakimAnlasma = true;
     G.maintDiscount = Math.min(G.maintDiscount || 1, .8);
     toast('💠🔧 Bakım Anlaşması imzalandı — bakım giderleri KALICI -%20!', '', null, 0, true);
   } else if (kod === 'vipAy') {
-    if (!ipHarca(40)) return;
+    if (!ipHarca(60)) return;
     G.adFreeUntil = Math.max(Date.now(), G.adFreeUntil || 0) + 30 * 864e5;
     toast('💠🎬 VIP Reklamsız 1 ay aktif!', '', null, 0, true);
   } else if (kod === 'vipLife') {
-    if (G.adFreeLife || !ipHarca(150)) return;
+    if (G.adFreeLife || !ipHarca(700)) return;
     G.adFreeLife = true;
     toast('💠♾️ Ömür Boyu VIP Reklamsız aktif!', '', null, 0, true);
   } else return;
@@ -2912,6 +2920,12 @@ function katkiHaftaKapat(eskiHafta, katki) {
     G.ip = (G.ip || 0) + ipOdul; // 💠 terfi ödülü
     addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta şebekeye ${fmtN(katki)} MWh katkı sağladınız. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki: ${fmt(odul)} + 💠 ${ipOdul} İmtiyaz Puanı. Tebrikler!`, true);
     toast(y.ico + ' Şirketin artık ' + y.nm + '! Teşvik: +' + fmt(odul) + ' ve 💠 +' + ipOdul, '', null, 0, true);
+    // 👑 EN ÜST LİG AYRICALIĞI duyurusu — reklamsızlık adFreeActive() içinde ölçekten okunur,
+    // burada gün eklenmez: holding'likten düşen ayrıcalığı da kaybeder (patron tasarımı).
+    if (G.olcek === OLCEK.length - 1) {
+      addMail('🏛️ Enerji Bakanlığı', '👑 Enerji Holdingi — REKLAMSIZ ayrıcalık', 'Sektörün zirvesindesiniz: holding statünüz sürdüğü müddetçe oyun REKLAMSIZ. Statüyü korumak için haftalık şebeke katkınızı yüksek tutun.', true);
+      toast('👑 Enerji Holdingi — holding kaldıkça REKLAMSIZ oynarsın!', '', null, 0, true);
+    }
   } else if (eski > 0 && katki < OLCEK[eski].esik * .25) {
     // ⬇️ KADEME KORUMA: mevcut ölçeğin eşiğinin çeyreğinin altında kalan hafta ölçeği bir düşürür
     G.olcek = eski - 1;
@@ -2979,7 +2993,11 @@ function offerLeft(o) {
   return Math.floor(ms / 3600e3) + 's ' + Math.floor(ms % 3600e3 / 60e3) + 'dk';
 }
 // VIP Reklamsız: reklam butonları reklam izletmeden ödül verir
-const adFreeActive = () => G.adFreeLife || (G.adFreeUntil && G.adFreeUntil > Date.now());
+// 👑 LİG AYRICALIĞI (patron, 19 Ağu akşam): Enerji Holdingi ligindeki HERKES holding kaldığı
+// sürece reklamsız oynar. İlk-10 gibi sıfır toplamlı değil — herkese açık hedef, "üst lige
+// çıkmak için zorlar". Ölçek zaten haftalık canlı değerlendirme: katkısı düşen holding'likten
+// düşer, reklamlar geri gelir — "oynamaya devam ettiği müddetçe" şartı kendiliğinden sağlanır.
+const adFreeActive = () => G.adFreeLife || (G.adFreeUntil && G.adFreeUntil > Date.now()) || G.olcek === OLCEK.length - 1;
 const LIFE_SOLD = 217; // simülasyon: satılan ömür boyu paket sayısı (gerçekte sunucudan)
 const lifePrice = () => 500 * Math.pow(2, Math.floor(LIFE_SOLD / 500)); // 500 kişide ₺1000, 1000'de ₺2000...
 window.buyAdFree = kind => {
@@ -3234,6 +3252,20 @@ window.startStoreLink = id => {
   hideSheets();
   setMode('link');
   toast('🔗 Bağlanmak istediğin DEPOYA haritadan dokun', '', null, 0, true);
+};
+// 🔗 SANTRAL BAĞLAMA MODU (patron: "bir sürü bağlan düğmesi olmaz — tek Bağlan, basınca harita
+// açılır, bağlanacağım şeye tıklarım; bağlıyken önce Bağlantıyı Kes"): depo makinesinin santral sürümü.
+let PLINK_SRC = null;
+window.startPlantLink = id => {
+  const u = G.units.find(x => x.id === id);
+  if (!u) return;
+  if (assignedStoreOf(u)) { toast('⛔ Santral zaten bağlı — başka istasyona geçmek için önce Bağlantıyı Kes', 'warn', null, 0, true); return; }
+  const aday = readyStores(u.cell).filter(s => connCount(s) < STORE_TYPES[s.t].conn);
+  if (!aday.length) { toast('🔋 Bu karede boş slotu olan istasyon yok — önce depo kur', 'warn', null, 0, true); return; }
+  PLINK_SRC = id;
+  hideSheets();
+  setMode('plink');
+  toast('🔗 Bağlanmak istediğin İSTASYONA haritadan dokun (santralla aynı karede)', '', null, 0, true);
 };
 // ═══ ⚡ HAT HİYERARŞİSİ (patron: "kısaca büyük kazanç için birlik olmak şart olsun") ═══
 // 🧍 BİREYSEL oyuncu: yalnız ÜLKE İÇİNDE hat çeker — başlangıç ülkesinde ya da sonradan
@@ -4969,8 +5001,9 @@ function aucAssets() { // satılabilir varlıkların listesi
     if (u.kind === 'store' && isLinked(u)) continue;
     const T = TYPE_OF(u.kind, u.t);
     if (!T) continue;
-    // 📍 KONUM (patron: "bilmediğim yerdeki santrali almam") — ilanda taşınır
-    out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, loc: placeName(u.cell) + ' · ' + cellCode(u.cell), note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? T.mw + ' MW' : '' });
+    // 📍 KONUM (patron: "bilmediğim yerdeki santrali almam") — ilanda taşınır; cell/ll HAM
+    // olarak da taşınır ki kartta bölge adına tıklayınca bilgi ekranı açılabilsin (loc geri çevrilemez)
+    out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, loc: placeName(u.cell) + ' · ' + cellCode(u.cell), cell: u.cell, ll: u.ll, note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? T.mw + ' MW' : '' });
   }
   for (const l of (G.lines || [])) if (lineReady(l) && !aucListed('line', l.id))
     out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs) * .5), loc: placeName(l.from) + ' → ' + placeName(l.to), note: fmtN(l.km) + ' km' });
@@ -4990,16 +5023,31 @@ window.openAucSheet = () => {
     ${mine.length ? mine.map(a => aucCard(a)).join('') : '<p class="sub">Açık ilanın yok.</p>'}`;
   showSheet('aucsheet');
 };
+// 📜🏢 DEVİR MASRAFI (patron: "devraldığı bölgede kalacak; orada ofis ve ruhsat yoksa maliyet
+// ekranına ek maliyet olarak yazılacak") — kazanan devir anında otomatik öder/edinir.
+function aucEkMaliyet(a) {
+  if (a.assetKind !== 'unit' || a.mine || !a.cell) return { ruhsat: 0, ofis: 0, toplam: 0 };
+  const ruhsat = G.licenses[a.cell] ? 0 : licenseFee(a.cell);
+  // ofis LİMİTE SAYILIR: limit doluysa otomatik ofis KURULMAZ ve ücreti de alınmaz (ruhsat
+  // tek başına yeter, birim ofissiz de çalışır) — yoksa müzayede "Ofis Ağı" araştırmasının
+  // kapısını baypas eden bir ofis çiftçiliğine dönüşüyordu (inceleme bulgusu).
+  const ofis = (officeCovers(a.cell) || offices().length >= maxOffices()) ? 0 : OFFICE.cost;
+  return { ruhsat, ofis, toplam: ruhsat + ofis };
+}
 function aucCard(a) {
   const left = Math.max(0, a.until - Date.now());
   const term = AUC_TERMS.find(t => t.h === a.term) || AUC_TERMS[0];
   const next = Math.round((a.top || a.start) * (a.top ? 1.08 : 1) / 1e5) * 1e5;
+  const ek = aucEkMaliyet(a);
   return `<div style="border:1px solid ${a.mine ? 'var(--gold)' : 'var(--line)'};border-radius:10px;padding:8px 10px;margin:6px 0">
     <div style="font-size:12.5px;font-weight:700">${a.ico} ${a.nm}</div>
     <div class="sub">${a.note ? a.note + ' · ' : ''}satıcı: ${a.seller} · ⏳ ${fmtHrs(left / 36e5)} · vergi %${term.tax * 100}</div>
-    ${a.loc ? `<div class="sub">📍 <b>${a.loc}</b></div>` : ''}
+    ${a.loc ? `<div class="sub">📍 <b ${a.cell ? `style="cursor:pointer;text-decoration:underline;color:var(--acc2)" onclick="showCellInfo('${a.cell}')"` : ''}>${a.loc}</b>${a.cell ? ' — dokun: bölge koşulları (bu tesis orada verimli mi?)' : ''}</div>` : ''}
     ${a.assetKind === 'unit' && !a.mine
-      ? `<div class="sub">📍 Devralınca <b>senin merkez ofisinin bölgesine</b> kurulur — bilmediğin sahaya bağlı kalmazsın.</div>` : ''}
+      ? (a.cell
+        ? `<div class="sub">📍 Devralınca tesis <b>bulunduğu bölgede kalır</b>.</div>
+           ${ek.toplam ? `<div class="sub">${ek.ruhsat ? '📜 Bu bölgede ruhsatın yok: <b class="neg">+' + fmt(ek.ruhsat) + '</b>' : ''}${ek.ruhsat && ek.ofis ? ' · ' : ''}${ek.ofis ? '🏢 Ofis menzilinin dışında: <b class="neg">+' + fmt(ek.ofis) + '</b>' : ''} — kazanırsan devir anında otomatik alınır</div>` : ''}`
+        : `<div class="sub">📍 Devralınca <b>senin merkez ofisinin bölgesine</b> kurulur (eski ilan — konum bilgisi yok).</div>`) : ''}
     <div class="qline" style="font-size:11.5px"><span>Açılış: <b>${fmt(a.start)}</b></span><span>En yüksek: <b class="${a.top ? 'pos' : ''}">${a.top ? fmt(a.top) + ' — ' + a.topBy : 'teklif yok'}</b></span></div>
     ${a.mine ? `<div class="sub">Satılırsa eline geçecek: <b>${fmt(Math.round((a.top || 0) * (1 - term.tax)))}</b></div>
       ${a.top
@@ -5085,6 +5133,7 @@ window.aucCreate = (i, hours) => {
   G.auctionsMkt = G.auctionsMkt || [];
   G.auctionsMkt.push({
     id: G.nextId++, mine: true, seller: G.company, ico: x.ico, nm: x.nm, note: x.note, loc: x.loc || '',
+    cell: x.cell || null, ll: x.ll || null, // 📍 bölge bilgisi kartta tıklanabilir
     assetKind: x.kind, assetId: x.id, start, top: 0, topBy: null, term: hours,
     until: Date.now() + hours * 36e5 / (G.demo ? 60 : 1), _bt: Date.now(),
   });
@@ -5122,12 +5171,35 @@ window.aucCancel = id => {
   beep(420, .1);
   save(); openAucSheet();
 };
-window.aucBid = id => {
+window.aucBid = (id, onayli, onayTutar) => {
   const a = aucList().find(x => x.id === id);
   if (!a || a.mine) return;
   const next = Math.round((a.top || a.start) * (a.top ? 1.08 : 1) / 1e5) * 1e5;
   const need = next - (a.myEscrow || 0);
   if (G.cash < need) { toast('Teklif için ' + fmt(need) + ' daha gerekli', 'warn'); return; }
+  // 📜🏢 MALİYET EKRANI (patron): bölgede ruhsat/ofis yoksa İLK teklifte döküm gösterilir —
+  // oyuncu devir masrafını görmeden yarışa girmesin. Sonraki artırmalarda tekrar sorulmaz.
+  // Onay butonu GÖSTERİLEN tutarı taşır: modal açıkken bot artırdıysa (aucTick ~45 sn ritmi)
+  // sorgusuz yüksek tutar bloke edilmesin — modal güncel rakamla yeniden gösterilir.
+  const ek = aucEkMaliyet(a);
+  const onayGecerli = onayli && !(onayTutar && next > onayTutar);
+  if (ek.toplam && !a.myEscrow && !onayGecerli) {
+    if (onayli) toast('🔨 Teklif yükseldi — güncel tutarı yeniden onayla', 'warn');
+    $('modal').innerHTML = `
+      <h2>🔨 Teklif Onayı</h2>
+      <p style="text-align:center">${a.ico} <b>${a.nm}</b><br><span class="sub">📍 ${a.loc || placeName(a.cell)}</span></p>
+      <table class="ledger">
+        <tr><td>Teklif (bloke edilir)</td><td>${fmt(next)}</td></tr>
+        ${ek.ruhsat ? `<tr><td>📜 Bölge ruhsatı (sende yok)</td><td class="neg">+${fmt(ek.ruhsat)}</td></tr>` : ''}
+        ${ek.ofis ? `<tr><td>🏢 Bölge ofisi (menzil dışı)</td><td class="neg">+${fmt(ek.ofis)}</td></tr>` : ''}
+        <tr><td><b>Kazanırsan toplam</b></td><td><b>${fmt(next + ek.toplam)}</b></td></tr>
+      </table>
+      <p class="sub">Tesis bulunduğu bölgede kalır; ruhsat${ek.ofis ? ' ve bölge ofisi' : ''} devirle birlikte OTOMATİK alınır. Ek masraf yalnız kazanırsan, devir anında kesilir. Bölge koşullarını karttaki 📍 bölge adına dokunarak inceleyebilirsin.</p>
+      <button class="primary" onclick="closeModal();aucBid(${id},1,${next})">🔨 Teklifi Ver — ${fmt(next)}</button>
+      <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+    $('overlay').classList.add('show');
+    return;
+  }
   G.cash -= need;
   a.myEscrow = next; a.top = next; a.topBy = G.company;
   toast('🔨 Teklifin verildi: ' + fmt(next) + ' (bloke)', '');
@@ -5215,7 +5287,7 @@ function aucGrantAsset(a) {
   // olacak, alan kişi orada fabrikayı devralacak gibi düşün"). Eskiden merkez ofise taşınıyordu;
   // o zaman ilandaki konum anlamsız kalıyordu. Konum yoksa (eski ilanlar) merkeze düşer.
   let ll = a.ll;
-  if (!ll && a.cell) { const b = cellBounds(a.cell); ll = [b[0][0] + .5 * CELL, b[0][1] + .5 * CELL]; }
+  if (!ll && a.cell) ll = cellCenter(a.cell); // (cellBounds + .5*CELL yüksek enlemde kare genişliğini şaşırıyordu)
   if (!ll) {
     const hq = G.units.find(u => u.kind === 'office' && u.hq) || offices()[0];
     ll = hq ? [hq.ll[0] + (Math.random() - .5) * .02, hq.ll[1] + (Math.random() - .5) * .02] : (SEL.ll || [40.77, 29.94]);
@@ -5223,12 +5295,31 @@ function aucGrantAsset(a) {
   const nu = addUnit(kind, t, ll);
   nu.cond = a.assetCond || 75; // "ikinci el" — sağlamlık ilandaki değerle gelir
   nu.buildDone = Date.now();   // devir anında hazır, yeniden inşa yok
+  // 📜🏢 DEVİR MASRAFI (patron): bölgede ruhsat yoksa ruhsat, ofis menzili dışındaysa bölge ofisi
+  // OTOMATİK alınır — bedeli teklif onayında gösterildi. Kasa o ana dek eridiyse oyuncu yine
+  // mağdur edilmez (doOfferBuy emsali: "devirle ruhsat gelir") — kesinti kasadaki kadar yapılır.
+  const masraf = [];
+  if (!G.licenses[nu.cell]) {
+    const fee = Math.min(licenseFee(nu.cell), Math.max(0, G.cash));
+    G.cash -= fee; G.cellSpent[nu.cell] = (G.cellSpent[nu.cell] || 0) + fee;
+    G.licenses[nu.cell] = true; refreshLicenseTiles();
+    masraf.push('📜 bölge ruhsatı ' + fmt(fee));
+  }
+  if (!officeCovers(nu.cell) && offices().length < maxOffices()) {
+    // ofis limiti DOLUYSA kurulmaz da, ücret de alınmaz (aucEkMaliyet ile aynı kural) —
+    // limit üstü otomatik ofis "Ofis Ağı" araştırma kapısını baypas ediyordu
+    const fee = Math.min(OFFICE.cost, Math.max(0, G.cash));
+    G.cash -= fee; G.cellSpent[nu.cell] = (G.cellSpent[nu.cell] || 0) + fee;
+    addUnit('office', 'office', [nu.ll[0] + .003, nu.ll[1] + .003], 0); // tesisin dibinde bölge ofisi
+    masraf.push('🏢 bölge ofisi ' + fmt(fee));
+  }
   ensureConnections();
   const nerede = a.loc || placeName(nu.cell);
   const bagli = !!assignedStoreOf(nu);
+  const masrafTxt = masraf.length ? `\n\n💸 Devir masrafı: ${masraf.join(' + ')} — bölge artık sana açık.` : '';
   toast('📦 ' + T.nm + ' devralındı — ' + nerede + ' (%' + Math.round(nu.cond) + ' sağlam)', '', null, 0, true);
-  if (!bagli) addMail('🔨 Müzayede', T.nm + ' devralındı', `${T.nm} artık senin — ${nerede} konumunda, olduğu yerde devraldın.\n\n⚠️ Bu karede bağlanacak bir DEPON yok, üretimi şu an boşa gidiyor. Oraya bir enerji deposu kurup santrali bağlaman gerekiyor.`, true);
-  refreshUnitMarkers();
+  if (!bagli || masraf.length) addMail('🔨 Müzayede', T.nm + ' devralındı', `${T.nm} artık senin — ${nerede} konumunda, olduğu yerde devraldın.${masrafTxt}${bagli ? '' : '\n\n⚠️ Bu karede bağlanacak bir DEPON yok, üretimi şu an boşa gidiyor. Oraya bir enerji deposu kurup santrali bağlaman gerekiyor.'}`, true);
+  refreshUnitMarkers(); drawOverlay();
 }
 // ── Bot ilanları: pazar boş kalmasın (deterministik, 3 saatte bir tazelenir)
 function seedAucMarket() {
@@ -5246,15 +5337,32 @@ function seedAucMarket() {
     a.myEscrow = 0;
   }
   G.auctionsMkt = G.auctionsMkt.filter(a => a.mine && !a.done); // eski bot ilanlarını temizle
+  const hq = G.units.find(u2 => u2.kind === 'office' && u2.hq) || offices()[0];
+  const merkez = hq ? hq.ll : [40.77, 29.94];
   for (let k = 0; k < 3; k++) {
     const h = hash01(slot, k, 29);
     const types = Object.keys(PLANT_TYPES);
     const t = types[Math.floor(h * types.length)];
     const T = PLANT_TYPES[t];
     const term = AUC_TERMS[Math.floor(hash01(slot, k, 31) * 3)].h;
+    // 📍 İLAN KONUMU (patron: "devraldığı bölgede kalacak"): HQ çevresinde 40-350 km arası
+    // GERÇEK bir kara noktası — oyuncu bölge adına dokunup koşullara bakarak karar verir.
+    // Deterministik (hash01) denenir, 24 denemede kara bulunamazsa HQ yanına düşer.
+    // ⚠️ LAND_BOX yüklenmeden isLand her yere true der — o durumda rastgele nokta DENİZE
+    // düşebilir; kara verisi gelmeden uzak nokta seçme, HQ yanına (bilinen kara) düş.
+    let ll = null;
+    for (let dn = 0; LAND_BOX && dn < 24 && !ll; dn++) {
+      const ang = hash01(slot, k, 41 + dn * 2) * 2 * Math.PI;
+      const km = 40 + hash01(slot, k, 42 + dn * 2) * 310;
+      const cand = [merkez[0] + Math.cos(ang) * km / 111, merkez[1] + Math.sin(ang) * km / (111 * Math.max(.2, Math.cos(merkez[0] * Math.PI / 180)))];
+      if (cand[0] > -60 && cand[0] < 72 && isLand(cand) && !oyunDisiMi(cand)) ll = cand;
+    }
+    if (!ll) ll = [merkez[0] + .05, merkez[1] + .05];
+    const cell = cellId(ll);
     G.auctionsMkt.push({
       id: G.nextId++, mine: false, seller: WORLD_PLAYERS[Math.floor(hash01(slot, k, 37) * WORLD_PLAYERS.length)],
       ico: T.ico, nm: T.nm + ' (ikinci el)', note: T.mw + ' MW · %' + (60 + Math.floor(h * 35)) + ' sağlam',
+      cell, ll, loc: placeName(cell) + ' · ' + cellCode(cell),
       // assetType/assetCond: kazanan oyuncuya GERÇEK birim kurabilmek için tür bilgisi taşınır
       assetKind: 'unit', assetId: -1, assetType: t, assetType2: 'plant', assetCond: 60 + Math.floor(h * 35),
       start: Math.round(T.cost * (.45 + h * .3) / 1e5) * 1e5,
@@ -5950,9 +6058,11 @@ function setMode(m) {
       ? '🏗️ ' + (PENDING ? TYPE_OF(PENDING.kind, PENDING.t).nm + ' — kurmak istediğin yere dokun' : 'Kurmak istediğin yere dokun')
       : m === 'line' ? '⚡ Hattın varacağı uzak noktaya dokun'
       : m === 'link' ? '🔗 Bağlanacak DEPOYA haritadan dokun'
+      : m === 'plink' ? '🔗 Santralı bağlayacağın İSTASYONA dokun'
       : 'ℹ️ Bilgi almak istediğin konuma dokun';
   }
   if (m !== 'link') LINK_SRC = null; // mod bırakılınca bağlama seçimi de iptal
+  if (m !== 'plink') PLINK_SRC = null;
   $('buildbtn').classList.toggle('on', m === 'build');
   $('infobtn').classList.toggle('on', m === 'info');
 }
@@ -6237,6 +6347,16 @@ function addUnitMarker(u) {
       if (u.id === src) { toast('🔗 Kendisine bağlanamaz', 'warn'); return; }
       LINK_SRC = null; setMode(null);
       storeLinkAsk(src, u.id);   // maliyet ayrıntılı onay ekranı
+      return;
+    }
+    // 🔗 santral bağlama modunda dokunuş HEDEF İSTASYONU seçer (ücret yok → onay ekranı gerekmez)
+    if (MODE === 'plink' && PLINK_SRC != null) {
+      const src = G.units.find(x => x.id === PLINK_SRC);
+      if (u.kind !== 'store') { toast('🔗 Yalnız İSTASYON (depo) seçebilirsin', 'warn'); return; }
+      if (src && u.cell !== src.cell) { toast('🔗 İstasyon santralla AYNI karede olmalı', 'warn'); return; }
+      if (connCount(u) >= STORE_TYPES[u.t].conn) { toast('🔗 Bu istasyonun bağlantı limiti dolu', 'warn'); return; }
+      const sid = PLINK_SRC; PLINK_SRC = null; setMode(null);
+      connectUnitTo(sid, u.id);
       return;
     }
     openUnitSheet(u.id);
@@ -6565,6 +6685,14 @@ window.flyToPlace = (lat, lng, zoom, label) => {
   const outZ = km > 5000 ? 2 : km > 2000 ? 3 : km > 800 ? 4 : 5;
   map.flyTo([(from.lat + ll[0]) / 2, (from.lng + ll[1]) / 2], outZ, { duration: 1.1 });
   setTimeout(() => { map.flyTo(ll, z, { duration: 1.4 }); setTimeout(() => pingAt(ll, label), 1250); }, 1250);
+};
+// 📍 Bölge adına dokununca: bölgeye uç + bilgi ekranı (müzayede kartı vb. inline onclick'ler için).
+// Sıra ÖNEMLİ: flyToPlace içindeki hideSheets açık paneli kapatır — bilgi ekranı uçuştan SONRA açılmalı.
+window.showCellInfo = c => {
+  if (!G || !map || !c) return;
+  const ll = cellCenter(c);
+  flyToPlace(ll[0], ll[1], 11, placeName(c));
+  openCellSheet(c, ll, 'info');
 };
 window.closeNav = () => { $('navpanel').classList.remove('open'); $('navhandle').style.display = ''; };
 window.openNav = tab => {
@@ -7146,11 +7274,15 @@ function openUnitSheet(id) {
           if (wx2) {
             const h = (nowMin() / 60) % 24;
             const bell = (h >= 6 && h <= 19.5) ? Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) : 0;
-            rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0,00')]);
-            if (wx2.day) rows.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0), '×' + Math.max(.05, 1 - (wx2.cloud || 0) / 100).toFixed(2)]);
+            rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0.00')]);
+            // 🐞 [BOT-FIX ca5ae6b] plantOutput() bulutu NEWBIE_CLOUD*newbieAid() ile azaltıyor ve
+            // marka bulut toleransına (T.cloudTol) BÖLÜYOR — tablo da aynı hesabı kullanmalı,
+            // yoksa "çarpımların sonucu = anlık üretim" tutmaz (Günara cloudTol 1.2'de fark ediliyordu)
+            if (wx2.day) { const effCloud2 = (wx2.cloud || 0) * (1 - NEWBIE_CLOUD * newbieAid()) / (T.cloudTol || 1); rows.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0) + (newbieAid() > .01 ? ' <span class="pos">🌱 takviyeli</span>' : '') + ((T.cloudTol || 1) > 1 ? ' <span class="pos">bulut toleransı ×' + T.cloudTol.toFixed(2) + '</span>' : ''), '×' + Math.max(.05, 1 - effCloud2 / 100).toFixed(2)]); }
           } else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + sunFactor(q2).toFixed(2)]); // 🐞 bot bulgusu: bu satır eksikti, tablo üretimi tutmuyordu
         } else if (T.kind === 'wind') {
-          if (wx2) rows.push(['🌬️ Canlı rüzgar ' + wx2.w.toFixed(1) + ' m/s → türbin eğrisi', '×' + (windCurve(wx2.w, T) ?? 0).toFixed(2)]);
+          // 🐞 [BOT-FIX ca5ae6b] plantOutput() rüzgara NEWBIE_WIND*newbieAid() ekliyor — tablo ham wx2.w ile eğri hesaplayınca takviye görünmüyordu
+          if (wx2) { const boostedW2 = wx2.w + NEWBIE_WIND * newbieAid(); rows.push(['🌬️ Canlı rüzgar ' + wx2.w.toFixed(1) + ' m/s' + (newbieAid() > .01 ? ' <span class="pos">+' + (NEWBIE_WIND * newbieAid()).toFixed(1) + ' 🌱 takviye</span>' : '') + ' → türbin eğrisi', '×' + (windCurve(boostedW2, T) ?? 0).toFixed(2)]); }
           else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + (windFactor(q2) * .55).toFixed(2)]); // 🐞 bot bulgusu: eksikti
           rows.push(['⚙️ Bu modelin eğrisi', T.cutIn + ' m/s altı dönmez · ' + T.nom + ' m/s üstü tam güç · ' + T.storm + ' m/s fırtına kapatması']);
         } else if (T.kind === 'hydro') {
@@ -7180,15 +7312,16 @@ function openUnitSheet(id) {
       })() : ''}
       ${!sts.length ? '<p style="color:var(--warn);font-size:12px">🔌 Bağlantısız: üretim boşa gidiyor! Aşağıdan bir istasyona bağlan ya da kareye küçük bir Pil İstasyonu kur.</p>' : ''}
       ${(() => {
+        // 🔗 TEK BAĞLAN DÜĞMESİ (patron: "bir sürü bağlan düğmesi olmaz — sadece Bağlan yazacak,
+        // basınca harita açılır, bağlanacağım şeye tıklarım; bağlıyken önce bağlantı kesilir").
         const cellSts = readyStores(u.cell);
+        const bosAday = cellSts.filter(s => s !== myStore && connCount(s) < STORE_TYPES[s.t].conn);
         let h = '<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🔗 BAĞLANTI YÖNETİMİ</div>';
-        if (myStore) h += `<button class="bigsell half" onclick="disconnectUnit(${u.id})">🔌 Bağlantıyı Kes — ${unitName(myStore)}</button>`;
-        const others = cellSts.filter(s => s !== myStore);
-        if (!cellSts.length) h += '<p class="sub">Bu karede istasyon yok.</p>';
-        else h += others.map(s => {
-          const full = connCount(s) >= STORE_TYPES[s.t].conn;
-          return `<button class="bigsell half" onclick="connectUnitTo(${u.id},${s.id})" ${full ? 'disabled' : ''}>🔗 Bağlan → ${unitName(s)} (${connCount(s)}/${STORE_TYPES[s.t].conn}${full ? ' — LİMİT DOLU' : ''})</button>`;
-        }).join('');
+        if (myStore) h += `<button class="bigsell half" onclick="disconnectUnit(${u.id})">🔌 Bağlantıyı Kes — ${unitName(myStore)}</button>
+          <p class="sub">Başka istasyona bağlamak için önce bağlantıyı kes.</p>`;
+        else if (!cellSts.length) h += `<button class="bigsell half" disabled>🔗 Bağlan</button><p class="sub">Bu karede istasyon yok — önce bir depo kur.</p>`;
+        else h += `<button class="bigsell half" onclick="startPlantLink(${u.id})" ${bosAday.length ? '' : 'disabled'}>🔗 Bağlan${bosAday.length ? '' : ' — boş slot yok'}</button>
+          ${bosAday.length ? '<p class="sub">Basınca harita açılır — bağlanacağın istasyona dokun.</p>' : '<p class="sub">Karedeki istasyonların bağlantı slotları dolu.</p>'}`;
         return h;
       })()}
       ${repairCost >= 1 ? `<button class="bigsell" onclick="repairUnit(${u.id})" ${G.cash < repairCost ? 'disabled' : ''}>🔧 Onar — ${fmt(repairCost)}</button>` : ''}
@@ -7640,7 +7773,7 @@ function renderMenu() {
   // VIP Reklamsız satırı ($10B kazanç sonrası menüde kalıcı; aylık her ay yenilenebilir)
   if (G.totalEarned >= 1e10 || adFreeActive()) {
     $('modrow').innerHTML = `<div style="font-size:12px;margin:12px 0 2px">🚫 <b>REKLAMLARI KAPAT (VIP)</b></div>
-      ${adFreeActive() ? `<p class="sub">✅ Aktif — ${G.adFreeLife ? 'Ömür Boyu ♾️' : 'kalan ' + Math.ceil((G.adFreeUntil - Date.now()) / 864e5) + ' gün'}. Reklam butonları ödülü direkt verir.</p>` : ''}
+      ${adFreeActive() ? `<p class="sub">✅ Aktif — ${G.adFreeLife ? 'Ömür Boyu ♾️' : G.adFreeUntil > Date.now() ? 'kalan ' + Math.ceil((G.adFreeUntil - Date.now()) / 864e5) + ' gün' : '👑 Enerji Holdingi ayrıcalığı (holding kaldıkça)'}. Reklam butonları ödülü direkt verir.</p>` : ''}
       ${!G.adFreeLife ? `<button class="bigsell half" onclick="adFreeModal()">🚫 ${adFreeActive() ? 'Uzat / Ömür Boyu Al' : 'Paketleri Gör'} — ₺100 aylık · ₺${lifePrice()} ömür boyu</button>` : ''}`;
   } else $('modrow').innerHTML = '';
 }
