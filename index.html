@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-19 06:59) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-19 07:08) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-19 06:59)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-19 07:08)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -5197,6 +5197,28 @@ function botCard(i) { // bot şirketlerin karnesi: servetiyle tutarlı ve determ
     pl: Math.max(1, Math.round(k * 2.2 + hash01(i, 13, 1) * 5)),
     st: Math.max(1, Math.round(k * .9 + hash01(i, 14, 1) * 3)) };
 }
+// ── 🏆 TAM SIRALAMA (patron: "bir yerde sıralama olsa, en iyi şirketleri görelim, değeri yazsın") ──
+// Menüdeki 9'luk özet listenin tam hâli: gerçek oyuncular + bot şirketler, şirket değerine göre.
+// İsme dokununca şirket kartı açılır. Kendi satırın altın çerçeveli, sıran listede olmasa da altta görünür.
+window.openLeaderboard = () => {
+  if (!G || !G.company) return;
+  const rows = (NET.on() ? NET.list().map(p => ({ raw: p.nm, w: p.worth || 0, em: p.em || 0, on: p.online })) : [])
+    .concat(WORLD_PLAYERS.map((b, i) => ({ raw: b, w: botWorth(i), em: botEm(i), bot: 1 })));
+  rows.push({ raw: G.company, w: Math.round(myWorth()), em: co2Avg(), me: true, on: true });
+  rows.sort((a, b) => b.w - a.w);
+  const benimSira = rows.findIndex(r => r.me) + 1;
+  const satir = (r, i) => `<tr${r.me ? ' style="outline:1.5px solid var(--gold);border-radius:6px"' : ''}>
+    <td style="white-space:nowrap">#${i + 1}</td>
+    <td>${r.me ? `<b>${r.raw} (SEN)</b>` : `<span onclick="closeModal();openPlayerCard('${jsStr(r.raw)}')" style="cursor:pointer;text-decoration:underline">${r.bot ? '🤖 ' : ''}${r.raw}</span>`}
+      ${r.on ? ' <span style="color:var(--acc)">●</span>' : ''} ${emBadgeHTML(r.em)}</td>
+    <td style="text-align:right"><b>${fmt(r.w)}</b></td></tr>`;
+  $('modal').innerHTML = `
+    <h2>🏆 En İyi Şirketler</h2>
+    <p class="sub" style="margin-top:0">Şirket değerine göre · ● çevrimiçi · isme dokun: şirket kartı${benimSira > 20 ? ` · senin sıran: <b>#${benimSira}</b>` : ''}</p>
+    <table class="ledger">${rows.slice(0, 20).map(satir).join('')}${benimSira > 20 ? satir(rows[benimSira - 1], benimSira - 1) : ''}</table>
+    <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
+  $('overlay').classList.add('show');
+};
 window.openPlayerCard = nm => {
   nm = (nm || '').trim();
   if (!nm || !G) return;
@@ -6921,9 +6943,10 @@ function openUnitSheet(id) {
             const bell = (h >= 6 && h <= 19.5) ? Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) : 0;
             rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0,00')]);
             if (wx2.day) rows.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0), '×' + Math.max(.05, 1 - (wx2.cloud || 0) / 100).toFixed(2)]);
-          }
+          } else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + sunFactor(q2).toFixed(2)]); // 🐞 bot bulgusu: bu satır eksikti, tablo üretimi tutmuyordu
         } else if (T.kind === 'wind') {
           if (wx2) rows.push(['🌬️ Canlı rüzgar ' + wx2.w.toFixed(1) + ' m/s → türbin eğrisi', '×' + (windCurve(wx2.w, T) ?? 0).toFixed(2)]);
+          else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + (windFactor(q2) * .55).toFixed(2)]); // 🐞 bot bulgusu: eksikti
           rows.push(['⚙️ Bu modelin eğrisi', T.cutIn + ' m/s altı dönmez · ' + T.nom + ' m/s üstü tam güç · ' + T.storm + ' m/s fırtına kapatması']);
         } else if (T.kind === 'hydro') {
           rows.push(['💧 Havza puanı' + (sv2 ? ' (rakım + iklim)' : ''), '×' + hydroQGeo(u.cell, q2.hydro).toFixed(2) + (sv2 ? '' : ' <span class="sub">keşif bekleniyor — tahmini</span>')]);
@@ -6936,6 +6959,8 @@ function openUnitSheet(id) {
         } else if (T.kind === 'geo') rows.push(['♨️ Jeotermal buhar', 'gece gündüz sabit — ×0,95']);
         siteParts(u).forEach(p => rows.push([p.ico + ' ' + p.nm + (p.sub ? ' <span class="sub">' + p.sub + '</span>' : ''),
           p.f > 1.001 ? '<span class="pos">×' + p.f.toFixed(2) + '</span>' : p.f < .999 ? '<span class="neg">×' + p.f.toFixed(2) + '</span>' : '—']));
+        // 🐞 bot bulgusu: eğitimde f=max(f,.35) uygulanıyor ama tabloda görünmüyordu — "hesap tutmuyor" sanılıyordu
+        if (tutActive()) rows.push(['🎓 Eğitim güvencesi', '<span class="pos">toplam çarpan 0,35 altına düşmez</span>']);
         rows.push(['🔧 Sağlamlık %' + Math.round(u.cond), '×' + (u.cond / 100).toFixed(2)]);
         return `<div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">📊 VERİM DÖKÜMÜ <span class="sub">çarpanların sonucu = anlık üretim</span></div>
           <table class="ledger">${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>`;
@@ -7403,7 +7428,8 @@ function renderMenu() {
   rows.push({ nm: G.company + ' (SEN)', raw: G.company, w: myWorth(), em: co2Avg(), me: true });
   rows.sort((a, b) => b.w - a.w);
   // Sıraya dokununca o şirketin kamuya açık karnesi açılır (patron isteği)
-  $('lb').innerHTML = rows.slice(0, 9).map((r, i) => `<div class="r ${r.me ? 'me' : ''}" style="cursor:pointer" onclick="openPlayerCard('${(r.raw || '').replace(/'/g, '')}')"><span>#${i + 1} ${r.nm} ${emBadgeHTML(r.em)}</span><span>${fmt(r.w)}</span></div>`).join('');
+  $('lb').innerHTML = rows.slice(0, 9).map((r, i) => `<div class="r ${r.me ? 'me' : ''}" style="cursor:pointer" onclick="openPlayerCard('${(r.raw || '').replace(/'/g, '')}')"><span>#${i + 1} ${r.nm} ${emBadgeHTML(r.em)}</span><span>${fmt(r.w)}</span></div>`).join('')
+    + `<div class="r" style="cursor:pointer;justify-content:center" onclick="openLeaderboard()"><span>🏆 <b>Tam sıralamayı gör</b></span></div>`; // patron: "en iyi şirketleri görelim"
   // VIP Reklamsız satırı ($10B kazanç sonrası menüde kalıcı; aylık her ay yenilenebilir)
   if (G.totalEarned >= 1e10 || adFreeActive()) {
     $('modrow').innerHTML = `<div style="font-size:12px;margin:12px 0 2px">🚫 <b>REKLAMLARI KAPAT (VIP)</b></div>
@@ -7469,13 +7495,47 @@ function renderHUD() {
 }
 
 // ═══════════ ONBOARDING: gerçek dünya haritasından Ülke → İl → Şirket ═══════════
+let CLOUD_CHECKED = false; // bulut kaydı oturum başına bir kez denetlenir
 function wizardStart() {
   // 🔐 HESAP EKRANI (patron): ilk girişte Google hesabı bağla ya da misafir olarak oyna.
   // Google'a bağlayan oyuncu telefon değiştirse bile kaydını kaybetmez (kayıt sunucuda).
   if (NET.on() && !NET.auth) { showLoginScreen(); return; }
   // KAYIT VARSA DİREKT YÜKLE: her açılışta "Yeni Oyun / Devam" SORULMAZ.
   const has = load();
-  if (has) { G = has; startGame(true); return; }
+  // ☁️ BULUT KAYIT DENETİMİ (bot bulgusu — VERİ KAYBI riski): normal açılış bulut kaydına hiç
+  // bakmıyordu. Temiz cihazda/tarayıcıda localStorage boş diye "Yeni Oyun" açılıyor, otomatik
+  // kayıt sunucudaki ESKİ ilerlemenin üstüne yazabiliyordu. Artık: yerel kayıt YOKSA sihirbaza
+  // girmeden önce bulut BEKLENİR; yerel kayıt VARSA oyun hemen başlar, arka planda bulutta
+  // belirgin daha yeni kayıt aranır ve bulunursa oyuncuya SEÇİM sorulur (sessiz ezme yok).
+  if (!has && NET.on() && NET.auth && !CLOUD_CHECKED) {
+    CLOUD_CHECKED = true;
+    LOGIN_BUSY = true; // closeModal emniyet ağı bu bekleme sırasında sihirbazı tetiklemesin
+    $('app').classList.add('wiz');
+    $('modal').innerHTML = '<h2>☁️ Kayıt aranıyor</h2><p>Buluttaki şirket kaydın kontrol ediliyor...</p>';
+    $('overlay').classList.add('show');
+    Promise.race([NET.cloudLoad(), new Promise(r => setTimeout(() => r(null), 8000))])
+      .then(cloud => {
+        LOGIN_BUSY = false;
+        if (cloud && cloud.company) {
+          G = migrate(cloud);
+          save();
+          closeModal();
+          $('app').classList.remove('wiz');
+          startGame(true);
+          toast('☁️ Buluttaki şirketinle devam ediyorsun: ' + G.company, '', null, 0, true);
+        } else { closeModal(); wizardWelcome(); }
+      })
+      .catch(() => { LOGIN_BUSY = false; closeModal(); wizardWelcome(); });
+    return;
+  }
+  if (has) {
+    G = has; startGame(true);
+    cloudNewerCheck(has); // arka planda: başka cihazda oynanmış daha yeni bulut kaydı var mı?
+    return;
+  }
+  wizardWelcome();
+}
+function wizardWelcome() { // karşılama + kuruluş sihirbazının kapısı (wizardStart'ın eski kuyruğu)
   $('app').classList.add('wiz'); // kuruluşta üst/alt menüler gizli
   $('modal').innerHTML = `
     <div class="biglogo">${LOGO_SVG}</div>
@@ -7486,6 +7546,37 @@ function wizardStart() {
     <p style="text-align:center;font-size:10px;margin-top:10px">${BUILD_TAG} — test sürümü</p>`;
   $('overlay').classList.add('show');
 }
+// Yerel kayıtla oyuna girildi ama bulutta 3+ dk daha yeni kayıt varsa: sessizce ezme, SOR.
+function cloudNewerCheck(localS) {
+  if (!NET.on() || !NET.auth || CLOUD_CHECKED) return;
+  CLOUD_CHECKED = true;
+  NET.cloudLoad().then(cloud => {
+    if (!cloud || !cloud.company || !cloud._sv) return;
+    const yerel = localS.lastSeen || 0;
+    if (cloud._sv <= yerel + 3 * 60000) return; // bulut belirgin yeni değil — dokunma
+    const tf = t => new Date(t).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    $('modal').innerHTML = `
+      <h2>☁️ Bulutta daha yeni kayıt var</h2>
+      <p>📱 Bu cihaz: <b>${localS.company}</b> <span class="sub">· son oynama ${tf(yerel)}</span><br>
+      ☁️ Bulut: <b>${cloud.company}</b> <span class="sub">· son kayıt ${tf(cloud._sv)}</span></p>
+      <p class="sub">Başka bir cihazda/tarayıcıda oynamışsın gibi görünüyor. Hangisiyle devam edelim?</p>
+      <button class="primary" onclick="adoptCloudSave()">☁️ Buluttaki (daha yeni) kayıtla devam</button>
+      <button class="primary ghostbtn" onclick="closeModal()">📱 Bu cihazdakiyle devam</button>`;
+    $('overlay').classList.add('show');
+  }).catch(() => {});
+}
+window.adoptCloudSave = async () => {
+  $('modal').innerHTML = '<h2>☁️ Yükleniyor</h2><p>Buluttaki kayıt getiriliyor...</p>';
+  try {
+    const cloud = await NET.cloudLoad();
+    if (cloud && cloud.company) {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(cloud));
+      location.reload(); // temiz başlangıç — eski oyunun işaretçi/katman kalıntısı kalmasın
+      return;
+    }
+  } catch (e) {}
+  closeModal(); toast('☁️ Bulut kaydı okunamadı — bu cihazdakiyle devam', 'warn');
+};
 // İki adımlı kuruluş: 1) Ülke (liste VEYA haritadan) 2) İl/şehir (liste VEYA haritadaki noktadan) — rakiple aynı akış
 const WIZ = { step: 0 };
 // ── 🔐 GİRİŞ EKRANI ──
