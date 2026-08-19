@@ -80,3 +80,58 @@ function ensureCellSold() {
 ---
 
 Diğer 3 bulgu (VERİM DÖKÜMÜ gösterim tutarsızlığı, wizardStart bulut kontrolü eksikliği) tasarım kararı gerektirdiği için `patrona-sorulacak.md`'ye yazıldı, koda dokunulmadı.
+
+## 2026-08-19 07:56 turu
+
+### Düzeltme 1: KRİTİK — 🏢 Şirket paneli her açılışta çöküyordu (`resRow('liccap')`)
+
+**Bulgu:** `-P-Mu3WWZke_4R9idJc-` (02:47), `-P-N6h9jUaLQpkXkF2ni` (03:45), `-P-NLISzjHzdczygTt5g` (04:47) — üç bağımsız bildirim. Şirket ekranı (üstteki şirket adına dokununca) her zaman `TypeError: Cannot read properties of undefined (reading 'ico')` ile çöküyor. `resRow('liccap')` çağrılıyor ama `RESEARCH` nesnesinde `liccap` yok (yalnız `coalcap`/`gascap`/`office`/`range` var).
+
+**Kök neden:** 18 Ağustos'ta "ruhsat limiti sabit 20'ye çekildi, `liccap` araştırması kaldırıldı, yerine `range` (Ofis Menzili) geldi" değişikliği yapılırken (satır ~1576 yorumunda not düşülmüş), Şirket panelini oluşturan `resRow('liccap')` çağrısı güncellenmemiş kalmış.
+
+**ÖNCESİ** (`index.html`, ~satır 7278, `openCompanySheet` içinde):
+```js
+${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('liccap')}
+```
+
+**SONRASI:**
+```js
+${/* 🐞 BOT DÜZELTMESİ: 'liccap' araştırması 18 Ağu'da kaldırıldı (satır ~1576), yerine 'range'
+   (Ofis Menzili) geldi ama bu çağrı güncellenmemişti — RESEARCH['liccap'] undefined olduğu için
+   resRow() D.ico'ya erişirken TypeError fırlatıp Şirket panelini her açılışta çökertiyordu. */''}
+${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}
+```
+
+**Değişiklik:** Son çağrı `resRow('liccap')` → `resRow('range')` olarak düzeltildi; artık geçerli bir `RESEARCH` anahtarına işaret ediyor ve "Ofis Menzili" araştırması (bot bulgusunun da işaret ettiği gibi) UI'de tekrar görünür oldu.
+
+**Doğrulama:** Node ile önce/sonra simülasyonu — `RESEARCH['liccap']` erişiminde `Cannot read properties of undefined (reading 'ico')` doğrulandı (ÖNCESİ), `RESEARCH['range']` erişiminde hatasız `ico` döndüğü doğrulandı (SONRASI). Ayrıca tüm inline `<script>` blokları `new Function` ile sözdizimi kontrolünden geçti; Playwright ile headless Chromium'da sayfa açılışında `pageerror` yok.
+
+---
+
+### Düzeltme 2: kozmetik — VERİM DÖKÜMÜ tablosunda gece eğrisi çarpanı virgüllü `0,00` yazıyordu
+
+**Bulgu:** `-P-N6kHoq78RNMt7etiB` (03:46) — VERİM DÖKÜMÜ tablosunda güneş paneli gece durumunda çarpan `0,00` (virgüllü) yazıyor, tablodaki diğer tüm çarpanlar (`bell.toFixed(2)` dahil) nokta kullanıyor — biçim tutarsızlığı.
+
+**Kök neden:** Gece durumu için çarpan `.toFixed(2)` ile hesaplanmak yerine elle `'0,00'` string literaliyle yazılmış.
+
+**ÖNCESİ** (`index.html`, ~satır 6944, VERİM DÖKÜMÜ satırlarını oluşturan kod):
+```js
+rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0,00')]);
+```
+
+**SONRASI:**
+```js
+// 🐞 BOT DÜZELTMESİ: burada virgüllü '0,00' yazılıyordu, tablodaki diğer tüm çarpanlar
+// (bell.toFixed(2) dahil) nokta kullanıyor — biçim tutarsızlığı düzeltildi.
+rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0.00')]);
+```
+
+**Değişiklik:** `'0,00'` → `'0.00'`. Salt kozmetik, ekonomi/hesaplama etkilenmiyor.
+
+**Not (koda dokunulmadı):** Aynı virgüllü yazım kalıbı `T.kind === 'geo'` satırında da var (`'gece gündüz sabit — ×0,95'`, ~satır 6959) ama bu suggestions'ta bildirilmedi; kapsam dışı bırakıldı, ileride aynı düzeltme uygulanabilir.
+
+**Doğrulama:** `new Function` ile tüm inline scriptler sözdizimi kontrolünden geçti; Playwright headless Chromium'da `pageerror` yok.
+
+---
+
+İşlenen diğer 9 kayıt: 2'si önceki turda patrona sorulan konularla aynı kök nedene sahip olduğu için yerel geliştirici tarafından zaten çözülmüş bulundu (kod değişikliği gerekmedi), 7'si durum özeti/bilgi amaçlı (aksiyon gerekmedi). Detaylar `bot-notlar/islenen.md`'de.

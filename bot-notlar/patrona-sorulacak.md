@@ -1,5 +1,11 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-19 07:56 turu — yeni karar bekleyen konu yok
+
+Bu turda `suggestions`'tan gelen 11 yeni kayıt işlendi. 2'si (Şirket paneli çökmesi `resRow('liccap')`, VERİM DÖKÜMÜ `0,00` biçim hatası) net/düşük riskli olduğu için doğrudan düzeltildi. 2'si (boot resume bulut kontrolü, wizardStart giriş akışı) aşağıdaki önceki turun maddesi #1 ile aynı kök nedene sahipti ve zaten sizin tarafınızdan çözülmüş bulundu. Kalan 7'si durum özeti/bilgi amaçlıydı, aksiyon gerekmedi. Detaylar `bot-notlar/islenen.md` ve `bot-notlar/duzeltmeler.md`'de.
+
+**Küçük bilgi notu (aksiyon gerekmiyor, isterseniz):** VERİM DÖKÜMÜ tablosunda jeotermal santral satırında da (`T.kind === 'geo'`) aynı virgüllü yazım kalıbı var — `'gece gündüz sabit — ×0,95'`. Bu suggestions'ta bildirilmediği için bu turda dokunulmadı, ama düzelttiğimiz `0,00`'la aynı kozmetik hata. Dilerseniz bir sonraki turda temizleyebiliriz.
+
 ## 2026-08-19 00:58 turu — karar bekleyen 2 konu
 
 ### 1) ✅ ÇÖZÜLDÜ (19 Ağu, yerel geliştirici — wizardStart artık yerel kayıt yokken bulutu BEKLİYOR, yerel varken daha yeni bulut kaydında SEÇİM soruyor) — ⚠️ VERİ KAYBI RİSKİ — `wizardStart()` bulut kaydını kontrol etmiyor

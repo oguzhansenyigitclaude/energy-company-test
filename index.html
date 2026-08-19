@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-19 07:08)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-19 07:56)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -6941,7 +6941,9 @@ function openUnitSheet(id) {
           if (wx2) {
             const h = (nowMin() / 60) % 24;
             const bell = (h >= 6 && h <= 19.5) ? Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) : 0;
-            rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0,00')]);
+            // 🐞 BOT DÜZELTMESİ: burada virgüllü '0,00' yazılıyordu, tablodaki diğer tüm çarpanlar
+            // (bell.toFixed(2) dahil) nokta kullanıyor — biçim tutarsızlığı düzeltildi.
+            rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0.00')]);
             if (wx2.day) rows.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0), '×' + Math.max(.05, 1 - (wx2.cloud || 0) / 100).toFixed(2)]);
           } else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + sunFactor(q2).toFixed(2)]); // 🐞 bot bulgusu: bu satır eksikti, tablo üretimi tutmuyordu
         } else if (T.kind === 'wind') {
@@ -7275,7 +7277,10 @@ function openCompanySheet() {
     </table>
     <div style="font-size:12px;margin:10px 0 2px">🧪 <b>ARAŞTIRMA</b> <span class="sub">tek seferde 1 araştırma yürür</span></div>
     <p class="sub" style="margin:2px 0 4px">Puanların: <b>🌞 ${G.resPts.daily} günlük</b> · <b>📅 ${G.resPts.weekly} haftalık</b><br>Sv1-10: 1 günlük puan (günün İLK satışında +1) · Sv11+: 1 haftalık puan (📅 haftalık görev ödülüyle +1)</p>
-    ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('liccap')}
+    ${/* 🐞 BOT DÜZELTMESİ: 'liccap' araştırması 18 Ağu'da kaldırıldı (satır ~1576), yerine 'range'
+       (Ofis Menzili) geldi ama bu çağrı güncellenmemişti — RESEARCH['liccap'] undefined olduğu için
+       resRow() D.ico'ya erişirken TypeError fırlatıp Şirket panelini her açılışta çökertiyordu. */''}
+    ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}
     ${brandPanelHTML()}
     ${accountRowHTML()}
     <button class="bigsell half" onclick="resetAccountAsk()" style="color:var(--danger);margin-top:8px">⚠️ Hesabı Sıfırla</button>`;
