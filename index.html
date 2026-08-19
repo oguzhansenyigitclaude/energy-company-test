@@ -439,7 +439,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-18 21:49) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-19 06:59) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -541,7 +541,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-19 00:58)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-19 06:59)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2189,6 +2189,37 @@ window.adFinishBuild = id => {
   });
 };
 const adFinishBtnHTML = u => `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="adFinishBuild(${u.id})">🎬 Reklam İzle — İnşaatı HEMEN Bitir</button>`;
+// 🎬 SATIŞI HEMEN BİTİR (patron: "hemen boşalt reklam izle butonu") — süren boşaltmanın kalanını
+// tek seferde satar. dischargeTick ile AYNI muhasebe (grup çekişi + sellChunk); para basmaz,
+// yalnız süreyi sıfırlar. VIP reklamsız kuralı adPlay içinde zaten geçerli.
+window.adFinishDischarge = id => {
+  const st = storeById(id);
+  if (!st || !st.disch) return;
+  adPlay('izleyene satış ANINDA tamamlanır.', () => {
+    const s2 = storeById(id), d = s2 && s2.disch;
+    if (!d) return;
+    let emniyet = 0;
+    while (d.left > .005 && emniyet++ < 500) {
+      if (!s2.link && d.left > s2.stored + .001) for (const g2 of storeGroup(s2)) {
+        if (g2.id === s2.id) continue;
+        if (s2.stored >= d.left) break;
+        const al = Math.min(g2.stored, d.left - s2.stored);
+        if (al > 0) { g2.stored -= al; s2.stored += al; }
+      }
+      const chunk = Math.min(d.left, s2.stored);
+      if (chunk <= 0) break;
+      d.gain += sellChunk(s2, chunk, d.target, d.mult);
+      d.left -= chunk; d.sold += chunk;
+    }
+    s2.disch = null;
+    plants().forEach(p => { if (p.st === s2.id && p._autoOff) { p.on = true; p._autoOff = false; } });
+    toast('🎬💰 Satış reklamla TAMAMLANDI: ' + fmtE(d.sold) + ' MWh = ' + fmt(d.gain) + (d.target ? ' · 🔁 ' + cellCode(d.target) : ''), '', null, 0, true);
+    beep(660, .09); beep(990, .12);
+    $('restartbar').style.display = 'block';
+    checkOffers(); save(); refreshUnitMarkers();
+    if ($('unitsheet').classList.contains('show') && window.__lastUnit === id) openUnitSheet(id);
+  });
+};
 // ── BOŞALTMA SÜRELİ SATIŞ (patron tasarımı): SAT'a basınca depo süre içinde boşalır —
 // en küçük depo ~35 sn, en büyüğü TAM dolulukta 2 dk. Para akan enerjiyle birlikte akar.
 const dischSecOf = T => Math.round(30 + 90 * Math.min(1, T.cap / 500));
@@ -4540,7 +4571,7 @@ const NET = {
         // patlıyor, bu yüzden ne diğer oyuncular çiziliyor ne de "göster/gizle" düğmesi
         // işini bitirebiliyordu (istisna save() ve panel tazelemesinden ÖNCE atılıyordu).
         if (!u || !u.c || u.c !== cell) continue;
-        out.push({ oid: pid + '_' + uid, owner: this.nameOf(pid) || 'Oyuncu', ownerIdx: 0, netOwner: pid, kind: u.k, t: u.t, cell, ll: u.ll, since: u.s, net: true });
+        out.push({ oid: pid + '_' + uid, owner: this.nameOf(pid) || 'Oyuncu', ownerIdx: 0, netOwner: pid, kind: u.k, t: u.t, cell, ll: u.ll, since: u.s, hq: !!u.hq, net: true });
       }
     }
     return out;
@@ -4647,7 +4678,8 @@ function drawOthers() {
         : `<span style="font-size:${px}px">${T.ico}</span>`;
       const lbl = o.kind === 'office' ? `<div class="bd" style="background:#000a">${(o.owner || '').slice(0, 12)}</div>` : '';
       const m = L.marker(o.ll, { icon: divIcon(`<div class="umark" style="opacity:.72;filter:saturate(.7)">${vis}${lbl}</div>`, [px + 10, px + 20]) }).addTo(map);
-      m.on('click', () => openOtherSheet(o));
+      // 🏢 patron: ŞİRKET MERKEZİNE tıklayınca tesis sayfası değil ŞİRKET KARTI açılsın
+      m.on('click', () => (o.hq && o.owner && o.owner !== 'Oyuncu') ? openPlayerCard(o.owner) : openOtherSheet(o));
       othersLayer.push(m);
     }
    }
@@ -4685,7 +4717,9 @@ window.openOtherSheet = o => {
   $('us_title').innerHTML = `${T.ico} ${T.nm} <span class="sub">— başka oyuncunun tesisi</span>`;
   $('us_body').innerHTML = `
     <div class="detcols">
-      <div><div class="l">Sahibi</div><div class="v" style="font-size:12.5px">${sahip} ${sahipVar ? `<span style="color:${on ? 'var(--acc)' : 'var(--danger)'}">●</span>` : ''}</div></div>
+      <div><div class="l">Sahibi</div><div class="v" style="font-size:12.5px">${sahipVar
+        ? `<span onclick="openPlayerCard('${jsStr(o.owner)}')" style="cursor:pointer;text-decoration:underline">${sahip}</span> <span style="color:${on ? 'var(--acc)' : 'var(--danger)'}">●</span>`
+        : sahip}</div></div>
       <div><div class="l">${olcu.l}</div><div class="v">${olcu.v}</div></div>
     </div>
     <table class="ledger">
@@ -6736,6 +6770,7 @@ function openUnitSheet(id) {
         <div style="font-size:12.5px;font-weight:700">⚡ Boşaltılıyor${u.disch.target ? ' → 🔁 ' + cellCode(u.disch.target) + ' pazarı (-%10 aktarım)' : ''}</div>
         <div class="rsbar" style="margin:6px 0"><i style="width:${Math.min(100, 100 * u.disch.sold / (u.disch.sold + u.disch.left))}%"></i></div>
         <div class="sub">Satılan: ${fmtE(u.disch.sold)} MWh · +${fmt(u.disch.gain)} · kalan ${fmtE(u.disch.left)} MWh</div>
+        <button class="bigsell" style="background:#8a6cff;color:#0d0a1a;margin-top:8px" onclick="adFinishDischarge(${u.id})">🎬 Reklam İzle — Satışı HEMEN Bitir (kalan ${fmtE(u.disch.left)} MWh)</button>
       </div>` : `
       <button class="bigsell" onclick="sellUnit(${u.id},1)" ${satMwh < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(satMwh)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * satMwh / T.cap))} sn)</button>
       ${alt ? (() => { // patron: fiyat/MWh değil KAZANILACAK TUTAR + yerele göre kâr/zarar
@@ -7660,7 +7695,21 @@ window.wizDone = () => {
   // başlangıç kiti: merkez karesinin ruhsatı HEDİYE + 1 rüzgar türbini + 1 pil deposu (bağlantıyı örnekle öğret)
   const hcell = cellId(IL_COORD[G.il]);
   G.licenses[hcell] = true;
-  const cc = cellCenter(hcell);
+  // 🏢 KURULUŞ SAÇILIMI (patron: "yeni oyuncu girdikçe ofisler iç içe geçiyor"): herkes il
+  // merkezinin AYNI sabit noktasına kuruluyordu. Artık kare içinde karada, diğer oyuncuların
+  // ofislerinden uzak bir nokta aranır; bulunamazsa en iyi aday kullanılır.
+  const cc = (() => {
+    const merkez = cellCenter(hcell);
+    const digerOfisler = othersInCell(hcell).filter(o => o.kind === 'office').map(o => o.ll);
+    let aday = [merkez[0] - .022, merkez[1] - .022];
+    for (let i = 0; i < 24; i++) {
+      const ll = [merkez[0] + (Math.random() - .5) * CELL * .6, merkez[1] + (Math.random() - .5) * CELL * .6];
+      if (!isLand(ll)) continue;
+      aday = ll;
+      if (!digerOfisler.some(d => kmDist(ll, d) < 4)) break; // karada + 4 km'de komşu ofis yok → yeter
+    }
+    return aday;
+  })();
   // hediye kit: haritada BAŞKALARINA görünmez (hidden) — kalabalık önleme (patron kararı)
   addUnit('plant', 'wind_2', [cc[0] + .012, cc[1] - .015], 0).hidden = true;
   addUnit('store', 'bat', [cc[0] - .01, cc[1] + .015], 0).hidden = true;
