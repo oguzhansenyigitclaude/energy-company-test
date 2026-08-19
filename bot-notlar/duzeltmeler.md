@@ -2,6 +2,40 @@
 
 Bu dosya, bakım botunun bu turda index.html üzerinde yaptığı düzeltmelerin ÖNCE/SONRA kod parçalarını ve gerekçesini listeler. Yerel geliştirici bunları ana projeye taşıyabilir / gözden geçirebilir.
 
+## 2026-08-19 14:58 turu
+
+### Düzeltme 1: VERİM DÖKÜMÜ tablosu "yeni şirket takviyesi" (NEWBIE_WIND/NEWBIE_CLOUD) çarpanını göstermiyordu
+
+**Bulgu:** `-P-P3ghTOJp9tTk1ImXv` (ClaudeBot, 12:50) — RES T-200 Onshore #1 için tabloda ×0.53(rüzgar)×0.43(sağlamlık)×2MW=0.45MW gösteriliyor ama gerçek Anlık üretim 0.66MW. Aynı eksikliğin güneş/bulut tarafında (NEWBIE_CLOUD) da olduğu bildirildi.
+
+**Kök neden:** `plantOutput()` canlı hava verisi varken rüzgara `+NEWBIE_WIND*newbieAid()` takviyesi ekliyor, bulutu da `(1-NEWBIE_CLOUD*newbieAid())` ile azaltıyor (yeni şirketlere düşük üretimde tanınan başlangıç desteği). VERİM DÖKÜMÜ tablosu ise bu iki satır için ham `wx2.w` / `wx2.cloud` değerlerini kullanıyordu — takviye tabloya hiç yansımıyordu, "çarpımların sonucu = anlık üretim" iddiası tutmuyordu.
+
+**ÖNCESİ** (`index.html`, VERİM DÖKÜMÜ satırları):
+```js
+if (wx2.day) rows.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0), '×' + Math.max(.05, 1 - (wx2.cloud || 0) / 100).toFixed(2)]);
+} else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + sunFactor(q2).toFixed(2)]);
+} else if (T.kind === 'wind') {
+  if (wx2) rows.push(['🌬️ Canlı rüzgar ' + wx2.w.toFixed(1) + ' m/s → türbin eğrisi', '×' + (windCurve(wx2.w, T) ?? 0).toFixed(2)]);
+  else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + (windFactor(q2) * .55).toFixed(2)]);
+```
+
+**SONRASI:**
+```js
+if (wx2.day) {
+  const effCloud2 = (wx2.cloud || 0) * (1 - NEWBIE_CLOUD * newbieAid());
+  rows.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0) + (newbieAid() > .01 ? ' <span class="pos">🌱 takviyeli</span>' : ''), '×' + Math.max(.05, 1 - effCloud2 / 100).toFixed(2)]);
+}
+} else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + sunFactor(q2).toFixed(2)]);
+} else if (T.kind === 'wind') {
+  if (wx2) {
+    const boostedW2 = wx2.w + NEWBIE_WIND * newbieAid();
+    rows.push(['🌬️ Canlı rüzgar ' + wx2.w.toFixed(1) + ' m/s' + (newbieAid() > .01 ? ' <span class="pos">+' + (NEWBIE_WIND * newbieAid()).toFixed(1) + ' 🌱 takviye</span>' : '') + ' → türbin eğrisi', '×' + (windCurve(boostedW2, T) ?? 0).toFixed(2)]);
+  }
+  else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + (windFactor(q2) * .55).toFixed(2)]);
+```
+
+**Etki:** Sadece görüntüleme (bilgi ekranı) düzeltmesi — gerçek üretim/ekonomi hesabı (`plantOutput()`) hiç değişmedi, sadece VERİM DÖKÜMÜ tablosu artık aynı takviyeyi gösteriyor. Doğrulama: tüm inline `<script>` blokları `new Function` ile sözdizimi kontrolünden geçti; Playwright (headless Chromium, hem `file://` hem `http://` üzerinden) sayfa açılışında `pageerror` üretmedi.
+
 ## 2026-08-19 00:58 turu
 
 ### Düzeltme 1: "Yeni Oyun" modalı ülke/il seçim ekranının üstünde takılı kalıyordu

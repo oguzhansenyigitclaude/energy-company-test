@@ -35,3 +35,19 @@ Bu turda 2 net/düşük riskli kod hatası bulundu ve düzeltildi (modal yarış
 | `-P-Nz6X3sG1teI4WuzP7` | 2026-08-19 07:46 | ClaudeBot: durum özeti (bug değil) — MERKEZ depo SAT testi, komşu oyuncu tesis kartı doğru açıldı | Bilgi amaçlı, aksiyon gerekmiyor. |
 
 Bu turda 1 kök nedenden 2 KRİTİK çökme bildirimi (Şirket paneli, `liccap`→`range`) ve 1 kozmetik biçim hatası (`0,00`→`0.00`) düzeltildi — toplam 2 kod değişikliği (kritik çökme tek düzeltme sayılır çünkü aynı satırdaki tek çağrıyı düzeltiyor). 2 bulgu önceki turda patrona sorulan konularla aynı kök nedene sahip olduğu için zaten yerel geliştirici tarafından çözülmüş bulundu, ek aksiyon gerekmedi. BUILD_TAG ve version.json `2026-08-19 07:56` olarak güncellendi.
+
+## 2026-08-19 14:58 turu
+
+| Anahtar | Zaman (UTC) | Özet | Sonuç |
+|---|---|---|---|
+| `-P-OB2R2AgYC8uwY64e0` | 2026-08-19 08:47 | ClaudeBot: durum özeti (bug değil) — bağlı depo satış/müzayede kilidi, grup toplamı, VERİM DÖKÜMÜ tutarlılığı doğru | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-OPf8k6XBx57C_n_qx` | 2026-08-19 09:46 | ClaudeBot: onay — önceki 3 bulgunun (Şirket paneli çökmesi, VERİM DÖKÜMÜ sim-çarpanı satırı, wizardStart bulut bekleme) hepsi düzeltilmiş olarak doğrulandı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-OPfJk2mO7-NhzOMla` | 2026-08-19 09:46 | ClaudeBot: durum özeti (bug değil) — MERKEZ depo SAT testi, panel alımı, bağlı depo silme koruması doğru | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-O_xP-SzRzP_k6gpis` | 2026-08-19 10:36 | ClaudeBot: bildiren botun kendi Chromium/proxy TLS sorunu, REST fallback ile hesap durumu doğrulandı | Oyun koduyla ilgili değil, bildiren botun kendi test ortamı sorunu. Kod değişikliği yapılmadı. |
+| `-P-OqHauGutnsQ8MZEi6` | 2026-08-19 11:47 | ClaudeBot: durum özeti (bug değil) — bağlı depo demolish/discharge koruması, grup toplamı, ruhsat/inşa/SAT akışları doğru | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-OqJokbSRgZGOisfRZ` | 2026-08-19 11:47 | ClaudeBot: öneri (düşük öncelik) — `NET.cloudSave` zorunlu flush'ı sadece `visibilitychange(hidden)`'da çalışıyor, ani kapatmada (`pagehide`/`beforeunload`) son <20sn ilerleme kaybolabilir | Kod değiştirilmedi — patrona soruldu (bkz. `patrona-sorulacak.md`), bulut senkronizasyon akışına dokunduğu ve `beforeunload` sırasında ağ isteğinin garanti tamamlanmaması riski taşıdığı için onay isteniyor. |
+| `-P-P3ghTOJp9tTk1ImXv` | 2026-08-19 12:50 | ClaudeBot: BUG — VERİM DÖKÜMÜ tablosu rüzgar/bulut satırlarında `plantOutput()`'ın uyguladığı "yeni şirket takviyesi" (NEWBIE_WIND/NEWBIE_CLOUD) çarpanını göstermiyor, tablo çarpımı gerçek üretimle tutmuyor | **DÜZELTİLDİ.** Detay: `bot-notlar/duzeltmeler.md`. |
+| `-P-PHpmp0yn24-f5kpRW` | 2026-08-19 13:51 | ClaudeBot: durum özeti (bug değil) — bağlı depo demolish koruması, grup toplamı, konsol hatası/NaN yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-PHqIjbtGJ6ZFk6hBH` | 2026-08-19 13:51 | ClaudeBot: not — Playwright bazen "Başlat" (araştırma) butonlarında actionability timeout veriyor, bildiren bot bunun periyodik DOM re-render kaynaklı olduğunu ve oyuncu dokunuşunu etkilemediğini belirtiyor | Bildiren botun kendi test aracı davranışı hakkında bir gözlem, oyun kodunda bir hata bildirmiyor. Kod değişikliği yapılmadı. |
+
+Bu turda 9 yeni kayıt işlendi. 1'i (VERİM DÖKÜMÜ tablosunda NEWBIE_WIND/NEWBIE_CLOUD takviyesinin gösterilmemesi) net/düşük riskli olduğu için doğrudan düzeltildi — sadece bilgi ekranı, ekonomi/üretim hesabı değişmedi. 1'i (bulut flush'a pagehide/beforeunload eklenmesi) bulut senkronizasyon akışına dokunduğu için patrona bırakıldı. Kalan 7'si durum özeti/bilgi amaçlıydı ya da bildiren botun kendi test ortamıyla ilgiliydi, aksiyon gerekmedi. Doğrulama: tüm inline `<script>` blokları `new Function` ile sözdizimi kontrolünden geçti; Playwright (headless Chromium) sayfa açılışında `pageerror` üretmedi. BUILD_TAG ve version.json `2026-08-19 14:58` olarak güncellendi.

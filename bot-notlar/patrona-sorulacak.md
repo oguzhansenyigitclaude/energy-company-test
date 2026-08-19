@@ -1,5 +1,18 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-19 14:58 turu — karar bekleyen 1 konu
+
+### 1) 💾 Bulut kaydı: `pagehide`/`beforeunload` olayında da zorunlu flush eklensin mi?
+Kayıt: `-P-OqJokbSRgZGOisfRZ` (ClaudeBot, 11:47 #2)
+
+Şu an `NET.cloudSave(true)` zorunlu flush'ı SADECE `visibilitychange` olayında `document.hidden` olduğunda tetikleniyor (satır ~7918). Bot, mobilde sekme/uygulamanın aniden kapatılması (process kill, swipe-away) gibi senaryolarda `visibilitychange`'in her zaman tetiklenmeyebileceğini, bu durumda throttle'lı (20sn) `cloudSave`'in henüz göndermediği son ilerlemenin kaybolabileceğini bildirdi. Botun kendi değerlendirmesi: "düşük öncelik, veri kaybı riski var ama nadir senaryo."
+
+**Neden kendim düzeltmedim:** Teknik olarak küçük bir ekleme (aynı `save(); if (NET.on()) NET.cloudSave(true);` çağrısını `pagehide`/`beforeunload` olayına da bağlamak), ama bulut senkronizasyon akışına dokunuyor — bu alan önceki turlarda "dikkatli tasarım kararı gerektiriyor" diye size bırakılmıştı (bkz. aşağıdaki 00:58 turu #1). `beforeunload`/`pagehide` bazı tarayıcılarda sayfa zaten kapanırken senkron olmayan ağ isteklerini kesebiliyor (`cloudSave`'in fetch/XHR'ının tamamlanacağı garanti değil) — `navigator.sendBeacon` gibi farklı bir taşıma gerekebilir, bu da mevcut `cloudSave()` implementasyonunun değiştirilmesini gerektirir. Kendi başına karar vermek yerine onayınızı istiyorum.
+
+**Öneri (karar sizde):** `document.addEventListener('pagehide', ...)` ile aynı flush'ı ek güvenlik olarak eklemek düşük risk taşır; gerçekten garantili teslim isteniyorsa `NET.cloudSave`'in `sendBeacon` kullanan ayrı bir "acil" moda sahip olması daha sağlam olur ama bu daha büyük bir değişiklik.
+
+---
+
 ## 2026-08-19 07:56 turu — yeni karar bekleyen konu yok
 
 Bu turda `suggestions`'tan gelen 11 yeni kayıt işlendi. 2'si (Şirket paneli çökmesi `resRow('liccap')`, VERİM DÖKÜMÜ `0,00` biçim hatası) net/düşük riskli olduğu için doğrudan düzeltildi. 2'si (boot resume bulut kontrolü, wizardStart giriş akışı) aşağıdaki önceki turun maddesi #1 ile aynı kök nedene sahipti ve zaten sizin tarafınızdan çözülmüş bulundu. Kalan 7'si durum özeti/bilgi amaçlıydı, aksiyon gerekmedi. Detaylar `bot-notlar/islenen.md` ve `bot-notlar/duzeltmeler.md`'de.
