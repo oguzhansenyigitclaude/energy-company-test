@@ -446,7 +446,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-20 17:02) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-20 20:00) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -549,7 +549,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-20 17:02)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-20 20:00)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2108,7 +2108,16 @@ function co2Avg() {
 // santrali almayalım"). 12 saatte düzelten oyuncuya ceza YOK — ama düzeltmiş gibi yapıp ihtar
 // bitince aynı santrali geri açan MUVAZAA sayılır: fosil kapasitesinin %50'sine el konur.
 const EM_LIMIT_GKWH = 550;                       // yasal yoğunluk tavanı (AB EPS 550 paraleli)
-const EM_QUOTA = [400, 1200, 2500, 8000, 25000]; // ölçek başına HAFTALIK salım kotası (ton)
+const EM_QUOTA = [100, 400, 1200, 4000, 12000];   // ölçek başına HAFTALIK salım kotası (ton)
+// 🧾 ÖMÜR BOYU KARBON BÜTÇESİ (patron: "toplam kirliliğe de limit olsun"): şirketin kuruluşundan
+// beri saldığı toplam ton için tavan. Tek başına dursaydı bir kez aşan asla düzeltemezdi (geçmiş
+// silinmez) — bu yüzden TEMİZ ÜRETİM bütçeyi geri kazandırır: her 1 MWh temiz üretim +0,4 ton.
+// Kömürle salıp sonra güneşe/rüzgara geçen şirket borcunu eritebilir; hiç temizlenmeyen eritemez.
+const EM_BUDGET = [1500, 6000, 20000, 70000, 200000]; // ölçek başına ömür boyu ton bütçesi
+const EM_CLEAN_CREDIT = .4;                            // temiz MWh başına geri kazanılan ton
+const emTemizMWh = () => plants().reduce((a, u) => a + ((PLANT_TYPES[u.t].em || 0) < 300 ? (u.lifeProd || 0) : 0), 0);
+const emButce = () => EM_BUDGET[Math.max(0, Math.min(EM_BUDGET.length - 1, G.olcek || 0))] + emTemizMWh() * EM_CLEAN_CREDIT;
+const emButceAcik = () => Math.max(0, co2TotalTon() - emButce());
 const EM_GRACE_MS = 12 * 3600e3;                 // ihtar süresi: 12 saat
 const EM_WATCH_MS = 24 * 3600e3;                 // ihtar sonrası gözetim (muvazaa avı)
 const EM_TON_FINE = 50000;                       // aşım tonu başına para cezası
@@ -2130,8 +2139,12 @@ function emDurum() {
   const yog = emPortfoy(), ton = emWeekTon(), kota = emQuota(), rate = emRate();
   // kota aşıldıysa ihlal sürer — ama salım hızını ciddi düşürdüyse (tedbir aldıysa) düzelmiş sayılır
   const kotaIhlal = ton > kota && rate > (kota / 168) * .5;
-  return { yog, ton, kota, rate, yogIhlal: yog > EM_LIMIT_GKWH, kotaIhlal,
-    asimTon: Math.max(0, ton - kota), ihlal: (yog > EM_LIMIT_GKWH) || kotaIhlal };
+  // 🧾 bütçe aşımı da aynı mantıkla: hâlâ salım yapıyorsa ihlal, kirli üretimi durdurduysa askıda
+  const butce = emButce(), butceAcik = emButceAcik(), butceIhlal = butceAcik > 0 && rate > .05;
+  return { yog, ton, kota, rate, butce, butceAcik, butceIhlal, toplam: co2TotalTon(),
+    yogIhlal: yog > EM_LIMIT_GKWH, kotaIhlal,
+    asimTon: Math.max(0, ton - kota) + butceAcik * .1, // ceza hesabı: haftalık aşım + bütçe borcunun %10'u
+    ihlal: (yog > EM_LIMIT_GKWH) || kotaIhlal || butceIhlal };
 }
 const emPosta = (baslik, govde) => addMail('🏛️ Enerji Bakanlığı', baslik, govde, true);
 // 🏛️ KAMULAŞTIRMA: aşımı kapatan EN KÜÇÜK katkılı tesis (yoksa en kirli olan) devlete geçer
@@ -2194,11 +2207,12 @@ function emisTick() {
   if (!E.warnUntil) { // 1) İHTAR — 12 saat süre
     E.warnUntil = now + EM_GRACE_MS;
     E.watch = {};
-    const sebep = d.yogIhlal && d.kotaIhlal
-      ? 'ortalama salımınız ' + d.yog + ' g/kWh (sınır ' + EM_LIMIT_GKWH + ') ve haftalık salımınız ' + fmtN(Math.round(d.ton)) + ' ton (kota ' + fmtN(d.kota) + ')'
-      : d.yogIhlal ? 'kWh başına ortalama salımınız ' + d.yog + ' g/kWh — yasal sınır ' + EM_LIMIT_GKWH + ' g/kWh'
-      : 'haftalık toplam salımınız ' + fmtN(Math.round(d.ton)) + ' ton — ölçeğinizin kotası ' + fmtN(d.kota) + ' ton';
-    emPosta('⚠️ İHTAR — emisyon sınırı aşıldı (12 saat)', 'Yapılan denetimde ' + sebep + ' olarak tespit edilmiştir.\n\n12 SAAT içinde gerekli tedbirleri alır (kirli tesisi kapatır, güneş/rüzgar yatırımı yaparsanız) ceza uygulanmaz. Aksi hâlde sırasıyla idari para cezası, tesis mühürleme ve KAMULAŞTIRMA işlemlerine başlanır.');
+    const sbp = [];
+    if (d.yogIhlal) sbp.push('çalışan tesislerinizin karbon yoğunluğu ' + d.yog + ' g/kWh (yasal tavan ' + EM_LIMIT_GKWH + ')');
+    if (d.kotaIhlal) sbp.push('bu haftaki salımınız ' + fmtN(Math.round(d.ton)) + ' ton (ölçek kotası ' + fmtN(d.kota) + ' ton)');
+    if (d.butceIhlal) sbp.push('ömür boyu karbon bütçenizi ' + fmtN(Math.round(d.butceAcik)) + ' ton AŞTINIZ (toplam ' + fmtN(Math.round(d.toplam)) + ' / bütçe ' + fmtN(Math.round(d.butce)) + ' ton)');
+    const sebep = sbp.join(', ');
+    emPosta('⚠️ İHTAR — emisyon sınırı aşıldı (12 saat)', 'Yapılan denetimde ' + sebep + ' olarak tespit edilmiştir.\n\n12 SAAT içinde gerekli tedbirleri alırsanız ceza uygulanmaz:\n• Kirli tesisleri DURDURUN (denetim anlık ölçer — durdurunca yoğunluk ve salım hızı anında düşer)\n• Güneş/rüzgar yatırımı yapın: her 1 MWh temiz üretim karbon bütçenize +' + EM_CLEAN_CREDIT + ' ton geri kazandırır\n\nAksi hâlde sırasıyla idari para cezası, tesis mühürleme ve KAMULAŞTIRMA işlemlerine başlanır.');
     toast('⚠️ BAKANLIK İHTARI: emisyon sınırı aşıldı — 12 saatin var', 'warn', null, 0, true);
     return;
   }
@@ -7827,16 +7841,25 @@ function openCompanySheet() {
     <table class="ledger">
       <tr><td>Kasa</td><td class="pos">${fmt(G.cash)}</td></tr>
       <tr><td>Şirket değeri</td><td>${fmt(myWorth())}</td></tr>
+      ${(() => { // 💼 patron: "ciro 653M, kasada 8M — 300M fazlalık mı?" Hayır: para TESİSE döndü.
+        // Şirket değeri = kasa + kurulu tesislerin %70'i. Döküm olmadan bu görünmüyordu.
+        const tesis = G.units.reduce((a, u) => a + TYPE_OF(u.kind, u.t).cost * .7, 0);
+        const sant = G.units.filter(u => u.kind === 'plant').length, dep = G.units.filter(u => u.kind === 'store').length, ofs = offices().length;
+        return `<tr><td class="sub">↳ dökümü <span class="sub">(kasa + kurulu tesislerin %70'i)</span></td><td class="sub">💰 ${fmt(G.cash)} kasa + 🏭 ${fmt(tesis)} tesis <span class="sub">(${sant} santral · ${dep} depo · ${ofs} ofis)</span></td></tr>`;
+      })()}
       <tr><td>Toplam ciro</td><td>${fmt(G.totalEarned)}</td></tr>
       <tr><td>Toplam satış</td><td>${fmtN(G.totalSold)} MWh</td></tr>
       <tr><td>🌿 Devlet teşviki (emisyona göre)</td><td class="${greenBonus() > 0 ? 'pos' : 'neg'}">${greenBonus() > 0 ? '+%' + Math.round(greenBonus() * 100) + ' (satışlara eklenir)' : 'YOK — ort. ' + co2Avg() + ' g/kWh çok yüksek'}</td></tr>
       ${(() => { // 🌍 EMİSYON DENETİMİ (patron): toplam kirlilik + haftalık kota + yaptırım durumu
         const d = emDurum(), oran = d.kota ? Math.min(200, Math.round(d.ton / d.kota * 100)) : 0;
         const kalanSa = G.emis && G.emis.warnUntil > Date.now() ? fmtHrs((G.emis.warnUntil - Date.now()) / 36e5) : null;
-        return `<tr><td>🌍 Toplam kirlilik <span class="sub">(ömür boyu)</span></td><td>${fmtN(Math.round(co2TotalTon()))} ton CO₂ <span class="sub">· ort. ${co2Avg()} g/kWh</span></td></tr>
-        <tr><td>⚖️ Denetim yoğunluğu <span class="sub">(çalışan portföy)</span></td><td class="${d.yogIhlal ? 'neg' : 'pos'}">${d.yog} g/kWh <span class="sub">/ tavan ${EM_LIMIT_GKWH}</span></td></tr>
-        <tr><td>🌍 Bu hafta salım / kota <span class="sub">(${olcekOf(G.olcek).nm})</span></td><td class="${d.kotaIhlal ? 'neg' : oran > 80 ? 'warn' : 'pos'}">${fmtN(Math.round(d.ton))} / ${fmtN(d.kota)} ton <span class="sub">(%${oran})</span></td></tr>
-        <tr><td>🏛️ Emisyon denetimi <span class="sub">(yasal tavan ${EM_LIMIT_GKWH} g/kWh)</span></td><td class="${d.ihlal ? 'neg' : 'pos'}">${emMuaf() ? 'muaf — yeni şirket' : d.ihlal ? (kalanSa ? '⚠️ İHTAR — ' + kalanSa + ' içinde düzelt' : '⚠️ İHLAL') : '✅ sınırlar içinde'}</td></tr>` +
+        const butceOran = d.butce ? Math.min(200, Math.round(d.toplam / d.butce * 100)) : 0;
+        return `<tr><td colspan="2" style="padding-top:8px"><b style="color:var(--acc2);font-size:11px">🌍 EMİSYON DENETİMİ</b> <span class="sub">— denetlenen 3 ölçüt aşağıda</span></td></tr>
+        <tr><td>1️⃣ Karbon yoğunluğu <span class="sub">(ŞU AN çalışan tesisler)</span></td><td class="${d.yogIhlal ? 'neg' : 'pos'}"><b>${d.yog}</b> / ${EM_LIMIT_GKWH} g/kWh ${d.yogIhlal ? '❌' : '✅'}</td></tr>
+        <tr><td>2️⃣ Haftalık salım <span class="sub">(${olcekOf(G.olcek).nm} kotası · pazar sıfırlanır)</span></td><td class="${d.kotaIhlal ? 'neg' : oran > 80 ? 'warn' : 'pos'}"><b>${fmtN(Math.round(d.ton))}</b> / ${fmtN(d.kota)} ton (%${oran}) ${d.kotaIhlal ? '❌' : '✅'}</td></tr>
+        <tr><td>3️⃣ Ömür boyu karbon bütçesi <span class="sub">(temiz üretim bütçeyi büyütür: +${EM_CLEAN_CREDIT} ton/MWh)</span></td><td class="${d.butceAcik ? 'neg' : butceOran > 80 ? 'warn' : 'pos'}"><b>${fmtN(Math.round(d.toplam))}</b> / ${fmtN(Math.round(d.butce))} ton (%${butceOran}) ${d.butceAcik ? '❌ ' + fmtN(Math.round(d.butceAcik)) + ' ton aşım' : '✅'}</td></tr>
+        <tr><td>🏛️ Denetim sonucu</td><td class="${d.ihlal ? 'neg' : 'pos'}">${emMuaf() ? 'muaf — yeni şirket (3 gün)' : d.ihlal ? (kalanSa ? '⚠️ İHTAR — ' + kalanSa + ' içinde düzelt' : '⚠️ İHLAL') : '✅ sınırlar içinde'}</td></tr>
+        <tr><td class="sub">📊 Toplam kirlilik <span class="sub">· ömür ort. ${co2Avg()} g/kWh (geçmiş — denetimde kullanılmaz)</span></td><td class="sub">${fmtN(Math.round(d.toplam))} ton CO₂</td></tr>` +
         (G.emis && G.emis.watchUntil > Date.now() ? `<tr><td>👁️ Gözetim</td><td class="warn">${fmtHrs((G.emis.watchUntil - Date.now()) / 36e5)} — durdurulan fosili açmak MUVAZAA sayılır</td></tr>` : '') +
         (G.emis && G.emis.fines ? `<tr><td>💸 Ödenen emisyon cezası</td><td class="neg">${fmt(G.emis.fines)}</td></tr>` : '');
       })()}
