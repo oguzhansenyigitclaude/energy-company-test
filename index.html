@@ -549,7 +549,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-19 21:56)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-20 14:59)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -6804,13 +6804,19 @@ window.sellAllStoresAsk = () => {
   if (!sts.length) return;
   // ⚠️ HATA AVI: burada da her depo günlük talebi sıfırdan tüketiyormuş gibi sayılıyordu.
   // Aynı kare biriktiricisi — onay ekranındaki rakam gerçekte ödenecek tutar olsun.
+  // 🐞 BOT DÜZELTMESİ: onay penceresi BAĞLI depoların stoğunu saymıyordu — merkez depo için
+  // s.stored (yalnız kendi tankı) kullanılıyordu, oysa panel butonu (renderStorePanel) ve
+  // gerçek satış (startDischarge) grup toplamını (groupStored) satıyor. Sonuç: bağlı uydusu
+  // olan merkezde onaydaki tahmin gerçekten ~%20 düşük çıkıyordu ("gördüğün = aldığın" bozuluyordu).
+  // Çözüm: panel/satışla aynı `dolu` (isLinked ? groupStored : stored) değeri kullanılıyor.
   const kareSatilan = {};
+  const dolu = s => isLinked(s) ? groupStored(s) : s.stored;
   const toplam = sts.reduce((a, s) => {
     const onceki = kareSatilan[s.cell] || 0;
-    kareSatilan[s.cell] = onceki + s.stored;
-    return a + sellRevenueAfter(s.cell, s.stored, onceki).gain;
+    kareSatilan[s.cell] = onceki + dolu(s);
+    return a + sellRevenueAfter(s.cell, dolu(s), onceki).gain;
   }, 0);
-  const mwh = sts.reduce((a, s) => a + s.stored, 0);
+  const mwh = sts.reduce((a, s) => a + dolu(s), 0);
   $('modal').innerHTML = `
     <h2>💰 Hepsini Sat</h2>
     <p><b>${sts.length} depo</b> · ${fmtE(mwh)} MWh · tahmini <b class="pos">${fmt(toplam)}</b></p>

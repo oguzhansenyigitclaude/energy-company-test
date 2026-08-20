@@ -2,6 +2,48 @@
 
 Bu dosya, bakım botunun bu turda index.html üzerinde yaptığı düzeltmelerin ÖNCE/SONRA kod parçalarını ve gerekçesini listeler. Yerel geliştirici bunları ana projeye taşıyabilir / gözden geçirebilir.
 
+## 2026-08-20 14:59 turu
+
+### Düzeltme 1: "Hepsini Sat" onay penceresi bağlı (uydu) depo stoğunu saymıyordu — tahmin gerçekten ~%20 düşük çıkıyordu
+
+**Bulgu:** `-P-TYIPb85XcfS0O-6qc` (09:42). Depo panelinde "Hepsini Sat" butonu ör. $144.343 (1 depo) yazıyor, ama tıklayınca açılan onay penceresi AYNI işlem için 0,64 MWh / tahmini $111.917 gösteriyor (~%22 fark). Repro: sağ çekmece (navhandle) → DEPOLARIN → Hepsini Sat.
+
+**Kök neden:** Panel butonunu üreten `renderStorePanel()` (satır ~6757) her depo için `dolu(s) = isLinked(s) ? groupStored(s) : s.stored` kullanıyor — yani bağlı MERKEZ depo için tüm grubun (merkez + uydular) stoğunu sayıyor. Gerçek satış `startDischarge()` (satır ~2430) da aynı grup toplamını satar. Ama onay penceresi `sellAllStoresAsk()` sadece `s.stored` (merkezin kendi tankı) kullanıyordu; bağlı uydunun stoğu (ör. id6, ~0,18 MWh) tahmine hiç girmiyordu. Sonuç: panel butonu ve gerçek satış grup toplamını gösterirken, arada duran onay penceresi eksik rakam gösteriyordu — "gördüğün = aldığın" sözü bağlı depolu merkezlerde bozuluyordu.
+
+**ÖNCESİ** (`index.html`, `sellAllStoresAsk` içinde, ~satır 6807):
+```js
+const kareSatilan = {};
+const toplam = sts.reduce((a, s) => {
+  const onceki = kareSatilan[s.cell] || 0;
+  kareSatilan[s.cell] = onceki + s.stored;
+  return a + sellRevenueAfter(s.cell, s.stored, onceki).gain;
+}, 0);
+const mwh = sts.reduce((a, s) => a + s.stored, 0);
+```
+
+**SONRASI:**
+```js
+// 🐞 BOT DÜZELTMESİ: onay penceresi BAĞLI depoların stoğunu saymıyordu — merkez depo için
+// s.stored (yalnız kendi tankı) kullanılıyordu, oysa panel butonu (renderStorePanel) ve
+// gerçek satış (startDischarge) grup toplamını (groupStored) satıyor. Sonuç: bağlı uydusu
+// olan merkezde onaydaki tahmin gerçekten ~%20 düşük çıkıyordu ("gördüğün = aldığın" bozuluyordu).
+// Çözüm: panel/satışla aynı `dolu` (isLinked ? groupStored : stored) değeri kullanılıyor.
+const kareSatilan = {};
+const dolu = s => isLinked(s) ? groupStored(s) : s.stored;
+const toplam = sts.reduce((a, s) => {
+  const onceki = kareSatilan[s.cell] || 0;
+  kareSatilan[s.cell] = onceki + dolu(s);
+  return a + sellRevenueAfter(s.cell, dolu(s), onceki).gain;
+}, 0);
+const mwh = sts.reduce((a, s) => a + dolu(s), 0);
+```
+
+**Değişiklik:** `s.stored` → `dolu(s)` (üç yerde) + `dolu` yardımcı fonksiyonu eklendi. Salt gösterim düzeltmesi — ekonomi/satış mantığı değişmedi (gerçek satış zaten grup toplamını satıyordu); yalnız onay penceresindeki tahmin artık gerçekten alınacak tutarla eşleşiyor.
+
+**Doğrulama:** `new Function` ile 4 inline `<script>` bloğunun tamamı sözdizimi kontrolünden geçti (0 hata). Playwright + headless Chromium (`/opt/pw-browsers/chromium`) ile sayfa `file://` üzerinden açıldı: `pageerror` = 0, `typeof window.sellAllStoresAsk` = "function". Bu tur bağlı uydu deposunun stoğu artık hem panel butonu hem onay penceresinde aynı `dolu` değerinden hesaplanıyor.
+
+---
+
 ## 2026-08-19 21:56 turu
 
 ### Düzeltme 1: `demolishDo()` bağlı depo koruması eksikti (konsoldan çağrıyla grup kilidi bypass edilebiliyordu)

@@ -2,6 +2,26 @@
 
 Bu dosya, `suggestions` düğümünden okunup bakım botu tarafından değerlendirilen kayıtların anahtarlarını listeler. Sadece burada olmayan (yeni) anahtarlar bir sonraki turda işlenir.
 
+## 2026-08-20 14:59 turu
+
+13 yeni kayıt işlendi. **1 düzeltme yapıldı** (A: "Hepsini Sat" onay penceresi bağlı depo stoğunu saymıyordu — bkz. `duzeltmeler.md`). 1 kayıt tasarım/belirsiz olduğu için `patrona-sorulacak.md`'ye yazıldı (verim dökümü ↔ anlık üretim tutarsızlığı). Kalanlar durum özeti/bilgi.
+
+| Anahtar | Zaman (UTC) | Özet | Sonuç |
+|---|---|---|---|
+| `-P-TMV4gILN-rOeInMzb` | 2026-08-20 08:51 | Durum özeti — depo alımı, şirket sağlıklı, konsol hatası yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-TMjK2u0a1eXSQbv-T` | 2026-08-20 08:52 | Gözlem (orta güven) — İnşa katalogunda 'Satın al'/'Evet, Satın Al' butonu headless Chromium'da gerçek click/tap ile tetiklenmiyor; oyun mantığı JS ile çağrılınca doğru | Test-altyapısı artefaktı olarak değerlendirildi (bot kendisi "oyun mantığı doğru" diyor; `data-cost` butonunun onclick=`buildHere` handler'ı normal tarayıcıda çalışır). Kod değiştirilmedi. |
+| `-P-TMjUvbAo80PdfGUVw` | 2026-08-20 08:52 | Doğrulama (bug değil) — pil istasyonu alımı kasa/toast doğru; bulut kaydı gecikmesi botun kendi `browser.close()` akışından | Bilgi amaçlı, aksiyon gerekmiyor (bot "GERÇEK BUG DEĞİL" diyor). |
+| `-P-TYIPb85XcfS0O-6qc` | 2026-08-20 09:42 | **BUG** — 'Hepsini Sat' butonu (panel) ~%22 daha yüksek tutar gösteriyor, onay penceresi bağlı uydu deposu stoğunu saymıyor | ✅ **DÜZELTİLDİ** (A). `sellAllStoresAsk` artık `dolu = isLinked ? groupStored : stored` kullanıyor — panel butonu ve gerçek satışla eşleşti. Detay `duzeltmeler.md`. |
+| `-P-Tl2q3t5Z25RVzaEr8` | 2026-08-20 10:42 | Durum özeti (bug yok) — depo satış akışı doğru, verim dökümü tutarlı, bağlı depo kilidi çift katmanlı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-TylltX_lTbnymebcR` | 2026-08-20 11:42 | Durum özeti (bug yok) — SAT tahmini=gerçek, verim dökümü tutarlı, bağlı depo kilitli, paneller sorunsuz | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-UDR7FELbVfIVyWhuM` | 2026-08-20 12:50 | Bulgu — Verim Dökümü (solar #11) 'çarpımların sonucu = anlık üretim' diyor ama Saha kalitesi çarpanı "keşif bekleniyor —" (sayısız); görünen çarpanlar çarpımı gerçek üretimden farklı | ⚠️ `patrona-sorulacak.md`'ye yazıldı (B). Verim/üretim hesabı ilgili, kök neden belirsiz (keşif durumu / siteFactor 60sn önbelleği / clamp) — dokunulmadı. |
+| `-P-UDTeXMcp2KNGANil1` | 2026-08-20 12:51 | Durum özeti (bug yok) — bulut kayıt tutarlı, depo grubu satışı gerçek≈tahmin, bağlı depo engeli, kasa negatif olmadı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-UNGOk4d5D6aRmPjXy` | 2026-08-20 13:34 | Devriye başladı (durum) | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-UPuIpKRO2dZVRlkxM` | 2026-08-20 13:45 | BUG(küçük) — `img/splash.webp` 404 (kaynak repoda yok) | Tasarım gereği: satır 355'te `onerror="this.remove()"` ile zarif düşüş var, yorumda "splash.webp konursa foto-gerçekçi arka plan; yoksa çizim sahne" (satır 293) — opsiyonel varlık, gerçek bug değil. Kod değiştirilmedi. |
+| `-P-UPuSorTtzLb4PM9z1` | 2026-08-20 13:45 | Durum özeti (bug yok) — MERKEZ depo SAT doğru, bağlı depo engeli, verim dökümü tutarlı, kasa≥0 | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-UdHzkDm3Mgi2OVhiY` | 2026-08-20 14:48 | BUG(tekrar) — Solar Verim Dökümü çarpan çarpımı ≠ anlık üretim (#7: 0.172 vs 0.158, fark ×1.09 = keşfedilmemiş saha çarpanı) | ⚠️ Yukarıdaki `-P-UDR7FELbVfIVyWhuM` ile aynı konu; `patrona-sorulacak.md`'ye yazıldı (B). Dokunulmadı. |
+| `-P-UdLQwRGW6P6Qj9i4Y` | 2026-08-20 14:48 | Durum özeti (bug yok) — invariantlar geçti (totalEarned=Σ cellEarned, kasa≥0, NaN yok), bağlı depo kilidi çalışıyor | Bilgi amaçlı, aksiyon gerekmiyor. |
+
 ## 2026-08-20 07:58 turu
 
 | Anahtar | Zaman (UTC) | Özet | Sonuç |

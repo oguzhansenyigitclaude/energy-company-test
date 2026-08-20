@@ -1,5 +1,26 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-20 14:59 turu — 1 yeni tasarım/karar konusu (VERİM DÖKÜMÜ ↔ anlık üretim tutarsızlığı)
+
+Bu turda 13 kayıt işlendi, 1 net kod hatası düzeltildi ("Hepsini Sat" onay penceresi — bkz. `duzeltmeler.md`). Aşağıdaki konu ise verim/üretim **hesabıyla ilgili ve kök nedeni belirsiz** olduğu için koda dokunulmadı, kararınızı bekliyor:
+
+### ☀️ Solar "VERİM DÖKÜMÜ" tablosundaki çarpanların çarpımı, gösterilen "anlık üretim" ile birebir tutmuyor
+
+**Bulgu (2 bağımsız bot kaydı, `-P-UDR7FELbVfIVyWhuM` 12:50 ve `-P-UdHzkDm3Mgi2OVhiY` 14:48):**
+Santral bilgi kartındaki VERİM DÖKÜMÜ tablosu başlığında "çarpanların sonucu = anlık üretim" yazıyor, ama bazı **güneş** santrallerinde tablodaki çarpanların çarpımı gösterilen anlık üretimden farklı çıkıyor:
+- Santral #7 (solar_1__yelkora): tablo 0.9×0.78(bulut)×1.09(saha)×0.25 → **0.172 MW** gösteriyor ama gerçek `plantOutput` = **0.158 MW** (fark tam ×1.09).
+- Santral #11 (solar_1__ortaç): tablo 0.268 vs gerçek 0.244 (yine ×1.09) — ya da başka kayıtta "📍 Saha kalitesi: keşif bekleniyor —" (sayı yok) gösterilirken üretim yine de farklı.
+- Rüzgar santrallerinde birebir tutuyor; sorun güneşe özgü görünüyor.
+
+**Neden koda dokunmadım (belirsizlik — üç olası kök neden var, hangisinin geçerli olduğu emin değil):**
+1. **`siteFactor` 60 sn önbelleği** (`index.html` ~satır 883-889): `plantOutput` önbelleğe alınmış `u._sf`'i kullanır; tablo ise `siteParts(u)`'ı **taze** hesaplar. Kare yeni keşfedildiyse (survey tamamlandıysa) tablo yeni saha çarpanını (×1.09) gösterirken üretim hâlâ eski önbellekli 1.0'ı kullanıyor olabilir → ~60 sn'lik geçici tutarsızlık.
+2. **`clampF(.7, 1.3, ...)` kelepçesi** (siteFactor içinde): tablo ham çarpanları çarpıp gösterirken siteFactor toplam çarpımı [0.7,1.3]'e kelepçeliyor; kelepçe devredeyse tablo bunu göstermiyor.
+3. **Keşif durumu (`SV(cell)`)**: tablo saha çarpanını 1.09 gösterirken üretimin siteFactor'ü 1.0 uyguluyor olabilir (bot bu yorumu yaptı) — ama bu, önbellek/keşif zamanlamasına bağlı, deterministik değil.
+
+Bu bir **gösterim/UX** hatası (ekonomiyi değiştirmiyor — üretim rakamı doğru, sadece tablo açıklaması tutmuyor), ama düzeltmenin doğru yeri kök nedene göre değişiyor: önbellek meselesiyse tabloyu önbellekli `siteFactor` ile hizalamak, kelepçeyse tabloya kelepçe satırı eklemek gerekir. Yanlış düzeltme oyuncuya farklı bir yanlış sayı gösterir. **Karar:** hangi davranış "doğru" — (a) tablo taze siteParts'ı mı göstermeli (üretim önbelleğini kırıp anında güncelleyerek), yoksa (b) tablo üretimin fiilen kullandığı kelepçeli/önbellekli değeri mi göstermeli? Yerel geliştirici siteFactor önbellek/kelepçe akışını netleştirip tek satırlık hizalama yapabilir.
+
+---
+
 ## 2026-08-20 07:58 turu — yeni karar bekleyen konu yok, mevcut konular yeniden doğrulandı
 
 17 yeni `suggestions` kaydı işlendi, net/düşük riskli yeni bir kod hatası bulunmadı. Detaylar `bot-notlar/islenen.md`'de. Kod değişikliği yapılmadı, BUILD_TAG/version.json güncellenmedi.
