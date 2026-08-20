@@ -446,7 +446,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-19 20:47) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-20 16:17) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -549,7 +549,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-20 14:59)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-20 16:17)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1412,6 +1412,11 @@ function botLease(cell) { // bilgi ekranı için: kazanılmamış karede bot imt
   const a = (G.auctions || {})[cell];
   return a && a.resolved && a.topBy && a.topBy !== 'SEN' ? a.topBy : null;
 }
+// 🏛️ ALIM GARANTİSİ VERGİSİ (patron): kareyi başkası kazandıysa o karedeki satış gelirinin
+// %20'si garanti sahibine vergi olarak gider. İhaleye girmenin ikinci sebebi budur:
+// kazanan hem +%20 prim alır hem rakiplerinden vergi toplar.
+const leaseOwnerOf = cell => botLease(cell);
+const leaseTaxRate = cell => (!myLease(cell) && leaseOwnerOf(cell)) ? LEASE_PRIM : 0;
 // ── HER KARE FARKLI FİYATTAN ALIR (patron tasarımı): bölge alım çarpanı 0.80–1.30 (kare karakteri, sabit).
 // İmtiyaz kazananın avantajı artık ALIM FİYATINA +%20 (ek prim kalemine değil — patron düzeltmesi).
 const cellPriceFactor = c => { const [cy, cx] = c.split('_').map(Number); return .8 + hash01(cy, cx, 77) * .5; };
@@ -1437,7 +1442,9 @@ function sellRevenue(cell, mwh) {
   const gb = 1 + greenBonus(); // 🌿 devlet teşviki: temiz portföye alımda +%5/%10/%15
   // 💠 Satış Primi takviyesi (İmtiyaz Mağazası, 24 sa): TAHMİN ve GERÇEK satış aynı fonksiyondan
   // geçtiği için "gördüğün = aldığın" sözü takviyede de korunur.
-  return { gain: (inD * base + excess * base * DUMP_RATE) * gb * ipSatBoost(), inD, excess, remaining, price: base, green: gb - 1 };
+  const ham = (inD * base + excess * base * DUMP_RATE) * gb * ipSatBoost();
+  const vRate = leaseTaxRate(cell), vergi = ham * vRate; // 🏛️ garanti sahibine giden pay
+  return { gain: ham - vergi, inD, excess, remaining, price: base, green: gb - 1, leaseTax: vergi, leaseTaxRate: vRate, leaseOwner: vRate ? leaseOwnerOf(cell) : null };
 }
 // 🔁 ALTERNATİF PAZAR BUTONLARI (patron: "butonda MWh fiyatı değil KAZANILACAK TUTAR yazsın,
 // parantezden sonra da yerel satışa göre '%25 daha kârlı' / '%15 zarar' desin").
@@ -1641,7 +1648,20 @@ function officeLabel(u) {
   const i = ayni.findIndex(x => x.id === u.id);
   return ad + ' Ofisi ' + (i < 0 ? 1 : i + 1);
 }
-const unitName = u => u.name || (u.kind === 'office' ? (u.hq ? 'Merkez Ofis' : officeLabel(u)) : TYPE_OF(u.kind, u.t).nm + ' #' + u.id);
+// 🔗 BİRLEŞİK DEPO ADI (patron): birden fazla depo bağlıysa MERKEZ deponun adı "Birleşik Pil
+// İstasyonu 01/02/03" olur — oyuncu listede ismine bakarak grup merkezi olduğunu anlar.
+function birlesikNo(u) {
+  if (!G || u.kind !== 'store' || u.link) return 0; // yalnız MERKEZ (bağlı olmayan) depo
+  if (storeGroup(u).length < 2) return 0;           // en az 1 uydusu olacak
+  const merkezler = G.units.filter(x => x.kind === 'store' && !x.link && storeGroup(x).length > 1)
+    .sort((a, b) => a.id - b.id);
+  return merkezler.findIndex(x => x.id === u.id) + 1;
+}
+const unitName = u => { if (u.name) return u.name;
+  if (u.kind === 'office') return u.hq ? 'Merkez Ofis' : officeLabel(u);
+  const bn = birlesikNo(u);
+  if (bn) return 'Birleşik Pil İstasyonu ' + String(bn).padStart(2, '0');
+  return TYPE_OF(u.kind, u.t).nm + ' #' + u.id; };
 window.renameUnit = id => {
   const u = G.units.find(x => x.id === id);
   if (!u) return;
@@ -1835,6 +1855,7 @@ function freshState() {
     week: isoWeek(), weekSold: 0, weekClaimed: false,
     olcek: 0, katkiOdenen: '', // 🏛️ resmî şirket ölçeği (Mikro→Holding) + son ödenen katkı haftası
     ip: 10, ipBoost: null, bakimAnlasma: false, // 💠 İmtiyaz Puanı (10 hediye) + aktif takviye + kalıcı bakım anlaşması
+    emis: { week: '', ton: 0, stage: 0, warnUntil: 0, watch: {}, watchUntil: 0, fines: 0, muvazaa: 0 }, // 🌍 emisyon denetimi
     totalSold: 0, totalEarned: 0, demoOffsetMin: 0,
     lastSeen: Date.now(), muted: false, demo: false,
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
@@ -1994,6 +2015,11 @@ async function surveyCell(cell) {
     // Hatayı İŞARETLE: 964'teki koruma devreye girer, oyuncu "Tekrar dene" ile elle yeniler.
     WX.survey[cell] = { err: 1, at: Date.now() };
   }
+  // 🐞 BOT BULGUSU (2 bağımsız kayıt, 12:50 + 14:48): keşif verisi gelince VERİM DÖKÜMÜ tablosu
+  // TAZE siteParts ile yeni saha çarpanını (ör. ×1.09) gösteriyor, ama plantOutput → siteFactor()
+  // 60 sn'lik u._sf önbelleğindeki keşif ÖNCESİ değeri (1.0) kullanıyordu → "çarpanların sonucu =
+  // anlık üretim" sözü ilk dakika boyunca tutmuyordu. Keşif KALICI bir gerçek: önbelleği hemen kır.
+  for (const u2 of G.units) if (u2.cell === cell) u2._sfAt = 0;
   if (SEL.cell === cell && $('cellsheet').classList.contains('show')) openCellSheet(cell, SEL.ll);
   // açık birim sayfası bu karedeyse tazele (ikinci el değeri keşifle netleşir)
   if ($('unitsheet').classList.contains('show') && window.__lastUnit) {
@@ -2070,6 +2096,124 @@ function co2Avg() {
   for (const u of plants()) { prod += u.lifeProd || 0; emit += (u.lifeProd || 0) * (PLANT_TYPES[u.t].em || 0); }
   return prod > .1 ? Math.round(emit / prod) : 0;
 }
+// ═══ 🌍 EMİSYON YAPTIRIM SİSTEMİ (patron tasarımı) ═══
+// "Gerçek hayatta kirliliğin yasal sınırı var; aşarsan devlet ciddi yaptırım uygular. İnsanlar
+//  full kömür/nükleerle kısa sürede oyunu bitirmesin — güneşe/rüzgara yönelmek zorunda kalsınlar."
+// İKİ AYRI ÖLÇÜ, İKİ AYRI YAPTIRIM:
+//   A) YOĞUNLUK — kWh başına ortalama (g/kWh): portföyün ne kadar kirli olduğu
+//   B) KOTA — haftalık MUTLAK salım (ton): ölçek büyüdükçe artar ama üretimden yavaş,
+//      yani sınırsız kömürle büyümek mümkün değil
+// CEZA MERDİVENİ: ⚠️ ihtar (12 sa) → 💸 para → ⏸️ mühürleme → 🏛️ kamulaştırma.
+// Kamulaştırmada AŞIMI KAPATAN EN KÜÇÜK tesis alınır (patron: "gidip direk en büyük 500'lük
+// santrali almayalım"). 12 saatte düzelten oyuncuya ceza YOK — ama düzeltmiş gibi yapıp ihtar
+// bitince aynı santrali geri açan MUVAZAA sayılır: fosil kapasitesinin %50'sine el konur.
+const EM_LIMIT_GKWH = 550;                       // yasal yoğunluk tavanı (AB EPS 550 paraleli)
+const EM_QUOTA = [400, 1200, 2500, 8000, 25000]; // ölçek başına HAFTALIK salım kotası (ton)
+const EM_GRACE_MS = 12 * 3600e3;                 // ihtar süresi: 12 saat
+const EM_WATCH_MS = 24 * 3600e3;                 // ihtar sonrası gözetim (muvazaa avı)
+const EM_TON_FINE = 50000;                       // aşım tonu başına para cezası
+const emQuota = () => EM_QUOTA[Math.max(0, Math.min(EM_QUOTA.length - 1, G.olcek || 0))];
+const emWeekTon = () => Math.max(0, (G.emis && G.emis.ton) || 0);
+const co2TotalTon = () => plants().reduce((a, u) => a + (u.lifeProd || 0) * (PLANT_TYPES[u.t].em || 0) / 1000, 0);
+const emKirli = u => u.kind === 'plant' && (PLANT_TYPES[u.t].em || 0) >= 300; // fosil sayılan santral
+// eğitimdeki ve ilk 3 günündeki şirket denetim dışı (yeni oyuncu boğulmasın)
+const emMuaf = () => tutActive() || (Date.now() - (G.founded || Date.now())) < 3 * 864e5;
+// ⚖️ YAPTIRIM ÖLÇÜTÜ = ŞU AN ÇALIŞAN PORTFÖY (ömür ortalaması DEĞİL).
+// Sebep: co2Avg() geçmiş üretimin ağırlıklı ortalaması — kirli santrali kapatsan bile düşmez;
+// onunla denetim yapılsa "12 saatte tedbir al, ceza yok" sözü imkânsız olurdu (ceza kaçınılmaz).
+// Denetim gerçek hayatta da ANLIK ölçer: çalışan kurulu gücün karbon yoğunluğu ve salım hızı.
+const emPortfoy = () => { let mw = 0, g = 0;
+  for (const u of plants()) if (u.on && u.buildDone <= Date.now()) { const T = PLANT_TYPES[u.t]; mw += T.mw; g += T.mw * (T.em || 0); }
+  return mw > .01 ? Math.round(g / mw) : 0; };
+const emRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() ? PLANT_TYPES[u.t].mw * (PLANT_TYPES[u.t].em || 0) / 1000 : 0), 0); // ton/saat (tam güçte)
+function emDurum() {
+  const yog = emPortfoy(), ton = emWeekTon(), kota = emQuota(), rate = emRate();
+  // kota aşıldıysa ihlal sürer — ama salım hızını ciddi düşürdüyse (tedbir aldıysa) düzelmiş sayılır
+  const kotaIhlal = ton > kota && rate > (kota / 168) * .5;
+  return { yog, ton, kota, rate, yogIhlal: yog > EM_LIMIT_GKWH, kotaIhlal,
+    asimTon: Math.max(0, ton - kota), ihlal: (yog > EM_LIMIT_GKWH) || kotaIhlal };
+}
+const emPosta = (baslik, govde) => addMail('🏛️ Enerji Bakanlığı', baslik, govde, true);
+// 🏛️ KAMULAŞTIRMA: aşımı kapatan EN KÜÇÜK katkılı tesis (yoksa en kirli olan) devlete geçer
+function emKamulastir(asimTon) {
+  const aday = plants().filter(emKirli);
+  if (!aday.length) return null;
+  const kapatan = aday.filter(u => (u.wkTon || 0) >= asimTon).sort((a, b) => (a.wkTon || 0) - (b.wkTon || 0))[0];
+  const hedef = kapatan || aday.slice().sort((a, b) => (b.wkTon || 0) - (a.wkTon || 0))[0];
+  const T = PLANT_TYPES[hedef.t];
+  G.units = G.units.filter(x => x.id !== hedef.id);
+  if (unitMarkers[hedef.id]) { unitMarkers[hedef.id].remove(); delete unitMarkers[hedef.id]; }
+  emPosta('🏛️ KAMULAŞTIRMA — ' + T.nm, 'Emisyon sınırlarını sürekli aştığınız için ' + T.nm + ' (' + T.mw + ' MW) tesisiniz kamulaştırılarak Hazine\'ye devredilmiştir. Bedel ödenmez.\n\nBu tesis, aşımınızı kapatacak EN KÜÇÜK kapasiteli tesis olduğu için seçilmiştir. Salımınız yasal sınıra inene kadar denetim sürer.');
+  toast('🏛️ KAMULAŞTIRILDI: ' + T.nm + ' devlete devredildi', 'warn', null, 0, true);
+  return hedef;
+}
+// ⏸️ MÜHÜRLEME: en kirli santral durdurulur (üretim durur, mülkiyet kalır)
+function emMuhurle() {
+  const aday = plants().filter(u => emKirli(u) && u.on).sort((a, b) => (PLANT_TYPES[b.t].em || 0) - (PLANT_TYPES[a.t].em || 0))[0];
+  if (!aday) return null;
+  aday.on = false; aday.emSealed = true;
+  const T = PLANT_TYPES[aday.t];
+  emPosta('⏸️ MÜHÜRLEME — ' + T.nm, T.nm + ' (' + T.em + ' g/kWh) tesisiniz emisyon ihlali nedeniyle MÜHÜRLENDİ; salımınız yasal sınıra inene kadar çalıştırılamaz. Mühür, ihlal giderildiğinde kendiliğinden kalkar.');
+  toast('⏸️ ' + T.nm + ' MÜHÜRLENDİ — emisyon ihlali', 'warn', null, 0, true);
+  return aday;
+}
+// 🚨 MUVAZAA: ihtarda santralini durdurup ihtar biter bitmez geri açan / yeni fosil kuran
+function emMuvazaa(sebep) {
+  const fosil = plants().filter(emKirli).sort((a, b) => PLANT_TYPES[b.t].mw - PLANT_TYPES[a.t].mw);
+  const alinan = fosil.slice(0, Math.ceil(fosil.length / 2)); // fosil kapasitesinin ~%50'si
+  let mw = 0;
+  for (const u of alinan) { mw += PLANT_TYPES[u.t].mw; if (unitMarkers[u.id]) { unitMarkers[u.id].remove(); delete unitMarkers[u.id]; } }
+  G.units = G.units.filter(x => !alinan.some(a => a.id === x.id));
+  const para = Math.round(Math.max(5e6, G.cash * .35));
+  G.cash = Math.max(0, G.cash - para);
+  G.emis.muvazaa = (G.emis.muvazaa || 0) + 1;
+  G.emis.watchUntil = 0; G.emis.watch = {}; G.emis.stage = 0; G.emis.warnUntil = 0;
+  emPosta('🚨 MUVAZAA TESPİTİ — ağır yaptırım', 'Denetim kayıtlarına göre ihtar süresi boyunca tesisinizi durdurup, süre biter bitmez ' + sebep + '. Bu, Bakanlığı yanıltma (muvazaa) sayılır.\n\nYAPTIRIM: fosil üretim kapasitenizin %50\'sine EL KONULDU (' + alinan.length + ' tesis · ' + mw + ' MW) ve ' + fmt(para) + ' idari para cezası uygulandı.\n\nDevleti yanıltmanın bedeli, kirliliğin bedelinden ağırdır.');
+  toast('🚨 MUVAZAA: fosil santrallerinin %50\'sine EL KONDU + ' + fmt(para) + ' ceza', 'warn', null, 0, true);
+  save(); refreshUnitMarkers();
+}
+// ana denetim: ana döngüden çağrılır
+function emisTick() {
+  if (!G || !G._started || !G.emis) return;
+  const E = G.emis, now = Date.now(), d = emDurum();
+  if (emMuaf()) { E.stage = 0; E.warnUntil = 0; return; }
+  // 🚨 gözetim penceresi: ihtarda durdurulan santral geri açıldıysa muvazaa
+  if (E.watchUntil > now && E.watch) {
+    const geriAcilan = plants().find(u => E.watch[u.id] && u.on);
+    if (geriAcilan) { emMuvazaa('aynı tesisi (' + PLANT_TYPES[geriAcilan.t].nm + ') yeniden çalıştırdınız'); return; }
+  } else if (E.watchUntil && E.watchUntil <= now) { E.watchUntil = 0; E.watch = {}; }
+  if (!d.ihlal) {
+    if (E.warnUntil > now) { // ihtar süresinde DÜZELTTİ → ceza yok, ama gözetim başlar
+      E.warnUntil = 0; E.stage = 0; E.watchUntil = now + EM_WATCH_MS;
+      emPosta('✅ Denetim kapandı — ceza yok', 'Bakanlığın verdiği süre içinde salımınızı yasal sınırın altına indirdiniz; hakkınızda işlem yapılmayacaktır.\n\nUYARI: tesisleriniz 24 saat GÖZETİM altındadır. İhtarda durdurduğunuz fosil tesisi bu süre içinde yeniden çalıştırmak MUVAZAA sayılır ve fosil kapasitenizin %50\'sine el konulur.');
+      toast('✅ Emisyon denetimi kapandı — ceza yok (24 sa gözetim)', '', null, 0, true);
+    }
+    for (const u of plants()) if (u.emSealed) { u.emSealed = false; u.on = true; } // mühürler kalkar
+    return;
+  }
+  if (!E.warnUntil) { // 1) İHTAR — 12 saat süre
+    E.warnUntil = now + EM_GRACE_MS;
+    E.watch = {};
+    const sebep = d.yogIhlal && d.kotaIhlal
+      ? 'ortalama salımınız ' + d.yog + ' g/kWh (sınır ' + EM_LIMIT_GKWH + ') ve haftalık salımınız ' + fmtN(Math.round(d.ton)) + ' ton (kota ' + fmtN(d.kota) + ')'
+      : d.yogIhlal ? 'kWh başına ortalama salımınız ' + d.yog + ' g/kWh — yasal sınır ' + EM_LIMIT_GKWH + ' g/kWh'
+      : 'haftalık toplam salımınız ' + fmtN(Math.round(d.ton)) + ' ton — ölçeğinizin kotası ' + fmtN(d.kota) + ' ton';
+    emPosta('⚠️ İHTAR — emisyon sınırı aşıldı (12 saat)', 'Yapılan denetimde ' + sebep + ' olarak tespit edilmiştir.\n\n12 SAAT içinde gerekli tedbirleri alır (kirli tesisi kapatır, güneş/rüzgar yatırımı yaparsanız) ceza uygulanmaz. Aksi hâlde sırasıyla idari para cezası, tesis mühürleme ve KAMULAŞTIRMA işlemlerine başlanır.');
+    toast('⚠️ BAKANLIK İHTARI: emisyon sınırı aşıldı — 12 saatin var', 'warn', null, 0, true);
+    return;
+  }
+  if (now < E.warnUntil) return; // süre işliyor
+  E.stage = (E.stage || 0) + 1;
+  E.warnUntil = now + EM_GRACE_MS; // her kademeden sonra yeni 12 saat
+  if (E.stage === 1) {
+    const ceza = Math.round(Math.max(2e6, (d.asimTon || Math.max(1, d.yog - EM_LIMIT_GKWH) * 20) * EM_TON_FINE));
+    G.cash -= ceza; E.fines = (E.fines || 0) + ceza;
+    emPosta('💸 İDARİ PARA CEZASI', 'Süre dolmasına rağmen ihlal sürdüğü için ' + fmt(ceza) + ' idari para cezası uygulanmıştır. İhlal devam ederse tesisleriniz MÜHÜRLENİR.');
+    toast('💸 Emisyon cezası: ' + fmt(ceza), 'warn', null, 0, true);
+  } else if (E.stage === 2) emMuhurle();
+  else { emKamulastir(d.asimTon); E.stage = 2; }
+  save(); refreshUnitMarkers();
+}
 // 🌿 DEVLET TEŞVİKİ (patron tasarımı, rakip paraleli): kWh başına karbona göre TEMİZ üretene alımda ekstra.
 // Full kömürcü teşvik alamaz; temiz portföy +%15'e kadar. co2Avg = ömür üretim ağırlıklı ortalama emisyon.
 function greenBonus() {
@@ -2107,6 +2251,9 @@ function step(dtMin, silent, atMin) {
       produced += out;
       u.lifeProd = (u.lifeProd || 0) + out;
       const T = PLANT_TYPES[u.t];
+      // 🌍 salım birikimi: MWh × (g/kWh) / 1000 = ton. Hem şirket haftalığı hem SANTRAL BAZINDA
+      // (kamulaştırmada "aşımı kapatan en küçük tesis" bunun üzerinden seçilir).
+      if (T.em && G.emis) { const ton = out * T.em / 1000; G.emis.ton = (G.emis.ton || 0) + ton; u.wkTon = (u.wkTon || 0) + ton; }
       // YAKIT STOĞU: ~12 saatte biter → sabah/akşam ikmal ritüeli (yakıt İKMALDE peşin ödenir)
       if (T.fuel) {
         u.fuelH = Math.max(0, (u.fuelH || 0) - dtH);
@@ -2501,6 +2648,8 @@ function restartAll() {
     const s2 = u.st ? storeById(u.st) : null;
     if (s2 && s2.disch) { locked++; return; } // boşaltması süren depoya bağlı cihaz AÇILAMAZ (patron kuralı)
     if (aucSetupEksik(u)) return; // 🚫 kurulum eksik kilidi: toplu başlatma da açamaz
+    if (u.emSealed) { locked++; return; }  // ⏸️ Bakanlık mührü toplu başlatmayla da açılmaz
+    if (emKirli(u) && !u.on && G.emis && G.emis.watchUntil > Date.now() && (G.emis.watch || {})[u.id]) return; // gözetimdeki fosili kazara açma
     u.on = true; u._autoOff = false;
   });
   $('restartbar').style.display = 'none';
@@ -2911,6 +3060,8 @@ function checkWeek() {
   if (G.week !== w) {
     katkiHaftaKapat(G.week, G.weekSold); // hafta kapanışı: ölçek değerlendirmesi + devlet ödülleri
     G.week = w; G.weekSold = 0; G.weekClaimed = false;
+    if (G.emis) { G.emis.ton = 0; G.emis.week = w; } // 🌍 haftalık salım kotası sıfırlanır
+    for (const u of G.units) if (u.wkTon) u.wkTon = 0;
   }
 }
 function katkiHaftaKapat(eskiHafta, katki) {
@@ -5478,7 +5629,12 @@ function renderChatBody(room) {
 // Kendi şirketine dokunursan tam ayrıntılı ekran (openCompanySheet) açılır.
 function botCard(i) { // bot şirketlerin karnesi: servetiyle tutarlı ve deterministik
   const w = botWorth(i), k = Math.max(1, w / 6e6);
+  // 🧩 patron: "iki şirket kartı farklı görünüyor" — bot kartında ülke/şehir ve son çevrimiçi
+  // alanları yoktu, kart yarım kalıyordu. Deterministik olarak burada da doldurulur.
+  const iller = Object.values(TR_ILLER).flat();
   return { nm: WORLD_PLAYERS[i], w, em: botEm(i), bot: true,
+    country: 'Türkiye', il: iller[Math.floor(hash01(i, 21, 3) * iller.length)] || 'Kocaeli',
+    online: false, ts: Date.now() - Math.round((5 + hash01(i, 22, 3) * 900) * 60e3),
     off: Math.max(1, Math.round(k * .5 + hash01(i, 11, 1) * 2)),
     lic: Math.max(1, Math.round(k * 1.6 + hash01(i, 12, 1) * 4)),
     pl: Math.max(1, Math.round(k * 2.2 + hash01(i, 13, 1) * 5)),
@@ -5502,12 +5658,13 @@ window.openLeaderboard = (tab) => {
   const sekme = t => `<button onclick="openLeaderboard('${t.k}')" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid ${tab === t.k ? 'var(--acc2)' : 'var(--line)'};background:${tab === t.k ? 'var(--acc2)' : 'transparent'};color:${tab === t.k ? '#071018' : 'var(--ink)'};font-weight:800;font-size:11.5px;cursor:pointer">${t.nm}</button>`;
   const satir = (r, i) => `<tr${r.me ? ' style="outline:1.5px solid var(--gold);border-radius:6px"' : ''}>
     <td style="white-space:nowrap">#${i + 1}</td>
-    <td>${r.me ? `<b>${r.raw} (SEN)</b>` : r.tik === false ? `${r.bot ? '🤖 ' : ''}${r.raw}` : `<span onclick="closeModal();openPlayerCard('${jsStr(r.raw)}')" style="cursor:pointer;text-decoration:underline">${r.bot ? '🤖 ' : ''}${r.raw}</span>`}
+    <td>${r.me ? `<b>${r.raw} (SEN)</b>` : r.tik === false ? `${r.bot ? '🤖 ' : ''}${r.raw}` : `<span onclick="closeModal();openPlayerCard('${jsStr(r.raw)}','${tab}')" style="cursor:pointer;text-decoration:underline">${r.bot ? '🤖 ' : ''}${r.raw}</span>`}
       ${r.on ? ' <span style="color:var(--acc)">●</span>' : ''}${r.alt ? `<div class="sub">${r.alt}</div>` : ''}</td>
     <td style="text-align:right"><b>${r.deger}</b></td></tr>`;
   const cerceve = (aciklama, icHtml) => {
     $('modal').innerHTML = `
-      <h2>🏆 Sıralama</h2>
+      <h2 style="display:flex;align-items:center;justify-content:space-between">🏆 Sıralama
+        <span onclick="closeModal()" style="cursor:pointer;font-size:20px;line-height:1;color:var(--dim);padding:0 4px">✕</span></h2>
       <div style="display:flex;gap:6px;margin:6px 0">${[{ k: 'bireysel', nm: '🏢 Bireysel' }, { k: 'ittifak', nm: '🤝 İttifak' }, { k: 'katki', nm: '🏛️ Devlet Katkısı' }].map(sekme).join('')}</div>
       <p class="sub" style="margin:4px 0">${aciklama}</p>
       <div id="lbicerik">${icHtml}</div>
@@ -5555,9 +5712,11 @@ window.openLeaderboard = (tab) => {
     }).catch(() => { const el = $('lbicerik'); if (el) el.innerHTML = '<p class="sub">Tablo okunamadı — bağlantını kontrol et.</p>'; });
   }
 };
-window.openPlayerCard = nm => {
+window.openPlayerCard = (nm, geriSekme) => {
   nm = (nm || '').trim();
   if (!nm || !G) return;
+  // 🔙 patron: "sıralamadan girdim, kapatınca haritaya atıyor — listeye dönmeli"
+  const geri = geriSekme ? `openLeaderboard('${geriSekme}')` : 'closeModal()';
   if (nm === G.company) { hideSheets(); openCompanySheet(); return; } // kendi şirketin: tam ekran
   const net = NET.on() ? NET.list().find(x => x.nm === nm) : null;
   const wi = WORLD_PLAYERS.indexOf(nm);
@@ -5571,7 +5730,7 @@ window.openPlayerCard = nm => {
     <h2 style="margin-bottom:2px">🏢 ${nm}</h2>
     <p class="sub" style="margin-top:0">
       ${c.online !== undefined ? `<span style="color:${c.online ? 'var(--acc)' : 'var(--dim)'}">●</span> ${c.online ? 'sahada' : 'çevrimdışı'} · ` : ''}
-      ${c.country ? (COUNTRIES[c.country] ? COUNTRIES[c.country].flag + ' ' : '') + (c.il ? c.il + ', ' : '') + c.country : c.bot ? 'rakip şirket' : 'şirket'}
+      ${friend ? '<span class="pos">🤝 dost şirket</span>' : c.country ? (COUNTRIES[c.country] ? COUNTRIES[c.country].flag + ' ' : '') + (c.il ? c.il + ', ' : '') + c.country : c.bot ? 'rakip şirket' : 'şirket'}${friend && c.country ? ' · ' + (COUNTRIES[c.country] ? COUNTRIES[c.country].flag + ' ' : '') + (c.il ? c.il + ', ' : '') + c.country : ''}
       ${c.em !== undefined ? ' · ' + emBadgeHTML(c.em) : ''}</p>
     ${!c.online && c.ts ? `<p class="sub" style="margin-top:2px">🕐 Son çevrimiçi: <b>${sonGorulme(c.ts)}</b></p>` : ''}
     ${c.unknown ? '<p class="sub">Bu şirketin karnesi henüz sunucuya düşmedi.</p>' : `
@@ -5587,7 +5746,7 @@ window.openPlayerCard = nm => {
     <button class="bigsell half" onclick="closeModal();openDM('${nm.replace(/'/g, '')}')">✉️ Mesaj Gönder</button>
     ${friend ? '' : `<button class="bigsell half" onclick="sendFriendReq('${nm.replace(/'/g, '')}');closeModal()">👥 Arkadaş Ekle</button>`}
     <button class="bigsell half" style="color:var(--warn)" onclick="reportPlayerAsk('${nm.replace(/'/g, '')}')">🚩 Şikayet Et</button>
-    <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
+    <button class="primary ghostbtn" onclick="${geri}">${geriSekme ? '← Sıralamaya Dön' : 'Kapat'}</button>`;
   $('overlay').classList.add('show');
 };
 // ── 🚩 ŞİKAYET SİSTEMİ (patron: "oyuncular hilecileri şikayet edebilsinler") ──
@@ -6671,12 +6830,24 @@ function drawOverlay() {
 }
 // RUHSATLI KARELER: haritada kalıcı şeffaf mavi karolar (patron isteği — "burada kurabilirim" görünsün)
 let licLayer = {};
+// 🏛️ KARO RENGİ (patron: "ihaleyi ben aldıysam YEŞİL, başkası aldıysa KIRMIZI olsun"):
+// alım garantisi sende → yeşil (+%20 prim) · başkasında → kırmızı (gelirinden %20 vergi gider)
+// · garanti yoksa → normal mavi ruhsat karosu.
+function tileStyle(c) {
+  if (myLease(c)) return { color: '#8ef5b0', fillColor: '#3ddc84', fillOpacity: .30, weight: 1.8 };
+  if (leaseOwnerOf(c)) return { color: '#ff9d9d', fillColor: '#ff5d5d', fillOpacity: .26, weight: 1.8 };
+  return { color: '#eaf6ff', fillColor: '#bfe3ff', fillOpacity: .22, weight: 1.3 };
+}
 function refreshLicenseTiles() {
   if (!map || !G) return;
-  for (const c of Object.keys(G.licenses))
-    if (!licLayer[c]) licLayer[c] = L.rectangle(cellBounds(c), { color: '#eaf6ff', weight: 1.3, opacity: .8, fillColor: '#bfe3ff', fillOpacity: .22, interactive: false, renderer: VEC || undefined }).addTo(map);
+  const kareler = new Set(Object.keys(G.licenses).concat(Object.keys(G.leases || {}).filter(c => G.leases[c] > Date.now())));
+  for (const c of kareler) {
+    const st = tileStyle(c);
+    if (!licLayer[c]) licLayer[c] = L.rectangle(cellBounds(c), Object.assign({ opacity: .85, interactive: false, renderer: VEC || undefined }, st)).addTo(map);
+    else licLayer[c].setStyle(st); // dönem değişince renk de değişsin (yeniden çizmeye gerek yok)
+  }
   for (const c of Object.keys(licLayer))
-    if (!G.licenses[c]) { licLayer[c].remove(); delete licLayer[c]; }
+    if (!kareler.has(c)) { licLayer[c].remove(); delete licLayer[c]; }
 }
 
 // ═══ 🧭 SAHA ÇEKMECESİ + SİNEMATİK GEÇİŞ (patron isteği) ═══
@@ -6804,11 +6975,10 @@ window.sellAllStoresAsk = () => {
   if (!sts.length) return;
   // ⚠️ HATA AVI: burada da her depo günlük talebi sıfırdan tüketiyormuş gibi sayılıyordu.
   // Aynı kare biriktiricisi — onay ekranındaki rakam gerçekte ödenecek tutar olsun.
-  // 🐞 BOT DÜZELTMESİ: onay penceresi BAĞLI depoların stoğunu saymıyordu — merkez depo için
-  // s.stored (yalnız kendi tankı) kullanılıyordu, oysa panel butonu (renderStorePanel) ve
-  // gerçek satış (startDischarge) grup toplamını (groupStored) satıyor. Sonuç: bağlı uydusu
-  // olan merkezde onaydaki tahmin gerçekten ~%20 düşük çıkıyordu ("gördüğün = aldığın" bozuluyordu).
-  // Çözüm: panel/satışla aynı `dolu` (isLinked ? groupStored : stored) değeri kullanılıyor.
+  // 🐞 [BOT-FIX b25679a] onay penceresi BAĞLI depoların stoğunu saymıyordu — merkez depo için
+  // s.stored (yalnız kendi tankı) kullanılıyordu, oysa panel butonu (renderStorePanel) ve gerçek
+  // satış (startDischarge) grup toplamını satıyor → bağlı uydusu olan merkezde tahmin ~%20 düşük
+  // çıkıyor, "gördüğün = aldığın" sözü bozuluyordu. Artık panel/satışla AYNI `dolu` değeri.
   const kareSatilan = {};
   const dolu = s => isLinked(s) ? groupStored(s) : s.stored;
   const toplam = sts.reduce((a, s) => {
@@ -6930,7 +7100,8 @@ function openCellSheet(c, ll, mode) {
     const bl = botLease(c), ml = myLease(c);
     html = `
       <p style="font-size:12px;color:var(--dim)">📜 Ruhsat: <b>${licensed ? 'SENDE ✅' : 'Devlette (ücret: ' + fmt(licenseFee(c)) + ')'}</b><br>
-      🏛️ Alım Garantisi: <b>${ml ? 'SENDE — kalan ~' + fmtHrs((G.leases[c] - Date.now()) / 36e5) + ' (alım fiyatı +%20)' : bl ? bl + ' (bu dönem)' : 'boşta (taban: ' + fmt(minBid(c)) + ')'}</b></p>
+      🏛️ Alım Garantisi: <b>${ml ? 'SENDE — kalan ~' + fmtHrs((G.leases[c] - Date.now()) / 36e5) + ' (alım fiyatı +%20)' : bl ? bl + ' (bu dönem)' : 'boşta (taban: ' + fmt(minBid(c)) + ')'}</b>
+      ${bl ? `<br><span class="neg">💸 Bu karedeki satış gelirinin %${LEASE_PRIM * 100}'si vergi olarak ${bl} şirketine gider — ihaleyi kazanırsan hem +%20 prim alır hem vergiyi sen toplarsın.</span>` : ''}</p>
       ${!licensed ? (officeCovers(c)
         ? `<p class="sub">📜 Ruhsatların: ${Object.keys(G.licenses).length}/${licCap()}</p>
            <button class="bigsell" onclick="buyLicense()" ${G.cash < licenseFee(c) || Object.keys(G.licenses).length >= licCap() ? 'disabled' : ''}>📜 Ruhsat Al — ${fmt(licenseFee(c))}${Object.keys(G.licenses).length >= licCap() ? ' (LİMİT DOLU)' : ''}</button>`
@@ -7327,6 +7498,10 @@ function openUnitSheet(id) {
         siteParts(u).forEach(p => rows.push([p.ico + ' ' + p.nm + (p.sub ? ' <span class="sub">' + p.sub + '</span>' : ''),
           p.f > 1.001 ? '<span class="pos">×' + p.f.toFixed(2) + '</span>' : p.f < .999 ? '<span class="neg">×' + p.f.toFixed(2) + '</span>' : '—']));
         // 🐞 bot bulgusu: eğitimde f=max(f,.35) uygulanıyor ama tabloda görünmüyordu — "hesap tutmuyor" sanılıyordu
+        // saha çarpanlarının çarpımı ±%30 kelepçesine takılıyorsa tabloda GÖRÜNSÜN — yoksa
+        // görünen çarpanların çarpımı yine anlık üretimden sapar (aynı bot bulgusu ailesi)
+        const sfRaw2 = siteParts(u).reduce((x, p) => x * p.f, 1), sfUse2 = siteFactor(u);
+        if (Math.abs(sfRaw2 - sfUse2) > .005 && sfRaw2 > 0) rows.push(['⚖️ Saha kelepçesi (±%30 sınırı)', '×' + (sfUse2 / sfRaw2).toFixed(2) + ' <span class="sub">toplam saha etkisi ' + sfUse2.toFixed(2) + '</span>']);
         if (tutActive()) rows.push(['🎓 Eğitim güvencesi', '<span class="pos">toplam çarpan 0,35 altına düşmez</span>']);
         if (ipProdBoost() > 1) rows.push(['💠 Üretim Takviyesi (İmtiyaz)', '<span class="pos">×1.15</span>']);
         rows.push(['🔧 Sağlamlık %' + Math.round(u.cond), '×' + (u.cond / 100).toFixed(2)]);
@@ -7411,6 +7586,11 @@ window.toggleUnit = id => {
     toast('🚫 Kurulum eksik: bu bölgeye ' + (!G.licenses[u.cell] ? '📜 ruhsat' : '') + (!G.licenses[u.cell] && !officeCovers(u.cell) ? ' ve ' : '') + (!officeCovers(u.cell) ? '🏢 ofis (menzil)' : '') + ' al — tesis o zaman aktifleşir', 'warn', null, 0, true);
     return;
   }
+  // 🌍 MÜHÜR: emisyon ihlali nedeniyle mühürlenen tesis elle açılamaz
+  if (!u.on && u.emSealed) { toast('⏸️ Bu tesis Bakanlık tarafından MÜHÜRLENDİ — salımın yasal sınıra inince mühür kalkar', 'warn', null, 0, true); return; }
+  // 🚨 MUVAZAA AVI: ihtar süresi içinde durdurulan fosil tesis "tedbir" sayılır; ihtar
+  // kapandıktan sonraki 24 saatlik gözetimde yeniden açılırsa devleti yanıltma sayılır.
+  if (u.on && emKirli(u) && G.emis && G.emis.warnUntil > Date.now()) { G.emis.watch = G.emis.watch || {}; G.emis.watch[u.id] = true; }
   u.on = !u.on; save(); refreshUnitMarkers(); openUnitSheet(id);
 };
 window.demolishUnit = id => { // SATIŞ ONAYI (patron isteği — telefon testi)
@@ -7437,8 +7617,8 @@ window.demolishDo = id => {
   if (i < 0) return;
   const u = G.units[i];
   if (u.kind === 'office' && u.hq) return;
-  // 🔗 GRUP KİLİDİ: demolishUnit() (satır ~7418) bu kontrolü yapıyor ama demolishDo()
-  // konsoldan doğrudan çağrılabildiği için aynı korumaya burada da ihtiyaç var.
+  // 🔗 [BOT-FIX 8ef9bdd] GRUP KİLİDİ: demolishUnit() bu kontrolü yapıyor ama demolishDo()
+  // konsoldan doğrudan çağrılabildiği için aynı koruma burada da olmalı (bypass deliği).
   if (u.kind === 'store' && isLinked(u)) return;
   const r = resaleValue(u);
   G.cash += r.value;
@@ -7639,6 +7819,16 @@ function openCompanySheet() {
       <tr><td>Toplam ciro</td><td>${fmt(G.totalEarned)}</td></tr>
       <tr><td>Toplam satış</td><td>${fmtN(G.totalSold)} MWh</td></tr>
       <tr><td>🌿 Devlet teşviki (emisyona göre)</td><td class="${greenBonus() > 0 ? 'pos' : 'neg'}">${greenBonus() > 0 ? '+%' + Math.round(greenBonus() * 100) + ' (satışlara eklenir)' : 'YOK — ort. ' + co2Avg() + ' g/kWh çok yüksek'}</td></tr>
+      ${(() => { // 🌍 EMİSYON DENETİMİ (patron): toplam kirlilik + haftalık kota + yaptırım durumu
+        const d = emDurum(), oran = d.kota ? Math.min(200, Math.round(d.ton / d.kota * 100)) : 0;
+        const kalanSa = G.emis && G.emis.warnUntil > Date.now() ? fmtHrs((G.emis.warnUntil - Date.now()) / 36e5) : null;
+        return `<tr><td>🌍 Toplam kirlilik <span class="sub">(ömür boyu)</span></td><td>${fmtN(Math.round(co2TotalTon()))} ton CO₂ <span class="sub">· ort. ${co2Avg()} g/kWh</span></td></tr>
+        <tr><td>⚖️ Denetim yoğunluğu <span class="sub">(çalışan portföy)</span></td><td class="${d.yogIhlal ? 'neg' : 'pos'}">${d.yog} g/kWh <span class="sub">/ tavan ${EM_LIMIT_GKWH}</span></td></tr>
+        <tr><td>🌍 Bu hafta salım / kota <span class="sub">(${olcekOf(G.olcek).nm})</span></td><td class="${d.kotaIhlal ? 'neg' : oran > 80 ? 'warn' : 'pos'}">${fmtN(Math.round(d.ton))} / ${fmtN(d.kota)} ton <span class="sub">(%${oran})</span></td></tr>
+        <tr><td>🏛️ Emisyon denetimi <span class="sub">(yasal tavan ${EM_LIMIT_GKWH} g/kWh)</span></td><td class="${d.ihlal ? 'neg' : 'pos'}">${emMuaf() ? 'muaf — yeni şirket' : d.ihlal ? (kalanSa ? '⚠️ İHTAR — ' + kalanSa + ' içinde düzelt' : '⚠️ İHLAL') : '✅ sınırlar içinde'}</td></tr>` +
+        (G.emis && G.emis.watchUntil > Date.now() ? `<tr><td>👁️ Gözetim</td><td class="warn">${fmtHrs((G.emis.watchUntil - Date.now()) / 36e5)} — durdurulan fosili açmak MUVAZAA sayılır</td></tr>` : '') +
+        (G.emis && G.emis.fines ? `<tr><td>💸 Ödenen emisyon cezası</td><td class="neg">${fmt(G.emis.fines)}</td></tr>` : '');
+      })()}
       <tr><td>Bekleyen bakım</td><td>${maintCost() >= 1 ? fmt(maintCost()) : '✓ yok'}</td></tr>
       <tr><td>⛏️ Kömür stoğu</td><td>${fmtN(fuelStock('coal'))} ton</td></tr>
       <tr><td>🛢️ LNG stoğu</td><td>${fmtN(fuelStock('gas'))} ton</td></tr>
@@ -7845,7 +8035,15 @@ function renderHUD() {
   $('coloc').textContent = G.country ? `${COUNTRIES[G.country].flag} ${G.il}, ${G.country}` : '—';
   $('cash').textContent = fmt(G.cash);
   const d = clockDate();
-  $('clockline').textContent = '🕐 ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) + (G.demo ? ' ⏩' : '') + (boostFactor() > 1 ? ' 🚀' : '');
+  // ⏳ patron: saatin sağında SONRAKİ FİYAT DÖNEMİNE kalan süre — oyuncu "fiyat ne zaman
+  // değişecek / yükselecek mi" sorusunu ekrandan görsün (PRICE_KEYS dönüm saatleri).
+  const hNow = (nowMin() / 60) % 24;
+  const sonraki = PRICE_KEYS.find(k => k[0] > hNow) || [24, PRICE_KEYS[0][1]];
+  const kalanDk = Math.max(0, Math.round((sonraki[0] - hNow) * 60));
+  const yon = sonraki[1] > (PRICE_KEYS.filter(k => k[0] <= hNow).pop() || PRICE_KEYS[0])[1] ? '📈' : '📉';
+  $('clockline').textContent = '🕐 ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+    + ' · ' + yon + (kalanDk >= 60 ? ' ' + Math.round(kalanDk / 60) + ' sa' : ' ' + kalanDk + ' dk')
+    + (G.demo ? ' ⏩' : '') + (boostFactor() > 1 ? ' 🚀' : '');
   if (boostFactor() > 1) {
     $('lvltxt').textContent = '🚀 Bonus ×' + BOOST_MULT;
     $('lvlfill').style.width = Math.min(100, 100 * G.totalEarned / BOOST_CAP) + '%';
@@ -8347,7 +8545,7 @@ function frameBody(ts) {
         if ($('companysheet').classList.contains('show')) openCompanySheet();
       }
       checkWeek(); // ⚠️ HATA AVI: yalnız menü açılınca çağrılıyordu — hafta dönümünden sonraki satışlar siliniyordu
-      allyTick(); allyCallTick(); consortiumTick(); aucTick(); studyTick(); // 🤝 ihale · 💰 bağış · 🌍 konsorsiyum · 🔨 müzayede · 🔎 bölge araştırması
+      allyTick(); allyCallTick(); consortiumTick(); aucTick(); studyTick(); emisTick(); // 🤝 ihale · 💰 bağış · 🌍 konsorsiyum · 🔨 müzayede · 🔎 bölge araştırması
       if (G.ally) allyElectionTick(); // 🗳️ başkanlık seçimi süresi doldu mu
       // ⏫ depo kapasite inşaatı bitti mi?
       for (const d of G.units) {
