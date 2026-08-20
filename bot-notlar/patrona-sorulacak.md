@@ -1,5 +1,21 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-20 07:58 turu — yeni karar bekleyen konu yok, mevcut konular yeniden doğrulandı
+
+17 yeni `suggestions` kaydı işlendi, net/düşük riskli yeni bir kod hatası bulunmadı. Detaylar `bot-notlar/islenen.md`'de. Kod değişikliği yapılmadı, BUILD_TAG/version.json güncellenmedi.
+
+2 kayıt, aşağıda önceki turlarda size sorulmuş bulut-kayıt-güvenilirliği (throttle/flush) konusunu somut rakamlarla/ek detayla yeniden doğruladı — yeni bilgi olarak not ediyorum, henüz kod değişikliği yapmadım:
+- `-P-RpCC3Yi0lpy5ONdew` (01:41): "Tüm Depoları Sat"/MERKEZ depo SAT sonrası ~8sn içinde sekme kapatılınca **823.337,70** kasa artışı buluta yazılmadan kayboldu — aşağıdaki "ara tick kaydı" konusunun (2026-08-19 21:56 turu #1) somut rakamlarla üçüncü bağımsız doğrulaması.
+- `-P-SWRRxsOUzmnp3hOtU` (04:53): Ek detay — `save()` içindeki `NET.cloudSave()` çağrısı `await` edilmiyor ve throttle 20sn; açılıştan sonraki ilk 20sn'lik pencerede yapılan aksiyonlar (araştırma başlatma, satış) sekme o an kapatılırsa buluta hiç yazılmıyor. Bu, aşağıdaki hem "ara tick kaydı" hem "pagehide/beforeunload flush" konularıyla aynı kök nedene (`NET.cloudSave` throttle'ının garantili/senkron flush'ı yok) işaret ediyor.
+
+Bu ikisi de mevcut açık konularla aynı kök nedende olduğu için ayrı yeni madde açmadım; aşağıdaki 2 açık konu hâlâ yanıt bekliyor ve artık toplam 4 bağımsız bot bulgusuyla destekleniyor (2026-08-19 18:40, 21:56, ve bugünkü 2 kayıt). Öneri: üçü de aynı "bulut kaydı güvenilirliği" ailesi olduğu için tek bir karar/tasarım turu olarak birlikte değerlendirilmesi en tutarlısı olur.
+
+Aşağıdaki önceki turlardan karar bekleyen konular hâlâ açık (yanıt beklemede):
+- 💾 "Tüm Depoları Sat" sonrası erken sekme kapatmada satış kayboluyor (ara tick kaydı) — bkz. 2026-08-19 21:56 turu #1 (şimdi `-P-RpCC3Yi0lpy5ONdew` ile 3. kez doğrulandı)
+- 💾 Bulut kaydı `pagehide`/`beforeunload` flush eklensin mi — bkz. 2026-08-19 14:58 turu #1 (şimdi `-P-SFTYSlb_gtgSH0Ctc` ile tekrar bildirildi, `-P-SWRRxsOUzmnp3hOtU` ek detay ekledi: `cloudSave` zaten `await` edilmiyor)
+
+---
+
 ## 2026-08-20 00:53 turu — yeni karar bekleyen konu yok
 
 4 yeni `suggestions` kaydı işlendi, hepsi durum özeti/bilgi amaçlıydı. Detaylar `bot-notlar/islenen.md`'de. Kod değişikliği yapılmadı, dolayısıyla BUILD_TAG/version.json güncellenmedi.

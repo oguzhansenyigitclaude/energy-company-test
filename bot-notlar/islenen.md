@@ -2,6 +2,30 @@
 
 Bu dosya, `suggestions` düğümünden okunup bakım botu tarafından değerlendirilen kayıtların anahtarlarını listeler. Sadece burada olmayan (yeni) anahtarlar bir sonraki turda işlenir.
 
+## 2026-08-20 07:58 turu
+
+| Anahtar | Zaman (UTC) | Özet | Sonuç |
+|---|---|---|---|
+| `-P-Rp9wk0SsHEKkvWPY1` | 2026-08-20 01:41 | ClaudeBot: onay — `demolishDo()` isLinked bypass açığının kapalı kaldığı canlı kaynak incelenerek doğrulandı | Bilgi amaçlı, aksiyon gerekmiyor (daha önce düzeltilmiş bug'ın doğrulaması). |
+| `-P-RpCC3Yi0lpy5ONdew` | 2026-08-20 01:41 | ClaudeBot: BUG — "tekrar doğrulandı rakamlarla": MERKEZ depo SAT sonrası ~8sn içinde sekme kapatılınca 823.337,70 kasa artışı buluta yazılmadan kayboldu | Zaten patrona sorulmuş konu (bkz. `patrona-sorulacak.md`, "ara tick kaydı" — 2026-08-19 21:56 turu #1, kayıt `-P-QY_wAaRpycmWfhdxV`). Bu, aynı kök nedenin somut rakamlarla yeni doğrulaması; kod değiştirilmedi, patron notu güncellendi. |
+| `-P-S2pphYx1L1hQZQHP3` | 2026-08-20 02:44 | ClaudeBot: durum özeti (bug değil) — kısa boşaltmada kasa istemci=sunucu tam uyumlu, veri kaybı yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-S2rXtEUMjAKUkz2vj` | 2026-08-20 02:44 | ClaudeBot: onay — bağlı depo koruması (`demolishDo(6)` doğrudan çağrı) regresyon olmadan çalışmaya devam ediyor | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-SFGXyccvsMul5egpj` | 2026-08-20 03:39 | ClaudeBot: durum özeti (bug değil) — giriş+ilk tur OK, bağlı depo engeli, fiyat farkı açıklaması doğru | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-SFTYSlb_gtgSH0Ctc` | 2026-08-20 03:40 | ClaudeBot: gözlem/öneri (bug değil) — ani sekme kapatmada (process-kill benzeri) `cloudSave` 20sn debounce nedeniyle son ilerleme buluta yazılmayabilir | Zaten patrona sorulmuş konu (bkz. `patrona-sorulacak.md`, "pagehide/beforeunload flush" — 2026-08-19 14:58 turu #1, kayıt `-P-OqJokbSRgZGOisfRZ`). Aynı konunun tekrarı, kod değiştirilmedi. |
+| `-P-SWRRxsOUzmnp3hOtU` | 2026-08-20 04:53 | ClaudeBot: BUG (veri kaybı riski) — `save()`→`NET.cloudSave()` await edilmiyor, 20sn throttle nedeniyle açılıştan sonraki ilk 20sn'deki aksiyonlar (araştırma başlatma, satış) sekme hemen kapatılırsa buluta hiç yazılmıyor | Aynı bulut-kayıt-güvenilirliği ailesinden (yukarıdaki `-P-RpCC3Yi0lpy5ONdew` ve önceki turlarda patrona sorulan throttle/flush konularıyla aynı kök neden — `NET.cloudSave` throttle'ının garantili flush'ı yok). Kod değiştirilmedi, patron notu bu ek detayla güncellendi (bkz. `patrona-sorulacak.md`). |
+| `-P-SgH2dKXg42GYafNIz` | 2026-08-20 05:42 | ClaudeBot: durum özeti (bug değil) — bağlı depo + merkez depo grubu satış kilidi doğrulandı, bağlantı kesilince/yeniden bağlanınca davranış beklenen gibi | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-SgH9ZaxQnV9U3_Vek` | 2026-08-20 05:42 | ClaudeBot: durum özeti (bug değil) — gece güneş santralleri için VERİM DÖKÜMÜ ×0.00 doğru, inşa kataloğunda NaN/undefined yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Sv4fEv8lfDBO6xeaa` | 2026-08-20 06:46 | ClaudeBot: durum özeti (bug değil) — bağlı depo satış/yıkım koruması (JS doğrudan çağrı) tekrar doğrulandı, regresyon yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Sv6qoCASGgp2Y0K2e` | 2026-08-20 06:46 | ClaudeBot: durum özeti (bug değil) — VERİM DÖKÜMÜ çarpanları×kapasite ile Anlık üretim tutarlı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Sv91YVcJGHnbvKZe0` | 2026-08-20 06:46 | ClaudeBot: durum özeti (bug değil) — grup depo SAT tahmini/gerçekleşen ve grup toplamı tutarlı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-T8DHLpJFEsFQu-Txg` | 2026-08-20 07:48 | ClaudeBot: durum özeti (bug değil) — devriye özeti, ağ/bridge çalıştı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-T8DO3p_7NDpgLn1NL` | 2026-08-20 07:48 | ClaudeBot: durum özeti (bug değil) — SAT tahmini ile gerçekleşen kasa artışı eşleşti | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-T8DV71wmB9FGvEfLU` | 2026-08-20 07:48 | ClaudeBot: durum özeti (bug değil) — bağlı depo koruması (UI + konsol-bypass) sağlam | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-T8DahMdOJupSv2Jhb` | 2026-08-20 07:48 | ClaudeBot: durum özeti (bug değil) — rüzgar santrali VERİM DÖKÜMÜ çarpanları Anlık üretimle eşleşti | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-T8Dsmsk_89ND2zteW` | 2026-08-20 07:48 | ClaudeBot: küçük/doğrulanmamış gözlem — bir kez `ERR_CONTENT_LENGTH_MISMATCH` konsol hatası görüldü, tekrarlanmadı | Bildiren botun kendisi de düşük güvenle test-altyapısı/proxy kaynaklı olduğunu belirtiyor, oyun kodunda somut bir hata tarif etmiyor. Kod değişikliği yapılmadı. |
+
+Bu turda 17 yeni kayıt işlendi. Net/düşük riskli yeni bir kod hatası bulunmadı — 2 kayıt (`-P-RpCC3Yi0lpy5ONdew`, `-P-SWRRxsOUzmnp3hOtU`) daha önce patrona sorulmuş bulut-kayıt-güvenilirliği (throttle/flush/ara-tick) ailesinin somut rakamlarla/ek detayla tekrar doğrulanmasıydı — kod değiştirilmedi, `patrona-sorulacak.md` bu ek kanıtla güncellendi. 1 kayıt (`-P-SFTYSlb_gtgSH0Ctc`) da aynı ailenin tekrarıydı. Kalan 14 kayıt durum özeti/bilgi amaçlıydı ya da bildiren botun kendi test ortamıyla ilgiliydi. Kod değişikliği yapılmadığı için BUILD_TAG/version.json güncellenmedi.
+
 ## 2026-08-20 00:53 turu
 
 | Anahtar | Zaman (UTC) | Özet | Sonuç |
