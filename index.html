@@ -446,7 +446,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-20 16:17) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-20 17:02) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -549,7 +549,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-20 16:17)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-20 17:02)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -6743,6 +6743,17 @@ function drawCountryTint() {
     }
   }
 }
+// ⏳ DEPO DOLMA SÜRESİ (patron: "kapasite dolmasına 3 saat kaldı gibi"): kalan boş kapasite,
+// depoya AKAN güce bölünür. Depo dolunca üretim boşa gittiği için oyuncunun en çok ihtiyaç
+// duyduğu sayaç budur — satışı ne zaman yapması gerektiğini buradan görür.
+function dolumTxt(kalanMWh, inflowMW) {
+  if (kalanMWh <= .005) return ' <span class="neg">· 🛑 DOLU — üretim boşa gidiyor!</span>';
+  if (!(inflowMW > .05)) return '';
+  const sa = kalanMWh / inflowMW;
+  const metin = sa >= 48 ? Math.round(sa / 24) + ' günde' : sa >= 1.5 ? Math.round(sa) + ' saatte'
+    : sa >= .75 ? '1 saatte' : Math.max(1, Math.round(sa * 60)) + ' dakikada';
+  return ` <span class="sub">· ⏳ ${metin} dolar</span>`;
+}
 // ═══ 🏙️ ŞEHİR KATMANI (patron: "yakınlaşınca görünsün yoksa uzaktan tüm yazılar iç içe geçer") ═══
 function drawCityLabels() {
   const z = zoomNow(), b = map.getBounds();
@@ -6953,7 +6964,7 @@ function renderStorePanel() {
         `<button onclick="setStSort('${k}')" style="flex:1;padding:6px 2px;border-radius:8px;border:1px solid var(--line);background:${STSORT === k ? 'var(--acc2)' : 'var(--panel2)'};color:${STSORT === k ? '#071018' : 'var(--dim)'};font-size:10.5px;font-weight:800;cursor:pointer">${n} ↓</button>`).join('')}
     </div>
     ${rows.map(({ s, T, r, inflow, pct, mwh, cap, bagli }) => {
-      const dolum = cap - mwh;
+      const dolum = cap - mwh; // kalan boş kapasite (MWh)
       return `<div class="strow">
         <div class="top">
           <span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${s.ll[0]},${s.ll[1]},11,'${(placeName(s.cell)).replace(/'/g, '')}')">${unitName(s)}</span>
@@ -6962,7 +6973,7 @@ function renderStorePanel() {
         <div class="foot">
           <span class="val">${fmtE(mwh)}/${cap} MWh${bagli ? ' <b style="color:var(--acc2)">👑 ' + storeGroup(s).length + ' depo</b>' : ''} · %${Math.round(pct * 100)}
             ${inflow > .05 ? ` · ⚡${inflow.toFixed(1)} MW` : ' · <span class="neg">üretim yok</span>'}
-            ${s.disch ? '' : `<br><b style="color:var(--acc)">${fmt(r.gain)}</b>${r.excess > .5 ? ' <span class="neg">· talep aşımı</span>' : ''}`}</span>
+            ${s.disch ? '' : `<br><b style="color:var(--acc)">${fmt(r.gain)}</b>${r.excess > .5 ? ' <span class="neg">· talep aşımı</span>' : ''}${dolumTxt(dolum, inflow)}`}</span>
           ${s.disch
             ? `<span style="font-size:10.5px;color:var(--gold);font-weight:800">⚡ %${Math.round(100 * s.disch.sold / (s.disch.sold + s.disch.left))}</span>`
             : `<button onclick="sellUnit(${s.id},1);renderNav()" ${mwh < .005 ? 'disabled' : ''}>SAT</button>`}
@@ -7291,7 +7302,7 @@ function openUnitSheet(id) {
     $('us_title').innerHTML = `<b>${T.cap} MWh</b> <span style="font-weight:600">${unitName(u)}</span> <span style="cursor:pointer;font-size:13px;opacity:.8" onclick="renameUnit(${u.id})" title="Yeniden isimlendir">✏️</span>`;
     $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` + adFinishBtnHTML(u) : `
       <div class="detcols">
-        <div><div class="l">⚡ ${isLinked(u) ? 'Grup dolum hızı' : 'Dolum hızı'}</div><div class="v">${inflow.toFixed(1)} <span style="font-size:11px">MW</span>${speedMult() > 1 ? ' 🚀' : ''}</div></div>
+        <div><div class="l">⚡ ${isLinked(u) ? 'Grup dolum hızı' : 'Dolum hızı'}</div><div class="v">${inflow.toFixed(1)} <span style="font-size:11px">MW</span>${speedMult() > 1 ? ' 🚀' : ''}<span style="font-size:10.5px;font-weight:600">${dolumTxt((isLinked(u) ? groupCap(u) : T.cap) - (isLinked(u) ? groupStored(u) : u.stored), inflow)}</span></div></div>
         ${isLinked(u)
           ? `<div><div class="l">🔗 Ortak depo (%${Math.round(100 * groupStored(u) / (groupCap(u) || 1))})</div><div class="v">${fmtE(groupStored(u))} <span style="font-size:11px">/ ${groupCap(u)} MWh</span></div></div>`
           : `<div><div class="l">🔋 Doluluk (%${Math.round(100 * u.stored / T.cap)})</div><div class="v">${fmtE(u.stored)} <span style="font-size:11px">/ ${T.cap} MWh</span></div></div>`}
@@ -8035,15 +8046,7 @@ function renderHUD() {
   $('coloc').textContent = G.country ? `${COUNTRIES[G.country].flag} ${G.il}, ${G.country}` : '—';
   $('cash').textContent = fmt(G.cash);
   const d = clockDate();
-  // ⏳ patron: saatin sağında SONRAKİ FİYAT DÖNEMİNE kalan süre — oyuncu "fiyat ne zaman
-  // değişecek / yükselecek mi" sorusunu ekrandan görsün (PRICE_KEYS dönüm saatleri).
-  const hNow = (nowMin() / 60) % 24;
-  const sonraki = PRICE_KEYS.find(k => k[0] > hNow) || [24, PRICE_KEYS[0][1]];
-  const kalanDk = Math.max(0, Math.round((sonraki[0] - hNow) * 60));
-  const yon = sonraki[1] > (PRICE_KEYS.filter(k => k[0] <= hNow).pop() || PRICE_KEYS[0])[1] ? '📈' : '📉';
-  $('clockline').textContent = '🕐 ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-    + ' · ' + yon + (kalanDk >= 60 ? ' ' + Math.round(kalanDk / 60) + ' sa' : ' ' + kalanDk + ' dk')
-    + (G.demo ? ' ⏩' : '') + (boostFactor() > 1 ? ' 🚀' : '');
+  $('clockline').textContent = '🕐 ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) + (G.demo ? ' ⏩' : '') + (boostFactor() > 1 ? ' 🚀' : '');
   if (boostFactor() > 1) {
     $('lvltxt').textContent = '🚀 Bonus ×' + BOOST_MULT;
     $('lvlfill').style.width = Math.min(100, 100 * G.totalEarned / BOOST_CAP) + '%';
