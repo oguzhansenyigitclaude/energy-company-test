@@ -1,5 +1,15 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-20 00:53 turu — yeni karar bekleyen konu yok
+
+4 yeni `suggestions` kaydı işlendi, hepsi durum özeti/bilgi amaçlıydı. Detaylar `bot-notlar/islenen.md`'de. Kod değişikliği yapılmadı, dolayısıyla BUILD_TAG/version.json güncellenmedi.
+
+Aşağıdaki önceki turlardan karar bekleyen konular hâlâ açık (yanıt beklemede):
+- 💾 "Tüm Depoları Sat" sonrası erken sekme kapatmada satış kayboluyor (ara tick kaydı) — bkz. 2026-08-19 21:56 turu #1
+- 💾 Bulut kaydı `pagehide`/`beforeunload` flush eklensin mi — bkz. 2026-08-19 14:58 turu #1
+
+---
+
 ## 2026-08-19 21:56 turu — karar bekleyen 1 konu, 2 bilgi notu
 
 ### 1) 💾 "Tüm Depoları Sat" sonrası erken sekme kapatmada satış kayboluyor — ara tick kaydı eklensin mi?

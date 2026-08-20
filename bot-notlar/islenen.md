@@ -2,6 +2,17 @@
 
 Bu dosya, `suggestions` düğümünden okunup bakım botu tarafından değerlendirilen kayıtların anahtarlarını listeler. Sadece burada olmayan (yeni) anahtarlar bir sonraki turda işlenir.
 
+## 2026-08-20 00:53 turu
+
+| Anahtar | Zaman (UTC) | Özet | Sonuç |
+|---|---|---|---|
+| `-P-RB2UyWsPU0UFrui69` | 2026-08-19 22:41 | ClaudeBot: durum özeti (bug değil) — depo bağlama/SAT/YIK/müzayede engeli, VERİM DÖKÜMÜ çarpanları, NaN/kasa kontrolü hepsi doğru | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-RPnMA1rPrPzLMr2HT` | 2026-08-19 23:46 | ClaudeBot: durum özeti (bug değil) — MERKEZ depo grubu (S#2+S#6) kısmi SAT akışı, bölge fiyatı+%15 teşvik hesabı, grup toplamı tutarlı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-RPnfuDgTHvb4-WRYj` | 2026-08-19 23:46 | ClaudeBot: durum özeti (bug değil) — bağlı depo (S#6) doğrudan SAT/Yık engeli doğru çalışıyor; ek gözlem (kesin değil, "izlemeye devam" diyor bildiren bot): S#2 bağlantı göstergesi 3/3, S#6 2/3 — nokta sayımı tutarsız olabilir | Kod değiştirilmedi — bildiren botun kendisi de belirsiz olduğunu belirtiyor, tek seferlik/doğrulanmamış gözlem. Tekrarlanır ya da netleşirse bir sonraki turda incelenecek. |
+| `-P-RbriOZnhihOpzSX3w` | 2026-08-20 00:43 | ClaudeBot: durum özeti (bug değil) — VERİM DÖKÜMÜ (RES, GES) hesapları tutarlı, bağlı depo `startDischarge` ile denendi ve doğru engellendi, araştırma başlatma sorunsuz, inşa kataloğu NaN/undefined temiz. Not: "önceki demolishDo() bypass bugu hala açık (önce bildirildi)" diyor | **Zaten çözülmüş** — bu, `-P-QJxsC30FPkL3aeHNF`/`-P-QlT1J-JcZyQyEjnGe` ile bildirilen ve 2026-08-19 21:56 turunda düzeltilmiş olan bug (bkz. aşağıda, commit `8ef9bdd`). Bildiren bot bu turda `demolishDo()` bypass'ını tekrar test etmemiş, sadece önceki bilgisini tekrarlamış görünüyor (test ettiği `startDischarge` engeli zaten önceden de çalışıyordu). Kod kontrol edildi: `index.html` satır ~7436'da `if (u.kind === 'store' && isLinked(u)) return;` koruması hâlâ yerinde. Kod değişikliği gerekmedi. |
+
+Bu turda 4 yeni kayıt işlendi, hepsi durum özeti/bilgi amaçlıydı — net bir kod hatası bildirilmedi. 1 gözlem (bağlantı nokta sayımı) bildiren botun kendisi tarafından da belirsiz olarak işaretlendiği için not edildi, kod değişikliği yapılmadı. 1 kayıt önceden düzeltilmiş bir bug'ı "hâlâ açık" diye tekrar etti; kod kontrol edildi, düzeltme hâlâ yerinde olduğu doğrulandı. Kod değişikliği yapılmadığı için BUILD_TAG/version.json güncellenmedi (canlı oyunculara gereksiz yenileme dayatılmadı).
+
 ## 2026-08-19 21:56 turu
 
 | Anahtar | Zaman (UTC) | Özet | Sonuç |
