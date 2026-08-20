@@ -2,6 +2,27 @@
 
 Bu dosya, `suggestions` düğümünden okunup bakım botu tarafından değerlendirilen kayıtların anahtarlarını listeler. Sadece burada olmayan (yeni) anahtarlar bir sonraki turda işlenir.
 
+## 2026-08-20 21:56 turu
+
+14 yeni kayıt işlendi. **1 düzeltme yapıldı** (A: hoşgeldin/yönetim raporu modalında "51 dakikate" gibi hatalı ek — bkz. `duzeltmeler.md`). 2 kayıt zaten açık olan patrona sorulmuş konuları (VERİM DÖKÜMÜ↔anlık üretim yuvarlama, bulut kaydı `visibilitychange`/`pagehide` flush) tekrar doğruladı — `patrona-sorulacak.md` bu yeni kanıtlarla güncellendi, koda dokunulmadı. Kalan 11 kayıt durum özeti/doğrulama, aksiyon gerekmiyor.
+
+| Anahtar | Zaman (UTC) | Özet | Sonuç |
+|---|---|---|---|
+| `-P-Uprq1GHD6v3uqscDm` | 2026-08-20 15:43 | Durum — tarayıcı QA proxy'de engellendi, read-only kayıt denetimi temiz (kasa+, birim sayıları tutarlı, NaN/negatif yok) | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-UsksFGwotbl83W3EG` | 2026-08-20 15:56 | Durum — bot kendi tarayıcı-proxy sorununu yerel köprüyle çözdü (altyapı notu) | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-UskyItux7AFyjOX8u` | 2026-08-20 15:56 | Durum özeti (bug yok) — veri bütünlüğü temiz, bağlı depo yıkma engeli çalışıyor, müzayede listesi doğru filtreliyor, santral üretimi tutarlı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-V3PPzQc79UvdTFGmy` | 2026-08-20 16:47 | Durum — yerel köprü kuruldu, bulut kayıttan devam edildi, bulut yazımı doğrulandı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-V3Pj2NxvCLa_ys_bp` | 2026-08-20 16:47 | Doğrulama (bug yok) — bağlı depo sat/yık/müzayede engelleri çalışıyor, SAT tahmini≈gerçek (%0,001 sapma), grup toplamı=üye toplamı, NaN yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-V3Q24xfQe9Hf2FCN8` | 2026-08-20 16:47 | BUG(tekrar, düşük öncelik) — Rüzgar #1 "Anlık üretim" ekranı 1 ondalık yuvarlamadan dolayı VERİM DÖKÜMÜ çarpım sonucundan ~%18 sapıyor | ⚠️ Aynı konu zaten `patrona-sorulacak.md`'de (2026-08-20 14:59 turu, "VERİM DÖKÜMÜ↔anlık üretim"). Yeni kanıt olarak nota eklendi, koda dokunulmadı — tasarım kararı bekliyor. |
+| `-P-VH2X6nAzDqxnQWz9t` | 2026-08-20 17:46 | BUG — bulut kaydı: `save()`→`cloudSave()` 20sn throttle'lı; `visibilitychange(hidden)`/`pagehide` zorunlu flush tetiklemiyor; somut repro (santral onar → 20sn içinde arkaplana al → değişiklik buluta düşmüyor) | ⚠️ Zaten `patrona-sorulacak.md`'de açık konu (bulut kaydı güvenilirliği ailesi, "dikkatli tasarım kararı gerektiriyor" notuyla önceki turda soruldu). Yeni somut repro olarak nota eklendi, koda dokunulmadı. |
+| `-P-VH2gLjFnSAKdGVg2L` | 2026-08-20 17:46 | Durum + aksiyon — bağlı depo engelleri doğrulandı, verim dökümü tutarlı (yuvarlama farkı hariç), Bakım Günü'nde 3 santral onarıldı, kasa deltası maliyetle birebir | Bilgi amaçlı, aksiyon gerekmiyor (oyuncu aksiyonu, bot bulgusu değil). |
+| `-P-VUYQ1uPTScLdXCXoI` | 2026-08-20 18:45 | **BUG** — Hoşgeldin (yönetim raporu) modalında <60 dk yoklukta "...(51 dakikate)" yazıyor; doğrusu "dakikada". Sadece dakika dalı bozuk, saat dalı ("1.5 saatte") doğru | ✅ **DÜZELTİLDİ** (A). Detay `duzeltmeler.md`. |
+| `-P-VUdicXpj0KO-HRGN-` | 2026-08-20 18:46 | Doğrulama (bug yok) — grup satışı tahmin≈gerçek, bağlı depo engelleri (3 yolla), grup defteri=üye toplamı, verim dökümü tutarlı, santral satın alma kasa düşümü tam | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-VhR6bi1xQCvmbiD0i` | 2026-08-20 19:46 | Durum + aksiyon — canlı hava köprüsü çalışıyor, depo satın alındı+yerleştirildi, kasa deltası tam, MAX_PER_CELL sınırı korunuyor | Bilgi amaçlı, aksiyon gerekmiyor (oyuncu aksiyonu, bot bulgusu değil). |
+| `-P-VhU30oqqQ9wJvNJFV` | 2026-08-20 19:46 | BUG(tekrar, hâlâ açık) — VERİM DÖKÜMÜ çarpım sonucu <1MW üretimde "anlık üretim" ile görsel tutmuyor (canlı repro, ~%18 sapma) | ⚠️ Aynı konu, `-P-V3Q24xfQe9Hf2FCN8` ile birlikte `patrona-sorulacak.md`'ye üçüncü kanıt olarak eklendi. Koda dokunulmadı. |
+| `-P-VwKsP2Zz8EWOLkNJF` | 2026-08-20 20:33 | Durum özeti (bug yok) — Merkez Ofis NET tutarlı, depo toplamları bileşenlerle tutarlı, SAT tahmini≈gerçek, bağlı depo satışı doğru engellendi | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-W7O1YrxHs5OE8PCny` | 2026-08-20 21:43 | Durum özeti (bug yok) — bulut kaydı sorunsuz, bağlı depo yıkma/müzayede engelleri çalışıyor, verim dökümü tutarlı, konsol hatası yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+
 ## 2026-08-20 14:59 turu
 
 13 yeni kayıt işlendi. **1 düzeltme yapıldı** (A: "Hepsini Sat" onay penceresi bağlı depo stoğunu saymıyordu — bkz. `duzeltmeler.md`). 1 kayıt tasarım/belirsiz olduğu için `patrona-sorulacak.md`'ye yazıldı (verim dökümü ↔ anlık üretim tutarsızlığı). Kalanlar durum özeti/bilgi.

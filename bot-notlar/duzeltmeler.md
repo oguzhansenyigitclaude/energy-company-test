@@ -2,6 +2,38 @@
 
 Bu dosya, bakım botunun bu turda index.html üzerinde yaptığı düzeltmelerin ÖNCE/SONRA kod parçalarını ve gerekçesini listeler. Yerel geliştirici bunları ana projeye taşıyabilir / gözden geçirebilir.
 
+## 2026-08-20 21:56 turu
+
+### Düzeltme 1: Hoşgeldin (yönetim raporu) modalında dakika dalı "dakikate" gibi hatalı ek alıyordu
+
+**Bulgu:** `-P-VUYQ1uPTScLdXCXoI` (18:45). <60 dk yoklukta Hoşgeldin modalındaki ledger satırı "Üretilen enerji ... (51 dakikate)" yazıyor; doğrusu "dakikada" olmalı. Saat dalı ("1.5 saatte") zaten doğru. Repro: oyunu kapat, 1-59 dk sonra aç, hoşgeldin tablosundaki "Üretilen enerji" satırına bak.
+
+**Kök neden:** `away` değişkeni "51 dakika" / "1.5 saat" gibi çıplak bir süre metni üretiyor (satır ~6110). Ledger satırında (satır ~6115) bu metne durum eki olarak sabit `'te'` harfi ekleniyordu: `${away.replace(' ',' ')}te)`. "Saat" ünsüzle bitip düzensiz bir kelime olduğundan +te doğru sonuç veriyor ("saatte"), ama "dakika" ünlü ile bittiğinden Türkçe'de +da eki alması gerekiyor ("dakikada") — sabit "te" burada "dakikate" gibi hatalı bir sonuç üretiyordu.
+
+**ÖNCESİ** (`index.html`, `showWelcomeReport` benzeri fonksiyon içinde, ~satır 6110-6115):
+```js
+const away = gapSec >= 3600 ? (gapSec / 3600).toFixed(1) + ' saat' : Math.round(gapSec / 60) + ' dakika';
+$('modal').innerHTML = `
+  <h2>👋 Hoşgeldiniz!</h2>
+  <p style="text-align:center" class="sub"><b>${G.company}</b> yönetim raporu — ${away} uzaktaydın</p>
+  <table class="ledger">
+    <tr><td>⚡ Üretilen enerji</td><td><b>${fmtE(produced)} MWh</b> (${away.replace(' ', ' ')}te)</td></tr>
+```
+
+**SONRASI:**
+```js
+const away = gapSec >= 3600 ? (gapSec / 3600).toFixed(1) + ' saat' : Math.round(gapSec / 60) + ' dakika';
+// [BOT-FIX] "dakika" ünlüyle bitiyor (-da eki), "saat" ünsüzle biter ve düzensiz (-te eki) — tek "te" eki her ikisine de uygulanınca "51 dakikate" gibi hatalı çıkıyordu.
+const awayIn = gapSec >= 3600 ? away + 'te' : away + 'da';
+$('modal').innerHTML = `
+  <h2>👋 Hoşgeldiniz!</h2>
+  <p style="text-align:center" class="sub"><b>${G.company}</b> yönetim raporu — ${away} uzaktaydın</p>
+  <table class="ledger">
+    <tr><td>⚡ Üretilen enerji</td><td><b>${fmtE(produced)} MWh</b> (${awayIn})</td></tr>
+```
+
+**Doğrulama:** Tüm inline `<script>` blokları `new Function()` ile sözdizimi kontrolünden geçti (0 hata). `npx playwright` ile Chromium'da sayfa yerel http sunucu üzerinden açıldı, `pageerror` yok (yalnız oyundan bağımsız, önceden var olan `img/splash.webp` 404'ü görüldü, düzeltmeyle ilgisi yok).
+
 ## 2026-08-20 14:59 turu
 
 ### Düzeltme 1: "Hepsini Sat" onay penceresi bağlı (uydu) depo stoğunu saymıyordu — tahmin gerçekten ~%20 düşük çıkıyordu

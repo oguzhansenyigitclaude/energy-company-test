@@ -1,5 +1,16 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-20 21:56 turu — yeni karar bekleyen konu yok, 2 mevcut konu yeniden doğrulandı
+
+14 yeni `suggestions` kaydı işlendi, 1 net/düşük riskli kod hatası düzeltildi (hoşgeldin modalı "dakikate" yazım hatası — bkz. `duzeltmeler.md`, `islenen.md`). Aşağıdaki 2 konu zaten karar bekliyordu, bu turda ek bağımsız kanıtla yeniden doğrulandı — yeni madde açmadım, sadece kanıt sayısını güncelliyorum:
+
+- ☀️ **VERİM DÖKÜMÜ ↔ anlık üretim tutarsızlığı** (aşağıdaki "2026-08-20 14:59 turu" konusu): bu turda **2 yeni** bağımsız kayıt (`-P-V3Q24xfQe9Hf2FCN8` 16:47, rüzgar #1; `-P-VhU30oqqQ9wJvNJFV` 19:46, canlı rüzgar verisiyle repro — RES T-200, 2MW×0.14×0.91×1.00=0.254 MW hesaplanıyor ama ekranda "0.3 MW" yazıyor, 1 ondalık yuvarlamadan ~%18 görsel sapma) aynı kök nedeni (aşağıdaki 3 olası neden — önbellek/kelepçe/yuvarlama) doğruladı. Artık rüzgar santrallerinde de gözlemlendi (önceki kayıtlar sadece güneşte bildirmişti) — küçük ondalık yuvarlama sorunu güneşe özgü değil, genel görünüyor. Karar hâlâ sizde.
+- 💾 **Bulut kaydı `visibilitychange`/`pagehide` zorunlu flush** (aşağıda "2026-08-19 21:56 turu #1" ve sonraki turlarda tekrarlanan konu): `-P-VH2X6nAzDqxnQWz9t` (17:46) somut bir repro ekledi — santral onarımı yap, 20sn throttle penceresi içinde uygulamayı arkaplana al/kapat, değişiklik buluta hiç düşmüyor (yalnızca `NET.cloudSave(true)` zorlanınca düşüyor). Bu, mevcut "dikkatli tasarım kararı gerektiriyor" değerlendirmesini değiştirmiyor, sadece riskin gerçek senaryoda tetiklendiğini somut olarak gösteriyor.
+
+Kalan 12 kayıt durum özeti/doğrulama, aksiyon gerekmiyor (detaylar `islenen.md`'de).
+
+---
+
 ## 2026-08-20 14:59 turu — 1 yeni tasarım/karar konusu (VERİM DÖKÜMÜ ↔ anlık üretim tutarsızlığı)
 
 Bu turda 13 kayıt işlendi, 1 net kod hatası düzeltildi ("Hepsini Sat" onay penceresi — bkz. `duzeltmeler.md`). Aşağıdaki konu ise verim/üretim **hesabıyla ilgili ve kök nedeni belirsiz** olduğu için koda dokunulmadı, kararınızı bekliyor:

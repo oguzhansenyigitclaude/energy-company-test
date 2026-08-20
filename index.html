@@ -549,7 +549,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-20 21:48)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-20 21:56)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -6108,11 +6108,13 @@ function offlineProgress() {
   const worst = ps.slice().sort((a, b) => a.cond - b.cond)[0];
   const fuelOut = ps.filter(p => PLANT_TYPES[p.t].fuel && (p.fuelH || 0) <= 0).length;
   const away = gapSec >= 3600 ? (gapSec / 3600).toFixed(1) + ' saat' : Math.round(gapSec / 60) + ' dakika';
+  // [BOT-FIX] "dakika" ünlüyle bitiyor (-da eki), "saat" ünsüzle biter ve düzensiz (-te eki) — tek "te" eki her ikisine de uygulanınca "51 dakikate" gibi hatalı çıkıyordu.
+  const awayIn = gapSec >= 3600 ? away + 'te' : away + 'da';
   $('modal').innerHTML = `
     <h2>👋 Hoşgeldiniz!</h2>
     <p style="text-align:center" class="sub"><b>${G.company}</b> yönetim raporu — ${away} uzaktaydın</p>
     <table class="ledger">
-      <tr><td>⚡ Üretilen enerji</td><td><b>${fmtE(produced)} MWh</b> (${away.replace(' ', ' ')}te)</td></tr>
+      <tr><td>⚡ Üretilen enerji</td><td><b>${fmtE(produced)} MWh</b> (${awayIn})</td></tr>
       <tr><td>🔋 Depolar şu an</td><td>${fmtE(totalStored())} / ${totalCap()} MWh</td></tr>
       <tr><td>🔧 Filo yıpranması (ort.)</td><td class="${avgWear > 30 ? 'neg' : ''}">%${Math.round(avgWear)}${worst && worst.cond < 90 ? ` — en yıpranmış: ${unitName(worst)} %${Math.round(100 - worst.cond)}` : ''}</td></tr>
       ${fuelOut ? `<tr><td>⛽ Yakıtı biten santral</td><td class="neg">${fuelOut} adet — ikmal bekliyor!</td></tr>` : ''}
