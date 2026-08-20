@@ -446,7 +446,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-20 20:00) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-20 21:48) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -549,7 +549,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-20 20:00)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-20 21:48)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1097,7 +1097,7 @@ window.startCountryStudy = (iso, ad) => {
   if (studyOf(iso)) { toast('✅ Bu ülke zaten araştırıldı', ''); return; }
   if (G.countryStudyActive) { toast('🔎 Zaten bir bölge araştırması sürüyor', 'warn'); return; }
   if (G.cash < STUDY_COST) { toast('Bölge araştırması için ' + fmt(STUDY_COST) + ' gerekli', 'warn'); return; }
-  G.cash -= STUDY_COST;
+  G.cash -= STUDY_COST; gider('arastirma', STUDY_COST);
   G.countryStudyActive = { iso, ad, until: Date.now() + STUDY_SEC * 1000 / (G.demo ? 60 : 1) };
   toast('🔎 ' + ad + ' araştırması başladı — ' + STUDY_SEC + ' sn', '', null, 0, true);
   beep(620, .1);
@@ -1326,7 +1326,7 @@ function resolveAuction(cell, a) {
     toast('🏛️ İHALEYİ KAZANDIN! ' + fmt(a.top) + ' — 1 hafta boyunca bu bölge senden +%20 pahalı fiyatla alır. (Gelecek haftaki ihaleye katılamazsın — tekel önleme)', '', null, 0, true);
     a.myEscrow = 0;
   } else if (a.myEscrow > 0) {
-    G.cash += a.myEscrow; // kaybettin: TAM iade
+    G.cash += a.myEscrow; gider('ihale', -a.myEscrow); // kaybettin: TAM iade
     toast('🏛️ İhale kapandı — kazanamadın, teklifin tam iade edildi: ' + fmt(a.myEscrow), '');
     a.myEscrow = 0;
   }
@@ -1356,7 +1356,7 @@ window.placeBid = cell => {
   const next = a.top > 0 ? Math.round(a.top * BID_STEP / 1e5) * 1e5 : minBid(cell);
   const need = next - a.myEscrow; // önceki escrow'un üstüne tamamla
   if (G.cash < need) { toast('Teklif için ' + fmt(need) + ' daha gerekli', 'warn'); return; }
-  G.cash -= need;
+  G.cash -= need; gider('ihale', need);
   a.myEscrow = next; a.top = next; a.topBy = 'SEN'; a._botT = null;
   toast('🏛️ Teklifin verildi: ' + fmt(next) + ' (bloke) — ihale 21:00\'de biter', '');
   beep(650, .1);
@@ -1400,7 +1400,7 @@ window.directRent = cell => {
   if (w.open && !G.demo) { toast('İhale penceresi açık — doğrudan kiralama yerine teklif ver', 'warn'); return; }
   const fee = minBid(cell);
   if (G.cash < fee) { toast('Doğrudan kiralama için ' + fmt(fee) + ' gerekli', 'warn'); return; }
-  G.cash -= fee;
+  G.cash -= fee; gider('ihale', fee);
   G.leases[cell] = nextSunday09(); // TAKVİM kuralı: dönem Pazar 09:00'da biter
   toast('🏛️ Boş karo kiralandı (+%20 prim) — dönem Pazar 09:00\'da, ihale başlarken biter', '', null, 0, true);
   beep(700, .12);
@@ -1756,7 +1756,7 @@ window.storeLink = (aId, bId) => {
   if (connCount(B) >= STORE_TYPES[B.t].conn) { toast('🔗 ' + unitName(B) + ' bağlantı noktaları dolu', 'warn'); return; }
   const fee = storeLinkFee(A, B);
   if (G.cash < fee) { toast('Hat ücreti için ' + fmt(fee) + ' gerekli', 'warn'); return; }
-  if (fee) { G.cash -= fee; G.cellSpent = G.cellSpent || {}; G.cellSpent[A.cell] = (G.cellSpent[A.cell] || 0) + fee; }
+  if (fee) { G.cash -= fee; gider('altyapi', fee); G.cellSpent = G.cellSpent || {}; G.cellSpent[A.cell] = (G.cellSpent[A.cell] || 0) + fee; }
   B.link = A.id;
   toast('🔗 ' + unitName(A) + ' ↔ ' + unitName(B) + ' bağlandı — ortak kapasite ' + fmtE(groupCap(A)) + ' MWh' + (fee ? ' (hat ' + fmt(fee) + ')' : ''), '', null, 0, true);
   beep(700, .1);
@@ -1856,7 +1856,7 @@ function freshState() {
     olcek: 0, katkiOdenen: '', // 🏛️ resmî şirket ölçeği (Mikro→Holding) + son ödenen katkı haftası
     ip: 10, ipBoost: null, bakimAnlasma: false, // 💠 İmtiyaz Puanı (10 hediye) + aktif takviye + kalıcı bakım anlaşması
     emis: { week: '', ton: 0, stage: 0, warnUntil: 0, watch: {}, watchUntil: 0, fines: 0, muvazaa: 0 }, // 🌍 emisyon denetimi
-    totalSold: 0, totalEarned: 0, demoOffsetMin: 0,
+    totalSold: 0, totalEarned: 0, demoOffsetMin: 0, spend: {}, // 💸 gider defteri (kalem kalem kasa çıkışı)
     lastSeen: Date.now(), muted: false, demo: false,
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
   };
@@ -2178,7 +2178,7 @@ function emMuvazaa(sebep) {
   for (const u of alinan) { mw += PLANT_TYPES[u.t].mw; if (unitMarkers[u.id]) { unitMarkers[u.id].remove(); delete unitMarkers[u.id]; } }
   G.units = G.units.filter(x => !alinan.some(a => a.id === x.id));
   const para = Math.round(Math.max(5e6, G.cash * .35));
-  G.cash = Math.max(0, G.cash - para);
+  G.cash = Math.max(0, G.cash - para); gider('ceza', para);
   G.emis.muvazaa = (G.emis.muvazaa || 0) + 1;
   G.emis.watchUntil = 0; G.emis.watch = {}; G.emis.stage = 0; G.emis.warnUntil = 0;
   emPosta('🚨 MUVAZAA TESPİTİ — ağır yaptırım', 'Denetim kayıtlarına göre ihtar süresi boyunca tesisinizi durdurup, süre biter bitmez ' + sebep + '. Bu, Bakanlığı yanıltma (muvazaa) sayılır.\n\nYAPTIRIM: fosil üretim kapasitenizin %50\'sine EL KONULDU (' + alinan.length + ' tesis · ' + mw + ' MW) ve ' + fmt(para) + ' idari para cezası uygulandı.\n\nDevleti yanıltmanın bedeli, kirliliğin bedelinden ağırdır.');
@@ -2221,7 +2221,7 @@ function emisTick() {
   E.warnUntil = now + EM_GRACE_MS; // her kademeden sonra yeni 12 saat
   if (E.stage === 1) {
     const ceza = Math.round(Math.max(2e6, (d.asimTon || Math.max(1, d.yog - EM_LIMIT_GKWH) * 20) * EM_TON_FINE));
-    G.cash -= ceza; E.fines = (E.fines || 0) + ceza;
+    G.cash -= ceza; gider('ceza', ceza); E.fines = (E.fines || 0) + ceza;
     emPosta('💸 İDARİ PARA CEZASI', 'Süre dolmasına rağmen ihlal sürdüğü için ' + fmt(ceza) + ' idari para cezası uygulanmıştır. İhlal devam ederse tesisleriniz MÜHÜRLENİR.');
     toast('💸 Emisyon cezası: ' + fmt(ceza), 'warn', null, 0, true);
   } else if (E.stage === 2) emMuhurle();
@@ -2709,7 +2709,7 @@ window.doMaintSel = () => {
   const tot = sel.reduce((s, u) => s + unitRepairCost(u), 0);
   if (tot < 1) return;
   if (G.cash < tot) { toast('Bakım için ' + fmt(tot) + ' gerekli', 'warn'); return; }
-  G.cash -= tot;
+  G.cash -= tot; gider('bakim', tot);
   sel.forEach(u => { G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + unitRepairCost(u); u.cond = 100; });
   toast('🔧 ' + sel.length + ' cihaza bakım yapıldı — ' + fmt(tot), '');
   beep(520, .1); save(); refreshUnitMarkers(); hideSheets();
@@ -2724,7 +2724,7 @@ window.refuelUnit = id => {
   if (!f) { // NÜKLEER: yakıt çubuğu değişimi — depo gerekmez, direkt para (minik gider)
     const c = Math.round(PLANT_TYPES[u.t].fuel * PLANT_TYPES[u.t].mw * missH);
     if (G.cash < c) { toast('Yakıt çubuğu için ' + fmt(c) + ' gerekli', 'warn'); return; }
-    G.cash -= c;
+    G.cash -= c; gider('yakit', c);
     G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + c;
     u.fuelH = FUEL_HOURS;
     toast('⚛️ Yakıt çubuğu değişti — ' + FUEL_HOURS + ' saatlik stok (' + fmt(c) + ')', '');
@@ -2753,7 +2753,7 @@ window.buyFuel = (id, tons) => {
   const n = Math.floor(Math.min(tons === 'max' ? space : tons, space, G.cash / F.price));
   if (n < 1) { toast(space < 1 ? 'Depo dolu' : 'Yakıt için para yetersiz (ton: ' + fmt(F.price) + ')', 'warn'); return; }
   const cost = n * F.price;
-  G.cash -= cost;
+  G.cash -= cost; gider('yakit', cost);
   G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + cost;
   u.fuel = (u.fuel || 0) + n;
   toast(F.ico + ' ' + fmtN(n) + ' ' + F.unit + ' ' + F.nm.toLowerCase() + ' alındı — ' + fmt(cost), '');
@@ -2904,7 +2904,7 @@ window.buyLicense = () => {
   if (Object.keys(G.licenses).length >= licCap()) { toast('📜 Ruhsat limitin dolu (' + Object.keys(G.licenses).length + '/' + licCap() + ') — limit sabittir, kullanmadığın bir karenin ruhsatını bırakabilirsin', 'warn'); return; }
   const fee = licenseFee(c);
   if (G.cash < fee) { toast('Ruhsat için ' + fmt(fee) + ' gerekli', 'warn'); return; }
-  G.cash -= fee;
+  G.cash -= fee; gider('ruhsat', fee);
   G.cellSpent[c] = (G.cellSpent[c] || 0) + fee;
   G.licenses[c] = true;
   toast('📜 Kare ruhsatı alındı — artık burada kurabilirsin!', '');
@@ -2944,7 +2944,7 @@ window.doBuyCapLic = cat => {
   const nt = nextCapTier(cat);
   if (!nt) return;
   if (G.cash < nt.fee) { toast('Lisans için ' + fmt(nt.fee) + ' gerekli', 'warn'); return; }
-  G.cash -= nt.fee;
+  G.cash -= nt.fee; gider('ruhsat', nt.fee);
   G.capLic[cat] = capTierIdx(cat) + 1;
   toast('🔓 ' + cat + ' lisansı alındı — limit ' + fmtN(nt.mw) + ' MW (kalıcı)!', '', null, 0, true);
   beep(880, .12);
@@ -2999,7 +2999,7 @@ function placeAt(c, ll) {
   if (kind === 'plant' && capBlocked(t)) { toast('🔒 ' + T.cat + ' kurulu güç limitin dolu — İnşa ekranından lisans yükselt', 'warn'); PENDING = null; setMode(null); return; }
   const price = Math.round(T.cost * (PENDING.disc || 1)); // 🎬 reklam indirimi burada uygulanır
   if (G.cash < price) { toast('Yetersiz bakiye — ' + fmt(price) + ' gerekli', 'warn'); PENDING = null; setMode(null); return; }
-  G.cash -= price;
+  G.cash -= price; gider('yatirim', price);
   G.cellSpent[c] = (G.cellSpent[c] || 0) + price;
   if (PENDING.disc && PENDING.disc < 1) toast('🎬 Reklam indirimi uygulandı: ' + fmt(T.cost - price) + ' cebinde kaldı', '');
   const nu = addUnit(kind, t, ll);
@@ -3041,7 +3041,7 @@ window.buildOfficeAsk = () => {
 };
 window.doBuildOffice = () => {
   if (offices().length >= maxOffices() || G.cash < OFFICE.cost) return;
-  G.cash -= OFFICE.cost;
+  G.cash -= OFFICE.cost; gider('ruhsat', OFFICE.cost);
   const c = SEL.cell, ll = SEL.ll || cellCenter(c);
   G.cellSpent[c] = (G.cellSpent[c] || 0) + OFFICE.cost;
   addUnit('office', 'office', ll, 0);
@@ -3535,7 +3535,7 @@ window.buildLine = (toCell, km, hubs, brand) => {
     G.ally.treasury -= cost;
   } else {
     if (G.cash < cost) { toast('Hat için ' + fmt(cost) + ' gerekli', 'warn'); return; }
-    G.cash -= cost;
+    G.cash -= cost; gider('altyapi', cost);
     G.cellSpent[LINE_SRC] = (G.cellSpent[LINE_SRC] || 0) + cost;
   }
   brandBuy(brand); // sadakat/ilişki güncellenir
@@ -3566,7 +3566,7 @@ window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça a
   if (!l) return;
   const c = brandPrice(l.brand || 'voltas', LINE.hub);
   if (G.cash < c) { toast('Transfer merkezi için ' + fmt(c) + ' gerekli', 'warn'); return; }
-  G.cash -= c; l.hubs++; brandBuy(l.brand || 'voltas');
+  G.cash -= c; gider('altyapi', c); l.hubs++; brandBuy(l.brand || 'voltas');
   toast('🏗️ Transfer merkezi eklendi — kayıp %' + lineLossPct(l.km, l.hubs), '');
   save(); openViewSheet(); drawOverlay();
 };
@@ -3575,7 +3575,7 @@ window.repairLine = id => {
   if (!l) return;
   const c = Math.round((100 - lineWear(l)) * l.km * 900);
   if (c < 1 || G.cash < c) { if (G.cash < c) toast('Hat bakımı için ' + fmt(c) + ' gerekli', 'warn'); return; }
-  G.cash -= c; l.built = Date.now();
+  G.cash -= c; gider('altyapi', c); l.built = Date.now();
   toast('🔧 Hat bakımı yapıldı — ' + fmt(c), '');
   save(); openViewSheet();
 };
@@ -3883,7 +3883,7 @@ window.donateAlly = amt => {
   if (!G.ally || !G.ally.call) return;
   amt = Math.min(amt, G.cash);
   if (amt < 1) { toast('Bağış için paran yok', 'warn'); return; }
-  G.cash -= amt;
+  G.cash -= amt; gider('ittifak', amt);
   G.ally.treasury = (G.ally.treasury || 0) + amt;
   G.ally.call.raised += amt;
   G.ally.donations = G.ally.donations || {};
@@ -4122,7 +4122,7 @@ window.enterAllyTender = () => {
   const o = allyOffer();
   if (installedMW() < o.minMW) { toast('🤝 Koşul: en az ' + o.minMW + ' MW kurulu güç gerekli', 'warn'); return; }
   if (G.cash < o.stake) { toast('🤝 Kefalet için ' + fmt(o.stake) + ' gerekli', 'warn'); return; }
-  G.cash -= o.stake;
+  G.cash -= o.stake; gider('ittifak', o.stake);
   const winSec = 86400 / (G.demo ? 60 : 1);
   G.ally.tender = { ...o, delivered: 0, mine: 0, until: Date.now() + winSec * 1000, winSec, _bt: Date.now() };
   toast('🚨 ACİL İHALE alındı: ' + cellCode(o.cell) + ' bölgesine 24 saatte ' + fmtN(o.need) + ' MWh! Kefalet bloke: ' + fmt(o.stake), '', null, 0, true);
@@ -5119,7 +5119,7 @@ window.doOfferBuy = oid => {
     addMail(o.owner, 'Teklifin hakkında', `${cellCode(o.cell)} bölgesindeki tesisim için ${fmt(ask)} teklifini aldım ama şu an satmayı düşünmüyorum. Daha yüksek teklifle tekrar deneyebilirsin.`);
     save(); hideSheets(); return;
   }
-  G.cash -= ask;
+  G.cash -= ask; gider('muzayede', ask);
   G.boughtOthers = G.boughtOthers || {};
   G.boughtOthers[oid] = true;
   G.licenses[o.cell] = true;
@@ -5308,7 +5308,7 @@ window.aucCreate = (i, hours) => {
   const fee = Math.round(start * AUC_FEE);
   if (G.cash < fee) { toast('İlan bedeli için ' + fmt(fee) + ' gerekli', 'warn'); return; }
   closeModal();
-  G.cash -= fee;
+  G.cash -= fee; gider('muzayede', fee);
   G.auctionsMkt = G.auctionsMkt || [];
   G.auctionsMkt.push({
     id: G.nextId++, mine: true, seller: G.company, ico: x.ico, nm: x.nm, note: x.note, loc: x.loc || '',
@@ -5343,7 +5343,7 @@ window.aucCancel = id => {
   if (a.top) { toast('⛔ Teklif gelmiş ilan geri çekilemez', 'warn', null, 0, true); return; } // yarış koşulu kalkanı
   const pen = aucCancelFee(a);
   if (G.cash < pen) { toast('Cayma bedeli için ' + fmt(pen) + ' gerekli', 'warn'); return; }
-  G.cash -= pen;
+  G.cash -= pen; gider('muzayede', pen);
   a.done = true; a.cancelled = true; // aucList() done'ları eler → varlık yeniden ilana çıkabilir
   toast('✖️ İlan geri çekildi — cayma bedeli ' + fmt(pen), 'warn', null, 0, true);
   addMail('🔨 Müzayede', 'İlan geri çekildi', `${a.nm} ilanını teklif gelmeden geri çektin. Cayma bedeli ${fmt(pen)} kasandan düşüldü; varlık sende.`, true);
@@ -5381,7 +5381,7 @@ window.aucBid = (id, onayli, onayTutar) => {
     $('overlay').classList.add('show');
     return;
   }
-  G.cash -= need;
+  G.cash -= need; gider('muzayede', need);
   a.myEscrow = next; a.top = next; a.topBy = G.company;
   toast('🔨 Teklifin verildi: ' + fmt(next) + ' (bloke)', '');
   beep(650, .1);
@@ -5398,7 +5398,7 @@ function aucTick() { // bot teklifleri + süre bitişi
       const cap = a.start * (1.1 + hash01(a.id, 3, 7) * .8); // botun cüzdan tavanı
       const nb = Math.round((a.top || a.start) * 1.08 / 1e5) * 1e5;
       if (nb <= cap && hash01(a.id, Math.floor(Date.now() / 45000), 11) > .55 && a.topBy !== 'BOT') {
-        if (a.myEscrow) { G.cash += a.myEscrow; a.myEscrow = 0; toast('🔨 ' + a.nm + ' ilanında üstüne çıkıldı — teklifin iade edildi', 'warn', 'auc' + a.id, 20000); }
+        if (a.myEscrow) { G.cash += a.myEscrow; gider('muzayede', -a.myEscrow); a.myEscrow = 0; toast('🔨 ' + a.nm + ' ilanında üstüne çıkıldı — teklifin iade edildi', 'warn', 'auc' + a.id, 20000); }
         a.top = nb; a.topBy = WORLD_PLAYERS[Math.floor(hash01(a.id, 5, 13) * WORLD_PLAYERS.length)];
         changed = true;
       }
@@ -5429,7 +5429,7 @@ function aucResolve(a) {
     toast('🏆 MÜZAYEDEYİ KAZANDIN: ' + a.nm + ' — ' + fmt(a.top), '', null, 0, true);
     a.myEscrow = 0;
   } else if (a.myEscrow) {
-    G.cash += a.myEscrow; a.myEscrow = 0;
+    G.cash += a.myEscrow; gider('muzayede', -a.myEscrow); a.myEscrow = 0;
     toast('🔨 ' + a.nm + ' ilanını kaybettin — teklifin iade edildi', 'warn');
   }
 }
@@ -5460,7 +5460,7 @@ function aucGrantAsset(a) {
   const t = a.assetType, kind = a.assetType2 || 'plant';
   const T = t && TYPE_OF(kind, t);
   if (!T) { // tür çözülemedi → parayı iade et, oyuncu mağdur olmasın
-    G.cash += a.myEscrow || a.top || 0;
+    G.cash += a.myEscrow || a.top || 0; gider('muzayede', -(a.myEscrow || a.top || 0));
     toast('🔨 ' + a.nm + ' devredilemedi — ödemen iade edildi', 'warn', null, 0, true);
     return;
   }
@@ -5483,7 +5483,7 @@ function aucGrantAsset(a) {
   if (!G.licenses[nu.cell]) {
     const fee = licenseFee(nu.cell);
     if (G.cash >= fee) {
-      G.cash -= fee; G.cellSpent[nu.cell] = (G.cellSpent[nu.cell] || 0) + fee;
+      G.cash -= fee; gider('ruhsat', fee); G.cellSpent[nu.cell] = (G.cellSpent[nu.cell] || 0) + fee;
       G.licenses[nu.cell] = true; refreshLicenseTiles();
       masraf.push('📜 bölge ruhsatı ' + fmt(fee));
     }
@@ -5491,7 +5491,7 @@ function aucGrantAsset(a) {
   if (!officeCovers(nu.cell) && offices().length < maxOffices() && G.cash >= OFFICE.cost) {
     // ofis limiti DOLUYSA kurulmaz da, ücret de alınmaz (aucEkMaliyet ile aynı kural) —
     // limit üstü otomatik ofis "Ofis Ağı" araştırma kapısını baypas ediyordu
-    G.cash -= OFFICE.cost; G.cellSpent[nu.cell] = (G.cellSpent[nu.cell] || 0) + OFFICE.cost;
+    G.cash -= OFFICE.cost; gider('ruhsat', OFFICE.cost); G.cellSpent[nu.cell] = (G.cellSpent[nu.cell] || 0) + OFFICE.cost;
     addUnit('office', 'office', [nu.ll[0] + .003, nu.ll[1] + .003], 0); // tesisin dibinde bölge ofisi
     masraf.push('🏢 bölge ofisi ' + fmt(OFFICE.cost));
   }
@@ -6045,6 +6045,15 @@ window.renderFriendSearch = () => {
 // bot şirketler YAVAŞ gelişir (patron): günlük artış gerçek oyuncunun çok altında
 const botWorth = i => { const days = Math.floor(Date.now() / 864e5) - 20655; return (2000 + (i * 13777 % 6000) + days * (120 + (i * 7919) % 260)) * 1000; };
 const myWorth = () => G.cash + G.units.reduce((s, u) => s + TYPE_OF(u.kind, u.t).cost * .7, 0);
+// 💸 GİDER DEFTERİ (patron: "653M ciro, 306M tesis, 8M kasa — geri kalan nerede?")
+// Ciro GELİRDİR, kâr değil: para tesise, yakıta, bakıma, ruhsata, hatta, ihaleye gider.
+// Bu defter olmadan oyuncu parasının nereye gittiğini göremiyordu. Her kasa çıkışı kalemlenir;
+// iadeler (kaybedilen ihale/müzayede teklifi) negatif yazılır, yani defter NET gideri tutar.
+const GIDER_ADI = { yatirim: '🏭 Tesis yatırımı', yakit: '⛽ Yakıt', bakim: '🔧 Bakım ve onarım',
+  ruhsat: '📜 Ruhsat · ofis · lisans', altyapi: '⚡ Nakil hattı', arastirma: '🔬 Araştırma',
+  ihale: '🏛️ İhale / alım garantisi', muzayede: '🔨 Müzayede', ittifak: '🤝 İttifak / konsorsiyum', ceza: '⚖️ Cezalar' };
+function gider(k, n) { if (!G || !n) return; G.spend = G.spend || {}; G.spend[k] = Math.max(0, (G.spend[k] || 0) + n); }
+const giderToplam = () => Object.values((G && G.spend) || {}).reduce((a, b) => a + b, 0);
 const BOT_PLANTS = [
   { b: 3, nm: 'Taklamakan Çölü', ll: [38.9, 82.2], t: 'solar_2', n: 3 },
   { b: 0, nm: 'Berlin', ll: [52.52, 13.40], t: 'wind_2', n: 2 },
@@ -7595,7 +7604,7 @@ window.repairUnit = id => {
   if (!u) return;
   const c = unitRepairCost(u); // Bakım Günü indirimi tekil onarımda da geçerli (bug avı bulgusu)
   if (G.cash < c) return;
-  G.cash -= c; u.cond = 100;
+  G.cash -= c; gider('bakim', c); u.cond = 100;
   G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + c;
   toast('🔧 Onarıldı — ' + fmt(c), '');
   save(); refreshUnitMarkers(); openUnitSheet(id);
@@ -7847,7 +7856,18 @@ function openCompanySheet() {
         const sant = G.units.filter(u => u.kind === 'plant').length, dep = G.units.filter(u => u.kind === 'store').length, ofs = offices().length;
         return `<tr><td class="sub">↳ dökümü <span class="sub">(kasa + kurulu tesislerin %70'i)</span></td><td class="sub">💰 ${fmt(G.cash)} kasa + 🏭 ${fmt(tesis)} tesis <span class="sub">(${sant} santral · ${dep} depo · ${ofs} ofis)</span></td></tr>`;
       })()}
-      <tr><td>Toplam ciro</td><td>${fmt(G.totalEarned)}</td></tr>
+      <tr><td>Toplam ciro <span class="sub">(satış geliri — kâr değil)</span></td><td>${fmt(G.totalEarned)}</td></tr>
+      ${(() => { // 💸 PARAM NEREYE GİTTİ? (patron sorusu) — gelir/gider dengesi
+        const sp = G.spend || {}, top = giderToplam();
+        const kalemler = Object.keys(GIDER_ADI).filter(k => (sp[k] || 0) > 0).sort((a, b) => sp[b] - sp[a]);
+        // izlenmeyen fark: gider defteri bu sürümle başladı; eski harcamalar + ödüller burada toplanır
+        const fark = G.totalEarned - top - G.cash;
+        return `<tr><td colspan="2" style="padding-top:8px"><b style="color:var(--acc2);font-size:11px">💸 PARAN NEREYE GİTTİ?</b> <span class="sub">— ciro eksi giderler = kasa</span></td></tr>
+        ${kalemler.map(k => `<tr><td class="sub">${GIDER_ADI[k]}</td><td class="neg">−${fmt(sp[k])}</td></tr>`).join('')}
+        ${Math.abs(fark) > 1000 ? `<tr><td class="sub">${fark > 0 ? '📦 Bu sürüm öncesi harcamalar <span class="sub">(defter yeni açıldı)</span>' : '🎁 Ödül · tesis satışı · iade gelirleri'}</td><td class="${fark > 0 ? 'neg' : 'pos'}">${fark > 0 ? '−' : '+'}${fmt(Math.abs(fark))}</td></tr>` : ''}
+        <tr><td><b>= Kasa</b></td><td><b>${fmt(G.cash)}</b></td></tr>
+        <tr><td class="sub">🏭 Tesise dönüşen sermaye <span class="sub">(satarsan ~%70'i geri döner)</span></td><td class="sub">${fmt(G.units.reduce((a, u) => a + TYPE_OF(u.kind, u.t).cost * .7, 0))}</td></tr>`;
+      })()}
       <tr><td>Toplam satış</td><td>${fmtN(G.totalSold)} MWh</td></tr>
       <tr><td>🌿 Devlet teşviki (emisyona göre)</td><td class="${greenBonus() > 0 ? 'pos' : 'neg'}">${greenBonus() > 0 ? '+%' + Math.round(greenBonus() * 100) + ' (satışlara eklenir)' : 'YOK — ort. ' + co2Avg() + ' g/kWh çok yüksek'}</td></tr>
       ${(() => { // 🌍 EMİSYON DENETİMİ (patron): toplam kirlilik + haftalık kota + yaptırım durumu
