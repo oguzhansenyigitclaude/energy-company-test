@@ -2,6 +2,45 @@
 
 Bu dosya, `suggestions` düğümünden okunup bakım botu tarafından değerlendirilen kayıtların anahtarlarını listeler. Sadece burada olmayan (yeni) anahtarlar bir sonraki turda işlenir.
 
+## 2026-08-21 14:58 turu
+
+30 yeni kayıt işlendi (`-P-Wynd...` → `-P-Zlr...` serisi, 2026-08-21 01:41–14:44 UTC). **1 net/düşük riskli düzeltme yapıldı** (A: `sellAll(frac)` — Pazar panelindeki "Tüm Depoları Sat"/"Yarısını Sat" butonu — bağlı uydu depoyu da sayaca dahil ediyordu; `sellAllStores()`'da daha önce düzeltilen aynı kök nedenin bir başka çağrı noktası, bkz. `duzeltmeler.md`). 2 kayıt yeni tasarım/belirsizlik konusu olarak `patrona-sorulacak.md`'ye yazıldı (harita işaretçi z-index/yanlış tesis açılması; alt navbar aktif sekme senkron değil). 1 kayıt önceden patrona sorulmuş bulut-kaydı güvenilirliği konusuna ek kanıt olarak eklendi. Kalan 26 kayıt durum özeti/doğrulama (çoğu "sellAllStores KRİTİK bug düzeltilmiş" onayı, bağlı depo koruması, VERİM DÖKÜMÜ testleri), aksiyon gerekmiyor.
+
+| Anahtar | Zaman (UTC) | Özet | Sonuç |
+|---|---|---|---|
+| `-P-WyndmKiJcspqTTQVt` | 2026-08-21 01:41 | Durum özeti (bug yok) — bağlı depo doğrudan boşaltma engeli, katalog satın alma, sellAll(1) tahmin≈gerçek | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Wz4HSn0lPDwtecRPS` | 2026-08-21 01:42 | Durum özeti (bug yok) — VERİM DÖKÜMÜ düşük rüzgarda tutarlı, NaN/pageerror yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-XByUSMNQdAHinLbb8` | 2026-08-21 02:43 | Durum özeti (bug yok) — grup SAT tahmin≈gerçek, boşaltma sırasında bağlı santraller otomatik duruyor/açılıyor | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-XP---kGSSbp6hBjfr` | 2026-08-21 03:40 | Doğrulama — `sellAllStores()` KRİTİK bug'ı (00:54 build) canlı repro ile düzeltilmiş bulundu | Bilgi amaçlı, önceki düzeltmenin teyidi. |
+| `-P-XP-3j1J-E5wYmwSOS` | 2026-08-21 03:40 | Ek doğrulama — sağlık taraması temiz, önceki kritik bug kapalı kaldı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Xg76efQDOhB25Yjt6` | 2026-08-21 04:59 | Durum özeti (bug yok) — depo kapasite toplamı ve Hepsini-Sat toplamı tutarlı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-XgAcjw8mJDX4DofOX` | 2026-08-21 05:00 | Durum (bug değil) — link+ücret testi doğru, "kaybolma" bildiren botun kendi ani `browser.close()` akışından | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-XgAmGCrsHrPWSVnOv` | 2026-08-21 05:00 | Küçük öneri (doğrulanmamış, gerçek kayıp repro edilmedi) — `cloudSave` için `pagehide`/`beforeunload`+`sendBeacon` yedek yolu yok | ⚠️ Zaten `patrona-sorulacak.md`'de açık konu (bulut kaydı güvenilirliği ailesi). Ek kanıt olarak not edildi, koda dokunulmadı. |
+| `-P-XgArv6CM7vpW-RVn0` | 2026-08-21 05:00 | Durum özeti (bug yok) — VERİM DÖKÜMÜ rüzgar çarpanları anlık üretimle tutarlı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Xq3YE8EZT55M_Wj9c` | 2026-08-21 05:43 | Durum özeti (bug yok) — merkez depo SAT doğru, bağlı depo tüm yollardan engellendi | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Xq3dJYEMjX5c5PG63` | 2026-08-21 05:43 | Durum özeti (bug yok) — VERİM DÖKÜMÜ çarpan doğrulaması, tüm sekmeler hatasız | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-YGxLtFV6aDHuPYAvr` | 2026-08-21 07:44 | Durum özeti (bug yok) — bağlı depo silme engeli, VERİM DÖKÜMÜ eşleşiyor, satış kademeli tasarım gereği | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-YU1tta_Z4iL6mvUIB` | 2026-08-21 08:42 | Durum özeti (bug yok) — bağlı depo koruma testi, sellAllStores() kasa artışı doğru, NaN/negatif yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-YUHJqgnSUevjGF9t0` | 2026-08-21 08:43 | Durum özeti (bug yok) — inşa kataloğu NaN/undefined temiz, araştırma durumu notu | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-YinPWMKjWV44AqSME` | 2026-08-21 09:51 | Durum özeti (bug yok) — "Tüm Depoları Sat" tahmin≈gerçek, buton durumu doğru | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-YinV3NLiUJL64lBzG` | 2026-08-21 09:51 | Durum özeti (bug yok) — VERİM DÖKÜMÜ matematiği doğrulandı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-YinaQaZRpVVSDoozO` | 2026-08-21 09:51 | Durum — bulut kayıttan devam sorunsuz; depo yerleştirme bu turda botun otomasyon kısıtından tamamlanamadı (oyun hatası değil) | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Yv5Tg9gJM972CAFNh` | 2026-08-21 10:44 | **BUG** — `sellAll(frac)` (L2652, Pazar "Tüm Depoları Sat"/"Yarısını Sat") hâlâ `!st.link` filtresi yok; `sellAllStores()`'daki [BOT-FIX b25679a] burada eksik kalmış. Repro + önerilen tek satır düzeltme (L2654'e `&& !st.link`) dahil | ✅ **DÜZELTİLDİ** (A) — önerilen düzeltme birebir uygulandı. Detay `duzeltmeler.md`. |
+| `-P-Yv5f2OxBFMrHQ-gpf` | 2026-08-21 10:44 | BUG (kozmetik) — Müzayede/Posta/İttifak/Görünüm açılınca alt navbar'da önceki aktif sekme (İnşa/Bilgi) vurgulu kalmaya devam ediyor, MODE güncellenmiyor | ⚠️ `patrona-sorulacak.md`'ye yazıldı (B) — kod incelemesi gösterdi ki MODE aslında hâlâ gerçekten aktif (harita tıklama modu sürüyor), vurgu bu durumu doğru yansıtıyor; asıl soru bu ikincil panelleri açmanın haritadaki bekleyen modu (ör. yerleştirme bekleyen satın alma) iptal etmesi mi gerektiği — davranış değişikliği, karar sizde. |
+| `-P-Yv5lF9lxfcqKPaghh` | 2026-08-21 10:44 | Durum özeti (bug yok) — bağlı depo koruması tüm yollarda sağlam, yerel köprü ile gerçek RTDB'ye bağlanıldı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Z79AJPFyKhiBdRDZG` | 2026-08-21 11:41 | Durum özeti (bug yok) — merkez depo SAT kademeli tasarım gereği, bağlı depo JS-doğrudan çağrıda da engellendi | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-ZNGjxe4PoeTYVEZcf` | 2026-08-21 12:52 | Durum özeti (bug yok) — grup satışı, bağlı depo kilidi, VERİM DÖKÜMÜ, satın alma kesintisi hepsi tutarlı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-ZbCp9wC3U0IWRvoRH` | 2026-08-21 13:57 | **BUG** — kendi tesis işaretçisi (z-index 350) başka oyuncunun işaretçisiyle (z-index 347, ~2px fark) neredeyse aynı koordinatta çakışınca, gerçek dokunuş kendi türbinim yerine komşu oyuncunun "Ekopark otomasyon" tesis kartını açtı | ⚠️ `patrona-sorulacak.md`'ye yazıldı (B) — gerçek bir yanlış-yönlendirme riski ama düzeltmesi (kendi işaretçilere öncelik veren z-index/zIndexOffset) mülkiyet alanı modelinin (hangi birimler "benim", hangileri komşu) doğru anlaşılmasını gerektiriyor; yanlış varsayımla dokunuşu başka bir yöne kaydırma riski var, tek başıma karar vermedim. |
+| `-P-ZbD-vHX03pzqt8IUN` | 2026-08-21 13:57 | Durum özeti (bug yok) — merkez depo SAT gerçek tıklamayla tahmin≈gerçek (%0.00 fark) | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-ZbD6Ntyrh-r4DbYx2` | 2026-08-21 13:57 | Durum özeti (bug yok) — bağlı depo kilidi 3 yoldan da (UI, demolishUnit, demolishDo) doğrulandı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-ZbDCurLoJzIYyNy_V` | 2026-08-21 13:57 | Durum özeti (bug yok) — VERİM DÖKÜMÜ farkları yuvarlama sınırında, grup toplamları tam eşleşiyor | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-ZbDJHa70R4jIuhd7I` | 2026-08-21 13:57 | Durum — 72 saatlik devriye özeti, bulut kayıttan sorunsuz devam edildi | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Zl_HdxfvalWGRTJXZ` | 2026-08-21 14:42 | Durum özeti (bug yok) — bağlı depo koruması (UI+bypass) sağlam, regresyon yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-Zl_Qyr8_5h07StQPn` | 2026-08-21 14:42 | Durum özeti (bug yok) — santral satın alma+yerleştirme kasa deltası tam, sellAll(1) doğru çalıştı | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-ZlrG67RlHhmbmbtjI` | 2026-08-21 14:44 | Durum özeti (bug yok) — müzayede/sohbet panelleri, bağlı depo engeli UI seviyesinde de doğru | Bilgi amaçlı, aksiyon gerekmiyor. |
+
+Doğrulama: `new Function` ile inline `<script>` sözdizim kontrolü geçti; Playwright (headless Chromium, yerel `http://` sunucu üzerinden) sayfa açılışında `pageerror` üretmedi (yalnızca beklenen bir 404 konsol uyarısı). BUILD_TAG ve version.json `2026-08-21 14:58` olarak güncellendi.
+
 ## 2026-08-21 00:54 turu
 
 12 yeni kayıt işlendi. **1 KRİTİK düzeltme yapıldı** (A: `sellAllStores()` bağlı depo varken hiç satış yapmıyordu, sessiz başarısızlık — bkz. `duzeltmeler.md`). 2 kayıt zaten açık olan patrona sorulmuş konuları (VERİM DÖKÜMÜ yuvarlama, bulut kaydı throttle/flush) yeni kanıtla doğruladı — `patrona-sorulacak.md` güncellendi, koda dokunulmadı. Kalan 9 kayıt durum özeti/doğrulama, aksiyon gerekmiyor.

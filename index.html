@@ -549,7 +549,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-21 00:54)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-21 14:58)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2651,8 +2651,13 @@ function estimateBulkGain(frac) {
 }
 function sellAll(frac) {
   let n = 0;
+  // 🐞 [BOT-FIX] sellAllStores()'da (b25679a/f5a9750) düzeltilen "!link filtresi eksik" bug'ının
+  // aynısı burada da vardı: BAĞLI (uydu) depo doğrudan seçilince startDischarge() onu sessizce
+  // reddediyor (satır ~2590), ama n sayaca girdiği için toast yanlış sayı gösteriyordu.
+  // Grup enerjisi zaten MERKEZ (hub) depo üzerinden satılıyor (dischargeTick grup-çekme mantığı) —
+  // uyduyu ayrıca seçmeye gerek yok. Artık yalnız bağlı olmayan depolar seçiliyor.
   for (const st of stores())
-    if (!st.disch && st.buildDone <= Date.now() && st.stored * frac >= .005) { startDischarge(st.id, frac, null, null, true); n++; }
+    if (!st.disch && !st.link && st.buildDone <= Date.now() && st.stored * frac >= .005) { startDischarge(st.id, frac, null, null, true); n++; }
   if (n) { toast('⚡ ' + n + ' depo boşaltılıyor — para satış aktıkça hesabına geçer', ''); beep(600, .08); }
   else toast('Boşaltılacak dolu depo yok', 'warn');
 }

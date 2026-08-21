@@ -1,5 +1,37 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-21 14:58 turu — 2 yeni tasarım/belirsizlik konusu, 1 mevcut konu yeniden doğrulandı
+
+30 yeni `suggestions` kaydı işlendi. 1 net/düşük riskli kod hatası düzeltildi (`sellAll(frac)` bağlı depo filtresi eksikliği — bkz. `duzeltmeler.md`). Aşağıdaki 2 konu **yeni** ve kök nedeni/doğru çözümü belirsiz olduğu için koda dokunulmadı:
+
+### 1) 🗺️ Harita işaretçisi çakışması — kendi tesisine dokununca komşu oyuncunun tesis kartı açılabiliyor
+Kayıt: `-P-ZbCp9wC3U0IWRvoRH` (13:57)
+
+Bot, kendi rüzgar türbinine (id1) neredeyse aynı koordinatta duran başka bir oyuncunun işaretçisiyle çakıştığını (Leaflet'in hesapladığı z-index farkı ~350 vs 347, piksel ofseti ~2px) ve gerçek bir dokunuşla (mouse click + `elementFromPoint` ile doğrulanmış) kendi tesisi yerine komşunun "Ekopark otomasyon" tesis kartının açıldığını bildirdi. Bu, kozmetik değil — oyuncu yanlışlıkla kendi tesisi sandığı bir ekranda "Teklif Ver / Şikayet Et / Mesaj" gibi komşuya yönelik bir aksiyona basabilir riski taşıyor.
+
+**Neden kendim düzeltmedim:** `index.html`'de işaretçiler (`addUnitMarker`, satır ~6546) için elle atanmış bir z-index/`zIndexOffset` yok — sıralama Leaflet'in kendi iç mantığına (piksel Y konumu) bırakılmış. Doğru düzeltme muhtemelen "kendi birimlerime her zaman öncelik ver" şeklinde bir `zIndexOffset` eklemek, ama bunun için önce koddaki mülkiyet modelini (hangi `G.units` kaydı "benim", hangisi komşu/rakip oyuncuya ait — bu ayrım bende netleşmedi, kodda `owner`/`uid` alanının nasıl kullanıldığını yanlış varsayarsam dokunuşu başka bir yöne kaydırma ya da başka oyuncuların işaretçilerini görünmez şekilde erişilemez kılma riski var) doğru anlamam gerekiyor. Riskli bir varsayımla harita etkileşim mantığına dokunmak yerine size bırakıyorum.
+
+**Öneri (karar sizde):** Kendi oyuncunun birimlerine sabit pozitif bir `zIndexOffset` (ör. +200) vererek her zaman üstte/tıklanabilir kalmalarını sağlamak muhtemelen en düşük riskli çözüm — ama "kendi birim" tespitinin kod tabanında hangi alanla yapıldığını (muhtemelen oyuncu id'si/uid karşılaştırması) yerel geliştiricinin teyit etmesi daha güvenli olur.
+
+### 2) 🧭 Alt navbar aktif sekme vurgusu, Müzayede/Posta/İttifak/Görünüm açılınca güncellenmiyor
+Kayıt: `-P-Yv5f2OxBFMrHQ-gpf` (10:44)
+
+Bot, "Bilgi" moduna (haritada konum seçme) girip sonra Müzayede paneline geçtiğinde, alt navbar'da hâlâ "Bilgi" butonunun vurgulu (mavi) göründüğünü, ekran değişmiş olmasına rağmen bildirdi (ekran görüntüsüyle doğrulanmış).
+
+**Kod incelemesi:** Bu bir "bayat CSS class" hatası değil — `buildbtn`/`infobtn`'in `on` sınıfı doğrudan `MODE` global değişkenini yansıtıyor (`setMode()`, satır ~6260-6276), ve Müzayede/Posta/İttifak/Görünüm butonlarının handler'ları (`$('aucbtn')`, `$('mailbtn')`, `$('allybtn')`, `$('viewbtn')`, satır ~8476-8485) `hideSheets()` çağırıyor ama `setMode(null)` ÇAĞIRMIYOR — yani harita "İnşa yerleştirme" ya da "Bilgi konumu seç" modu görsel olarak arka planda GERÇEKTEN hâlâ aktif kalıyor (kullanıcı haritaya dokunursa hâlâ o modun davranışı tetiklenir). Vurgu, gerçek durumu doğru yansıtıyor.
+
+**Neden kendim düzeltmedim:** Asıl soru kozmetik değil, davranışsal: Müzayede/Posta/İttifak/Görünüm gibi ikincil bir panel açmak, haritadaki bekleyen yerleştirme/bilgi modunu (`MODE`) İPTAL ETMELİ Mİ? Eğer evet ise fix basit (`setMode(null)` eklemek) ama bu, satın alınıp yerleştirme bekleyen bir ürünü (`PENDING`) olan bir oyuncunun -mesela mail'e bakarken- o işlemi kaybetmesine yol açabilir; hayır ise (mevcut davranış, "arka planda devam et") o zaman gerçek düzeltme sadece görsel senkronu koparmak (yanıltıcı olur) ya da bu ikincil panelleri açarken modehint/ipucu barını da göstermeye devam etmek olur. İki yönün de oyuncu deneyimi üzerinde gerçek etkisi var, "küçük/kozmetik" sınırının dışında kaldığını düşündüm.
+
+**Öneri (karar sizde):** (a) Bu 4 buton da `setMode(null)` çağırsın (basit, ama bekleyen yerleştirme/bilgi seçimini iptal eder) — veya (b) sadece navbar vurgusunu değil, `modehint` çubuğunu da bu panellerden biri açıkken gizleyip kapanınca geri getirmek (moda dokunmadan, sadece görünürlüğü panel durumuna bağlamak).
+
+Aşağıdaki konu zaten karar bekliyordu, bu turda ek bağımsız kanıtla yeniden doğrulandı — yeni madde açmadım:
+
+- 💾 **Bulut kaydı throttle/flush** (aşağıdaki "2026-08-20 07:58 turu" ve önceki turlar): `-P-XgAmGCrsHrPWSVnOv` (05:00) düşük öncelikli, doğrulanmamış bir gözlemle aynı kök nedeni (`cloudSave` için `pagehide`/`beforeunload`+`sendBeacon` yedek yolu yok) tekrarladı. Karar hâlâ sizde.
+
+Kalan 26 kayıt durum özeti/doğrulama (çoğunluğu `sellAllStores()` KRİTİK düzeltmesinin canlıda doğru çalıştığının teyidi) — aksiyon gerekmiyor.
+
+---
+
 ## 2026-08-21 00:54 turu — yeni karar bekleyen konu yok, 1 KRİTİK bug düzeltildi, 2 mevcut konu yeniden doğrulandı
 
 12 yeni `suggestions` kaydı işlendi (`-P-WLw...` ve `-P-Wm...` serisi, 22:47–00:46 UTC). **1 KRİTİK düzeltme yapıldı:** `sellAllStores()` (toplu "Hepsini Sat" butonu) bağlı (uydu) depoları hâlâ eski filtreyle (`s.stored`, `!s.link` kontrolü yok) seçiyordu — önceki turda (`b25679a`) sadece onay ekranı (`sellAllStoresAsk`) düzeltilmişti, asıl satışı yapan fonksiyon atlanmıştı. Sonuç: onay ekranı doğru tutarı gösteriyor, "Evet" sonrası kasa 0 artıyor ama "N depo boşaltılıyor" toast'ı yine de çıkıyordu (sessiz başarısızlık, oyuncu parasının geldiğini sanıyor). 3 bağımsız bot kaydı (22:47 #2, 00:46 #4) aynı satırı (`index.html` ~7036), aynı kök nedeni ve aynı düzeltme önerisini birbirinden bağımsız doğruladı — detay `duzeltmeler.md`.

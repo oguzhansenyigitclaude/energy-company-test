@@ -2,6 +2,45 @@
 
 Bu dosya, bakım botunun bu turda index.html üzerinde yaptığı düzeltmelerin ÖNCE/SONRA kod parçalarını ve gerekçesini listeler. Yerel geliştirici bunları ana projeye taşıyabilir / gözden geçirebilir.
 
+## 2026-08-21 14:58 turu
+
+### Düzeltme 1: `sellAll(frac)` (Pazar paneli "Tüm Depoları Sat"/"Yarısını Sat") bağlı uydu depoyu da sayıyordu
+
+**Bulgu:** `-P-Yv5Tg9gJM972CAFNh` (10:44) — bot, 00:54 build'te `sellAllStores()`'da düzeltilen "bağlı depo filtresi eksik" bug'ının bir kardeş fonksiyonda (`sellAll(frac)`, satır ~2652 — Pazar panelindeki "Tüm Depoları Sat"/"Yarısını Sat" butonlarının kullandığı fonksiyon) hâlâ mevcut olduğunu bildirdi. Repro: aynı karede 2 depo birbirine bağlanır (0 ücret, aynı il), bağlı uydu depoya stok eklenir, "Tüm Depoları Sat" tetiklenir → toast "2 depo boşaltılıyor" der, ama bağlı uydu depo `disch=null` kalır çünkü `startDischarge()` (satır ~2590) onu `st.link` kontrolüyle sessizce reddeder. Kayıp/hatalı gelir YOK (merkez depo grup toplamını zaten doğru satıyor), ama gösterilen "N depo" sayacı gerçek satılan depo sayısından fazla — yanıltıcı toast.
+
+**Kök neden:** `sellAllStores()`'daki (`[BOT-FIX b25679a]`) düzeltme yalnız o fonksiyona uygulanmıştı; aynı desendeki ikinci çağrı noktası `sellAll(frac)` gözden kaçmış.
+
+**ÖNCESİ** (`index.html`, ~satır 2652-2658):
+```js
+function sellAll(frac) {
+  let n = 0;
+  for (const st of stores())
+    if (!st.disch && st.buildDone <= Date.now() && st.stored * frac >= .005) { startDischarge(st.id, frac, null, null, true); n++; }
+  if (n) { toast('⚡ ' + n + ' depo boşaltılıyor — para satış aktıkça hesabına geçer', ''); beep(600, .08); }
+  else toast('Boşaltılacak dolu depo yok', 'warn');
+}
+```
+
+**SONRASI:**
+```js
+function sellAll(frac) {
+  let n = 0;
+  // 🐞 [BOT-FIX] sellAllStores()'da (b25679a/f5a9750) düzeltilen "!link filtresi eksik" bug'ının
+  // aynısı burada da vardı: BAĞLI (uydu) depo doğrudan seçilince startDischarge() onu sessizce
+  // reddediyor (satır ~2590), ama n sayaca girdiği için toast yanlış sayı gösteriyordu.
+  // Grup enerjisi zaten MERKEZ (hub) depo üzerinden satılıyor (dischargeTick grup-çekme mantığı) —
+  // uyduyu ayrıca seçmeye gerek yok. Artık yalnız bağlı olmayan depolar seçiliyor.
+  for (const st of stores())
+    if (!st.disch && !st.link && st.buildDone <= Date.now() && st.stored * frac >= .005) { startDischarge(st.id, frac, null, null, true); n++; }
+  if (n) { toast('⚡ ' + n + ' depo boşaltılıyor — para satış aktıkça hesabına geçer', ''); beep(600, .08); }
+  else toast('Boşaltılacak dolu depo yok', 'warn');
+}
+```
+
+**Neden düşük risk / ekonomiyi değiştirmiyor:** Tek eklenen koşul `!st.link` — reddedilen bağlı uydu depo zaten `startDischarge()` içinde işlem yapmıyordu (kasa/stored hiç değişmiyordu), bu değişiklik sadece onu döngüden ve sayaçtan çıkarıyor. Merkez (hub) depo `isLinked` olduğunda grup toplamını `dischargeTick`'teki mevcut cross-draw mantığıyla zaten satıyor (satır ~2604-2619, dokunulmadı) — hiçbir satış yolu/miktarı değişmedi. Bota önerilen tek satırlık düzeltme (`&& !st.link`) birebir uygulandı.
+
+**Doğrulama:** `new Function` ile inline `<script>` sözdizim kontrolü geçti; Playwright (headless Chromium, yerel `http://` sunucu üzerinden) sayfa açılışında `pageerror` üretmedi (yalnızca bilinen bir statik kaynak 404 uyarısı var, JS hatası yok).
+
 ## 2026-08-21 00:54 turu
 
 ### Düzeltme 1: "Hepsini Sat" bağlı (uydu) depo varken hiçbir şey satmıyordu (sessiz başarısızlık)
