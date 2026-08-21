@@ -446,7 +446,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-21 16:50) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-21 17:09) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -550,7 +550,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-21 16:50)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-21 17:09)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2272,11 +2272,10 @@ function emisTick() {
   E.stage = (E.stage || 0) + 1;
   E.warnUntil = now + EM_GRACE_MS; // her kademeden sonra yeni 12 saat
   if (E.stage === 1) {
-    // 🛡️ CEZA TAVANI (patron: kasa −$27,72M'ye düştü): ceza kasanın %25'ini ve 20M'yi aşamaz,
-    // kasa yoksa kesilmez — ceza şirketi batırmak için değil, kirliliği durdurmak için var.
-    const hamCeza = Math.round((d.asimTon || Math.max(1, d.yog - EM_LIMIT_GKWH) * 5) * EM_TON_FINE);
-    const ceza = Math.max(0, Math.min(hamCeza, Math.round(Math.max(0, G.cash) * .25), 2e7));
-    if (ceza < 1) { E.stage = Math.max(1, E.stage); emPosta('⚠️ Ceza ertelendi — kasanız yetersiz', 'İhlal sürüyor ancak kasanız boş olduğu için para cezası uygulanmadı. İhlal giderilmezse tesis mühürleme aşamasına geçilecektir.'); }
+    // 💸 CEZA TAM KESİLİR (patron kararı: tavan mantıklı değil). Artık ceza YALNIZCA
+    // düzeltilebilir (anlık) ihlallerde kesildiği için tam tutar adil: tedbir alan hiç ödemez,
+    // ihlali sürdüren aşımı kadar öder — caydırıcılık bozulmasın.
+    const ceza = Math.round(Math.max(2e6, (d.asimTon || Math.max(1, d.yog - EM_LIMIT_GKWH) * 5) * EM_TON_FINE));
     G.cash -= ceza; gider('ceza', ceza); E.fines = (E.fines || 0) + ceza;
     emPosta('💸 İDARİ PARA CEZASI', 'Süre dolmasına rağmen ihlal sürdüğü için ' + fmt(ceza) + ' idari para cezası uygulanmıştır. İhlal devam ederse tesisleriniz MÜHÜRLENİR.');
     toast('💸 Emisyon cezası: ' + fmt(ceza), 'warn', null, 0, true);
@@ -2657,7 +2656,14 @@ window.startDischarge = (id, frac, adMult, targetCell, quiet) => {
   save(); refreshUnitMarkers();
   if ($('unitsheet').classList.contains('show') && window.__lastUnit === id) openUnitSheet(id);
 };
+let _dischSaveAcc = 0;
 function dischargeTick(dtSec) {
+  // 💾 ARA KAYIT: boşaltma dakikalarca sürebiliyor ve yalnız başlangıç/bitişte kaydediliyordu —
+  // ortada kapatan oyuncunun geliri kayboluyordu (bot 3 kez bildirdi, patron onayladı).
+  if (stores().some(st => st.disch)) {
+    _dischSaveAcc += dtSec;
+    if (_dischSaveAcc >= 15) { _dischSaveAcc = 0; save(); if (NET.on()) NET.cloudSave(); }
+  } else _dischSaveAcc = 0;
   for (const st of stores()) {
     const d = st.disch;
     if (!d) continue;
@@ -4864,22 +4870,28 @@ const NET = {
     } catch (e) { console.warn('[NET] taşıma', e.message); return 'error'; }
   },
   // ── ☁️ BULUT KAYIT: oyuncunun tüm verisi sunucuda (cihaz değişse de kaybolmaz) ──
-  async cloudSave(force) {
+  async cloudSave(force, kapanis) {
     if (!this.on() || !G || !G.company) return;
     if (!force && Date.now() - this.cloudAt < 20000) return; // 20 sn'de bir
     this.cloudAt = Date.now();
     const { _tcd, _aucT, _started, ...s } = G;
     s.units = G.units.map(({ _lastIcon, ...u }) => u);
     s._sv = Date.now();
-    try { await this.put('saves/' + this.id, s); } catch (e) {}
+    // 💾 KAPANIŞ FLUSH'I (4 bağımsız bot bulgusu + patron onayı): sekme kapanırken normal fetch
+    // iptal ediliyordu, son ≤20 sn'lik oynanış (satış, onarım, satın alma) buluta HİÇ yazılmıyordu.
+    // keepalive:true ile istek sayfa kapansa da tamamlanır (tarayıcı sınırı 64KB — büyük kayıtta
+    // normal yola düşer, o zaman da en azından yerel kayıt duruyor).
+    try { await this.put('saves/' + this.id, s, kapanis); } catch (e) {}
   },
   async cloudLoad() {
     if (!this.on()) return null;
     try { return await this.get('saves/' + this.id); } catch (e) { return null; }
   },
-  async req(path, method, body) {
+  async req(path, method, body, kapanis) {
     const o = { method, cache: 'no-store' };
     if (body !== undefined) { o.headers = { 'Content-Type': 'application/json' }; o.body = JSON.stringify(body); }
+    // sayfa kapanırken isteğin iptal edilmemesi için keepalive (yalnız 64KB altındaki gövdelerde)
+    if (kapanis && o.body && o.body.length < 60000) o.keepalive = true;
     // 🔐 KİMLİK JETONU: istekler artık ?auth=<idToken> taşıyor. Kurallar hâlâ eski (şekil
     // doğrulayan) olduğu için bu değişiklik GERİYE UYUMLU — jeton eklemek kimseyi kilitlemez.
     // Kurallar auth.uid'ye geçirilmeden ÖNCE bu sürümün yayılmış olması şart, aksi halde
@@ -4892,7 +4904,7 @@ const NET = {
     return r.ok ? r.json() : null;
   },
   get(p) { return this.req(p, 'GET'); },
-  put(p, v) { return this.req(p, 'PUT', v); },
+  put(p, v, kapanis) { return this.req(p, 'PUT', v, kapanis); },
   push(p, v) { return this.req(p, 'POST', v); },
   async loop() { // 12 sn'de bir: kendi durumunu yaz + dünyayı oku
     if (!this.on() || !G || !G._started) { setTimeout(() => this.loop(), 5000); return; }
@@ -6313,6 +6325,10 @@ const SEL = { cell: null, ll: null, mode: 'build' };
 // ── Harita modları: null=serbest gezinti · 'build'=satın alınan ürünü YERLEŞTİR · 'info'=bilgi konumu seç ──
 // YENİ AKIŞ (patron isteği): İnşa → katalog açılır → Satın Al → "kurmak istediğin yere dokun" → yerleştir (ödeme o anda)
 let MODE = null, PENDING = null; // PENDING = { kind, t } — satın alınıp yerleştirme bekleyen ürün
+// 🧭 patron kararı (a): Müzayede/Posta/İttifak/Görünüm açılınca haritadaki bekleyen mod
+// (yerleştirme / bilgi seçimi) İPTAL edilir — alt barda yanlış sekme vurgulu kalmasın.
+// Para kaybı yok: satın alma bedeli zaten yerleştirme anında düşüyor.
+window.modKapat = () => { if (typeof MODE !== 'undefined' && MODE) { const vardi = PENDING; setMode(null); PENDING = null; if (vardi) toast('🏗️ Yerleştirme iptal edildi — 🏗️ İnşa\'dan yeniden seçebilirsin', 'warn'); } };
 function setMode(m) {
   MODE = m;
   $('modehint').classList.toggle('show', !!m);
@@ -6599,11 +6615,34 @@ function unitIconHTML(u) {
   }
   return `<div class="${cls}">${visual}${badge ? `<div class="bd">${badge}</div>` : ''}</div>`;
 }
+// 👆 İŞARETÇİ ÖNCELİĞİ (patron + bot bulgusu): komşu oyuncu neredeyse aynı koordinata tesis
+// kurunca kendi tesisine dokunmak imkânsızlaşıyor, yanlışlıkla onun kartı (Teklif Ver / Şikayet)
+// açılıyordu. Patron kararı: "tek dokunuş BENİM tesisimi açsın, BASILI TUTUNCA diğer oyuncularınki".
+// Kendi birimlerin zIndexOffset ile hep üstte; uzun basış aynı noktadaki komşu tesisleri listeler.
+const LONG_PRESS_MS = 450;
+window.openOthersHere = (ll, cell) => {
+  const yakin = othersInCell(cell).filter(o => kmDist(o.ll, ll) < .35 && !(G.boughtOthers || {})[o.oid]);
+  if (!yakin.length) { toast('👀 Bu noktada başka şirketin tesisi yok', ''); return; }
+  $('modal').innerHTML = `
+    <h2>👀 Bu noktadaki diğer şirketler</h2>
+    <p class="sub">Kendi tesisinle üst üste duran komşu tesisler. Tek dokunuş her zaman SENİN tesisini açar.</p>
+    ${yakin.map(o => { const T = TYPE_OF(o.kind, o.t); return `<button class="bigsell" style="text-align:left" onclick="closeModal();${o.hq && o.owner ? `openPlayerCard('${jsStr(o.owner)}')` : `openOtherSheet(${JSON.stringify(o).replace(/"/g, '&quot;')})`}">
+      ${T ? T.ico : '🏭'} <b>${T ? T.nm : o.t}</b> <span class="sub">— ${o.owner || 'şirket'}</span></button>`; }).join('')}
+    <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
+  $('overlay').classList.add('show');
+};
 function addUnitMarker(u) {
   if (!map) return;
   if (unitMarkers[u.id]) unitMarkers[u.id].remove(); // çift işaretçi bug'ı: eski marker haritada donuk kalıyordu
-  const m = L.marker(u.ll, { icon: divIcon(unitIconHTML(u), unitIconSize(u)) }).addTo(map);
+  const m = L.marker(u.ll, { icon: divIcon(unitIconHTML(u), unitIconSize(u)), zIndexOffset: 600 }).addTo(map);
+  // uzun basış: aynı noktadaki komşu tesisleri aç (kendi tesisin üstte kaldığı için tek yol bu)
+  let lpT = null, lpFired = false;
+  const lpStart = () => { lpFired = false; clearTimeout(lpT); lpT = setTimeout(() => { lpFired = true; beep(520, .06); openOthersHere(u.ll, u.cell); }, LONG_PRESS_MS); };
+  const lpEnd = () => clearTimeout(lpT);
+  m.on('mousedown', lpStart); m.on('touchstart', lpStart);
+  m.on('mouseup', lpEnd); m.on('touchend', lpEnd); m.on('mouseout', lpEnd); m.on('dragstart', lpEnd);
   m.on('click', () => {
+    if (lpFired) { lpFired = false; return; } // uzun basış zaten komşu listesini açtı
     // 🔗 bağlama modundaysak işaretçiye dokunmak HEDEF SEÇER, birim sayfasını açmaz
     if (MODE === 'link' && LINK_SRC != null) {
       const src = LINK_SRC;
@@ -8608,16 +8647,16 @@ function toggleBuild() {
 $('buildbtn').addEventListener('click', toggleBuild);
 $('infobtn').addEventListener('click', () => setMode(MODE === 'info' ? null : 'info'));
 $('modecancel').addEventListener('click', () => { PENDING = null; setMode(null); });
-$('viewbtn').addEventListener('click', openViewSheet);
-$('mailbtn').addEventListener('click', () => { const open = $('mailsheet').classList.contains('show'); hideSheets(); if (!open) openMailSheet(); });
-$('aucbtn').addEventListener('click', () => { const open = $('aucsheet').classList.contains('show'); hideSheets(); if (!open) { seedAucMarket(); openAucSheet(); } });
+$('viewbtn').addEventListener('click', () => { modKapat(); openViewSheet(); });
+$('mailbtn').addEventListener('click', () => { modKapat(); const open = $('mailsheet').classList.contains('show'); hideSheets(); if (!open) openMailSheet(); });
+$('aucbtn').addEventListener('click', () => { modKapat(); const open = $('aucsheet').classList.contains('show'); hideSheets(); if (!open) { seedAucMarket(); openAucSheet(); } });
 $('chathandle').addEventListener('click', () => {
   if (!G || !G._started) return;
   $('chatpanel').classList.add('open'); $('chathandle').style.display = 'none';
   renderChat();
 });
 window.closeChat = () => { $('chatpanel').classList.remove('open'); $('chathandle').style.display = ''; };
-$('allybtn').addEventListener('click', () => { const open = $('allysheet').classList.contains('show'); hideSheets(); if (!open) openAllySheet(); });
+$('allybtn').addEventListener('click', () => { modKapat(); const open = $('allysheet').classList.contains('show'); hideSheets(); if (!open) openAllySheet(); });
 $('coname').addEventListener('click', () => { if (!G || !G._started) return; const open = $('companysheet').classList.contains('show'); hideSheets(); if (!open) openCompanySheet(); });
 function openMarket() { const open = $('pricesheet').classList.contains('show'); hideSheets(); if (!open) { renderPriceSheet(); showSheet('pricesheet'); } }
 function openTasks() { const open = $('menusheet').classList.contains('show'); hideSheets(); if (!open) { renderMenu(); showSheet('menusheet'); } }
@@ -8666,13 +8705,20 @@ $('resetlink').addEventListener('click', () => {
   if (confirm('Tüm ilerleme silinsin mi?')) { G = null; localStorage.removeItem(SAVE_KEY); location.reload(); } // G=null: otokayıt geri yazmasın
 });
 $('mutelink').addEventListener('click', () => { G.muted = !G.muted; $('mutelink').textContent = G.muted ? '🔇' : '🔊'; });
+// 💾 pagehide: mobilde sekme/uygulama kapanışında visibilitychange bazen hiç ateşlenmiyor;
+// bu yol keepalive'lı son yazmayı garantiye alır (bot bulgusu: son 20 sn kayboluyordu).
+window.addEventListener('pagehide', () => {
+  if (!G || !G._started) return;
+  save();
+  if (NET.on()) NET.cloudSave(true, true);
+});
 document.addEventListener('visibilitychange', () => {
   if (!G || !G._started) return;
   if (document.hidden) {
     save(); scheduleFillNotifs();
     // ⚠️ HATA AVI (orta): buluta zorunlu flush yoktu. afterLogin "bulut esas" dediği için
     // her açılışta son ≤20 saniyelik oynanış geri alınıyordu.
-    if (NET.on()) NET.cloudSave(true);
+    if (NET.on()) NET.cloudSave(true, true); // keepalive: kapanışta iptal edilmesin
   }
   else { notifTimers.forEach(t => clearTimeout(t)); notifTimers = []; offlineProgress(); }
 });
