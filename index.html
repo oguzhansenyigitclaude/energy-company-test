@@ -446,7 +446,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-20 21:48) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-21 16:50) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -506,6 +506,7 @@
       <div id="navhead"><span id="navtitle">🧭 SAHA</span><span class="x" onclick="closeNav()">✕</span></div>
       <div id="navtabs">
         <button data-tab="sell">💰 Depolar</button>
+        <button data-tab="fuel">⛽ İkmal</button>
         <button data-tab="map">🧭 Saha</button>
       </div>
       <div id="navbody"></div>
@@ -549,7 +550,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-21 14:58)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-21 16:50)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1717,14 +1718,41 @@ function ensureConnections() {
   for (const p of plants()) {
     if (p.buildDone > Date.now() || assignedStoreOf(p) || p.noAuto) continue; // noAuto: elle kesilen bağlantıya dokunma
     p.st = null;
-    const st = readyStores(p.cell).find(s => connCount(s) < STORE_TYPES[s.t].conn);
+    const st = readyStores(p.cell).find(s => !s.link && connCount(s) < STORE_TYPES[s.t].conn); // yalnız MERKEZ depo
     if (st) p.st = st.id;
   }
 }
+// 🔄 GÖÇ: eski kayıtlarda santral bağlı (köle) depoya bağlanmış olabilir — kural değişince
+// bağlantı kopmasın diye sessizce o grubun MERKEZİNE taşınır (oyuncu mağdur edilmez).
+function migratePlantLinks() {
+  if (!G || !G.units) return;
+  for (const pl of plants()) {
+    if (!pl.st) continue;
+    const st = storeById(pl.st);
+    if (st && st.link) { const m = storeMaster(st); if (m && m.cell === pl.cell) pl.st = m.id; else pl.st = null; }
+  }
+}
 // 🔗 DEPO → DEPO BAĞLA (a = bağlantıyı yapan MERKEZ DEPO, b = bağlanılan BAĞLI DEPO)
-window.storeLinkAsk = (aId, bId) => {
-  const A = storeById(aId), B = storeById(bId);
-  if (!A || !B) return;
+window.storeLinkAsk = (aId, bId, merkezSecildi) => {
+  const A0 = storeById(aId), B0 = storeById(bId);
+  if (!A0 || !B0) return;
+  // 🏛️ MERKEZ SEÇİMİ (patron: "hangi depoyu merkez yapmak istersiniz — ismi ve kapasitesi yazsın"):
+  // merkez depo grubun tek bağlantı noktasıdır (santraller ve diğer depolar ona bağlanır),
+  // bu yüzden hangisinin merkez olacağı oyuncunun kararı olmalı — kapasitesi büyük olanı seçmek mantıklı.
+  if (!merkezSecildi) {
+    const kart = (m, k) => `<button class="bigsell" style="text-align:left" onclick="closeModal();storeLinkAsk(${m.id},${k.id},1)">
+      🏛️ <b>${unitName(m)}</b> merkez olsun <span class="sub">(${STORE_TYPES[m.t].cap} MWh · ${connCount(m)}/${STORE_TYPES[m.t].conn} bağlantı)</span>
+      <div class="sub">🏢 ${unitName(k)} ona bağlı depo olur (${STORE_TYPES[k.t].cap} MWh)</div></button>`;
+    $('modal').innerHTML = `
+      <h2>🏛️ Hangisi MERKEZ depo olsun?</h2>
+      <p class="sub">Merkez depo grubun tek bağlantı noktasıdır: <b>santraller ve diğer depolar yalnız merkeze bağlanır</b>.
+      Bağlantı noktası çok olan (büyük) depoyu merkez seçmek daha fazla santral bağlamanı sağlar.</p>
+      ${kart(A0, B0)}${kart(B0, A0)}
+      <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+    $('overlay').classList.add('show');
+    return;
+  }
+  const A = A0, B = B0;
   const fee = storeLinkFee(A, B);
   const km = A.cell === B.cell ? 0 : Math.round(kmDist(cellCenter(A.cell), cellCenter(B.cell)));
   $('modal').innerHTML = `
@@ -1798,6 +1826,9 @@ window.connectUnitTo = (id, stId) => {
   if (!u || !st) return;
   // eskiden sessiz return'dü — harita modunda sessiz başarısızlık kafa karıştırıyor
   if (st.cell !== u.cell) { toast('🔗 İstasyon santralla AYNI ruhsat karesinde olmalı', 'warn'); return; }
+  // ⛔ patron kuralı: santral YALNIZ MERKEZ depoya bağlanır. Bağlı (köle) depoya santral bağlanabilseydi
+  // 1 merkez + 5 köle ile tek bölgeye onlarca santral yığılır, oyun tek karede biterdi.
+  if (st.link) { toast('⛔ ' + unitName(st) + ' bir BAĞLI DEPO — santraller yalnız MERKEZ depoya bağlanır. Merkez: ' + unitName(storeMaster(st)), 'warn', null, 0, true); return; }
   if (connCount(st) >= STORE_TYPES[st.t].conn) { toast('Bu istasyonun bağlantı limiti dolu', 'warn'); return; }
   u.st = stId;
   u.noAuto = false;
@@ -2135,16 +2166,27 @@ const emPortfoy = () => { let mw = 0, g = 0;
   for (const u of plants()) if (u.on && u.buildDone <= Date.now()) { const T = PLANT_TYPES[u.t]; mw += T.mw; g += T.mw * (T.em || 0); }
   return mw > .01 ? Math.round(g / mw) : 0; };
 const emRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() ? PLANT_TYPES[u.t].mw * (PLANT_TYPES[u.t].em || 0) / 1000 : 0), 0); // ton/saat (tam güçte)
+// ⚖️ ADALET KURALI (patron, 21 Ağu — haklı itiraz): "3 rüzgar kurdum, yoğunluğu düşürdüm ama
+// haftalık salım ve ömür bütçesi GEÇMİŞ değerler, 12 saatte düşüremem ki — bu cezayı her türlü
+// yerim." Doğru: düzeltilemeyen ölçütle ceza kesilemez. Bu yüzden YAPTIRIM ÖLÇÜTLERİ ARTIK
+// TAMAMEN İLERİYE DÖNÜK — hepsi kirli tesisi durdurunca ya da temiz kapasite ekleyince ANINDA düşer:
+//   1) Karbon yoğunluğu  — çalışan portföyün g/kWh'ı
+//   2) Salım HIZI        — mevcut hızla haftalık projeksiyon (geçmiş salım DEĞİL), kota ile kıyaslanır
+// Ömür bütçesi ve "bu hafta salınan" artık BİLGİ satırıdır; ceza kesmez (geçmiş geri alınamaz).
+// Kota da üretim hacmine göre ölçeklenir: temiz üretim ekleyen oyuncunun kotası büyür.
+const emTemizRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() && (PLANT_TYPES[u.t].em || 0) < 300 ? PLANT_TYPES[u.t].mw : 0), 0);
 function emDurum() {
-  const yog = emPortfoy(), ton = emWeekTon(), kota = emQuota(), rate = emRate();
-  // kota aşıldıysa ihlal sürer — ama salım hızını ciddi düşürdüyse (tedbir aldıysa) düzelmiş sayılır
-  const kotaIhlal = ton > kota && rate > (kota / 168) * .5;
-  // 🧾 bütçe aşımı da aynı mantıkla: hâlâ salım yapıyorsa ihlal, kirli üretimi durdurduysa askıda
-  const butce = emButce(), butceAcik = emButceAcik(), butceIhlal = butceAcik > 0 && rate > .05;
-  return { yog, ton, kota, rate, butce, butceAcik, butceIhlal, toplam: co2TotalTon(),
+  const yog = emPortfoy(), ton = emWeekTon(), rate = emRate();
+  const hizHaftalik = rate * 168;                       // mevcut hızla bir hafta çalışsa (ton)
+  const uretimHaftalik = (emTemizRate() + plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() && (PLANT_TYPES[u.t].em || 0) >= 300 ? PLANT_TYPES[u.t].mw : 0), 0)) * 168;
+  // kota = ölçek tabanı VEYA üretim hacminin %40'ı (hangisi büyükse) — temiz kapasite kotayı BÜYÜTÜR
+  const kota = Math.max(EM_QUOTA[Math.max(0, Math.min(EM_QUOTA.length - 1, G.olcek || 0))], Math.round(uretimHaftalik * .4));
+  const butce = emButce(), butceAcik = emButceAcik();
+  const kotaIhlal = hizHaftalik > kota;
+  return { yog, ton, kota, rate, hizHaftalik, butce, butceAcik, butceIhlal: false, toplam: co2TotalTon(),
     yogIhlal: yog > EM_LIMIT_GKWH, kotaIhlal,
-    asimTon: Math.max(0, ton - kota) + butceAcik * .1, // ceza hesabı: haftalık aşım + bütçe borcunun %10'u
-    ihlal: (yog > EM_LIMIT_GKWH) || kotaIhlal || butceIhlal };
+    asimTon: Math.max(0, (hizHaftalik - kota) / 168 * 12), // ceza: 12 saatlik aşım kadar (ölçülü)
+    ihlal: (yog > EM_LIMIT_GKWH) || kotaIhlal };
 }
 const emPosta = (baslik, govde) => addMail('🏛️ Enerji Bakanlığı', baslik, govde, true);
 // 🏛️ KAMULAŞTIRMA: aşımı kapatan EN KÜÇÜK katkılı tesis (yoksa en kirli olan) devlete geçer
@@ -2189,6 +2231,17 @@ function emMuvazaa(sebep) {
 function emisTick() {
   if (!G || !G._started || !G.emis) return;
   const E = G.emis, now = Date.now(), d = emDurum();
+  // 💰 TELAFİ (tek sefer): önceki sürümde düzeltilemeyen geçmiş ölçütlerle (haftalık salım /
+  // ömür bütçesi) kesilen cezalar haksızdı — patronun kasası eksiye düştü. Tümü iade edilir.
+  if (E.fines > 0 && !E.iade) {
+    E.iade = true;
+    const geri = E.fines;
+    G.cash += geri; gider('ceza', -geri); E.fines = 0; E.stage = 0; E.warnUntil = 0;
+    for (const u of plants()) if (u.emSealed) { u.emSealed = false; u.on = true; }
+    emPosta('💰 Emisyon cezaları İADE EDİLDİ', 'Denetim yönetmeliği güncellendi: ceza artık yalnızca ANLIK ölçütlere (portföy karbon yoğunluğu ve salım hızı) göre kesilir — geçmişte salınan ve geri alınamayan miktarlar ceza konusu değildir.\n\nEski yönetmelikle tahsil edilen ' + fmt(geri) + ' tutarındaki ceza kasanıza İADE EDİLMİŞTİR; mühürler kaldırılmıştır.\n\nYeni kural: kirli tesisi durdurduğunuz ya da temiz kapasite eklediğiniz anda ölçütler düşer ve ceza kesilmez.');
+    toast('💰 Emisyon cezaları iade edildi: +' + fmt(geri), '', null, 0, true);
+    save();
+  }
   if (emMuaf()) { E.stage = 0; E.warnUntil = 0; return; }
   // 🚨 gözetim penceresi: ihtarda durdurulan santral geri açıldıysa muvazaa
   if (E.watchUntil > now && E.watch) {
@@ -2209,8 +2262,7 @@ function emisTick() {
     E.watch = {};
     const sbp = [];
     if (d.yogIhlal) sbp.push('çalışan tesislerinizin karbon yoğunluğu ' + d.yog + ' g/kWh (yasal tavan ' + EM_LIMIT_GKWH + ')');
-    if (d.kotaIhlal) sbp.push('bu haftaki salımınız ' + fmtN(Math.round(d.ton)) + ' ton (ölçek kotası ' + fmtN(d.kota) + ' ton)');
-    if (d.butceIhlal) sbp.push('ömür boyu karbon bütçenizi ' + fmtN(Math.round(d.butceAcik)) + ' ton AŞTINIZ (toplam ' + fmtN(Math.round(d.toplam)) + ' / bütçe ' + fmtN(Math.round(d.butce)) + ' ton)');
+    if (d.kotaIhlal) sbp.push('mevcut salım hızınız haftalık ' + fmtN(Math.round(d.hizHaftalik)) + ' tona denk geliyor (kota ' + fmtN(d.kota) + ' ton)');
     const sebep = sbp.join(', ');
     emPosta('⚠️ İHTAR — emisyon sınırı aşıldı (12 saat)', 'Yapılan denetimde ' + sebep + ' olarak tespit edilmiştir.\n\n12 SAAT içinde gerekli tedbirleri alırsanız ceza uygulanmaz:\n• Kirli tesisleri DURDURUN (denetim anlık ölçer — durdurunca yoğunluk ve salım hızı anında düşer)\n• Güneş/rüzgar yatırımı yapın: her 1 MWh temiz üretim karbon bütçenize +' + EM_CLEAN_CREDIT + ' ton geri kazandırır\n\nAksi hâlde sırasıyla idari para cezası, tesis mühürleme ve KAMULAŞTIRMA işlemlerine başlanır.');
     toast('⚠️ BAKANLIK İHTARI: emisyon sınırı aşıldı — 12 saatin var', 'warn', null, 0, true);
@@ -2220,7 +2272,11 @@ function emisTick() {
   E.stage = (E.stage || 0) + 1;
   E.warnUntil = now + EM_GRACE_MS; // her kademeden sonra yeni 12 saat
   if (E.stage === 1) {
-    const ceza = Math.round(Math.max(2e6, (d.asimTon || Math.max(1, d.yog - EM_LIMIT_GKWH) * 20) * EM_TON_FINE));
+    // 🛡️ CEZA TAVANI (patron: kasa −$27,72M'ye düştü): ceza kasanın %25'ini ve 20M'yi aşamaz,
+    // kasa yoksa kesilmez — ceza şirketi batırmak için değil, kirliliği durdurmak için var.
+    const hamCeza = Math.round((d.asimTon || Math.max(1, d.yog - EM_LIMIT_GKWH) * 5) * EM_TON_FINE);
+    const ceza = Math.max(0, Math.min(hamCeza, Math.round(Math.max(0, G.cash) * .25), 2e7));
+    if (ceza < 1) { E.stage = Math.max(1, E.stage); emPosta('⚠️ Ceza ertelendi — kasanız yetersiz', 'İhlal sürüyor ancak kasanız boş olduğu için para cezası uygulanmadı. İhlal giderilmezse tesis mühürleme aşamasına geçilecektir.'); }
     G.cash -= ceza; gider('ceza', ceza); E.fines = (E.fines || 0) + ceza;
     emPosta('💸 İDARİ PARA CEZASI', 'Süre dolmasına rağmen ihlal sürdüğü için ' + fmt(ceza) + ' idari para cezası uygulanmıştır. İhlal devam ederse tesisleriniz MÜHÜRLENİR.');
     toast('💸 Emisyon cezası: ' + fmt(ceza), 'warn', null, 0, true);
@@ -2651,11 +2707,8 @@ function estimateBulkGain(frac) {
 }
 function sellAll(frac) {
   let n = 0;
-  // 🐞 [BOT-FIX] sellAllStores()'da (b25679a/f5a9750) düzeltilen "!link filtresi eksik" bug'ının
-  // aynısı burada da vardı: BAĞLI (uydu) depo doğrudan seçilince startDischarge() onu sessizce
-  // reddediyor (satır ~2590), ama n sayaca girdiği için toast yanlış sayı gösteriyordu.
-  // Grup enerjisi zaten MERKEZ (hub) depo üzerinden satılıyor (dischargeTick grup-çekme mantığı) —
-  // uyduyu ayrıca seçmeye gerek yok. Artık yalnız bağlı olmayan depolar seçiliyor.
+  // 🐞 [BOT-FIX efc4408] aynı "!link filtresi eksik" hatası bu kardeş fonksiyonda da vardı:
+  // bağlı uydu doğrudan seçilince startDischarge onu reddediyor ama sayaca giriyordu (yanıltıcı toast).
   for (const st of stores())
     if (!st.disch && !st.link && st.buildDone <= Date.now() && st.stored * frac >= .005) { startDischarge(st.id, frac, null, null, true); n++; }
   if (n) { toast('⚡ ' + n + ' depo boşaltılıyor — para satış aktıkça hesabına geçer', ''); beep(600, .08); }
@@ -3433,8 +3486,8 @@ window.startPlantLink = id => {
   const u = G.units.find(x => x.id === id);
   if (!u) return;
   if (assignedStoreOf(u)) { toast('⛔ Santral zaten bağlı — başka istasyona geçmek için önce Bağlantıyı Kes', 'warn', null, 0, true); return; }
-  const aday = readyStores(u.cell).filter(s => connCount(s) < STORE_TYPES[s.t].conn);
-  if (!aday.length) { toast('🔋 Bu karede boş slotu olan istasyon yok — önce depo kur', 'warn', null, 0, true); return; }
+  const aday = readyStores(u.cell).filter(s => !s.link && connCount(s) < STORE_TYPES[s.t].conn); // bağlı depo aday değil
+  if (!aday.length) { toast('🔋 Bu karede boş slotu olan MERKEZ istasyon yok — depo kur ya da bağlı depolardan birini merkez yap', 'warn', null, 0, true); return; }
   PLINK_SRC = id;
   hideSheets();
   setMode('plink');
@@ -6113,13 +6166,11 @@ function offlineProgress() {
   const worst = ps.slice().sort((a, b) => a.cond - b.cond)[0];
   const fuelOut = ps.filter(p => PLANT_TYPES[p.t].fuel && (p.fuelH || 0) <= 0).length;
   const away = gapSec >= 3600 ? (gapSec / 3600).toFixed(1) + ' saat' : Math.round(gapSec / 60) + ' dakika';
-  // [BOT-FIX] "dakika" ünlüyle bitiyor (-da eki), "saat" ünsüzle biter ve düzensiz (-te eki) — tek "te" eki her ikisine de uygulanınca "51 dakikate" gibi hatalı çıkıyordu.
-  const awayIn = gapSec >= 3600 ? away + 'te' : away + 'da';
   $('modal').innerHTML = `
     <h2>👋 Hoşgeldiniz!</h2>
     <p style="text-align:center" class="sub"><b>${G.company}</b> yönetim raporu — ${away} uzaktaydın</p>
     <table class="ledger">
-      <tr><td>⚡ Üretilen enerji</td><td><b>${fmtE(produced)} MWh</b> (${awayIn})</td></tr>
+      <tr><td>⚡ Üretilen enerji</td><td><b>${fmtE(produced)} MWh</b> (${away + (away.indexOf('saat') > -1 ? 'te' : 'da')})</td></tr>
       <tr><td>🔋 Depolar şu an</td><td>${fmtE(totalStored())} / ${totalCap()} MWh</td></tr>
       <tr><td>🔧 Filo yıpranması (ort.)</td><td class="${avgWear > 30 ? 'neg' : ''}">%${Math.round(avgWear)}${worst && worst.cond < 90 ? ` — en yıpranmış: ${unitName(worst)} %${Math.round(100 - worst.cond)}` : ''}</td></tr>
       ${fuelOut ? `<tr><td>⛽ Yakıtı biten santral</td><td class="neg">${fuelOut} adet — ikmal bekliyor!</td></tr>` : ''}
@@ -6567,6 +6618,7 @@ function addUnitMarker(u) {
       const src = G.units.find(x => x.id === PLINK_SRC);
       if (u.kind !== 'store') { toast('🔗 Yalnız İSTASYON (depo) seçebilirsin', 'warn'); return; }
       if (src && u.cell !== src.cell) { toast('🔗 İstasyon santralla AYNI karede olmalı', 'warn'); return; }
+      if (u.link) { toast('⛔ Bu bir BAĞLI DEPO — santraller yalnız MERKEZ depoya bağlanır (merkez: ' + unitName(storeMaster(u)) + ')', 'warn', null, 0, true); return; }
       if (connCount(u) >= STORE_TYPES[u.t].conn) { toast('🔗 Bu istasyonun bağlantı limiti dolu', 'warn'); return; }
       const sid = PLINK_SRC; PLINK_SRC = null; setMode(null);
       connectUnitTo(sid, u.id);
@@ -6773,6 +6825,74 @@ function drawCountryTint() {
     }
   }
 }
+// ⛽ İKMAL PANELİ (patron: "bu menüye ikmal sekmesi koy santrallere ikmal olsun — kömür ve LNG
+// depolarını da buradan doldurmak mantıklı mı?" → EVET: yakıtlı santral her ~12 saatte bir stok
+// bitiriyor, oyuncu tek tek haritada tesis arıyordu. Tek liste + tek tuş, ama OTOMATİK DEĞİL —
+// "oto-satış yok" ilkesinin kardeşi: kararı yine oyuncu verir, sadece yol kısalır.)
+window.refuelAll = () => {
+  const liste = plants().filter(u => PLANT_TYPES[u.t].fuel && u.buildDone <= Date.now() && (FUEL_HOURS - (u.fuelH || 0)) >= .2);
+  if (!liste.length) { toast('⛽ İkmal gerektiren santral yok', 'warn'); return; }
+  const kasa0 = G.cash;
+  let n = 0;
+  for (const u of liste) { const once = u.fuelH || 0; refuelUnit(u.id); if ((u.fuelH || 0) > once + .01) n++; }
+  hideSheets(); openNav('fuel');
+  toast(n ? '⛽ ' + n + ' santral ikmal edildi — ' + fmt(Math.max(0, kasa0 - G.cash)) : '⛽ İkmal yapılamadı — yakıt stoğun yok', n ? '' : 'warn', null, 0, true);
+};
+window.buyFuelAll = () => { // tüm yakıt depolarını doldur
+  const dep = G.units.filter(u => u.kind === 'fueldepot' && u.buildDone <= Date.now() && depotCap(u) - (u.fuel || 0) >= 1);
+  if (!dep.length) { toast('🛢️ Dolacak yakıt deposu yok', 'warn'); return; }
+  const kasa0 = G.cash;
+  dep.forEach(u => buyFuel(u.id, 'max'));
+  hideSheets(); openNav('fuel');
+  toast('🛢️ Yakıt depoları dolduruldu — ' + fmt(Math.max(0, kasa0 - G.cash)), '', null, 0, true);
+};
+function renderFuelPanel() {
+  const sant = plants().filter(u => PLANT_TYPES[u.t].fuel && u.buildDone <= Date.now());
+  const dep = G.units.filter(u => u.kind === 'fueldepot' && u.buildDone <= Date.now());
+  if (!sant.length && !dep.length) {
+    $('navbody').innerHTML = `<p class="sub">⛽ Yakıtlı santralin (kömür · gaz · nükleer) ve yakıt deponun yok.<br><br>
+      Kömür/gaz santralleri 12 saatlik stokla çalışır: önce ⛏️ Kömür Deposu / 🛢️ LNG Tankı kur, depoya yakıt al, sonra buradan santrallere ikmal et.</p>`;
+    return;
+  }
+  const acil = sant.filter(u => (u.fuelH || 0) <= 0).length, az = sant.filter(u => (u.fuelH || 0) > 0 && u.fuelH < 3).length;
+  const ikmalGerek = sant.filter(u => (FUEL_HOURS - (u.fuelH || 0)) >= .2).length;
+  const satir = u => {
+    const T = PLANT_TYPES[u.t], f = fuelOf(u), F = f ? FUEL_TYPES[f] : null;
+    const saat = u.fuelH || 0, pct = Math.max(0, Math.min(100, saat / FUEL_HOURS * 100));
+    const need = f ? tonsFor(u, FUEL_HOURS - saat) : 0, have = f ? fuelStock(f) : 0;
+    const yeter = f ? have >= Math.min(need, .5) : G.cash >= Math.round(T.fuel * T.mw * (FUEL_HOURS - saat));
+    return `<div class="strow">
+      <div class="top">
+        <span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${u.ll[0]},${u.ll[1]},11,'${(placeName(u.cell)).replace(/'/g, '')}')">${unitName(u)}</span>
+        <span class="cap">${placeName(u.cell)}</span></div>
+      <div class="bar"><i style="width:${pct}%;background:${saat <= 0 ? 'var(--danger)' : saat < 3 ? 'var(--warn)' : 'linear-gradient(90deg,#3ddc97,#5ab0ff)'}"></i></div>
+      <div class="foot">
+        <span class="val">${saat <= 0 ? '<span class="neg">🛑 YAKIT BİTTİ — üretim durdu</span>' : saat.toFixed(1) + ' / ' + FUEL_HOURS + ' sa' + (saat < 3 ? ' <span class="neg">· azalıyor</span>' : '')}
+          ${F ? `<br><span class="sub">${F.ico} gerekli ${fmtN(Math.ceil(need))} ${F.unit} · stok ${fmtN(have)}</span>` : '<br><span class="sub">⚛️ yakıt çubuğu — doğrudan satın alınır</span>'}</span>
+        <button onclick="refuelUnit(${u.id});openNav('fuel')" ${(FUEL_HOURS - saat) < .2 || !yeter ? 'disabled' : ''}>${(FUEL_HOURS - saat) < .2 ? 'DOLU' : 'İKMAL'}</button>
+      </div></div>`;
+  };
+  const depSatir = u => {
+    const T = DEPOT_TYPES[u.t], F = FUEL_TYPES[T.fuel], cap = depotCap(u), dolu = u.fuel || 0;
+    const bos = Math.max(0, cap - dolu), alinabilir = Math.floor(Math.min(bos, G.cash / F.price));
+    return `<div class="strow">
+      <div class="top"><span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${u.ll[0]},${u.ll[1]},11,'${(placeName(u.cell)).replace(/'/g, '')}')">${F.ico} ${unitName(u)}</span>
+        <span class="cap">${placeName(u.cell)}</span></div>
+      <div class="bar"><i style="width:${Math.min(100, cap ? dolu / cap * 100 : 0)}%"></i></div>
+      <div class="foot">
+        <span class="val">${fmtN(dolu)} / ${fmtN(cap)} ${F.unit}<br><span class="sub">ton ${fmt(F.price)} · doldurma ${fmt(alinabilir * F.price)}</span></span>
+        <button onclick="buyFuel(${u.id},'max');openNav('fuel')" ${alinabilir < 1 ? 'disabled' : ''}>${bos < 1 ? 'DOLU' : 'DOLDUR'}</button>
+      </div></div>`;
+  };
+  $('navbody').innerHTML = `
+    ${acil || az ? `<p class="sub" style="color:${acil ? 'var(--danger)' : 'var(--warn)'}">${acil ? '🛑 ' + acil + ' santralin yakıtı BİTTİ — üretim duruyor.' : '⚠️ ' + az + ' santralin yakıtı 3 saatin altında.'}</p>` : ''}
+    ${sant.length ? `<button class="bigsell" onclick="refuelAll()" ${ikmalGerek ? '' : 'disabled'}>⛽ Tüm Santralleri İkmal Et${ikmalGerek ? ' (' + ikmalGerek + ')' : ' — hepsi dolu'}</button>` : ''}
+    ${dep.length ? `<button class="bigsell half" onclick="buyFuelAll()">🛢️ Tüm Yakıt Depolarını Doldur</button>` : ''}
+    ${sant.length ? `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">⚡ YAKITLI SANTRALLER (${sant.length})</div>${sant.slice().sort((a, b) => (a.fuelH || 0) - (b.fuelH || 0)).map(satir).join('')}` : ''}
+    ${dep.length ? `<div style="font-size:11px;color:var(--gold);margin:12px 0 2px">🛢️ YAKIT DEPOLARI (${dep.length})</div>${dep.map(depSatir).join('')}`
+      : '<p class="sub" style="margin-top:10px">🛢️ Yakıt deposu yok — kömür/gaz santralleri depodan ikmal alır. 🏗️ İnşa > Yakıt sekmesinden kur.</p>'}
+    <p class="sub" style="margin-top:8px">İkmal her zaman senin kararın — oto-ikmal yok. Depo adına dokun → harita oraya uçar.</p>`;
+}
 // ⏳ DEPO DOLMA SÜRESİ (patron: "kapasite dolmasına 3 saat kaldı gibi"): kalan boş kapasite,
 // depoya AKAN güce bölünür. Depo dolunca üretim boşa gittiği için oyuncunun en çok ihtiyaç
 // duyduğu sayaç budur — satışı ne zaman yapması gerektiğini buradan görür.
@@ -6941,9 +7061,9 @@ let NAVTAB = 'sell', STSORT = 'dolu';
 window.setNavTab = t => { NAVTAB = t; renderNav(); };
 window.setStSort = s => { STSORT = s; renderNav(); };
 function renderNav() {
-  $('navtitle').textContent = NAVTAB === 'sell' ? '💰 DEPOLARIN' : '🧭 SAHA';
+  $('navtitle').textContent = NAVTAB === 'sell' ? '💰 DEPOLARIN' : NAVTAB === 'fuel' ? '⛽ İKMAL' : '🧭 SAHA';
   document.querySelectorAll('#navtabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === NAVTAB));
-  if (NAVTAB === 'sell') renderStorePanel(); else renderNavPanel();
+  if (NAVTAB === 'sell') renderStorePanel(); else if (NAVTAB === 'fuel') renderFuelPanel(); else renderNavPanel();
 }
 // ═══ 💰 TOPLU DEPO / SATIŞ PANELİ (patron: "rakibin soldan açılan satış menüsü çok iyi") ═══
 // TELİF NOTU: rakibin düzeni kopyalanmadı — kendi mavi/krem temamız, kendi sütun sıramız
@@ -7038,10 +7158,9 @@ window.sellAllStoresAsk = () => {
   $('overlay').classList.add('show');
 };
 window.sellAllStores = () => {
-  // 🐞 [BOT-FIX] onay ekranı (sellAllStoresAsk) BAĞLI (uydu) depoları hariç tutup grup toplamını
-  // sayıyordu, ama asıl satışı yapan burası hâlâ TÜM depoları (uydu dahil) "s.stored" ile seçiyordu —
-  // startDischarge() uyduyu sessizce reddettiği için "N depo boşaltılıyor" diyip HİÇ satış olmuyordu.
-  // Artık onay ekranıyla AYNI filtre: yalnız bağlı olmayan depolar, grup toplamına göre.
+  // 🐞 [BOT-FIX f5a9750] KRİTİK: onay ekranı (sellAllStoresAsk) BAĞLI depoları eleyip grup
+  // toplamına bakıyordu ama asıl satışı yapan BURASI hâlâ uyduyu da seçiyordu — startDischarge()
+  // uyduyu sessizce reddettiği için "N depo boşaltılıyor" deyip HİÇ satış olmuyordu (kasa +0).
   const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && !s.link && (isLinked(s) ? groupStored(s) : s.stored) >= .005);
   sts.forEach(s => startDischarge(s.id, 1, null, null, true)); // quiet: tek tek bildirim yağmuru olmasın
   toast('💰 ' + sts.length + ' depo boşaltılıyor — para akmaya başladı', '', null, 0, true);
@@ -7566,7 +7685,7 @@ function openUnitSheet(id) {
         // 🔗 TEK BAĞLAN DÜĞMESİ (patron: "bir sürü bağlan düğmesi olmaz — sadece Bağlan yazacak,
         // basınca harita açılır, bağlanacağım şeye tıklarım; bağlıyken önce bağlantı kesilir").
         const cellSts = readyStores(u.cell);
-        const bosAday = cellSts.filter(s => s !== myStore && connCount(s) < STORE_TYPES[s.t].conn);
+        const bosAday = cellSts.filter(s => s !== myStore && !s.link && connCount(s) < STORE_TYPES[s.t].conn);
         let h = '<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🔗 BAĞLANTI YÖNETİMİ</div>';
         if (myStore) h += `<button class="bigsell half" onclick="disconnectUnit(${u.id})">🔌 Bağlantıyı Kes — ${unitName(myStore)}</button>
           <p class="sub">Başka istasyona bağlamak için önce bağlantıyı kes.</p>`;
@@ -7861,6 +7980,7 @@ function openCompanySheet() {
     <table class="ledger">
       <tr><td>Kasa</td><td class="pos">${fmt(G.cash)}</td></tr>
       <tr><td>Şirket değeri</td><td>${fmt(myWorth())}</td></tr>
+      <tr><td colspan="2" style="padding:2px 0"><details><summary style="cursor:pointer;color:var(--acc2);font-size:12px;font-weight:700">📊 Detaylar — döküm, ciro ve gider defteri</summary><table class="ledger" style="margin-top:4px">
       ${(() => { // 💼 patron: "ciro 653M, kasada 8M — 300M fazlalık mı?" Hayır: para TESİSE döndü.
         // Şirket değeri = kasa + kurulu tesislerin %70'i. Döküm olmadan bu görünmüyordu.
         const tesis = G.units.reduce((a, u) => a + TYPE_OF(u.kind, u.t).cost * .7, 0);
@@ -7879,18 +7999,27 @@ function openCompanySheet() {
         <tr><td><b>= Kasa</b></td><td><b>${fmt(G.cash)}</b></td></tr>
         <tr><td class="sub">🏭 Tesise dönüşen sermaye <span class="sub">(satarsan ~%70'i geri döner)</span></td><td class="sub">${fmt(G.units.reduce((a, u) => a + TYPE_OF(u.kind, u.t).cost * .7, 0))}</td></tr>`;
       })()}
+      </table></details></td></tr>
       <tr><td>Toplam satış</td><td>${fmtN(G.totalSold)} MWh</td></tr>
       <tr><td>🌿 Devlet teşviki (emisyona göre)</td><td class="${greenBonus() > 0 ? 'pos' : 'neg'}">${greenBonus() > 0 ? '+%' + Math.round(greenBonus() * 100) + ' (satışlara eklenir)' : 'YOK — ort. ' + co2Avg() + ' g/kWh çok yüksek'}</td></tr>
       ${(() => { // 🌍 EMİSYON DENETİMİ (patron): toplam kirlilik + haftalık kota + yaptırım durumu
         const d = emDurum(), oran = d.kota ? Math.min(200, Math.round(d.ton / d.kota * 100)) : 0;
         const kalanSa = G.emis && G.emis.warnUntil > Date.now() ? fmtHrs((G.emis.warnUntil - Date.now()) / 36e5) : null;
         const butceOran = d.butce ? Math.min(200, Math.round(d.toplam / d.butce * 100)) : 0;
-        return `<tr><td colspan="2" style="padding-top:8px"><b style="color:var(--acc2);font-size:11px">🌍 EMİSYON DENETİMİ</b> <span class="sub">— denetlenen 3 ölçüt aşağıda</span></td></tr>
+        return `<tr><td colspan="2" style="padding-top:8px"><b style="color:var(--acc2);font-size:11px">🌍 EMİSYON DENETİMİ</b> <span class="sub">— ceza yalnız bu 2 ANLIK ölçüte göre kesilir</span></td></tr>
         <tr><td>1️⃣ Karbon yoğunluğu <span class="sub">(ŞU AN çalışan tesisler)</span></td><td class="${d.yogIhlal ? 'neg' : 'pos'}"><b>${d.yog}</b> / ${EM_LIMIT_GKWH} g/kWh ${d.yogIhlal ? '❌' : '✅'}</td></tr>
-        <tr><td>2️⃣ Haftalık salım <span class="sub">(${olcekOf(G.olcek).nm} kotası · pazar sıfırlanır)</span></td><td class="${d.kotaIhlal ? 'neg' : oran > 80 ? 'warn' : 'pos'}"><b>${fmtN(Math.round(d.ton))}</b> / ${fmtN(d.kota)} ton (%${oran}) ${d.kotaIhlal ? '❌' : '✅'}</td></tr>
-        <tr><td>3️⃣ Ömür boyu karbon bütçesi <span class="sub">(temiz üretim bütçeyi büyütür: +${EM_CLEAN_CREDIT} ton/MWh)</span></td><td class="${d.butceAcik ? 'neg' : butceOran > 80 ? 'warn' : 'pos'}"><b>${fmtN(Math.round(d.toplam))}</b> / ${fmtN(Math.round(d.butce))} ton (%${butceOran}) ${d.butceAcik ? '❌ ' + fmtN(Math.round(d.butceAcik)) + ' ton aşım' : '✅'}</td></tr>
+        <tr><td>2️⃣ Salım hızın <span class="sub">(şu anki hızla 1 hafta çalışsan · kota üretimle büyür)</span></td><td class="${d.kotaIhlal ? 'neg' : 'pos'}"><b>${fmtN(Math.round(d.hizHaftalik))}</b> / ${fmtN(d.kota)} ton ${d.kotaIhlal ? '❌' : '✅'}</td></tr>
+        ${d.ihlal && !emMuaf() ? `<tr><td colspan="2" class="sub" style="color:var(--warn)">🛠️ <b>Cezadan kurtulmak için:</b> ${(() => {
+          const kirli = plants().filter(u => emKirli(u) && u.on).sort((a, b) => (PLANT_TYPES[b.t].em || 0) * PLANT_TYPES[b.t].mw - (PLANT_TYPES[a.t].em || 0) * PLANT_TYPES[a.t].mw);
+          const oneri = [];
+          if (kirli.length) oneri.push('en kirli tesisini durdur (' + unitName(kirli[0]) + ' — ' + PLANT_TYPES[kirli[0].t].em + ' g/kWh)');
+          if (d.kotaIhlal) { const gerek = Math.ceil((d.hizHaftalik - d.kota) / (168 * .4)); if (gerek > 0) oneri.push('ya da <b>' + gerek + ' MW</b> temiz kapasite (güneş/rüzgar) ekle — kotan büyür'); }
+          if (d.yogIhlal) oneri.push('portföy yoğunluğunu ' + EM_LIMIT_GKWH + ' g/kWh altına indir');
+          return oneri.join(' · ') || 'kirli üretimi durdur';
+        })()} <span class="sub">— ölçütler ANLIK; tedbiri alınca aynı dakika düşer, ceza kesilmez.</span></td></tr>` : ''}
         <tr><td>🏛️ Denetim sonucu</td><td class="${d.ihlal ? 'neg' : 'pos'}">${emMuaf() ? 'muaf — yeni şirket (3 gün)' : d.ihlal ? (kalanSa ? '⚠️ İHTAR — ' + kalanSa + ' içinde düzelt' : '⚠️ İHLAL') : '✅ sınırlar içinde'}</td></tr>
-        <tr><td class="sub">📊 Toplam kirlilik <span class="sub">· ömür ort. ${co2Avg()} g/kWh (geçmiş — denetimde kullanılmaz)</span></td><td class="sub">${fmtN(Math.round(d.toplam))} ton CO₂</td></tr>` +
+        <tr><td class="sub">📊 Bu hafta salınan <span class="sub">(bilgi — geçmiş, ceza kesmez)</span></td><td class="sub">${fmtN(Math.round(d.ton))} ton</td></tr>
+        <tr><td class="sub">🧾 Ömür boyu karbon <span class="sub">· bütçe ${fmtN(Math.round(d.butce))} ton (bilgi — temiz üretim büyütür)</span></td><td class="sub">${fmtN(Math.round(d.toplam))} ton CO₂ · ort. ${co2Avg()} g/kWh</td></tr>` +
         (G.emis && G.emis.watchUntil > Date.now() ? `<tr><td>👁️ Gözetim</td><td class="warn">${fmtHrs((G.emis.watchUntil - Date.now()) / 36e5)} — durdurulan fosili açmak MUVAZAA sayılır</td></tr>` : '') +
         (G.emis && G.emis.fines ? `<tr><td>💸 Ödenen emisyon cezası</td><td class="neg">${fmt(G.emis.fines)}</td></tr>` : '');
       })()}
@@ -7900,7 +8029,7 @@ function openCompanySheet() {
     </table>
     <div style="font-size:12px;margin:10px 0 2px">🏗️ <b>BİNA BİLGİLERİ</b></div>
     <table class="ledger">
-      <tr><td>Santral</td><td>${plants().length} adet · ${installedMW()} MW ${Object.entries(bySrc).map(([c2, mw]) => `<span class="sub">${c2} ${mw}</span>`).join(' ')}</td></tr>
+      <tr><td>Santral</td><td>${plants().length} adet · ${Math.round(installedMW() * 10) / 10} MW ${Object.entries(bySrc).map(([c2, mw]) => `<span class="sub">${c2} ${mw}</span>`).join(' ')}</td></tr>
       <tr><td>Enerji deposu</td><td>${stores().length} adet · ${totalCap()} MWh</td></tr>
       <tr><td>Yakıt deposu</td><td>${fuelDepots().length} adet</td></tr>
       <tr><td>🏢 Ofis</td><td>${offices().length} / ${maxOffices()}</td></tr>
@@ -8446,6 +8575,7 @@ window.wizDone = () => {
 // ── Başlat ──
 function startGame(resumed) {
   $('app').classList.remove('wiz'); // oyun başladı — HUD ve alt bar geri gelir
+  migratePlantLinks(); // 🔄 kural değişimi: köle depoya bağlı eski santralleri merkeze taşı
   ensureConnections(); // eski kayıtlar / yeni birimler için bağlantıları kur
   const hc = IL_COORD[G.il] || [39, 35];
   initMap(hc, 11);
