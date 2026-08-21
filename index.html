@@ -550,7 +550,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-21 17:09)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-21 21:57)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -7570,9 +7570,12 @@ function openUnitSheet(id) {
           && !s2.link && storeMaster(s2).id !== storeMaster(u).id && connCount(s2) < STORE_TYPES[s2.t].conn);
         return `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🔗 DEPO BAĞLANTISI
             <span class="sub">${connCount(u)}/${STORE_TYPES[u.t].conn} nokta dolu</span></div>
-          <button class="bigsell half" onclick="startStoreLink(${u.id})" ${bosSlot <= 0 || !aday.length ? 'disabled' : ''}>🔗 Bağlan — haritadan depo seç</button>
+          ${!u.link ? `<button class="bigsell half" onclick="startStoreLink(${u.id})" ${bosSlot <= 0 || !aday.length ? 'disabled' : ''}>🔗 Bağlan — haritadan depo seç</button>` : ''}
           ${isLinked(u) ? `<button class="bigsell half" onclick="storeUnlinkAsk(${u.id})">🔌 Bağlantıyı Kes</button>` : ''}
-          ${bosSlot <= 0 ? '<p class="sub">Bağlantı noktaların dolu — önce bir bağlantı kes.</p>'
+          ${/* 🐞 [BOT-FIX] u.link=true (zaten BAĞLI DEPO) iken "Bağlan" butonu de aktif görünüyordu —
+             tıklanınca startStoreLink() zaten güvenle engelliyordu (zincirleme bağlantı yok uyarısı),
+             ama UI kafa karıştırıyordu: aynı anda hem "Bağlan" hem "Bağlantıyı Kes" aktif duruyordu. */ ''}
+          ${u.link ? '' : bosSlot <= 0 ? '<p class="sub">Bağlantı noktaların dolu — önce bir bağlantı kes.</p>'
             : !aday.length ? '<p class="sub">Bağlanabilecek başka depo yok.</p>' : ''}`;
       })()}
       <details id="us_det" style="margin-top:6px"><summary>⚙️ Ayrıntılar</summary>

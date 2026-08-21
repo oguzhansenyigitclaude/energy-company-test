@@ -352,4 +352,53 @@ rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Ge
 
 ---
 
+## 2026-08-21 21:57 turu
+
+### Düzeltme 1: Bağlı (uydu) depo sheet'inde "🔗 Bağlan" butonu, zaten bağlıyken de aktif görünüyordu
+
+**Bulgu:** `-P-_d28ml48yeWY0fBP5` (18:45) ve `-P-_dHA-6pdAt5MfZtNB` (18:46) — bot, unit#6 (t=bat__ortac, `link=2`, zaten MERKEZ'e bağlı bir uydu depo) sheet'inde hem "🔗 Bağlan" hem "🔌 Bağlantıyı Kes" butonlarının AYNI ANDA `disabled=false` (aktif) göründüğünü bildirdi. Botun ilk kaydında ayrıca "MERKEZ depoda (unit#2) SAT butonu engellenmedi, `sellUnit(2,1)` başarıyla çalıştı" ifadesi vardı — bu kısmı incelendi ve **bug DEĞİL**: `startDischarge()` (satır ~2645) yalnız `st.link` olan (uydu) depoları engelliyor; MERKEZ depo (`st.link` yok) grup adına satış yapmak üzere TASARLANMIŞ (bkz. satır ~2643-2646 yorum ve `amt = (isLinked(st) ? groupStored(st) : st.stored) * frac`). Botun beklentisi yanlıştı, kod doğru çalışıyor — bu kısım için işlem yapılmadı.
+
+Asıl gerçek bulgu ikinci raporun konusu: unit sheet'inde "Bağlan" butonu, depo zaten `u.link` ile bağlıyken de gösteriliyor ve `disabled` değil. Tıklanınca `startStoreLink()` (satır ~3481) zaten güvenle engelliyor ("⛔ ... Zincirleme bağlantı yok" uyarısı) — veri/kasa riski YOK — ama UI kafa karıştırıcı: kullanıcı aynı anda hem "Bağlan" hem "Bağlantıyı Kes" görüyor.
+
+**Kök neden:** `openUnitSheet()` içindeki "DEPO BAĞLANTISI" bloğu (satır ~7565-7577), "Bağlan" butonunun `disabled` durumunu yalnız `bosSlot`/`aday.length`'e bağlıyordu; deponun kendisinin zaten bağlı (`u.link` dolu) olup olmadığını hiç kontrol etmiyordu.
+
+**ÖNCESİ** (`index.html`, ~satır 7565-7577):
+```js
+${(() => {
+  const bosSlot = STORE_TYPES[u.t].conn - connCount(u);
+  const aday = stores().filter(s2 => s2.id !== u.id && s2.buildDone <= Date.now()
+    && !s2.link && storeMaster(s2).id !== storeMaster(u).id && connCount(s2) < STORE_TYPES[s2.t].conn);
+  return `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🔗 DEPO BAĞLANTISI
+      <span class="sub">${connCount(u)}/${STORE_TYPES[u.t].conn} nokta dolu</span></div>
+    <button class="bigsell half" onclick="startStoreLink(${u.id})" ${bosSlot <= 0 || !aday.length ? 'disabled' : ''}>🔗 Bağlan — haritadan depo seç</button>
+    ${isLinked(u) ? `<button class="bigsell half" onclick="storeUnlinkAsk(${u.id})">🔌 Bağlantıyı Kes</button>` : ''}
+    ${bosSlot <= 0 ? '<p class="sub">Bağlantı noktaların dolu — önce bir bağlantı kes.</p>'
+      : !aday.length ? '<p class="sub">Bağlanabilecek başka depo yok.</p>' : ''}`;
+})()}
+```
+
+**SONRASI:**
+```js
+${(() => {
+  const bosSlot = STORE_TYPES[u.t].conn - connCount(u);
+  const aday = stores().filter(s2 => s2.id !== u.id && s2.buildDone <= Date.now()
+    && !s2.link && storeMaster(s2).id !== storeMaster(u).id && connCount(s2) < STORE_TYPES[s2.t].conn);
+  return `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🔗 DEPO BAĞLANTISI
+      <span class="sub">${connCount(u)}/${STORE_TYPES[u.t].conn} nokta dolu</span></div>
+    ${!u.link ? `<button class="bigsell half" onclick="startStoreLink(${u.id})" ${bosSlot <= 0 || !aday.length ? 'disabled' : ''}>🔗 Bağlan — haritadan depo seç</button>` : ''}
+    ${isLinked(u) ? `<button class="bigsell half" onclick="storeUnlinkAsk(${u.id})">🔌 Bağlantıyı Kes</button>` : ''}
+    ${/* 🐞 [BOT-FIX] u.link=true (zaten BAĞLI DEPO) iken "Bağlan" butonu de aktif görünüyordu —
+       tıklanınca startStoreLink() zaten güvenle engelliyordu (zincirleme bağlantı yok uyarısı),
+       ama UI kafa karıştırıyordu: aynı anda hem "Bağlan" hem "Bağlantıyı Kes" aktif duruyordu. */ ''}
+    ${u.link ? '' : bosSlot <= 0 ? '<p class="sub">Bağlantı noktaların dolu — önce bir bağlantı kes.</p>'
+      : !aday.length ? '<p class="sub">Bağlanabilecek başka depo yok.</p>' : ''}`;
+})()}
+```
+
+**Neden düşük risk / ekonomiyi değiştirmiyor:** Salt görüntü (UI) değişikliği — hiçbir mutasyon fonksiyonuna, kasaya, bağlantı/satış kuralına dokunulmadı. `startStoreLink()` zaten aynı koşulu (`s.link`) kontrol edip engelliyordu; bu değişiklik yalnızca zaten-engellenen bir butonu, kullanıcıyı yanıltmaması için gizliyor. MERKEZ depo (satellite'ı OLAN ama kendisi bağlı OLMAYAN, yani `u.link` boş) tarafında davranış değişmedi — hâlâ yeni uydu bağlayabiliyor.
+
+**Doğrulama:** `new Function` ile tüm inline scriptler sözdizimi kontrolünden geçti; `npm i playwright` + mevcut `/opt/pw-browsers` Chromium ile hem `file://` hem yerel `http://` sunucu üzerinden sayfa açılışında `pageerror` üretmedi (yalnız beklenen `file://` CORS / eksik test-config 404 console.error'ları var, JS hatası yok).
+
+---
+
 İşlenen diğer 9 kayıt: 2'si önceki turda patrona sorulan konularla aynı kök nedene sahip olduğu için yerel geliştirici tarafından zaten çözülmüş bulundu (kod değişikliği gerekmedi), 7'si durum özeti/bilgi amaçlı (aksiyon gerekmedi). Detaylar `bot-notlar/islenen.md`'de.

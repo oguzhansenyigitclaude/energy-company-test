@@ -1,5 +1,45 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-21 21:57 turu — 3 yeni belirsiz konu, 1 net düşük riskli düzeltme yapıldı
+
+16 yeni `suggestions` kaydı işlendi (`-P-Zzy...` → `-P-aF2...` serisi, 2026-08-21 15:45–21:35 UTC). **1 net/düşük riskli düzeltme yapıldı:** bağlı (uydu) depo sheet'inde "🔗 Bağlan" butonu, depo zaten bağlıyken de aktif görünüyordu (`startStoreLink()` tıklanınca zaten güvenle engelliyordu — veri riski yoktu, sadece UI kafa karıştırıyordu) — bkz. `duzeltmeler.md`. Aşağıdaki 3 konu **yeni** ve kapsam/kesinlik nedeniyle koda dokunulmadı:
+
+### 1) 📱 400px mobil viewportta yan çekmecedeki 4 sekmeye (Görevler/Arkadaş/Sıralama/Yardım) erişilemiyor
+Kayıt: `-P-_Ef7wjcL64P5trejd` (16:54)
+
+Bot, 400px genişlikte `#app` elementinin `scrollWidth`'inin (491px) `clientWidth`'i (400px) aştığını, `overflow:hidden` ile taşan kısmın kırpıldığını (x≈417, ekran dışı) ve bu yüzden sağ çekmecedeki (`#drawer`) Görevler/Arkadaş/Sıralama/Yardım butonlarına dokunamadığını bildirdi. Şirket ▾ menüsü ve alt Satış barından bu 4 işleve alternatif yol bulunamamış.
+
+**Neden kendim düzeltmedim:** `#drawer` CSS'i (satır ~55, `flex-direction:column`) incelendiğinde kendisi taşma yaratacak sabit bir genişlik içermiyor — 491px'lik taşmanın gerçek kaynağı (hangi eleman, hangi 91px'lik fazlalık) statik kod okumasıyla kesin olarak belirlenemedi; canlı 400px tarayıcı testi (DevTools ile taşan elementi tespit etmek) gerekiyor. Kör bir CSS değişikliği (`#app`'e `overflow-x:auto` gibi) yanlış elemanı hedefleyip görsel bozulmaya ya da başka taşma senaryolarını maskelemeye yol açabilir; kapsamı `#app` genelini etkileyebileceği için "küçük/izole" sınırının dışında kaldı.
+
+**Öneri (karar sizde):** Yerel geliştiricinin tarayıcıda 400px genişlikte DevTools ile hangi elementin taşdığını (`document.querySelectorAll('*')` üzerinde `scrollWidth > clientWidth` taraması ile) tespit etmesi, ardından o elemana hedefli bir `max-width`/`overflow-x` düzeltmesi önerilir.
+
+### 2) 🖱️ Harita tıklaması, arkada açık kalmış Müzayede "Teklif Ver" butonuna geçebiliyor (event bleed-through)
+Kayıt: `-P-_EfIAGEuSCf-wN-DK` (16:54)
+
+Bot, haritaya dokunduğunda arka planda kapanmamış bir Müzayede sheet'indeki "Teklif Ver" butonunun tetiklendiğini, "Teklif Onayı" diyaloğunun istemsizce açıldığını bildirdi (Vazgeç ile kapatılmış, kasa etkilenmemiş). Botun kendisi "bug garantisi değil" diyerek gözlemin kesin olmadığını belirtti.
+
+**Neden kendim düzeltmedim:** Tek, doğrulanmamış bir rapor; kök neden muhtemelen sheet kapanma sırası/z-index/`pointer-events` katmanlaması ile ilgili ama bu, birden fazla sheet/modal'ın ortak altyapısını (`hideSheets()`, z-index yığını) etkileyebilecek geniş kapsamlı bir alan — yanlış bir dokunuş başka sheet etkileşimlerini bozabilir. Kasa/veri riski doğrulanmadı (oyuncu Vazgeç ile kapatmış), bu yüzden acil değil.
+
+**Öneri (karar sizde):** Tekrarlanırsa (ikinci bağımsız rapor gelirse) öncelik verilecek. Şimdilik bilgi notu olarak kaydedildi, tekrarlanmazsa aksiyon gerekmez.
+
+### 3) 🔗 `connCount()` bir MERKEZ depoda "4/3 nokta dolu" gösteriyor (kapasite aşımı görünümü), iki bağımsız raporla doğrulandı
+Kayıtlar: `-P-_RoK8WbaWkBTl04_M` (17:51) ve `-P-_rFFLkrdoLIFMUmkF` (19:47, 2 saat sonra tekrar doğrulama, aynı depo/aynı sayı)
+
+Bot, "Birleşik Pil İstasyonu 01" (id2, MERKEZ) sheet'inde başlıkta "4/3 nokta dolu" göründüğünü, oysa Ayrıntılar bölümünün ayrı bir sayaçla "3/3 santral LİMİT DOLU" dediğini bildirdi. `connCount()` (satır 1711, `p.kind === 'plant'` filtresiyle) 3 santral (id1,7,11) + 1 depo-linki (id6) = 4 sayıyor gibi görünüyor; bot bunu "eski GÖÇ migrasyon kodunun limiti atlayarak taşımış olabileceği" şeklinde yorumluyor. Önemli: bot "yeni bağlantılar doğru engelleniyor" diyor — yani bu sadece BU depodaki mevcut veri için bir gösterim/sayaç tutarsızlığı, aktif bir açık/istismar değil.
+
+**Neden kendim düzeltmedim:** `connCount()` kod tabanında 8 farklı çağrı noktasında kullanılıyor (bağlantı kurma izinleri, sınır kontrolleri, birden fazla sheet gösterimi — satır ~1721, 1744, 1783-1784, 1832, 3482, 3495, 6661, 7568-7572). Bu tek örnekte gerçekte neyin sayıldığını (kod okumasıyla `p.kind==='plant'` filtresi depo-linklerini içermiyor gibi görünüyor, botun "aynı havuzda sayılıyor" iddiasıyla çelişiyor) statik olarak kesinleştiremedim — büyük ihtimalle bu SPESİFİK depo, eski/migrasyonlu bir save'de gerçekten `STORE_TYPES[t].conn` sınırını aşan sayıda bağlantıya sahip (verinin kendisinde fazlalık var, formül doğru sayıyor ama sınırı zaten aşmış bir veri gösteriyor). Kanıt olmadan `connCount()`'a veya sınır kontrolüne dokunmak, 8 çağrı noktasını etkileyen geniş kapsamlı ve riskli bir değişiklik olur.
+
+**Öneri (karar sizde):** Yerel geliştiricinin bu spesifik oyuncunun kaydını (`saves/<uid>/units`) inceleyip id2'nin gerçekten kaç bağlantısı olduğunu doğrulaması, ardından ya (a) veriyi elle düzeltmesi ya da (b) gerçekten bir sayım hatası varsa `connCount()`'u hedefli düzeltmesi önerilir. Tekrar ederse (üçüncü bağımsız rapor gelirse) öncelik verilecek.
+
+Aşağıdaki kayıtlar incelendi, bug DEĞİL / zaten doğru çalışıyor bulundu (kod değişikliği yapılmadı):
+- `-P-_d28ml48yeWY0fBP5` (18:45): "MERKEZ depoda SAT engellenmedi" bildirimi — bug değil, MERKEZ depo grup adına satış yapmak üzere TASARLANMIŞ (`startDischarge()` satır ~2645), yalnızca BAĞLI uydu depolar engellenir. Aynı kaydın "Bağlan/Bağlantıyı Kes aynı anda aktif" kısmı gerçek bulguydu, düzeltildi (yukarıda).
+- `-P-a43VeMc1gfFP7xijo` (20:50) / `-P-a4SMu8In3lwxXDQGI` (20:53): bildiren botun kendisi 3 dakika sonra bu bulgusunu geri çekti — kendi test yöntemi hatasıymış (sekmeyi ~10-15sn'lik otomatik kayıt aralığından önce kapatmış), gerçek bug değil.
+- `-P-aF2WxA1hLAGCssMsM` (21:35): `stored` alanında kalıntı float (2.35e-05, 1.11e-16) — `fmtE()` (satır 573) incelendiğinde bu değerler zaten ekranda "0" olarak gösteriliyor (regex `,0+$` kırpması), kullanıcıya görünen bir sorun yok; tüm satış/eylem eşik kontrolleri (`<.005`/`<.001`) zaten bu kalıntıların çok üzerinde. Kod değişikliği gerekmedi.
+
+Kalan 7 kayıt durum özeti/doğrulama (bağlı depo kilidi, VERİM DÖKÜMÜ, kasa/grup toplamı testleri) — aksiyon gerekmiyor.
+
+---
+
 ## 2026-08-21 14:58 turu — 2 yeni tasarım/belirsizlik konusu, 1 mevcut konu yeniden doğrulandı
 
 30 yeni `suggestions` kaydı işlendi. 1 net/düşük riskli kod hatası düzeltildi (`sellAll(frac)` bağlı depo filtresi eksikliği — bkz. `duzeltmeler.md`). Aşağıdaki 2 konu **yeni** ve kök nedeni/doğru çözümü belirsiz olduğu için koda dokunulmadı:
