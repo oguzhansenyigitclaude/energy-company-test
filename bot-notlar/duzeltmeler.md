@@ -2,6 +2,44 @@
 
 Bu dosya, bakım botunun bu turda index.html üzerinde yaptığı düzeltmelerin ÖNCE/SONRA kod parçalarını ve gerekçesini listeler. Yerel geliştirici bunları ana projeye taşıyabilir / gözden geçirebilir.
 
+## 2026-08-21 00:54 turu
+
+### Düzeltme 1: "Hepsini Sat" bağlı (uydu) depo varken hiçbir şey satmıyordu (sessiz başarısızlık)
+
+**Bulgu:** `-P-WLwOAS1WqbHNR6_ZV`, `-P-WLwWINVDojrNq2QeR`, `-P-WLwdOLFWJltkTWDht`, `-P-WM3TUYnd_9Itn_I7O` (22:47-22:48), `-P-WmDhLvA3Z04zFNxsW`, `-P-WmDu3n3nNY2QJffa0` (00:46) — toplam 3 bağımsız devriye turu aynı bug'ı bildirdi. Repro: merkez depoya bağlı bir uydu depo olsun, merkezin kendi tankı ~boşken uydu doluyken "Hepsini Sat" → onay ekranı doğru grup toplamını gösteriyor ("1 depo · tahmini $X"), "Evet" sonrası kasa deltası TAM 0, hiçbir depo boşalmıyor, ama "N depo boşaltılıyor — para akmaya başladı" toast'ı yine de çıkıyor (oyuncu parasının geldiğini sanıyor).
+
+**Kök neden:** Önceki turda (`b25679a`) sadece onay ekranını dolduran `sellAllStoresAsk()` düzeltilmişti — bağlı depoları hariç tutup (`!s.link`) grup toplamına (`isLinked(s) ? groupStored(s) : s.stored`) göre filtreliyor. Ama asıl satışı tetikleyen `sellAllStores()` (satır ~7035) hâlâ eski filtreyi kullanıyordu: `s.stored >= .005`, `!s.link` kontrolü YOK. Böylece onay ekranı merkezi (tankı boş) elip uyduyu (dolu) seçtiği için doğru tutarı gösteriyor, ama gerçek satış fonksiyonu da uyduyu seçip `startDischarge()`'a gönderiyor — `startDischarge()` ise `st.link` kontrolüyle ("🔗 Bu depo bir BAĞLI DEPO" toast'ı, satır ~2590) bağlı depoları sessizce (`quiet:true` olduğu için toast'sız) reddediyor. Sonuç: seçilen depo sayısı > 0 ("N depo boşaltılıyor" yazıyor) ama gerçek satılan depo sayısı 0.
+
+**ÖNCESİ** (`index.html`, ~satır 7035-7040):
+```js
+window.sellAllStores = () => {
+  const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && s.stored >= .005);
+  sts.forEach(s => startDischarge(s.id, 1, null, null, true)); // quiet: tek tek bildirim yağmuru olmasın
+  toast('💰 ' + sts.length + ' depo boşaltılıyor — para akmaya başladı', '', null, 0, true);
+  save(); renderNav();
+};
+```
+
+**SONRASI:**
+```js
+window.sellAllStores = () => {
+  // 🐞 [BOT-FIX] onay ekranı (sellAllStoresAsk) BAĞLI (uydu) depoları hariç tutup grup toplamını
+  // sayıyordu, ama asıl satışı yapan burası hâlâ TÜM depoları (uydu dahil) "s.stored" ile seçiyordu —
+  // startDischarge() uyduyu sessizce reddettiği için "N depo boşaltılıyor" diyip HİÇ satış olmuyordu.
+  // Artık onay ekranıyla AYNI filtre: yalnız bağlı olmayan depolar, grup toplamına göre.
+  const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && !s.link && (isLinked(s) ? groupStored(s) : s.stored) >= .005);
+  sts.forEach(s => startDischarge(s.id, 1, null, null, true)); // quiet: tek tek bildirim yağmuru olmasın
+  toast('💰 ' + sts.length + ' depo boşaltılıyor — para akmaya başladı', '', null, 0, true);
+  save(); renderNav();
+};
+```
+
+**Neden düşük risk / ekonomiyi değiştirmiyor:** Filtre, zaten canlıda çalışan ve doğrulanmış `sellAllStoresAsk()` filtresiyle birebir aynı — yeni bir kural eklemiyor, sadece iki fonksiyonu tutarlı hale getiriyor. Satış fiyatı/miktar hesabı (`sellRevenueAfter`, `startDischarge`) değişmedi; yalnızca HANGİ depoların bu toplu işleme dahil edileceği (bağlı olmayanlar) düzeltildi. Tekil "SAT" butonu (satır ~7004, `sellUnit`) zaten etkilenmiyordu, bu turda da dokunulmadı.
+
+**Doğrulama:** `new Function` ile inline `<script>` sözdizim kontrolü geçti; Playwright (headless Chromium, yerel `http://` sunucu üzerinden) sayfa açılışında `pageerror` üretmedi (yalnızca bilinen/önceden not edilmiş statik kaynak 404'leri var, JS hatası yok).
+
+---
+
 ## 2026-08-20 21:56 turu
 
 ### Düzeltme 1: Hoşgeldin (yönetim raporu) modalında dakika dalı "dakikate" gibi hatalı ek alıyordu

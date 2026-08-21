@@ -549,7 +549,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-20 21:56)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-21 00:54)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -7033,7 +7033,11 @@ window.sellAllStoresAsk = () => {
   $('overlay').classList.add('show');
 };
 window.sellAllStores = () => {
-  const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && s.stored >= .005);
+  // 🐞 [BOT-FIX] onay ekranı (sellAllStoresAsk) BAĞLI (uydu) depoları hariç tutup grup toplamını
+  // sayıyordu, ama asıl satışı yapan burası hâlâ TÜM depoları (uydu dahil) "s.stored" ile seçiyordu —
+  // startDischarge() uyduyu sessizce reddettiği için "N depo boşaltılıyor" diyip HİÇ satış olmuyordu.
+  // Artık onay ekranıyla AYNI filtre: yalnız bağlı olmayan depolar, grup toplamına göre.
+  const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && !s.link && (isLinked(s) ? groupStored(s) : s.stored) >= .005);
   sts.forEach(s => startDischarge(s.id, 1, null, null, true)); // quiet: tek tek bildirim yağmuru olmasın
   toast('💰 ' + sts.length + ' depo boşaltılıyor — para akmaya başladı', '', null, 0, true);
   save(); renderNav();

@@ -2,6 +2,27 @@
 
 Bu dosya, `suggestions` düğümünden okunup bakım botu tarafından değerlendirilen kayıtların anahtarlarını listeler. Sadece burada olmayan (yeni) anahtarlar bir sonraki turda işlenir.
 
+## 2026-08-21 00:54 turu
+
+12 yeni kayıt işlendi. **1 KRİTİK düzeltme yapıldı** (A: `sellAllStores()` bağlı depo varken hiç satış yapmıyordu, sessiz başarısızlık — bkz. `duzeltmeler.md`). 2 kayıt zaten açık olan patrona sorulmuş konuları (VERİM DÖKÜMÜ yuvarlama, bulut kaydı throttle/flush) yeni kanıtla doğruladı — `patrona-sorulacak.md` güncellendi, koda dokunulmadı. Kalan 9 kayıt durum özeti/doğrulama, aksiyon gerekmiyor.
+
+| Anahtar | Zaman (UTC) | Özet | Sonuç |
+|---|---|---|---|
+| `-P-WLwOAS1WqbHNR6_ZV` | 2026-08-20 22:47 | **KRİTİK BUG** — "Hepsini Sat" parayı vaat edip hiç satmıyor, kasa 0 artıyor, "N depo boşaltılıyor" toast'ı yine de çıkıyor | ✅ **DÜZELTİLDİ** (A). Detay `duzeltmeler.md`. |
+| `-P-WLwWINVDojrNq2QeR` | 2026-08-20 22:47 | Kök neden analizi — `sellAllStores()` `s.stored >= .005` kullanıyor, `!s.link` filtresi yok; `sellAllStoresAsk` ile tutarsız | ✅ Aynı düzeltmenin parçası (A). |
+| `-P-WLwdOLFWJltkTWDht` | 2026-08-20 22:47 | Ek detay — toast `sts.length` sayıyor ama bu liste reddedilen uydu depoları da içeriyor (yanıltıcı mesaj) | ✅ Aynı düzeltmeyle çözüldü (A) — artık liste zaten sadece gerçekten satılacak depoları içeriyor. |
+| `-P-WLwlWmB8-p16faMqs` | 2026-08-20 22:47 | Küçük/görsel — VERİM DÖKÜMÜ çarpanları 2 haneye yuvarlanıyor, düşük rüzgarda ~%4,8 görsel sapma | ⚠️ Zaten `patrona-sorulacak.md`'de açık konu (VERİM DÖKÜMÜ↔anlık üretim yuvarlama ailesi). Yeni kanıt olarak eklendi, koda dokunulmadı. |
+| `-P-WLwtbn4IMyY0IGA2N` | 2026-08-20 22:47 | Doğrulama (bug yok) — bağlı depo koruması sağlam, grup toplamı tutarlı, tekil "Hepsini Sat" vaat≈gerçek | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-WM3TUYnd_9Itn_I7O` | 2026-08-20 22:48 | Düzeltme önerisi (kayıt 480'de kesilen önceki mesajın devamı) — `sellAllStores` da `sellAllStoresAsk` ile aynı filtreyi kullansın | ✅ Aynı düzeltmenin parçası (A), öneri birebir uygulandı. |
+| `-P-WZ8aov7bpDgWS_d_L` | 2026-08-20 23:45 | Durum özeti (bug yok) — bağlı depo koruması UI seviyesinde de sağlam, grup toplamı doğru | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-WZ8jeLIZU9h_8FPsB` | 2026-08-20 23:45 | Durum özeti (bug yok) — müzayede teklifi (aucBid) kasa/escrow/rozet doğru çalışıyor | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-WmDhLvA3Z04zFNxsW` | 2026-08-21 00:46 | **KRİTİK, tekrar doğrulandı** — `sellAllStores()` bug'ı GERÇEK UI tıklamasıyla yeniden repro edildi (kasa deltası tam 0) | ✅ Aynı düzeltmeyle çözüldü (A). |
+| `-P-WmDu3n3nNY2QJffa0` | 2026-08-21 00:46 | Kod incelemesi — satır ~7035 doğrulaması, önerilen düzeltme birebir teyit edildi | ✅ Aynı düzeltmenin parçası (A). |
+| `-P-WmE5R0XlD4JQFWO_8` | 2026-08-21 00:46 | Orta öncelik — bulut kaydı throttle/flush riski somut repro ile yeniden doğrulandı (satın alma sonrası ~2sn'de kapatma → bulut güncellenmiyor) | ⚠️ Zaten `patrona-sorulacak.md`'de açık konu (bulut kaydı güvenilirliği ailesi). Yeni kanıt olarak eklendi, koda dokunulmadı. |
+| `-P-WmEI32P55Paua-nbK` | 2026-08-21 00:46 | Durum özeti (bug yok) — katalogdan satın alma+yerleştirme kasa deltası tam, araştırma sistemi ve konsol/page error temiz | Bilgi amaçlı, aksiyon gerekmiyor. |
+
+Doğrulama: `new Function` ile inline `<script>` sözdizim kontrolü geçti; Playwright (headless Chromium, yerel `http://` sunucu üzerinden) sayfa açılışında `pageerror` üretmedi. BUILD_TAG ve version.json `2026-08-21 00:54` olarak güncellendi.
+
 ## 2026-08-20 21:56 turu
 
 14 yeni kayıt işlendi. **1 düzeltme yapıldı** (A: hoşgeldin/yönetim raporu modalında "51 dakikate" gibi hatalı ek — bkz. `duzeltmeler.md`). 2 kayıt zaten açık olan patrona sorulmuş konuları (VERİM DÖKÜMÜ↔anlık üretim yuvarlama, bulut kaydı `visibilitychange`/`pagehide` flush) tekrar doğruladı — `patrona-sorulacak.md` bu yeni kanıtlarla güncellendi, koda dokunulmadı. Kalan 11 kayıt durum özeti/doğrulama, aksiyon gerekmiyor.

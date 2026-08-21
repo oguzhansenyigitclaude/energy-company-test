@@ -1,5 +1,18 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-21 00:54 turu — yeni karar bekleyen konu yok, 1 KRİTİK bug düzeltildi, 2 mevcut konu yeniden doğrulandı
+
+12 yeni `suggestions` kaydı işlendi (`-P-WLw...` ve `-P-Wm...` serisi, 22:47–00:46 UTC). **1 KRİTİK düzeltme yapıldı:** `sellAllStores()` (toplu "Hepsini Sat" butonu) bağlı (uydu) depoları hâlâ eski filtreyle (`s.stored`, `!s.link` kontrolü yok) seçiyordu — önceki turda (`b25679a`) sadece onay ekranı (`sellAllStoresAsk`) düzeltilmişti, asıl satışı yapan fonksiyon atlanmıştı. Sonuç: onay ekranı doğru tutarı gösteriyor, "Evet" sonrası kasa 0 artıyor ama "N depo boşaltılıyor" toast'ı yine de çıkıyordu (sessiz başarısızlık, oyuncu parasının geldiğini sanıyor). 3 bağımsız bot kaydı (22:47 #2, 00:46 #4) aynı satırı (`index.html` ~7036), aynı kök nedeni ve aynı düzeltme önerisini birbirinden bağımsız doğruladı — detay `duzeltmeler.md`.
+
+Aşağıdaki 2 konu zaten karar bekliyordu, bu turda ek bağımsız kanıtla yeniden doğrulandı — yeni madde açmadım:
+
+- ☀️ **VERİM DÖKÜMÜ ↔ anlık üretim tutarsızlığı** (aşağıdaki "2026-08-20 14:59 turu" konusu): `-P-WLwlWmB8-p16faMqs` (22:47) RES T-200'de düşük rüzgar (×0,02 gösterim vs gerçek 0,021055) nedeniyle ~%4,8 görsel sapma bildirdi, botun kendisi de "tam hassasiyette formül birebir tutuyor, sorun yalnız gösterim/yuvarlama" diyor — kök neden hâlâ aynı (2 ondalık yuvarlama), ek kanıt olarak not ediyorum.
+- 💾 **Bulut kaydı throttle/flush** (aşağıdaki "2026-08-20 07:58 turu" ve önceki turlar): `-P-WmE5R0XlD4JQFWO_8` (00:46) somut yeni bir repro ekledi — satın alma sonrası ~2sn içinde sekme kapatılınca bulut kaydı DEĞİŞMEDİ, 23sn beklenince doğru güncellendi. Karar hâlâ sizde.
+
+Kalan 9 kayıt durum özeti/doğrulama (bağlı depo koruması, müzayede, verim dökümü diğer testleri) — aksiyon gerekmiyor.
+
+---
+
 ## 2026-08-20 21:56 turu — yeni karar bekleyen konu yok, 2 mevcut konu yeniden doğrulandı
 
 14 yeni `suggestions` kaydı işlendi, 1 net/düşük riskli kod hatası düzeltildi (hoşgeldin modalı "dakikate" yazım hatası — bkz. `duzeltmeler.md`, `islenen.md`). Aşağıdaki 2 konu zaten karar bekliyordu, bu turda ek bağımsız kanıtla yeniden doğrulandı — yeni madde açmadım, sadece kanıt sayısını güncelliyorum:
