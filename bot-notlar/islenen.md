@@ -2,6 +2,20 @@
 
 Bu dosya, `suggestions` düğümünden okunup bakım botu tarafından değerlendirilen kayıtların anahtarlarını listeler. Sadece burada olmayan (yeni) anahtarlar bir sonraki turda işlenir.
 
+## 2026-08-22 21:07 turu (devriye)
+
+21 yeni kayıt işlendi (`-P-ehBlQmQAfOctV5Ejd` → `-P-fALUw6M19Hsl2dKe4`, 2026-08-22 ~17:41–18:33 UTC). Hiçbiri net bir kod hatası bildirmiyor — hepsi CLBOT1..CLBOT10'un kendi GELİŞİM/durum özetleri (bkz. `gelisim-raporu.md`).
+
+| Anahtar(lar) | Zaman (UTC) | Özet | Sonuç |
+|---|---|---|---|
+| `-P-ehBlQmQAfOctV5Ejd`, `-P-ehFPcPz5tRFy-5GE_`, `-P-ehIsCuYOb2kXFwjHi`, `-P-ehMVork0yTAEH8x1b`, `-P-ehQEvkud2fnRj4KWK` | 17:41 | CLBOT6-10 GELİŞİM özeti (18. tur) — kasa/tesis/ruhsat durumu, bug bildirimi yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-ehBvlykhjHj6btjAn`, `-P-ehFZ2h-_yrNHpWAKY`, `-P-ehJ1L4w8N4ca0-D0R`, `-P-ehMeQ7K85tNlOujVr`, `-P-ehQOI5m3f0Xh8CS5b` | 17:41-17:42 | CLBOT6-10: "Konsol hatası (54 adet) 404" — kaynak adı verilmemiş, muhtemelen zaten bilinen `vendor/leaflet.css` varsayılan ikon 404'leri (bkz. `patrona-sorulacak.md`, "Bilgi notu 1") | Yeni/spesifik bir kaynak belirtilmediği için ek aksiyon alınmadı; zaten bilinen kozmetik konunun tekrar gözlemi olarak değerlendirildi. |
+| `-P-evJSpNOq3Sf7i4CYq`, `-P-evJV70QoDk0dwL7Ko`, `-P-evJXI8xUnxYzBOz0L`, `-P-evJZQCug2p0ylOUTJ`, `-P-evJaYDzklk-Wqe3ch` | 18:03 | CLBOT1-5: yeni tur başladı, şirketler ilk kez kuruldu (kuruluş hediyesi: 1 santral+1 depo+ofis) — bug bildirimi yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+| `-P-f1MT4vycp6-lPzVv0` | 18:20 | ClaudeBot: `[BOT FINAL] 72 saat doldu, devriye bitti` — bildiren botun kendi devriye/görev bitiş bildirimi | Bug bildirimi değil, bildiren botun kendi durum notu. |
+| `-P-fAL2QAdh_LjPWRA-p`, `-P-fALEu8kuZQDbRjlrM`, `-P-fALKKi6pTPs6UYYbT`, `-P-fALPQ1B47wVrNeR1F`, `-P-fALUw6M19Hsl2dKe4` | 18:33 | CLBOT6-10 (20:32 tur): sıralama/yatırım özeti — büyük tesis alımıyla kasa düşüp şirket değeri arttı, bug bildirimi yok | Bilgi amaçlı, aksiyon gerekmiyor. |
+
+Kod değişikliği yapılmadı (net/düşük riskli bir kod hatası bildirilmedi), patrona sorulacak yeni bir konu yok. BUILD_TAG/version.json güncellenmedi (kod değişikliği olmadığı için).
+
 ## 2026-08-22 07:54 turu (devriye)
 
 `suggestions` düğümünde toplam 148 kayıt var, en yenisi hâlâ `-P-aSOYgaFtiHVrAxu6v` (2026-08-21 22:33, "[BOT FINAL] 72 saat doldu, devriye bitti") — bir önceki turda zaten işlenmişti. Yeni kayıt yok (bildiren bot devriyesini bitirdiği için). Kod değişikliği yapılmadı, patrona sorulacak yeni bir konu yok. BUILD_TAG/version.json güncellenmedi (kod değişikliği olmadığı için).
