@@ -446,7 +446,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-22 16:17) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 0.9 (2026-08-22 16:25) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -550,7 +550,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-22 16:17)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 0.9 (2026-08-22 16:25)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1269,6 +1269,12 @@ function placeName(id) {
 // Yerel piyasa (ŞEFFAF, parça parça): bugünkü talebin İÇİNDE kalan MWh tam fiyat,
 // talebi AŞAN kısım ×0.15 "yok pahasına" gider. Çöle kurarsan ilk satıştan itibaren hissedersin.
 const DUMP_RATE = 0.15;
+// ⚡ TRAFO/ÇEVRİM KAYBI (patron onayı, 21 Ağu — oyun süresi freni A): depoya giren enerjinin bir
+// kısmı çevrimde kaybolur. Gerçek hayatta da öyle: pil ~%10-15, hidrojen çevrimi daha verimsiz
+// değil ama burada PAHALI DEPO = DÜŞÜK KAYIP kuralı yükseltmeye hedef verir.
+// Grup halinde çalışan depolarda kayıp MERKEZİN kaybıdır (grup tek tank gibi davranır).
+const storeLoss = st => (STORE_TYPES[st.t] && STORE_TYPES[st.t].loss) || 0;
+const storeEff = st => 1 - storeLoss(st);
 function ensureCellSold() {
   const key = new Date().toISOString().slice(0, 10);
   // 🐞 BOT DÜZELTMESİ: RTDB boş {} nesneyi buluttan siliyor — bulut kayıtta "sold" alt-nesnesi
@@ -1422,18 +1428,35 @@ const leaseTaxRate = cell => (!myLease(cell) && leaseOwnerOf(cell)) ? LEASE_PRIM
 // İmtiyaz kazananın avantajı artık ALIM FİYATINA +%20 (ek prim kalemine değil — patron düzeltmesi).
 const cellPriceFactor = c => { const [cy, cx] = c.split('_').map(Number); return .8 + hash01(cy, cx, 77) * .5; };
 const cellPriceNow = c => priceNow() * cellPriceFactor(c) * (myLease(c) ? 1 + LEASE_PRIM : 1) * (G.allyBuffUntil > Date.now() ? 1.5 : 1); // 🤝 ittifak zaferi: +%50 alım fiyatı
-const TRANSFER_FEE = 0.10; // başka bölgenin pazarına satışta -%10 aktarım bedeli (arbitraj kapısı)
+const TRANSFER_FEE = 0.30; // başka bölgenin pazarına satışta -%30 aktarım bedeli (patron: arbitraj kapatıldı)
 // 🔁 "KOMŞU pazar" GERÇEKTEN komşu olmalı (telefon testi hatası): mesafe sınırı yokken
 // Kanada'daki depodan İstanbul'a %10 kesintiyle satılabiliyordu — bu, milyon dolarlık
 // ⚡ nakil hattı sistemini tamamen anlamsız kılıyordu. Uzak pazar = hat şart.
-const NEIGHBOR_KM = 120;
+// 🌍 patron onayı (fren C): 120 km + %10 kesinti, nakil hattını anlamsız kılıyordu
+// (Antarktika'dan komşu pazara %504 kârla satış). Artık 60 km + %30 kesinti: gerçek arbitraj
+// için ⚡ nakil hattı çekmek şart.
+const NEIGHBOR_KM = 60;
 // Aynı karede DAHA ÖNCE satılmış varsayılan miktarı hesaba katan sürüm (toplu satış tahmini için)
+// 📉 TALEP DOYGUNLUĞU (patron onayı, fren D): bir karenin günlük talebinin YARISINI aştıktan
+// sonra fiyat kademeli düşer — tek karede oturup pompalamak yerine coğrafi yayılma gerekir.
+// Doygun kısım tam fiyatın %70'inden satılır; talebin tamamı aşılınca zaten DUMP_RATE devreye girer.
+const SATURATE_AT = .5, SATURATE_RATE = .7;
+function doygunGelir(cell, mwh, oncekiMwh) {
+  const gunluk = cellDemand(cell) || 1;
+  const kalan = Math.max(0, demandLeft(cell) - (oncekiMwh || 0));
+  const satilan = (gunluk - demandLeft(cell)) + (oncekiMwh || 0); // bugün bu kareye satılan toplam
+  const inD = Math.min(mwh, kalan), excess = mwh - inD;
+  const esik = gunluk * SATURATE_AT;
+  const tazeKota = Math.max(0, esik - satilan);        // hâlâ tam fiyattan satılabilir miktar
+  const tam = Math.min(inD, tazeKota), doygun = inD - tam;
+  return { inD, excess, kalan, carpan: (tam + doygun * SATURATE_RATE) / (inD || 1), doygunMwh: doygun };
+}
 function sellRevenueAfter(cell, mwh, oncekiMwh) {
   const base = cellPriceNow(cell);
-  const kalan = Math.max(0, demandLeft(cell) - (oncekiMwh || 0));
-  const inD = Math.min(mwh, kalan), excess = mwh - inD;
+  const d = doygunGelir(cell, mwh, oncekiMwh);
   const gb = 1 + greenBonus();
-  return { gain: (inD * base + excess * base * DUMP_RATE) * gb * ipSatBoost(), inD, excess, remaining: kalan, price: base, green: gb - 1 };
+  return { gain: (d.inD * base * d.carpan + d.excess * base * DUMP_RATE) * gb * ipSatBoost(),
+    inD: d.inD, excess: d.excess, remaining: d.kalan, price: base, green: gb - 1, doygun: d.doygunMwh };
 }
 function sellRevenue(cell, mwh) {
   const base = cellPriceNow(cell);
@@ -1443,7 +1466,8 @@ function sellRevenue(cell, mwh) {
   const gb = 1 + greenBonus(); // 🌿 devlet teşviki: temiz portföye alımda +%5/%10/%15
   // 💠 Satış Primi takviyesi (İmtiyaz Mağazası, 24 sa): TAHMİN ve GERÇEK satış aynı fonksiyondan
   // geçtiği için "gördüğün = aldığın" sözü takviyede de korunur.
-  const ham = (inD * base + excess * base * DUMP_RATE) * gb * ipSatBoost();
+  const dg = doygunGelir(cell, mwh, 0);
+  const ham = (inD * base * dg.carpan + excess * base * DUMP_RATE) * gb * ipSatBoost();
   const vRate = leaseTaxRate(cell), vergi = ham * vRate; // 🏛️ garanti sahibine giden pay
   return { gain: ham - vergi, inD, excess, remaining, price: base, green: gb - 1, leaseTax: vergi, leaseTaxRate: vRate, leaseOwner: vRate ? leaseOwnerOf(cell) : null };
 }
@@ -1471,12 +1495,12 @@ function licenseFee(id) { return 1e5; } // patron kararı (telefon testi): ruhsa
 // conn = BAĞLANTI LİMİTİ: istasyona bağlanabilecek santral sayısı (kapasiteyle artar).
 // Denge: tek deponun ardına 100 türbin dizme istismarını kapatır — büyüyen filo daha çok istasyon ister.
 const STORE_TYPES = {
-  bat:     { nm: 'Pil İstasyonu S', ico: '🔋', tip: 'Kimyasal', cost: 25e5, cap: 30, conn: 3, build: 30, d: 'Konteyner tipi pil istasyonu. Karedeki santraller bağlanır, dokun → sat.' },
-  gravity: { nm: 'Beton Gravite Deposu', ico: '🧱', tip: 'Yer çekimi', cost: 5e6, cap: 60, conn: 4, build: 90, d: 'Beton blokları kaldırıp indirerek depolar — ağır ama güvenilir.' },
-  mega:    { nm: 'Li-İyon Pil İstasyonu M', ico: '🏭', tip: 'Kimyasal', cost: 8e6, cap: 100, conn: 5, build: 120, d: 'Sıra sıra pil konteynerleri — orta ölçeğin bel kemiği.' },
-  p2x:     { nm: 'P2X Hidrojen Üreteci', ico: '💠', tip: 'P2X', cost: 18e6, cap: 150, conn: 6, build: 180, d: 'Elektriği hidrojene çevirip saklar — yüksek kapasite, modern teknoloji.' },
-  xl:      { nm: 'Dev Pil İstasyonu XL', ico: '🏗️', tip: 'Kimyasal', cost: 25e6, cap: 300, conn: 8, build: 240, d: 'Ufka uzanan pil blokları — büyük filoların kalbi.' },
-  h2:      { nm: 'Hidrojen Mega Tesisi', ico: '⚗️', tip: 'P2X', cost: 45e6, cap: 500, conn: 10, build: 300, d: 'Kategorinin amiral gemisi — şehir ölçeğinde depolama.' },
+  bat:     { nm: 'Pil İstasyonu S', ico: '🔋', tip: 'Kimyasal', cost: 25e5, cap: 30, loss: .14, conn: 3, build: 30, d: 'Konteyner tipi pil istasyonu. Karedeki santraller bağlanır, dokun → sat.' },
+  gravity: { nm: 'Beton Gravite Deposu', ico: '🧱', tip: 'Yer çekimi', cost: 5e6, cap: 60, loss: .11, conn: 4, build: 90, d: 'Beton blokları kaldırıp indirerek depolar — ağır ama güvenilir.' },
+  mega:    { nm: 'Li-İyon Pil İstasyonu M', ico: '🏭', tip: 'Kimyasal', cost: 8e6, cap: 100, loss: .09, conn: 5, build: 120, d: 'Sıra sıra pil konteynerleri — orta ölçeğin bel kemiği.' },
+  p2x:     { nm: 'P2X Hidrojen Üreteci', ico: '💠', tip: 'P2X', cost: 18e6, cap: 150, loss: .07, conn: 6, build: 180, d: 'Elektriği hidrojene çevirip saklar — yüksek kapasite, modern teknoloji.' },
+  xl:      { nm: 'Dev Pil İstasyonu XL', ico: '🏗️', tip: 'Kimyasal', cost: 25e6, cap: 300, loss: .06, conn: 8, build: 240, d: 'Ufka uzanan pil blokları — büyük filoların kalbi.' },
+  h2:      { nm: 'Hidrojen Mega Tesisi', ico: '⚗️', tip: 'P2X', cost: 45e6, cap: 500, loss: .04, conn: 10, build: 300, d: 'Kategorinin amiral gemisi — şehir ölçeğinde depolama.' },
 };
 
 // ═══════════ 🏭 MARKA SİSTEMİ 2.0 (patron tasarımı — docs/marka-sistemi.md) ═══════════
@@ -2342,14 +2366,17 @@ function step(dtMin, silent, atMin) {
       const st = assignedStoreOf(u);
       let rem = out;
       if (st) {
-        const put = Math.min(STORE_TYPES[st.t].cap - st.stored, rem);
-        st.stored += put; rem -= put;
+        // ⚡ trafo kaybı: santralden çıkan enerjinin tamamı depoya GİRMEZ
+        const eff = storeEff(st);
+        const put = Math.min((STORE_TYPES[st.t].cap - st.stored) / (eff || 1), rem);
+        st.stored += put * eff; rem -= put;
         // 🔗 KAPASİTE BİRLEŞİMİ: bağlı depolar tek tank gibi çalışır — taşan enerji gruptaki
         // boş depolara akar. Bağlantı yoksa storeGroup tek elemanlı döner, davranış değişmez.
         if (rem > 0) for (const g2 of storeGroup(st)) {
           if (g2.id === st.id || rem <= 0) continue;
-          const p2 = Math.min(STORE_TYPES[g2.t].cap - g2.stored, rem);
-          if (p2 > 0) { g2.stored += p2; rem -= p2; }
+          const e2 = storeEff(g2);
+          const p2 = Math.min((STORE_TYPES[g2.t].cap - g2.stored) / (e2 || 1), rem);
+          if (p2 > 0) { g2.stored += p2 * e2; rem -= p2; }
         }
         if (rem > 0 && !silent) toast('⚠️ ' + (isLinked(st) ? 'Bağlı depoların HEPSİ' : STORE_TYPES[st.t].nm) + ' DOLU — ' + T.nm + ' üretimi boşa gidiyor!', 'warn', 'full' + st.id, 30000);
       } else if (!silent) {
@@ -2952,7 +2979,8 @@ window.openDetail = (t, mode) => {
     rows.push(['🔋 Kapasite', T.cap + ' MWh']);
     rows.push(['🔗 Bağlantı limiti', T.conn + ' santral']);
     rows.push(['⏱ Kurulum süresi', T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn']);
-    rows.push(['⚡ Trafo kaybı', 'YOK — gördüğün = sattığın ✅']);
+    rows.push(['⚡ Trafo kaybı', T.loss ? '%' + Math.round(T.loss * 100) + ' <span class="sub">— santralden gelen enerjinin bu kadarı çevrimde kaybolur; pahalı depo daha az kaybeder</span>' : 'yok']);
+    rows.push(['✅ Satışta kesinti', 'YOK — depoda gördüğün MWh tamamen satılır']);
     rows.push(['🏷️ Tür', T.tip]);
   }
   $('modal').innerHTML = `
@@ -7396,7 +7424,7 @@ function openBuildSheet() {
         ${T.brand && BRAND_ARCH[T.brand] ? `<span style="position:absolute;top:2px;right:2px;background:#0b1220e6;border-radius:6px;padding:2px;line-height:0;box-shadow:0 1px 4px #000a">${brandLogoSVG(T.brand, 18)}</span>` : ''}
       </div>
       <div class="pbody" onclick="openDetail('${t}','${mode}')">
-        <div class="pname">${T.nm} <span class="pmw">${isDepot ? T.baseCap + ' ton' : isStore ? T.cap + ' MWh' : T.mw + ' MW'}</span></div>
+        <div class="pname">${T.nm} <span class="pmw">${isDepot ? T.baseCap + ' ton' : isStore ? T.cap + ' MWh' : T.mw + ' MW'}${isStore && T.loss ? ' <span class="sub">· ⚡kayıp %' + Math.round(T.loss * 100) + '</span>' : ''}</span></div>
         ${T.brand && BRAND_ARCH[T.brand] ? (() => { const B = BRAND_ARCH[T.brand], rel = brandRel(T.brand);
           return `<div style="font-size:10.5px;font-weight:800;color:${B.col};margin:1px 0 2px">${B.ico} ${brandNm(T.brand)}${rel > 0 ? ` <span class="sub">· sadakat ${rel} → -%${Math.round(25 * rel / 100)}</span>` : ''}</div>`; })() : ''}
         <div class="pspecs">${specs}</div>
@@ -7504,7 +7532,7 @@ function openUnitSheet(id) {
     $('us_title').innerHTML = `<b>${T.cap} MWh</b> <span style="font-weight:600">${unitName(u)}</span> <span style="cursor:pointer;font-size:13px;opacity:.8" onclick="renameUnit(${u.id})" title="Yeniden isimlendir">✏️</span>`;
     $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` + adFinishBtnHTML(u) : `
       <div class="detcols">
-        <div><div class="l">⚡ ${isLinked(u) ? 'Grup dolum hızı' : 'Dolum hızı'}</div><div class="v">${inflow.toFixed(1)} <span style="font-size:11px">MW</span>${speedMult() > 1 ? ' 🚀' : ''}<span style="font-size:10.5px;font-weight:600">${dolumTxt((isLinked(u) ? groupCap(u) : T.cap) - (isLinked(u) ? groupStored(u) : u.stored), inflow)}</span></div></div>
+        <div><div class="l">⚡ ${isLinked(u) ? 'Grup dolum hızı' : 'Dolum hızı'}${T.loss ? ' <span class="sub">(⚡kayıp %' + Math.round(T.loss * 100) + ')</span>' : ''}</div><div class="v">${(inflow * (1 - (T.loss || 0))).toFixed(1)} <span style="font-size:11px">MW</span>${speedMult() > 1 ? ' 🚀' : ''}<span style="font-size:10.5px;font-weight:600">${dolumTxt((isLinked(u) ? groupCap(u) : T.cap) - (isLinked(u) ? groupStored(u) : u.stored), inflow)}</span></div></div>
         ${isLinked(u)
           ? `<div><div class="l">🔗 Ortak depo (%${Math.round(100 * groupStored(u) / (groupCap(u) || 1))})</div><div class="v">${fmtE(groupStored(u))} <span style="font-size:11px">/ ${groupCap(u)} MWh</span></div></div>`
           : `<div><div class="l">🔋 Doluluk (%${Math.round(100 * u.stored / T.cap)})</div><div class="v">${fmtE(u.stored)} <span style="font-size:11px">/ ${T.cap} MWh</span></div></div>`}
