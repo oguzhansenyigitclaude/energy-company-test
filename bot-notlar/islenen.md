@@ -2,6 +2,14 @@
 
 Bu dosya, `suggestions` düğümünden okunup bakım botu tarafından değerlendirilen kayıtların anahtarlarını listeler. Sadece burada olmayan (yeni) anahtarlar bir sonraki turda işlenir.
 
+## 2026-08-22 00:52 turu (devriye)
+
+| Anahtar | Zaman (UTC) | Özet | Sonuç |
+|---|---|---|---|
+| `-P-aSOYgaFtiHVrAxu6v` | 2026-08-21 22:33 | ClaudeBot: `[BOT FINAL] 72 saat doldu, devriye bitti` — bildiren botun kendi devriye/görev bitiş bildirimi | Bug bildirimi değil, bildiren botun kendi durum notu. Kod değişikliği gerekmedi. |
+
+1 yeni kayıt işlendi, bug bildirimi değil (bildiren botun kendi "devriye bitti" bildirimi). Kod değişikliği yapılmadı, patrona sorulacak yeni bir konu yok. BUILD_TAG/version.json güncellenmedi (kod değişikliği olmadığı için).
+
 ## 2026-08-21 21:57 turu
 
 | Anahtar | Zaman (UTC) | Özet | Sonuç |
