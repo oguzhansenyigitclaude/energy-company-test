@@ -47,13 +47,17 @@
 
   /* Kuruluş modunda (yeni oyun) üst/alt menüler gizli — rakipteki gibi sadece harita + kart */
   #app.wiz #hdr, #app.wiz #evbanner, #app.wiz #bottombar, #app.wiz #drawer, #app.wiz #drawerhandle,
-  #app.wiz #navpanel, #app.wiz #navhandle{display:none}
+  #app.wiz #navpanel, #app.wiz #navhandle, #app.wiz #linehandle, #app.wiz #linepanel, #app.wiz #drawbar{display:none}
 
   /* ── SAĞDAN AÇILAN ÇEKMECE MENÜ (patron isteği — rakipte solda; bizde sağda, kendi tasarımımız) ── */
   #drawerhandle{position:absolute;top:44%;right:0;z-index:1155;width:28px;height:60px;border-radius:12px 0 0 12px;border:1px solid var(--line);border-right:none;background:var(--cream);color:#13213a;font-size:16px;font-weight:800;cursor:pointer;box-shadow:-2px 2px 10px #0006;padding:0}
   #drawerhandle:disabled{opacity:.35}
   #drawer{position:absolute;top:100px;right:0;z-index:1156;display:flex;flex-direction:column;gap:6px;padding:10px 8px;background:#13213af2;border:1px solid var(--line);border-right:none;border-radius:14px 0 0 14px;transform:translateX(110%);transition:transform .22s;box-shadow:-4px 4px 18px #0009;backdrop-filter:blur(3px)}
   #drawer.open{transform:none}
+  /* 🖱️ kapalı/animasyonla kayan panel arkada TIKLAMA YEMESİN (bot bulgusu: harita dokunuşu
+     arkadaki Müzayede "Teklif Ver" butonunu tetikliyordu) */
+  .sheet:not(.show){pointer-events:none}
+  #drawer:not(.open), #navpanel:not(.open), #linepanel:not(.open){pointer-events:none}
   #drawer button{display:flex;flex-direction:column;align-items:center;gap:2px;width:66px;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--cream);font-size:10px;font-weight:700;cursor:pointer}
   #drawer button .big{font-size:19px}
   /* çekmecenin SOL kulpu: kapatma (rakip paraleli) */
@@ -92,6 +96,23 @@
   .navrow .d{font-size:10px;color:var(--dim);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .navrow .r{flex:0 0 auto;font-size:10.5px;color:var(--acc);font-weight:800}
   #navtip{font-size:11px;font-weight:700;color:var(--danger);text-align:center;margin:10px 2px 2px;line-height:1.45}
+  /* ── ⚡ ENERJİ NAKİL HATTI ÇEKMECESİ (patron 23 Ağu): soldan açılır, hattı HARİTAYA ÇİZDİRİR ── */
+  #linehandle{position:absolute;top:calc(44% + 72px);left:0;z-index:1155;width:28px;height:60px;border-radius:0 12px 12px 0;border:1px solid #ff8f6b;border-left:none;background:#b5341f;color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:2px 2px 10px #0006;padding:0}
+  #linehandle:disabled{opacity:.35}
+  #linepanel{position:absolute;left:0;top:8px;bottom:8px;width:min(300px,86%);z-index:1156;background:#13213af7;border:1px solid var(--line);border-left:none;border-radius:0 14px 14px 0;transform:translateX(-104%);transition:transform .24s;box-shadow:4px 4px 20px #0009;backdrop-filter:blur(3px);display:flex;flex-direction:column;overflow:hidden}
+  #linepanel.open{transform:none}
+  #linehead{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;font-size:13px;font-weight:800;color:var(--cream)}
+  #linehead .x{cursor:pointer;font-size:17px;color:var(--dim);padding:0 4px}
+  #linebody{flex:1;overflow-y:auto;padding:8px 10px 14px}
+  /* çizim sürerken alttaki maliyet/iptal çubuğu */
+  #drawbar{position:absolute;left:8px;right:8px;bottom:8px;z-index:1160;display:none;flex-direction:column;gap:6px;background:#0b2038f2;border:1px solid #3ddc97;border-radius:14px;padding:9px 11px;box-shadow:0 4px 18px #000a}
+  #drawbar.show{display:flex}
+  #drawbar .dtxt{font-size:12px;font-weight:700;color:var(--cream);line-height:1.4}
+  #drawbar .drow{display:flex;gap:6px}
+  #drawbar .drow button{flex:1;padding:11px 6px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12px;font-weight:800;cursor:pointer}
+  #drawbar .drow button.ok{background:var(--acc);color:#071018;border-color:var(--acc)}
+  #drawbar .drow button.ok:disabled{background:#2a3346;color:var(--dim);border-color:var(--line)}
+  #drawbar .drow button.no{color:var(--danger);border-color:var(--danger)}
   /* SİNEMATİK GEÇİŞ: hedefe dalarken kenarlar içeri büzülür, sonra açılır (patron: "bir şov gibi olsun") */
   #flyfx{position:absolute;inset:0;z-index:1149;pointer-events:none;opacity:0}
   #flyfx.on{animation:flyfx 2.6s ease-in-out}
@@ -446,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 0.9 (2026-08-22 17:06) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-23 15:37) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -511,6 +532,20 @@
       </div>
       <div id="navbody"></div>
     </div>
+    <!-- ⚡ SOLDAN AÇILAN NAKİL HATTI PENCERESİ (patron 23 Ağu) -->
+    <button id="linehandle" title="Enerji Nakil Hattı">🗼</button>
+    <div id="linepanel">
+      <div id="linehead"><span>⚡ ENERJİ NAKİL HATTI</span><span class="x" onclick="closeLinePanel()">✕</span></div>
+      <div id="linebody"></div>
+    </div>
+    <div id="drawbar">
+      <div class="dtxt" id="drawtxt">—</div>
+      <div class="drow">
+        <button class="no" onclick="lineDrawCancel()">✕ İptal</button>
+        <button onclick="lineDrawUndo()">↩ Son nokta</button>
+        <button class="ok" id="drawcost" onclick="lineDrawCost()">💰 Maliyet</button>
+      </div>
+    </div>
     <button id="drawerhandle" title="Menü">⚡</button>
     <div id="drawer">
       <button id="drawerclose" title="Menüyü kapat">▶</button>
@@ -550,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 0.9 (2026-08-22 17:06)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-23 15:37)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1746,6 +1781,11 @@ function storeLinkFee(a, b) {
 // bağlantı noktası sayımı: santraller + depo-depo bağlantıları (iki tarafın da slotunu yer)
 const connCount = st => G.units.filter(p => p.kind === 'plant' && p.st === st.id && p.buildDone <= Date.now()).length
   + G.units.filter(x => x.kind === 'store' && x.id !== st.id && (x.link === st.id || st.link === x.id)).length;
+// ⛔ BAĞLANTI SIRASI KURALI (patron 23 Ağu): bir depoda BAĞLI SANTRAL varken depo-depo
+// bağlantısı kurulamaz. Bug: bağlantı kurulunca köle deponun santralleri ONDA kalıyordu →
+// "9 santral bağlı bir depoyu köle yaparsam tek merkezde 90 santral olur" istismarı.
+// Doğru sıra: önce santral bağlantıları çözülür → depolar bağlanır → santraller MERKEZ depoya bağlanır.
+const plantsOn = st => (st ? G.units.filter(p => p.kind === 'plant' && p.st === st.id) : []);
 function assignedStoreOf(u) {
   const s = u.st && storeById(u.st);
   return (s && s.cell === u.cell && s.buildDone <= Date.now()) ? s : null;
@@ -1783,24 +1823,49 @@ function migratePlantLinks() {
   for (const pl of plants()) {
     if (!pl.st) continue;
     const st = storeById(pl.st);
-    if (st && st.link) { const m = storeMaster(st); if (m && m.cell === pl.cell) pl.st = m.id; else pl.st = null; }
+    // köle depoya bağlı santral merkeze taşınır — AMA merkezin bağlantı limiti aşılamaz
+    // (bot bulgusu: "4/3 nokta dolu" — eski göç kodu limiti atlayarak taşıyordu)
+    if (st && st.link) {
+      const m = storeMaster(st);
+      if (m && m.cell === pl.cell && connCount(m) < STORE_TYPES[m.t].conn) pl.st = m.id;
+      else { pl.st = null; pl.noAuto = true; }
+    }
   }
 }
 // 🔗 DEPO → DEPO BAĞLA (a = bağlantıyı yapan MERKEZ DEPO, b = bağlanılan BAĞLI DEPO)
 window.storeLinkAsk = (aId, bId, merkezSecildi) => {
   const A0 = storeById(aId), B0 = storeById(bId);
   if (!A0 || !B0) return;
+  // ⛔ ÖNCE SANTRAL BAĞLANTILARI (patron kuralı): iki taraftaki santral bağlantıları çözülmeden
+  // depolar bağlanamaz — yoksa köle deponun santralleri onda kalıp bağlantı limitini katlıyordu.
+  if (!merkezSecildi) {
+    const sant = plantsOn(A0).concat(plantsOn(B0));
+    if (sant.length) {
+      $('modal').innerHTML = `
+        <h2>🔌 Önce santral bağlantıları çözülmeli</h2>
+        <p class="sub">Bileşik depoda <b>santraller yalnız MERKEZ depoya</b> bağlı kalabilir.
+        Bu yüzden bağlantı kurulmadan önce her iki deponun santral bağlantıları çözülür; depolar
+        bağlandıktan sonra santraller <b>merkez deponun boş noktalarına</b> yeniden bağlanır.</p>
+        <p class="sub">Çözülecek bağlantılar (${sant.length}): ${sant.map(x => unitName(x)).join(', ')}</p>
+        <p class="sub">⚠️ Merkezin bağlantı noktası yetmezse fazla santraller <b>bağlantısız kalır</b>
+        (üretimleri boşa gider) — sonra elle başka bir istasyona bağlayabilirsin.</p>
+        <button class="primary" onclick="closeModal();storeLinkAsk(${aId},${bId},2)">🔌 Bağlantıları çöz ve devam et</button>
+        <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
+      $('overlay').classList.add('show');
+      return;
+    }
+  }
   // 🏛️ MERKEZ SEÇİMİ (patron: "hangi depoyu merkez yapmak istersiniz — ismi ve kapasitesi yazsın"):
   // merkez depo grubun tek bağlantı noktasıdır (santraller ve diğer depolar ona bağlanır),
   // bu yüzden hangisinin merkez olacağı oyuncunun kararı olmalı — kapasitesi büyük olanı seçmek mantıklı.
   // 🏛️ patron: "bir kere merkez seçtiysem sonraki bağlantılarda tekrar sormasın" —
   // taraflardan biri ZATEN bir grubun merkeziyse (bağlı deposu var) seçim ekranı atlanır.
   const A0Merkez = !A0.link && storeGroup(A0).length > 1, B0Merkez = !B0.link && storeGroup(B0).length > 1;
-  if (!merkezSecildi && (A0Merkez || B0Merkez)) {
+  if (merkezSecildi !== 1 && (A0Merkez || B0Merkez)) {
     const m = A0Merkez ? A0 : B0, k = A0Merkez ? B0 : A0;
     return storeLinkAsk(m.id, k.id, 1); // mevcut merkez korunur, ekran gelmez
   }
-  if (!merkezSecildi) {
+  if (merkezSecildi !== 1) {
     const kart = (m, k) => `<button class="bigsell" style="text-align:left" onclick="closeModal();storeLinkAsk(${m.id},${k.id},1)">
       🏛️ <b>${unitName(m)}</b> merkez olsun <span class="sub">(${STORE_TYPES[m.t].cap} MWh · ${connCount(m)}/${STORE_TYPES[m.t].conn} bağlantı)</span>
       <div class="sub">🏢 ${unitName(k)} ona bağlı depo olur (${STORE_TYPES[k.t].cap} MWh)</div></button>`;
@@ -1850,9 +1915,20 @@ window.storeLink = (aId, bId) => {
   if (connCount(B) >= STORE_TYPES[B.t].conn) { toast('🔗 ' + unitName(B) + ' bağlantı noktaları dolu', 'warn'); return; }
   const fee = storeLinkFee(A, B);
   if (G.cash < fee) { toast('Hat ücreti için ' + fmt(fee) + ' gerekli', 'warn'); return; }
+  // ⛔ SANTRALLERİ ÇÖZ → DEPOLARI BAĞLA → MERKEZE YENİDEN BAĞLA (tek işlemde, patron kuralı)
+  const sirada = plantsOn(A).concat(plantsOn(B));
+  sirada.forEach(pl => { pl.st = null; pl.noAuto = true; });
   if (fee) { G.cash -= fee; gider('altyapi', fee); G.cellSpent = G.cellSpent || {}; G.cellSpent[A.cell] = (G.cellSpent[A.cell] || 0) + fee; }
   B.link = A.id;
+  // merkez deponun KALAN noktaları kadar santral geri bağlanır (depo-depo bağlantısı da 1 nokta yer)
+  const baglanan = [], disarda = [];
+  for (const pl of sirada) {
+    if (connCount(A) < STORE_TYPES[A.t].conn) { pl.st = A.id; pl.noAuto = false; baglanan.push(pl); }
+    else disarda.push(pl);
+  }
   toast('🔗 ' + unitName(A) + ' ↔ ' + unitName(B) + ' bağlandı — ortak kapasite ' + fmtE(groupCap(A)) + ' MWh' + (fee ? ' (hat ' + fmt(fee) + ')' : ''), '', null, 0, true);
+  if (sirada.length) toast('🔌 ' + baglanan.length + ' santral MERKEZ depoya bağlandı' + (disarda.length ? ' · ⚠️ ' + disarda.length + ' santral bağlantısız kaldı — nokta dolu' : ''), disarda.length ? 'warn' : '', null, 0, true);
+  if (disarda.length) addMail('🔌 Şebeke', 'Bağlantısız kalan santraller', 'Bileşik depo kurulurken merkez deponun bağlantı noktaları yetmedi: ' + disarda.map(x => unitName(x)).join(', ') + '.\n\nBu santrallerin ürettiği enerji şu an boşa gidiyor. Ya merkeze yer açın (başka bir santralin bağlantısını kesin), ya aynı karede yeni bir MERKEZ depo kurup oraya bağlayın.', true);
   beep(700, .1);
   save(); refreshUnitMarkers(); drawOverlay(); openUnitSheet(aId);
 };
@@ -1917,15 +1993,51 @@ const OFFERS = [
 const OFFER_HOURS = 24;
 
 // ── Günlük etkinlik & hafta ──
+// 📅 ETKİNLİK TAKVİMİ (patron 23 Ağu): HER GÜNE 1 etkinlik, HAFTA SONU (Cmt+Paz) GÜNDE 2 —
+// biri sabit 🎉 Hafta Sonu Kampanyası (alım fiyatı ×2), diğeri sıradaki günlük etkinlik.
+// Desteklenen alanlar: wind · sun · hydro · priceAll · priceDay(10-20) · priceEve(18-22) ·
+// priceNight(00-06) · maint. Buraya alan eklerken priceAt/plantOutput tarafına da eklenmeli.
 const DAILY_EVENTS = [
   { ico: '🌬️', nm: 'Rüzgar Festivali', d: 'Rüzgar üretimi +%50', wind: 1.5 },
   { ico: '🌡️', nm: 'Sıcak Hava Dalgası', d: 'Gündüz fiyat +%35, güneş +%15', priceDay: 1.35, sun: 1.15 },
-  { ico: '🌧️', nm: 'Sağanak', d: 'Güneş -%40, hidro +%40', sun: .6, hydro: 1.4 },
+  { ico: '🌧️', nm: 'Sağanak', d: 'Güneş −%40, hidro +%40', sun: .6, hydro: 1.4 },
   { ico: '⚡', nm: 'Akşam Krizi', d: '18-22 arası fiyat +%80!', priceEve: 1.8 },
   { ico: '🔧', nm: 'Bakım Günü', d: 'Toplu bakım yarı fiyat', maint: .5 },
   { ico: '📈', nm: 'Talep Patlaması', d: 'Tüm gün fiyat +%25', priceAll: 1.25 },
+  { ico: '🌫️', nm: 'Durgun Hava', d: 'Rüzgar −%45, gündüz fiyat +%20', wind: .55, priceDay: 1.2 },
+  { ico: '❄️', nm: 'Soğuk Dalgası', d: 'Tüm gün fiyat +%40, güneş −%15', priceAll: 1.4, sun: .85 },
+  { ico: '🌙', nm: 'Gece Tarifesi', d: '00-06 arası fiyat +%60 — depoyu gece boşalt', priceNight: 1.6 },
+  { ico: '💧', nm: 'Kar Erimesi', d: 'Hidro +%60, güneş −%10', hydro: 1.6, sun: .9 },
+  { ico: '🏭', nm: 'Sanayi Vardiyası', d: 'Gündüz (10-20) fiyat +%30', priceDay: 1.3 },
+  { ico: '☀️', nm: 'Açık Gökyüzü', d: 'Güneş +%45, rüzgar −%20', sun: 1.45, wind: .8 },
 ];
-const todayEvent = () => { const d = new Date(); const doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5); return DAILY_EVENTS[doy % DAILY_EVENTS.length]; };
+// 🎉 HAFTA SONU KAMPANYASI (patron): Cumartesi ve Pazar devlet alım fiyatı 2 KATI.
+const WEEKEND_EVENT = { ico: '🎉', nm: 'Hafta Sonu Kampanyası', d: 'Devlet alım fiyatı 2 KATI — tüm gün', priceAll: 2, weekend: true };
+const isWeekend = d => { const g = (d || new Date()).getDay(); return g === 0 || g === 6; };
+function todayEvents() { // o günün etkinlik listesi (hafta içi 1, hafta sonu 2)
+  const d = new Date();
+  const doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+  const gun = DAILY_EVENTS[doy % DAILY_EVENTS.length];
+  return isWeekend(d) ? [WEEKEND_EVENT, gun] : [gun];
+}
+// Birden fazla etkinlik varken çarpanlar ÇARPILIR; bakım indiriminde en düşüğü geçerli.
+// priceAt/plantOutput gibi sıcak yollar bunu saniyede onlarca kez çağırdığı için gün bazında önbelleklenir.
+const EV_MULT_KEYS = ['wind', 'sun', 'hydro', 'priceAll', 'priceDay', 'priceEve', 'priceNight'];
+let _evCache = null, _evCacheKey = '';
+function todayEvent() {
+  const key = new Date().toDateString();
+  if (_evCacheKey === key && _evCache) return _evCache;
+  const list = todayEvents();
+  let o;
+  if (list.length === 1) o = list[0];
+  else {
+    o = { ico: list.map(e => e.ico).join(''), nm: list.map(e => e.nm).join(' + '), d: list.map(e => e.d).join(' · '), coklu: list };
+    for (const k of EV_MULT_KEYS) { const m = list.reduce((a, e) => a * (e[k] || 1), 1); if (m !== 1) o[k] = m; }
+    const mn = list.reduce((a, e) => Math.min(a, e.maint || 1), 1); if (mn !== 1) o.maint = mn;
+  }
+  _evCacheKey = key; _evCache = o;
+  return o;
+}
 const isoWeek = () => { const d = new Date(), t = new Date(d.getFullYear(), 0, 1); return d.getFullYear() + '-' + Math.ceil(((d - t) / 864e5 + t.getDay() + 1) / 7); };
 
 // ── Durum ──
@@ -1938,10 +2050,11 @@ function freshState() {
     licenses: {}, // cellId -> true (oyuncu başına ruhsat — kimse kimseyi engellemez)
     leases: {}, // cellId -> bitiş ts (3 günlük imtiyaz: +%20 satış primi — YEKA tarzı alım garantisi)
     offers: {}, maintDiscount: 1, starterClaimed: false, founded: Date.now(),
-    research: { lvl: { coalcap: 0, gascap: 0, office: 0, range: 0 }, active: null },
+    research: { lvl: { coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0 }, active: null },
     capLic: {}, // kapasite lisansları (patron): kategori → kademe (0=başlangıç; gaz/nükleer 0'da kilitli)
     lines: [], // ⚡ enerji nakil hatları
     showOthers: true, boughtOthers: {}, // 👥 diğer oyuncuların tesisleri (varsayılan GÖRÜNÜR — patron)
+    hideLines: false, // 🙈 enerji kablolarını haritada gizle (Görünüm ekranından)
     mail: [], friends: [], friendReqs: [], chat: {}, chatSeen: 0, // 💬 sosyal katman
     auctionsMkt: [], // 🔨 müzayede ilanları
     ally: null, allyId: null, allyBuffUntil: 0, // 🤝 ittifak (sunucuda ORTAK kayıt; çevrimdışıysa bot simülasyonu) + %50 alım bonusu penceresi
@@ -2144,6 +2257,7 @@ function hydroFactor(q, atMin, cell) {
   const qh = cell ? hydroQGeo(cell, q.hydro) : q.hydro;
   return .72 * qh * (ev.hydro || 1) * (.92 + .08 * smoothNoise(m / 300, 9));
 }
+const PRICE_BASE = 40000, PRICE_FLOOR = 15000; // 💸 devletin MWh alım tabanı (eski 120.000/45.000 — patron 23 Ağu: 3'te 1)
 const PRICE_KEYS = [[0,.7],[5,.68],[7,.85],[9,1],[13,1.02],[17,1.28],[19,1.5],[21,1.3],[23,.82],[24,.7]];
 function priceAt(atMin) {
   const h = (atMin / 60) % 24, ev = todayEvent();
@@ -2152,11 +2266,15 @@ function priceAt(atMin) {
     const [h1, v1] = PRICE_KEYS[i], [h2, v2] = PRICE_KEYS[i + 1];
     if (h >= h1 && h <= h2) { m = v1 + (v2 - v1) * (h - h1) / (h2 - h1); break; }
   }
-  let p = 120000 * m * (1 + .13 * smoothNoise(atMin / 70, 13));
+  // 💸 patron 23 Ağu: "oyuncu geliri çok yüksek, oyun süresini uzatmak için devletin ödediği
+  // tutarı 3'te 1'e düşür." Taban 120.000 → 40.000, taban zemini 45.000 → 15.000.
+  // Maliyetler (santral/depo/hat/bakım) DEĞİŞMEDİ — geri dönüş süresi 3 katına çıkar.
+  let p = PRICE_BASE * m * (1 + .13 * smoothNoise(atMin / 70, 13));
   if (ev.priceAll) p *= ev.priceAll;
   if (ev.priceDay && h >= 10 && h <= 20) p *= ev.priceDay;
   if (ev.priceEve && h >= 18 && h <= 22) p *= ev.priceEve;
-  return Math.max(45000, p);
+  if (ev.priceNight && h < 6) p *= ev.priceNight; // 🌙 Gece Tarifesi
+  return Math.max(PRICE_FLOOR, p);
 }
 const priceNow = () => priceAt(nowMin());
 
@@ -3418,7 +3536,7 @@ function startMinigame() {
 //   her 100 km %10 kayıp · 300 km'den uzun segment = hat çalışmaz (%100)
 //   TRANSFER MERKEZİ segmenti böler → her 100 km'de bir merkez = en iyi durum %10
 // Maliyet: kablo (km) + iki uç trafo + geçilen bölgelerin izin bedeli + işçilik. Hat yıpranır, bakım ister.
-const LINE = { cableKm: 80000, transformer: 15e6, permitPer100: 2e6, laborRate: .2, hub: 25e6, wearPer10d: 5 };
+const LINE = { cableKm: 80000, transformer: 15e6, permitPerHub: 4e6, laborRate: .2, hub: 25e6, wearPer10d: 5 };
 
 // ═══ ⚙️ TRAFO MARKALARI + İLİŞKİ SİSTEMİ (patron tasarımı) ═══
 // Aynı trafoyu farklı markalardan alabilirsin. Sadık kaldıkça İLİŞKİ artar (max 100) →
@@ -3485,9 +3603,28 @@ function lineLossPct(km, hubs) {
   if (seg > 300) return 100;              // taşınamaz — daha çok transfer merkezi gerekiyor
   return Math.min(90, 10 * Math.ceil(seg / 100)); // 100 km'de %10, en iyi durum %10
 }
+// ⚡ ÇOK NOKTALI HAT (patron 23 Ağu): oyuncu haritada Kocaeli → İzmir → Urfa diye dokunur;
+// her ARA nokta bir Enerji Transfer Merkezi olur. Kayıp, en uzun segmentin uzunluğundan
+// hesaplanır (eski tek-segment hatlarda davranış birebir aynı kalır — path yoksa eski formül).
+const pathKm = cells => { let t = 0; for (let i = 1; i < cells.length; i++) t += kmDist(cellCenter(cells[i - 1]), cellCenter(cells[i])); return t; };
+const pathMaxSeg = cells => { let m = 0; for (let i = 1; i < cells.length; i++) m = Math.max(m, kmDist(cellCenter(cells[i - 1]), cellCenter(cells[i]))); return m; };
+function lineBaseLoss(l) {
+  if (!l.path || l.path.length < 2) return lineLossPct(l.km, l.hubs);
+  const seg = pathMaxSeg(l.path);
+  if (seg > 300) return 100;
+  return Math.min(90, 10 * Math.ceil(seg / 100));
+}
+// hattın haritadaki düğümleri: uçlar + transfer merkezleri (path varsa gerçek dokunulan noktalar)
+function lineNodes(l) {
+  if (l.path && l.path.length >= 2) return l.path.map(c => cellCenter(c));
+  const a = cellCenter(l.from), b = cellCenter(l.to), out = [a];
+  for (let i = 1; i <= (l.hubs || 0); i++) { const t = i / ((l.hubs || 0) + 1); out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); }
+  out.push(b);
+  return out;
+}
 function lineCost(km, hubs) {
   const cable = km * LINE.cableKm;
-  const permit = Math.ceil(km / 100) * LINE.permitPer100;
+  const permit = (hubs || 0) * LINE.permitPerHub; // 📜 her transfer merkezi ayrı bir inşaat sahası = ayrı ruhsat
   const base = cable + LINE.transformer * 2 + permit + (hubs || 0) * LINE.hub;
   return Math.round(base * (1 + LINE.laborRate));
 }
@@ -3495,7 +3632,7 @@ const lineBuildSec = km => Math.min(86400, Math.round(60 + km * 6)); // en fazla
 const lineBrand = l => BRANDS[brandKey(l && l.brand)] || BRANDS.ortac;
 const lineWear = l => Math.max(0, 100 - (Date.now() - l.built) / 864e6 * LINE.wearPer10d * 10 * lineBrand(l).wear); // marka dayanıklılığı
 const lineReady = l => l.done <= Date.now();
-const lineLoss = l => Math.max(5, Math.min(100, lineLossPct(l.km, l.hubs) + lineBrand(l).loss + (100 - lineWear(l)) * .5)); // marka + yıpranma
+const lineLoss = l => Math.max(5, Math.min(100, lineBaseLoss(l) + lineBrand(l).loss + (100 - lineWear(l)) * .5)); // marka + yıpranma
 const linesOf = cell => (G.lines || []).filter(l => l.from === cell && lineReady(l) && lineLoss(l) < 100);
 // ═══ 🤝 İTTİFAK HATTI = İTTİFAĞIN MALI, kuranın değil ═══
 // Patron kuralı: hattı ÇEKMEK başkan/yardımcı yetkisi ister, ama KULLANMAK bütün üyelerin hakkı.
@@ -3503,12 +3640,10 @@ const linesOf = cell => (G.lines || []).filter(l => l.from === cell && lineReady
 // Erişim konsorsiyum modelinin aynısı: hattın çıkış ucuna ya da transfer merkezlerinden birine
 // ALLY_ACCESS_KM içinde deposu olan her üye hattı ÜCRETSİZ kullanır.
 const ALLY_ACCESS_KM = 150;
-const ALLY_LINE_FEE = 2000; // taşınan MWh başına ittifak KASASINA giden bakım payı (~%1)
+const ALLY_LINE_FEE = 700; // taşınan MWh başına ittifak KASASINA giden bakım payı (~%1,7) — fiyat 1/3'e inince ölçeklendi
 const allyLines = () => (G.ally && G.ally.lines) || [];
-function allyLineNodes(l) { // çıkış ucu + hat üzerindeki transfer merkezleri
-  const a = cellCenter(l.from), b = cellCenter(l.to), out = [a];
-  for (let i = 1; i <= (l.hubs || 0); i++) { const t = i / ((l.hubs || 0) + 1); out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); }
-  return out;
+function allyLineNodes(l) { // çıkış ucu + hat üzerindeki transfer merkezleri (varış ucu hariç)
+  return lineNodes(l).slice(0, -1);
 }
 function allyLinesFor(cell) {
   if (!G.ally) return [];
@@ -3635,8 +3770,8 @@ function lineConfirm(toCell) {
     <table class="ledger">
       <tr><td>🔌 Kablo (${fmtN(km)} km × ${fmt(LINE.cableKm)})</td><td>${fmt(km * LINE.cableKm)}</td></tr>
       <tr><td>⚙️ Trafo (2 uç)</td><td>${fmt(LINE.transformer * 2)}</td></tr>
-      <tr><td>📜 Geçilen bölge izinleri</td><td>${fmt(Math.ceil(km / 100) * LINE.permitPer100)}</td></tr>
-      <tr><td>👷 İşçilik (%${LINE.laborRate * 100})</td><td>~${fmt(lineCost(km, 0) - (km * LINE.cableKm + LINE.transformer * 2 + Math.ceil(km / 100) * LINE.permitPer100))}</td></tr>
+      <tr><td>📜 Transfer merkezi ruhsatı <span class="sub">(merkez başına ${fmt(LINE.permitPerHub)})</span></td><td>seçime göre</td></tr>
+      <tr><td>👷 İşçilik (%${LINE.laborRate * 100})</td><td>~${fmt(lineCost(km, 0) - (km * LINE.cableKm + LINE.transformer * 2))}</td></tr>
       <tr><td>⏱ Kurulum süresi</td><td>${fmtHrs(lineBuildSec(km) / 3600)}</td></tr>
     </table>
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">TRANSFER MERKEZİ SEÇ <span class="sub">(her biri ${fmt(LINE.hub)} — kaybı düşürür)</span></div>
@@ -3699,11 +3834,17 @@ window.buildLine = (toCell, km, hubs, brand) => {
 window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça aralara yeni merkez alıp kaybı azalt")
   const l = (G.lines || []).find(x => x.id === id);
   if (!l) return;
-  const c = brandPrice(l.brand || 'voltas', LINE.hub);
+  const c = brandPrice(l.brand || 'voltas', LINE.hub) + LINE.permitPerHub; // 🗼 merkez + 📜 inşaat ruhsatı
   if (G.cash < c) { toast('Transfer merkezi için ' + fmt(c) + ' gerekli', 'warn'); return; }
   G.cash -= c; gider('altyapi', c); l.hubs++; brandBuy(l.brand || 'voltas');
-  toast('🏗️ Transfer merkezi eklendi — kayıp %' + lineLossPct(l.km, l.hubs), '');
-  save(); openViewSheet(); drawOverlay();
+  if (l.path && l.path.length >= 2) { // 🗼 en uzun bölümün ORTASINA yeni transfer merkezi
+    let bi = 1, bk = -1;
+    for (let i = 1; i < l.path.length; i++) { const k = kmDist(cellCenter(l.path[i - 1]), cellCenter(l.path[i])); if (k > bk) { bk = k; bi = i; } }
+    const a = cellCenter(l.path[bi - 1]), b2 = cellCenter(l.path[bi]);
+    l.path.splice(bi, 0, cellId([(a[0] + b2[0]) / 2, (a[1] + b2[1]) / 2]));
+  }
+  toast('🏗️ Transfer merkezi eklendi — kayıp %' + Math.round(lineBaseLoss(l)), '');
+  save(); renderLinePanel(); drawOverlay();
 };
 window.repairLine = id => {
   const l = (G.lines || []).find(x => x.id === id);
@@ -3712,7 +3853,7 @@ window.repairLine = id => {
   if (c < 1 || G.cash < c) { if (G.cash < c) toast('Hat bakımı için ' + fmt(c) + ' gerekli', 'warn'); return; }
   G.cash -= c; gider('altyapi', c); l.built = Date.now();
   toast('🔧 Hat bakımı yapıldı — ' + fmt(c), '');
-  save(); openViewSheet();
+  save(); renderLinePanel();
 };
 window.demolishLine = id => {
   const i = (G.lines || []).findIndex(x => x.id === id);
@@ -3721,7 +3862,155 @@ window.demolishLine = id => {
   G.cash += Math.round(lineCost(G.lines[i].km, G.lines[i].hubs) * .3);
   G.lines.splice(i, 1);
   toast('🗑️ Hat söküldü — %30 hurda değeri iade', 'warn');
-  save(); openViewSheet(); drawOverlay();
+  save(); renderLinePanel(); drawOverlay();
+};
+// ═══════════ ✏️ ÇOK NOKTALI HAT ÇİZİMİ (patron 23 Ağu) ═══════════
+// "Soldan açılan pencereye basınca oyuncu ekranda çizgi çekebilsin — önce Kocaeli, sonra İzmir,
+// sonra Urfa. Önce YEŞİL ön izleme, altta maliyet ve iptal. Onaylayınca kablo KIRMIZI olsun ve
+// transfer merkezleriyle birlikte haritada görünsün." Her ARA nokta = 1 Enerji Transfer Merkezi.
+let LDRAW = null, ldrawLayer = [];
+const LDRAW_MAX = 8; // en fazla 8 nokta (7 bölüm) — maliyet ekranı okunaklı kalsın
+const bestBrand = () => Object.keys(BRANDS).reduce((a, b) => brandRel(b) > brandRel(a) ? b : a, 'ortac');
+window.openLinePanel = () => {
+  if (!G || !G._started) return;
+  renderLinePanel();
+  $('linepanel').classList.add('open'); $('linehandle').style.display = 'none';
+};
+window.closeLinePanel = () => { $('linepanel').classList.remove('open'); $('linehandle').style.display = ''; };
+function renderLinePanel() { $('linebody').innerHTML = gridPanelHTML(); }
+function ldrawClear() { ldrawLayer.forEach(l => { try { l.remove(); } catch (e) {} }); ldrawLayer = []; }
+window.startLineDraw = () => {
+  if (!stores().some(s2 => s2.buildDone <= Date.now())) { toast('Önce bir bölgeye 🔋 pil istasyonu kur — hat depodan başlar', 'warn', null, 0, true); return; }
+  closeLinePanel();
+  LDRAW = { cells: [] };
+  setMode('draw');
+  ldrawRender();
+  toast('✏️ Hattın geçeceği noktalara SIRAYLA dokun — ilk nokta depolu bölgen olmalı', '', null, 0, true);
+};
+window.lineDrawCancel = () => {
+  LDRAW = null; ldrawClear(); $('drawbar').classList.remove('show');
+  if (MODE === 'draw') setMode(null);
+  toast('✏️ Çizim iptal edildi — istersen yeniden başla', 'warn');
+};
+window.lineDrawUndo = () => { if (!LDRAW || !LDRAW.cells.length) return; LDRAW.cells.pop(); beep(420, .05); ldrawRender(); };
+function lineDrawAdd(cell) {
+  if (!LDRAW) return;
+  const n = LDRAW.cells.length;
+  if (n >= LDRAW_MAX) { toast('✏️ En fazla ' + LDRAW_MAX + ' nokta seçebilirsin', 'warn'); return; }
+  if (LDRAW.cells.indexOf(cell) >= 0) { toast('✏️ Bu noktayı zaten seçtin', 'warn'); return; }
+  const C = countryOfCell(cell);
+  if (LAND_BOX && !C) { toast('🌊 Hat yalnız KARADAN geçer — karaya dokun', 'warn'); return; }
+  if (n === 0) {
+    if (!stores().some(s2 => s2.cell === cell && s2.buildDone <= Date.now())) { toast('⚡ İLK nokta DEPOLU bölgen olmalı — hat depodan başlar', 'warn', null, 0, true); return; }
+  } else {
+    const C0 = countryOfCell(LDRAW.cells[0]);
+    if (LAND_BOX && C0 && C && C0.iso !== C.iso) { toast('🌍 Bireysel hat yalnız ÜLKE İÇİNDE kalır — sınır aşan hat 🤝 ittifak işidir', 'warn', null, 0, true); return; }
+    const seg = kmDist(cellCenter(LDRAW.cells[n - 1]), cellCenter(cell));
+    if (seg < 20) { toast('✏️ Çok yakın (' + Math.round(seg) + ' km) — en az 20 km uzağa dokun', 'warn'); return; }
+    // 300 km'den uzun bölüm taşınamaz → ZORUNLU transfer merkezi otomatik eklenir (bedeli maliyete girer)
+    if (seg > 300) toast('🗼 Bu bölüm ' + Math.round(seg) + ' km — ' + (Math.ceil(seg / 300) - 1) + ' zorunlu transfer merkezi otomatik eklendi', '', null, 0, true);
+  }
+  LDRAW.cells.push(cell);
+  beep(620, .06);
+  ldrawRender();
+}
+// 🗼 ZORUNLU MERKEZLER: 300 km'den uzun her bölüm eşit parçalara bölünür — parça başına 1 merkez.
+// Oyuncunun kendi dokunduğu noktalar korunur, aralarına yalnız gereken kadar merkez eklenir.
+function expandPath(cells) {
+  const out = [cells[0]];
+  for (let i = 1; i < cells.length; i++) {
+    const a = cellCenter(cells[i - 1]), b = cellCenter(cells[i]);
+    const n = Math.max(1, Math.ceil(kmDist(a, b) / 300));
+    for (let k = 1; k < n; k++) { const t = k / n; out.push(cellId([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t])); }
+    out.push(cells[i]);
+  }
+  return out;
+}
+function ldrawRender() {
+  ldrawClear();
+  if (!LDRAW) { $('drawbar').classList.remove('show'); return; }
+  const pts = LDRAW.cells.map(c => cellCenter(c));
+  if (pts.length >= 2 && map) ldrawLayer.push(L.polyline(pts, { color: '#3ddc97', weight: 5, opacity: .95, dashArray: '9 7', interactive: false }).addTo(map));
+  if (map) pts.forEach((p, i) => {
+    const ico = i === 0 ? '🏭' : i === pts.length - 1 ? '🎯' : '🗼';
+    ldrawLayer.push(L.marker(p, { icon: divIcon('<div style="font-size:22px;filter:drop-shadow(0 0 4px #3ddc97)">' + ico + '</div>', [24, 24]), interactive: false, zIndexOffset: 900 }).addTo(map));
+  });
+  drawBarUpdate();
+}
+function drawBarUpdate() {
+  const bar = $('drawbar');
+  if (!LDRAW) { bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  const n = LDRAW.cells.length;
+  const yol = n >= 2 ? expandPath(LDRAW.cells) : [];
+  const km = n >= 2 ? Math.round(pathKm(yol)) : 0;
+  const hubs = Math.max(0, yol.length - 2);
+  const cost = n >= 2 ? lineCost(km, hubs) : 0;
+  $('drawtxt').innerHTML = n === 0
+    ? '✏️ <b>İLK NOKTA</b> — depolu bölgene dokun (hat oradan başlar)'
+    : n === 1
+      ? '✏️ <b>' + placeName(LDRAW.cells[0]) + '</b> seçildi — şimdi <b>varış noktasına</b> dokun. Aralara dokunursan oraya transfer merkezi kurulur.'
+      : '⚡ ' + LDRAW.cells.map(c => placeName(c)).join(' → ') + '<br><span class="sub">' + fmtN(km) + ' km · 🗼 ' + hubs + ' transfer merkezi · kayıp %' + Math.round(lineBaseLoss({ path: yol, km, hubs })) + '</span>';
+  $('drawcost').disabled = n < 2;
+  $('drawcost').textContent = n < 2 ? '💰 Maliyet' : '💰 Maliyet — ' + fmt(cost);
+}
+// 💰 MALİYET EKRANI: transfer merkezi + hat ücreti + ruhsat bedeli kalem kalem
+window.lineDrawCost = brand => {
+  if (!LDRAW || LDRAW.cells.length < 2) return;
+  const secilen = LDRAW.cells.slice();
+  const cells = expandPath(secilen);
+  const km = Math.round(pathKm(cells)), hubs = cells.length - 2;
+  const zorunlu = cells.length - secilen.length;
+  const b = brandKey(brand || G._lastBrand || bestBrand());
+  const base = lineCost(km, hubs);
+  const price = brandPrice(b, base);
+  const cable = km * LINE.cableKm, permit = hubs * LINE.permitPerHub;
+  const trafo = LINE.transformer * 2, hubC = hubs * LINE.hub;
+  const iscilik = base - (cable + permit + trafo + hubC);
+  const loss = Math.max(5, Math.min(100, lineBaseLoss({ path: cells, km, hubs }) + BRANDS[b].loss));
+  const hedef = cells[cells.length - 1];
+  const secs = lineBuildSec(km) * BRANDS[b].build;
+  $('modal').innerHTML = `
+    <h2>⚡ Hat Maliyeti</h2>
+    <p><b>${secilen.map(c => placeName(c)).join(' → ')}</b><br>
+    <span class="sub">${fmtN(km)} km · 🗼 ${hubs} enerji transfer merkezi · varış alım fiyatı <b class="pos">${fmt(cellPriceNow(hedef))}</b>/MWh</span></p>
+    <table class="ledger">
+      <tr><td>🔌 Hat ücreti — kablo (${fmtN(km)} km × ${fmt(LINE.cableKm)})</td><td>${fmt(cable)}</td></tr>
+      <tr><td>⚙️ Uç trafoları (2 adet)</td><td>${fmt(trafo)}</td></tr>
+      <tr><td>🗼 Enerji transfer merkezi × ${hubs}${zorunlu ? ' <span class="sub">(' + (hubs - zorunlu) + ' senin + ' + zorunlu + ' zorunlu)</span>' : ''}</td><td>${fmt(hubC)}</td></tr>
+      <tr><td>📜 Transfer merkezi ruhsatı (${hubs} inşaat × ${fmt(LINE.permitPerHub)})</td><td>${fmt(permit)}</td></tr>
+      <tr><td>👷 İşçilik (%${LINE.laborRate * 100})</td><td>${fmt(iscilik)}</td></tr>
+      <tr><td><b>TOPLAM</b> <span class="sub">${BRANDS[b].ico} ${BRANDS[b].nm}${brandRel(b) > 0 ? ' · -%' + Math.round(25 * brandRel(b) / 100) + ' sadakat' : ''}</span></td><td><b class="${G.cash < price ? 'neg' : 'pos'}">${fmt(price)}</b></td></tr>
+      <tr><td>Hat kaybı · kurulum süresi</td><td>%${Math.round(loss)} · ${fmtHrs(secs / 3600)}</td></tr>
+    </table>
+    <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">⚙️ TRAFO MARKASI <span class="sub">(sadakat = iskonto)</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      ${Object.keys(BRANDS).map(k => `<button class="primary ghostbtn" style="flex:1 1 44%;padding:8px 4px;font-size:11px;${k === b ? 'border-color:var(--acc2);color:var(--acc2)' : ''}" onclick="lineDrawCost('${k}')">${BRANDS[k].ico} ${BRANDS[k].nm}<br><span class="sub">${fmt(brandPrice(k, base))}</span></button>`).join('')}
+    </div>
+    ${G.cash < price ? '<p class="neg">Kasanda yeterli para yok (' + fmt(G.cash) + ').</p>' : ''}
+    <button class="primary" ${G.cash < price ? 'disabled' : ''} onclick="closeModal();lineDrawBuild('${b}')">✅ Onayla ve Kur — ${fmt(price)}</button>
+    <button class="primary ghostbtn" onclick="closeModal()">Vazgeç <span class="sub">(çizim durmaz)</span></button>`;
+  $('overlay').classList.add('show');
+};
+window.lineDrawBuild = brand => {
+  if (!LDRAW || LDRAW.cells.length < 2) { toast('✏️ Çizim kalmadı — yeniden başla', 'warn'); return; }
+  const secilen = LDRAW.cells.slice();
+  const cells = expandPath(secilen);
+  const km = Math.round(pathKm(cells)), hubs = cells.length - 2;
+  const b = brandKey(brand);
+  const cost = brandPrice(b, lineCost(km, hubs));
+  if (G.cash < cost) { toast('Hat için ' + fmt(cost) + ' gerekli', 'warn'); return; }
+  G.cash -= cost; gider('altyapi', cost);
+  G.cellSpent = G.cellSpent || {};
+  G.cellSpent[cells[0]] = (G.cellSpent[cells[0]] || 0) + cost;
+  brandBuy(b); G._lastBrand = b;
+  const secs = lineBuildSec(km) * BRANDS[b].build;
+  G.lines = G.lines || [];
+  G.lines.push({ id: G.nextId++, from: cells[0], to: cells[cells.length - 1], path: cells, km, hubs, brand: b, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1) });
+  LDRAW = null; ldrawClear(); $('drawbar').classList.remove('show'); setMode(null);
+  toast('⚡ ' + BRANDS[b].ico + ' ' + secilen.map(c => placeName(c)).join(' → ') + ' — ' + fmtN(km) + ' km · 🗼 ' + hubs + ' merkez · ' + fmtHrs(secs / 3600) + ' sonra devrede', '', null, 0, true);
+  beep(500, .12);
+  save(); drawOverlay(); openLinePanel();
 };
 function gridPanelHTML() {
   const ls = G.lines || [];
@@ -3730,9 +4019,9 @@ function gridPanelHTML() {
   h += ls.map(l => {
     const rdy = lineReady(l), loss = Math.round(lineLoss(l)), wear = Math.round(100 - lineWear(l));
     return `<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0">
-      <div style="font-size:12.5px;font-weight:700">${placeName(l.from)} → ${placeName(l.to)} <span class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</span></div>
+      <div style="font-size:12.5px;font-weight:700">${(l.path && l.path.length > 2 ? l.path.map(c => placeName(c)).join(' → ') : placeName(l.from) + ' → ' + placeName(l.to))} <span class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</span></div>
       ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · ${l.hubs} transfer merkezi · yıpranma %${wear} · net ${fmt(cellPriceNow(l.to) * (1 - loss / 100))}/MWh</div>
-      <button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))} (kayıp %${Math.max(5, lineLossPct(l.km, l.hubs + 1) + lineBrand(l).loss)}'e iner)</button>
+      <button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))}</button>
       ${wear > 5 ? `<button class="bigsell half" onclick="repairLine(${l.id})">🔧 Hat Bakımı — ${fmt(Math.round(wear * l.km * 900))}</button>` : ''}
       <button class="bigsell half" style="color:var(--danger)" onclick="demolishLine(${l.id})">🗑️ Hattı Sök</button>`
       : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
@@ -3757,7 +4046,11 @@ function gridPanelHTML() {
   }
   const cells = [...new Set(stores().map(s => s.cell))];
   h += `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">YENİ HAT ÇEK <span class="sub">(depolu bölgenden başlar · ÜLKE İÇİ)</span></div>`;
-  h += cells.length ? cells.map(c => `<button class="bigsell half" onclick="startLineFrom('${c}')">⚡ ${placeName(c)} bölgesinden hat çek</button>`).join('')
+  h += cells.length
+    ? `<button class="bigsell" onclick="startLineDraw()">✏️ Haritaya Hat Çiz</button>
+       <p class="sub">Depolu bölgene dokun, sonra hattın geçeceği noktalara sırayla dokun (ör. Kocaeli → İzmir → Şanlıurfa).
+       Her <b>ara nokta</b> bir 🗼 <b>Enerji Transfer Merkezi</b> olur ve kaybı düşürür. Önce <b class="pos">yeşil ön izleme</b> görürsün;
+       maliyeti onaylayınca kablo <b style="color:#ff5c5c">kırmızı</b> olur ve haritada kalır.</p>`
     : '<p class="sub">Önce bir bölgeye pil istasyonu kur.</p>';
   h += `<p class="sub">🧍 Bireysel hat yalnız <b>ülke içindedir</b> (iller/eyaletler arası).
     🤝 Ülke sınırını aşan hat ittifak işidir — 🤝 İttifak ekranından başkan ya da yardımcısı başlatır.
@@ -3765,28 +4058,26 @@ function gridPanelHTML() {
   return h;
 }
 function drawLines() {
+  if (G.hideLines) return; // 🙈 Görünüm'den kablolar gizlendi (patron 23 Ağu)
   // 🌍 konsorsiyum hatları + ortak transfer merkezleri (ittifak hattı VE hissedarı olduğun hatlar)
   for (const idx of activeRouteIdx()) {
     const r = CONSORTIUM_ROUTES[idx];
-    overlayLayer.push(L.polyline([r.from, r.to], { color: '#8a6cff', weight: MAPVIEW === 'grid' ? 6 : 3, opacity: .9, interactive: false, renderer: VEC || undefined }).addTo(map));
-    if (MAPVIEW === 'grid') consortiumNodes(idx).forEach(n => overlayLayer.push(
+    overlayLayer.push(L.polyline([r.from, r.to], { color: '#8a6cff', weight: 5, opacity: .9, interactive: false, renderer: VEC || undefined }).addTo(map));
+    if (true) consortiumNodes(idx).forEach(n => overlayLayer.push(
       L.marker(n.ll, { icon: divIcon(`<div style="font-size:${n.end ? 20 : 16}px;filter:drop-shadow(0 1px 3px #000)">${n.end ? '🌍' : '🗼'}</div>`, [20, 20]), interactive: false }).addTo(map)));
   }
   if (G.lines) G.lines = G.lines.filter(l => l && l.from && l.to); // eksik veri çizimi çökertmesin
   if (G.ally && G.ally.lines) G.ally.lines = G.ally.lines.filter(l => l && l.from && l.to);
   for (const l of (G.lines || []).concat(allyLines())) { // kişisel + 🤝 ittifak hatları birlikte çizilir
-    const rdy = lineReady(l), loss = rdy ? lineLoss(l) : 100;
-    const a = cellCenter(l.from), b = cellCenter(l.to);
-    // 🤝 ittifak hattı ayrı renkte ve daha kalın çizilir — ortak mal olduğu bir bakışta anlaşılsın
-    const col = !rdy ? '#8b95a8' : l.ally ? '#2fd6a0' : loss >= 50 ? '#ff5c5c' : loss <= 15 ? '#3ddc97' : '#ffd166';
-    overlayLayer.push(L.polyline([a, b], { color: col, weight: (MAPVIEW === 'grid' ? 4 : 2) + (l.ally ? 2 : 0), opacity: .85, dashArray: rdy ? null : '6 6', interactive: false, renderer: VEC || undefined }).addTo(map));
-    if (MAPVIEW === 'grid') { // transfer merkezleri hat üzerinde eşit aralıkla
-      for (let i = 1; i <= l.hubs; i++) {
-        const t = i / (l.hubs + 1);
-        overlayLayer.push(L.marker([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t],
-          { icon: divIcon('<div style="filter:drop-shadow(0 1px 2px #000)">' + hubSVG(22, 'h' + i) + '</div>', [22, 22]), interactive: false }).addTo(map));
-      }
-    }
+    const rdy = lineReady(l);
+    const nodes = lineNodes(l);
+    // ⚡ patron 23 Ağu: devreye giren KENDİ hattın KIRMIZI enerji kablosudur (ön izleme yeşildi).
+    // 🤝 ittifak hattı ayrı renkte ve daha kalın — ortak mal olduğu bir bakışta anlaşılsın.
+    const col = !rdy ? '#8b95a8' : l.ally ? '#2fd6a0' : '#ff3b30';
+    overlayLayer.push(L.polyline(nodes, { color: col, weight: 4 + (l.ally ? 2 : 0), opacity: .9, dashArray: rdy ? null : '6 6', interactive: false, renderer: VEC || undefined }).addTo(map));
+    // 🗼 transfer merkezleri: çok noktalı hatta oyuncunun dokunduğu noktalarda, eski hatlarda eşit aralıkta
+    nodes.slice(1, -1).forEach((n, i) => overlayLayer.push(L.marker(n,
+      { icon: divIcon('<div style="filter:drop-shadow(0 1px 2px #000)">' + hubSVG(22, 'h' + l.id + '_' + i) + '</div>', [22, 22]), interactive: false }).addTo(map)));
   }
 }
 
@@ -6343,13 +6634,14 @@ function migrate(s) {
   const d = freshState();
   for (const k of Object.keys(d)) if (s[k] === undefined) s[k] = d[k];
   s.research = s.research || { lvl: {}, active: null };
-  s.research.lvl = Object.assign({ coalcap: 0, gascap: 0, office: 0, range: 0 }, s.research.lvl); // eski kayıttaki liccap seviyesi zararsızca yok sayılır
+  s.research.lvl = Object.assign({ coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0 }, s.research.lvl); // 📜 liccap Tur 11'de geri geldi
   s.capLic = s.capLic || {};
   s.lines = s.lines || []; s.mail = s.mail || []; s.friends = s.friends || []; s.friendReqs = s.friendReqs || [];
   s.chat = s.chat || {}; s.boughtOthers = s.boughtOthers || {}; s.auctionsMkt = s.auctionsMkt || [];
   s.countryStudy = s.countryStudy || {}; // 🔎 bölge araştırması sonradan geldi — eski kayıtlar boş başlar
   if (s.countryStudyActive === undefined) s.countryStudyActive = null;
   if (s.showOthers === undefined) s.showOthers = true;
+  if (s.hideLines === undefined) s.hideLines = false;
   // kapasite lisansı sonradan geldi: eski kayıtların mevcut kurulu gücü hangi kademeyi gerektiriyorsa BEDAVA verilir
   for (const cat2 of Object.keys(CAP_TIERS)) {
     const used = s.units.filter(u => u.kind === 'plant' && PLANT_TYPES[u.t] && PLANT_TYPES[u.t].cat === cat2).reduce((s2, u) => s2 + PLANT_TYPES[u.t].mw, 0);
@@ -6402,7 +6694,9 @@ let MODE = null, PENDING = null; // PENDING = { kind, t } — satın alınıp ye
 window.modKapat = () => { if (typeof MODE !== 'undefined' && MODE) { const vardi = PENDING; setMode(null); PENDING = null; if (vardi) toast('🏗️ Yerleştirme iptal edildi — 🏗️ İnşa\'dan yeniden seçebilirsin', 'warn'); } };
 function setMode(m) {
   MODE = m;
-  $('modehint').classList.toggle('show', !!m);
+  // ✏️ hat çizim modunun KENDİ alt çubuğu var (#drawbar) — mod ipucu barı gösterilmez
+  $('modehint').classList.toggle('show', !!m && m !== 'draw');
+  if (m !== 'draw' && typeof LDRAW !== 'undefined' && LDRAW) { LDRAW = null; ldrawClear(); $('drawbar').classList.remove('show'); }
   if (m) {
     hideSheets();
     $('modehinttxt').textContent = m === 'build'
@@ -6500,6 +6794,7 @@ function initMap(center, zoom) {
     if (!MODE) return; // mod seçili değilse harita serbest gezinti — panel açılmaz
     SEL.cell = cellId([e.latlng.lat, e.latlng.lng]);
     SEL.ll = [e.latlng.lat, e.latlng.lng];
+    if (MODE === 'draw') { lineDrawAdd(SEL.cell); return; } // ✏️ çok noktalı hat: mod SÜRER, arka arkaya nokta eklenir
     if (MODE === 'line') { const src = LINE_SRC; setMode(null); if (src) lineConfirm(SEL.cell); return; } // hat hedefi seçildi
     if (MODE === 'build') { // YERLEŞTİRME: satın alınan ürün bu konuma kurulur
       if (PENDING) placeAt(SEL.cell, SEL.ll);
@@ -6714,6 +7009,7 @@ function addUnitMarker(u) {
   m.on('mouseup', lpEnd); m.on('touchend', lpEnd); m.on('mouseout', lpEnd); m.on('dragstart', lpEnd);
   m.on('click', () => {
     if (lpFired) { lpFired = false; return; } // uzun basış zaten komşu listesini açtı
+    if (MODE === 'draw') { lineDrawAdd(u.cell); return; } // ✏️ hat çizimi: işaretçi de nokta seçer
     // 🔗 bağlama modundaysak işaretçiye dokunmak HEDEF SEÇER, birim sayfasını açmaz
     if (MODE === 'link' && LINK_SRC != null) {
       const src = LINK_SRC;
@@ -6813,7 +7109,6 @@ const VIEWS = {
   normal: { nm: 'Normal', ico: '🗺️', d: 'Sade harita — tesislerin ve ruhsatların.' },
   wind: { nm: 'Rüzgar Verimliliği', ico: '🌬️', d: 'Kareler rüzgar potansiyeline göre renklenir: koyu mavi = türbin cenneti.' },
   sun: { nm: 'Güneş Verimliliği', ico: '☀️', d: 'Kareler güneş potansiyeline göre renklenir: koyu turuncu = panel cenneti.' },
-  grid: { nm: 'Enerji Nakil Hattı', ico: '⚡', d: 'Hatların, transfer merkezlerin ve kayıp oranların.' },
   city: { nm: 'Şehirler', ico: '🏙️', d: 'Talep merkezleri. İsme dokun: nüfus, enerji ihtiyacı ve şehrin kısa hikâyesi.' },
 };
 // 🏙️ ŞEHİRLERİN KISA HİKÂYESİ (patron: "mesela Kocaeli'nin pişmaniyesi meşhurdur yazarsın")
@@ -6871,6 +7166,7 @@ const CITY_NOTE = {
   'Moskova': 'Kışın -20°C\'de ısınma yükü zirveye çıkar.',
 };
 window.setMapView = v => { MAPVIEW = v; drawOverlay(); openViewSheet(); toast(VIEWS[v].ico + ' ' + VIEWS[v].nm + ' görünümü', ''); };
+window.toggleLines = () => { G.hideLines = !G.hideLines; save(); drawOverlay(); openViewSheet(); toast(G.hideLines ? '🙈 Kablolar gizlendi' : '⚡ Kablolar görünür', ''); };
 function openViewSheet() {
   hideSheets();
   $('view_body').innerHTML =
@@ -6883,7 +7179,12 @@ function openViewSheet() {
     <button class="bigsell ${k === MAPVIEW ? '' : 'half'}" style="text-align:left" onclick="setMapView('${k}')">
       ${v.ico} <b>${v.nm}</b>${k === MAPVIEW ? ' ✓' : ''}<div class="sub" style="margin-top:2px">${v.d}</div>
     </button>`).join('') +
-    (MAPVIEW === 'grid' ? gridPanelHTML() : '');
+    // 🙈 patron 23 Ağu: kablolar haritada HEP görünür; isteyen buradan kapatır.
+    `<div style="border-top:1px dashed var(--line);margin:8px 0"></div>
+     <button class="bigsell ${G.hideLines ? 'half' : ''}" style="text-align:left" onclick="toggleLines()">
+       ${G.hideLines ? '🙈' : '⚡'} <b>Enerji kabloları: ${G.hideLines ? 'GİZLİ' : 'GÖRÜNÜR'}</b>
+       <div class="sub" style="margin-top:2px">Nakil hatları ve 🗼 transfer merkezleri haritada çizilsin mi? Hat çekmek ve yönetmek için soldaki 🗼 penceresini kullan.</div>
+     </button>`;
   showSheet('viewsheet');
 }
 // ═══ 🌍 ÜLKE BAZLI RENKLENDİRME (patron: "uzaktan bakınca kare olarak değil ülke olarak renklendir") ═══
@@ -7985,6 +8286,7 @@ function tutClearMarks() { // BUGFIX: infobtn listede yoktu → eğitim bitince 
 function tutTick() {
   TUT_BAR.forEach(id => $(id).disabled = false);
   $('drawerhandle').disabled = false;
+  $('linehandle').disabled = false;
   $('coname').style.pointerEvents = '';
   if (!G || !G._started) { tutClearMarks(); return; }
   if (!tutGuide()) { tutClearMarks(); $('tuthint').classList.remove('show'); clearTutCell(); return; }
@@ -8154,7 +8456,7 @@ function openCompanySheet() {
     </table>
     <div style="font-size:12px;margin:10px 0 2px">🧪 <b>ARAŞTIRMA</b> <span class="sub">tek seferde 1 araştırma yürür</span></div>
     <p class="sub" style="margin:2px 0 4px">Puanların: <b>🌞 ${G.resPts.daily} günlük</b> · <b>📅 ${G.resPts.weekly} haftalık</b><br>Sv1-10: 1 günlük puan (günün İLK satışında +1) · Sv11+: 1 haftalık puan (📅 haftalık görev ödülüyle +1)</p>
-    ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}
+    ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}${resRow('liccap')}
     ${brandPanelHTML()}
     ${accountRowHTML()}
     <button class="bigsell half" onclick="resetAccountAsk()" style="color:var(--danger);margin-top:8px">⚠️ Hesabı Sıfırla</button>`;
@@ -8366,8 +8668,10 @@ function renderHUD() {
   $('mailbtn').classList.toggle('unread', um > 0);
   $('mailbtn').textContent = um > 0 ? '📬 ' + um : '📬 Posta';
   tutTick(); // tutorial yönlendirmesi (hedef parlatma + ipucu çubuğu)
-  const ev = todayEvent(), o = activeOffer();
-  $('evtext').innerHTML = `🌫️ ${co2Avg()} g/kWh${greenBonus() > 0 ? ' · <span style="color:var(--acc)">🌿 teşvik +%' + Math.round(greenBonus() * 100) + '</span>' : ''} · <b>${ev.ico} ${ev.nm}</b> — ${ev.d}` +
+  const o = activeOffer();
+  // 📅 hafta sonu 2 etkinlik var — bandda ikisi de ayrı ayrı görünür
+  const evTxt = todayEvents().map(e => `<b${e.weekend ? ' style="color:var(--gold)"' : ''}>${e.ico} ${e.nm}</b> — ${e.d}`).join(' · ');
+  $('evtext').innerHTML = `🌫️ ${co2Avg()} g/kWh${greenBonus() > 0 ? ' · <span style="color:var(--acc)">🌿 teşvik +%' + Math.round(greenBonus() * 100) + '</span>' : ''} · ${evTxt}` +
     (o ? ` · <span style="color:var(--gold);cursor:pointer;text-decoration:underline" onclick="reopenOffer()">🎁 Kampanya ⏳${offerLeft(o)}</span>` : '') +
     '' + // 🎮 mini oyun gizliyken HUD çipi de görünmesin
     (allyBuffOn() ? ' · <span style="color:var(--gold)">🤝 +%50 bonus ⏳' + fmtHrs((G.allyBuffUntil - Date.now()) / 36e5) + '</span>' : '') +
@@ -8741,6 +9045,7 @@ function openTasks() { const open = $('menusheet').classList.contains('show'); h
 function goHome() { if (map && G && G.il) { try { map.flyTo(IL_COORD[G.il], 11); } catch (e) { map.setView(IL_COORD[G.il], 11); } } }
 // Sağ çekmece menü
 $('navhandle').addEventListener('click', () => openNav());
+$('linehandle').addEventListener('click', () => openLinePanel());
 document.querySelectorAll('#navtabs button').forEach(b => b.addEventListener('click', () => setNavTab(b.dataset.tab)));
 $('drawerhandle').addEventListener('click', () => {
   if (!G || !G._started) return;
@@ -8910,6 +9215,8 @@ try {
       if (inWiz && $('wizsheet').classList.contains('show')) { $('wizback').click(); return; } // sihirbazda geri = bir adım geri
       if ($('chatpanel').classList.contains('open')) { closeChat(); return; }
       if (document.querySelector('.sheet.show')) { hideSheets(); return; }
+      if (typeof LDRAW !== 'undefined' && LDRAW) { lineDrawCancel(); return; }
+      if ($('linepanel').classList.contains('open')) { closeLinePanel(); return; }
       if ($('navpanel').classList.contains('open')) { closeNav(); return; }
       if ($('drawer').classList.contains('open')) { $('drawer').classList.remove('open'); $('drawerhandle').style.display = ''; return; }
       if (MODE || PENDING) { PENDING = null; setMode(null); return; } // yerleştirme iptali de temizlensin
