@@ -1,5 +1,23 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-23 21:08 turu — 1 yeni konu (veri kaybı riski), 1 net düşük riskli düzeltme yapıldı
+
+140 yeni `suggestions` kaydı işlendi (2026-08-22 21:24 – 2026-08-23 20:25 UTC). **1 net/düşük riskli düzeltme yapıldı:** `countryAt()` bozuk koordinatta çöküyordu (bkz. `duzeltmeler.md`). Aşağıdaki konu **yeni** ve auth/jeton akışına dokunduğu için koda dokunulmadı:
+
+### 1) 🔐 RTDB yazma istekleri `401 Unauthorized` dönüyor — UI'de başarı görünüp yeniden yüklemede geri alınıyor (VERİ KAYBI RİSKİ)
+Kayıtlar: `-P-f_bpcci8-wMtInLvD` (CLBOT6, 18:01), `-P-f_c3JKJFDHoyhZ0DI` (CLBOT8, 18:01, aynı saniyede bağımsız oturum)
+
+CLBOT6: "Cash 4.97M->4.93M (server, unaffected by our try). Attempted: sold depot(+~$317k local, DID NOT PERSIST), bought wind_3 4.9M + started coalcap research - BOTH REVERTED on reload. BUG: writes to RTDB return 401 Unauthorized in browser console; local UI showed success but server state unchanged."
+CLBOT8: aynı turda "3 auction assets found, placeBid attempted... Sell est $4.71M full, DID NOT PERSIST. BUG: 401 Unauthorized blocking all RTDB writes this session."
+
+Yani her iki bot da o oturumda TÜM bulut yazmalarının 401 ile reddedildiğini, ama istemci tarafının (optimistic UI) işlemi başarılı gösterdiğini bildiriyor — sekme kapanıp yeniden açıldığında (ya da bir sonraki tur başında) yapılan her şey geri alınmış görünüyor.
+
+**Neden kendim düzeltmedim:** Bu, `NET.token()` (satır ~5167-5192) jeton yenileme mantığına ya da doğrudan Firebase güvenlik kurallarına işaret eden geniş kapsamlı bir konu — ikisine de dokunmam yasak ("Firebase kurallarına ve başka oyuncuların verisine dokunma"). Kod okumasıyla `token()` fonksiyonunun kendisi mantıklı görünüyor (50dk taze önbellek + `refreshToken` ile REST yenileme + hata durumunda `console.warn` ile jetonsuz devam), ama BEN kendi jetonumu (görev tanımındaki `refreshToken`) kullanarak `suggestions` düğümünü okuyorum — CLBOT6/CLBOT8'in KENDİ oyuncu oturumlarının jetonunun neden 401 aldığını canlı ortamda test edemem (kendi hesabım/misafir oturumum değil). Olası nedenler: (a) o spesifik misafir oturumunun `refreshToken`'ı iptal olmuş/süresi dolmuş (Firebase misafir hesapları belirli koşullarda temizlenebilir), (b) kurallar tarafında son zamanlarda bir sıkılaştırma oldu ve eski/jetonsuz istekler artık reddediliyor, (c) bot ortamına özgü bir saat senkronizasyon/CORS sorunu.
+
+**Öneri (karar sizde):** Firebase konsolundan (a) RTDB kurallarında yakın zamanda bir değişiklik olup olmadığını, (b) Authentication bölümünde CLBOT6/CLBOT8'in misafir hesaplarının hâlâ aktif olup olmadığını kontrol etmenizi öneririm. Eğer bu gerçek oyunculara da oluyorsa (ör. uzun süre açık kalan bir sekme, jeton 1 saat sonra dolduğunda `token()`'ın yenilemesi başarısız olursa), oyuncular fark etmeden ilerlemelerini kaybediyor olabilir — öncelik verilmesini öneririm. Tekrarlanırsa (üçüncü bağımsız rapor gelirse) bir sonraki turda daha derin incelenecek.
+
+Aşağıdaki kayıtlar incelendi, bug DEĞİL / zaten bilinen ailelerin tekrarı bulundu (kod değişikliği yapılmadı) — detaylar `islenen.md`'de: `window.myWorth is not a function` (botun kendi API kullanım hatası), "G never appeared" (tek seferlik eşzamanlı kurulum yarışı, tekrarlanmadı), "kasa/unit değişmedi" ailesi (3 rapor — `placeAt()`'in kare-dolu/ruhsat kısıtlarında sessizce reddetmesi, tasarım gereği doğru), bulut-kaydı-throttle ailesine ek kanıt, vendor/leaflet 404 ailesine ek kanıt, botların kendi yatırım-kararı/proxy-ortam sorunları.
+
 ## 2026-08-21 21:57 turu — 3 yeni belirsiz konu, 1 net düşük riskli düzeltme yapıldı
 
 16 yeni `suggestions` kaydı işlendi (`-P-Zzy...` → `-P-aF2...` serisi, 2026-08-21 15:45–21:35 UTC). **1 net/düşük riskli düzeltme yapıldı:** bağlı (uydu) depo sheet'inde "🔗 Bağlan" butonu, depo zaten bağlıyken de aktif görünüyordu (`startStoreLink()` tıklanınca zaten güvenle engelliyordu — veri riski yoktu, sadece UI kafa karıştırıyordu) — bkz. `duzeltmeler.md`. Aşağıdaki 3 konu **yeni** ve kapsam/kesinlik nedeniyle koda dokunulmadı:

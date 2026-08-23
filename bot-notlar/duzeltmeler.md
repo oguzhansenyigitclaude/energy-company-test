@@ -2,6 +2,39 @@
 
 Bu dosya, bakım botunun bu turda index.html üzerinde yaptığı düzeltmelerin ÖNCE/SONRA kod parçalarını ve gerekçesini listeler. Yerel geliştirici bunları ana projeye taşıyabilir / gözden geçirebilir.
 
+## 2026-08-23 21:08 turu
+
+### Düzeltme 1: `countryAt()` bozuk/eksik koordinatta çöküyordu (`TypeError: ... reading 'toFixed'`)
+
+**Bulgu:** `-P-jQwvsVFpWg9ACOaip` (CLBOT7), `-P-jQwwGGNJ0DoOF9k9W` (CLBOT6), `-P-jQze1vpJTmg9nh2TH` (CLBOT9) — 3 bağımsız bot, aynı gün 16:24 civarı, `page.evaluate` üzerinden kendi `tryBuild()` test fonksiyonlarının debug hook'ları (`window.__setSel`/`window.__addUnit`) aracılığıyla `placeAt()`'i çağırırken aynı hatayı bildirdi:
+```
+TypeError: Cannot read properties of undefined (reading 'toFixed')
+    at countryAt (index.html:830:21)
+    at oyunDisiMi (index.html:680:38)
+    at placeAt (index.html:3236:7)
+```
+
+**Kök neden:** `countryAt(ll, pay)` (satır ~827) yalnız `ll`'nin var olup olmadığını kontrol ediyordu (`!ll`), ama `ll[0]`/`ll[1]`'in gerçekten sayı olup olmadığını değil. Botlar debug/test API'sini (`window.__setSel(c, ll)`) yanlış bir `ll` değeriyle (muhtemelen bir hücre-id ya da eksik koordinat) çağırınca `ll[0].toFixed(2)` doğrudan `undefined.toFixed` şeklinde patlıyordu. **Gerçek oyuncu akışında bu koda ulaşılamaz** — tek çağrı noktası olan `placeAt(SEL.cell, SEL.ll)` (satır 6818), `SEL.ll`'yi ya Leaflet tıklama olayından (`[e.latlng.lat, e.latlng.lng]`, satır 6814) ya da hücre merkezinden (`cellCenter()`, her zaman geçerli sayı çifti döndürür, satır 7646) alır — hiçbir zaman eksik/bozuk olmaz. Yine de test/debug API'sinin sağlamlaştırılması ucuz ve risksiz.
+
+**ÖNCESİ** (`index.html`, satır 827-829):
+```js
+function countryAt(ll, pay) {
+  if (!LAND_BOX || !ll) return null;
+  const t = pay === undefined ? 0.12 : pay; // ~12 km
+```
+
+**SONRASI:**
+```js
+function countryAt(ll, pay) {
+  // 🐞 [BOT-FIX] ll[0]/ll[1] sayı değilse (bozuk/eksik koordinat) eskiden burada çöküyordu.
+  if (!LAND_BOX || !ll || typeof ll[0] !== 'number' || typeof ll[1] !== 'number') return null;
+  const t = pay === undefined ? 0.12 : pay; // ~12 km
+```
+
+**Neden düşük risk / ekonomiyi değiştirmiyor:** Yalnızca yeni bir erken-çıkış koşulu eklendi; gerçek oyuncu çağrılarında `ll` her zaman `[sayı, sayı]` olduğundan bu dal hiç tetiklenmez, davranış birebir aynı kalır. Bozuk girdi artık çökme yerine `null` (bilinmeyen ülke) döndürüyor — `oyunDisiMi()` zaten `null` sonucu "oyun dışı değil" olarak ele alıyor (güvenli varsayılan).
+
+**Doğrulama:** `new Function` ile tek inline `<script>` bloğu sözdizim kontrolünden geçti; Playwright (headless Chromium, yerel `http://` sunucu) sayfa açılışında `pageerror`/`console.error` üretmedi; ayrıca `countryAt([41.01])` (eksik ikinci koordinat) ile manuel test edilip artık çökmeden `null` döndürdüğü doğrulandı.
+
 ## 2026-08-21 14:58 turu
 
 ### Düzeltme 1: `sellAll(frac)` (Pazar paneli "Tüm Depoları Sat"/"Yarısını Sat") bağlı uydu depoyu da sayıyordu
