@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-23 17:34) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-23 18:13) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-23 17:34)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-23 18:13)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -3077,6 +3077,17 @@ function brandLogoSVG(b, px) {
   }[b] || '';
   return `<svg width="${px}" height="${px}" viewBox="0 0 24 24">${mark}</svg>`;
 }
+// 🖼️ GERÇEK LOGO (Gemini'de üretildi, 23 Ağu): img/marka-<arketip>.webp — 128×128, koyu lacivert
+// zeminli düz vektör amblem. Dosya yoksa/yüklenmezse ESKİ inline SVG'ye düşer (tolerans ilkesi:
+// görsel gelmeyen eski kurulumda marka kimliği yine görünür).
+window.brandLogoFallback = (b, px) => brandLogoSVG(b, px);
+function brandLogoHTML(b, px) {
+  if (!BRAND_ARCH[b]) return '';
+  const r = Math.max(3, Math.round(px * .22));
+  return `<img src="img/marka-${b}.webp" width="${px}" height="${px}" alt=""
+    style="width:${px}px;height:${px}px;border-radius:${r}px;vertical-align:middle;display:inline-block;object-fit:cover"
+    onerror="this.outerHTML=brandLogoFallback('${b}',${px})">`;
+}
 
 // ── ÜRÜN DETAY SAYFASI (rakipteki "İncele" — görsel + teknik özellikler + karbon karşılaştırma) ──
 function carbonScatter(curKey) {
@@ -3586,7 +3597,7 @@ function brandPanelHTML() {
       const B = BRANDS[b], rel = brandRel(b), isk = Math.round(25 * rel / 100);
       // patron düzeni: sağ üstte İLİŞKİ, çubuğun altında önce İNDİRİM, açıklama AYRI satırda
       return `<div style="border:1px solid ${b === enIyi && rel > 0 ? 'var(--acc2)' : 'var(--line)'};border-radius:10px;padding:7px 9px;margin:5px 0">
-        <div style="font-size:12.5px;font-weight:700">${B.ico} ${B.nm}
+        <div style="font-size:12.5px;font-weight:700">${brandLogoHTML(b, 20)} ${B.nm}
           ${say[b] ? `<span class="sub">· ${say[b]} hat</span>` : ''}
           <span style="float:right" class="sub">İlişki <b style="color:var(--ink)">${rel}/100</b></span></div>
         <div class="rsbar" style="margin:5px 0"><i style="width:${rel}%"></i></div>
@@ -3599,7 +3610,7 @@ function brandPanelHTML() {
 function brandRow(b, base, onclick) {
   const B = BRANDS[b], rel = brandRel(b), p = brandPrice(b, base);
   return `<button class="bigsell half" style="text-align:left" onclick="${onclick}">
-    ${B.ico} <b>${B.nm}</b> — <b class="pos">${fmt(p)}</b>${rel > 0 ? ` <span class="sub">(-%${Math.round(25 * rel / 100)} sadakat)</span>` : ''}
+    ${brandLogoHTML(b, 20)} <b>${B.nm}</b> — <b class="pos">${fmt(p)}</b>${rel > 0 ? ` <span class="sub">(-%${Math.round(25 * rel / 100)} sadakat)</span>` : ''}
     <div class="sub" style="margin-top:2px">${B.d}</div>
     <div class="rsbar" style="margin-top:4px"><i style="width:${rel}%"></i></div>
     <div class="sub">İlişki: ${rel}/100</div>
@@ -3987,12 +3998,12 @@ window.lineDrawCost = brand => {
       <tr><td>🗼 Enerji transfer merkezi × ${hubs}${zorunlu ? ' <span class="sub">(' + (hubs - zorunlu) + ' senin + ' + zorunlu + ' zorunlu)</span>' : ''}</td><td>${fmt(hubC)}</td></tr>
       <tr><td>📜 Transfer merkezi ruhsatı (${hubs} inşaat × ${fmt(LINE.permitPerHub)})</td><td>${fmt(permit)}</td></tr>
       <tr><td>👷 İşçilik (%${LINE.laborRate * 100})</td><td>${fmt(iscilik)}</td></tr>
-      <tr><td><b>TOPLAM</b> <span class="sub">${BRANDS[b].ico} ${BRANDS[b].nm}${brandRel(b) > 0 ? ' · -%' + Math.round(25 * brandRel(b) / 100) + ' sadakat' : ''}</span></td><td><b class="${G.cash < price ? 'neg' : 'pos'}">${fmt(price)}</b></td></tr>
+      <tr><td><b>TOPLAM</b> <span class="sub">${brandLogoHTML(b, 14)} ${BRANDS[b].nm}${brandRel(b) > 0 ? ' · -%' + Math.round(25 * brandRel(b) / 100) + ' sadakat' : ''}</span></td><td><b class="${G.cash < price ? 'neg' : 'pos'}">${fmt(price)}</b></td></tr>
       <tr><td>Hat kaybı · kurulum süresi</td><td>%${Math.round(loss)} · ${fmtHrs(secs / 3600)}</td></tr>
     </table>
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">⚙️ TRAFO MARKASI <span class="sub">(sadakat = iskonto)</span></div>
     <div style="display:flex;flex-wrap:wrap;gap:5px">
-      ${Object.keys(BRANDS).map(k => `<button class="primary ghostbtn" style="flex:1 1 44%;padding:8px 4px;font-size:11px;${k === b ? 'border-color:var(--acc2);color:var(--acc2)' : ''}" onclick="lineDrawCost('${k}')">${BRANDS[k].ico} ${BRANDS[k].nm}<br><span class="sub">${fmt(brandPrice(k, base))}</span></button>`).join('')}
+      ${Object.keys(BRANDS).map(k => `<button class="primary ghostbtn" style="flex:1 1 44%;padding:8px 4px;font-size:11px;${k === b ? 'border-color:var(--acc2);color:var(--acc2)' : ''}" onclick="lineDrawCost('${k}')">${brandLogoHTML(k, 16)} ${BRANDS[k].nm}<br><span class="sub">${fmt(brandPrice(k, base))}</span></button>`).join('')}
     </div>
     ${G.cash < price ? '<p class="neg">Kasanda yeterli para yok (' + fmt(G.cash) + ').</p>' : ''}
     <button class="primary" ${G.cash < price ? 'disabled' : ''} onclick="closeModal();lineDrawBuild('${b}')">✅ Onayla ve Kur — ${fmt(price)}</button>
@@ -7737,7 +7748,7 @@ function openBuildSheet() {
   // 🏭 MARKA FİLTRESİ (patron: "üste marka seçimi butonu koy ne olur ne olmaz")
   if (!tutLock) html += `<div class="catrow">
     <button class="${!SEL.brand ? 'on' : ''}" onclick="setBrandFilter('')">🏭 Tüm markalar</button>
-    ${Object.keys(BRAND_ARCH).map(b => `<button class="${SEL.brand === b ? 'on' : ''}" onclick="setBrandFilter('${b}')">${BRAND_ARCH[b].ico} ${brandKisa(b)}</button>`).join('')}
+    ${Object.keys(BRAND_ARCH).map(b => `<button class="${SEL.brand === b ? 'on' : ''}" onclick="setBrandFilter('${b}')">${brandLogoHTML(b, 15)} ${brandKisa(b)}</button>`).join('')}
   </div>`;
   if (tutGuideOn) html += `<p style="color:var(--gold);font-size:12.5px;font-weight:700;margin:4px 0">🎓 ${tutStepNow === 0 ? 'İlk santralin' : 'Yeni bölgene'}: ${tutPickT_.ico} ${tutPickT_.nm} — 👇 <b>ALTIN ÇERÇEVELİ</b> karta dokun, Satın Al'dan sonra haritada YANIP SÖNEN kareye dokunacaksın.</p>`;
   // ⚡ KAPASİTE LİSANS BANDI: santral kategorisi seçiliyken kurulu güç / limit / sonraki lisans
@@ -7765,12 +7776,12 @@ function openBuildSheet() {
       <div class="pimg" style="background:${CAT_GRAD[isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat]};position:relative;overflow:hidden" onclick="openDetail('${t}','${mode}')">
         <img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
         ${T.ico}
-        ${T.brand && BRAND_ARCH[T.brand] ? `<span style="position:absolute;top:2px;right:2px;background:#0b1220e6;border-radius:6px;padding:2px;line-height:0;box-shadow:0 1px 4px #000a">${brandLogoSVG(T.brand, 18)}</span>` : ''}
+        ${T.brand && BRAND_ARCH[T.brand] ? `<span style="position:absolute;top:2px;right:2px;background:#0b1220e6;border-radius:6px;padding:2px;line-height:0;box-shadow:0 1px 4px #000a">${brandLogoHTML(T.brand, 18)}</span>` : ''}
       </div>
       <div class="pbody" onclick="openDetail('${t}','${mode}')">
         <div class="pname">${T.nm} <span class="pmw">${isDepot ? T.baseCap + ' ton' : isStore ? T.cap + ' MWh' : T.mw + ' MW'}${isStore && T.loss ? ' <span class="sub">· ⚡kayıp %' + Math.round(T.loss * 100) + '</span>' : ''}</span></div>
         ${T.brand && BRAND_ARCH[T.brand] ? (() => { const B = BRAND_ARCH[T.brand], rel = brandRel(T.brand);
-          return `<div style="font-size:10.5px;font-weight:800;color:${B.col};margin:1px 0 2px">${B.ico} ${brandNm(T.brand)}${rel > 0 ? ` <span class="sub">· sadakat ${rel} → -%${Math.round(25 * rel / 100)}</span>` : ''}</div>`; })() : ''}
+          return `<div style="font-size:10.5px;font-weight:800;color:${B.col};margin:1px 0 2px">${brandLogoHTML(T.brand, 13)} ${brandNm(T.brand)}${rel > 0 ? ` <span class="sub">· sadakat ${rel} → -%${Math.round(25 * rel / 100)}</span>` : ''}</div>`; })() : ''}
         <div class="pspecs">${specs}</div>
         <div class="pdesc">${T.d}</div>
       </div>
