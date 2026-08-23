@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-23 15:37) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-23 16:49) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-23 15:37)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-23 16:49)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -3311,6 +3311,13 @@ const weekTarget = () => 150 + installedMW() * 25;
 // TTK'daki adı HOLDİNG. Şebekeye hafta içinde satılan enerji "devlet katkısı"dır: pazardan
 // pazara sıralanır, Bakanlık ödül öder, eşiği geçen şirket ÖLÇEK atlar. Lig/sezon YOK —
 // gerçek hayattaki isimlendirme var (patron: "sezon demek gerçekliğin dışında saçma durur").
+// 🏛️ HAFTA KAPANIŞ ÖDÜLLERİ (patron 23 Ağu — fiyat 1/3'e inince ölçeklendi):
+// #1 / #2 / #3 / ilk10 üçte bire indi (eski 30/20/12/5 M$), KATILIM yalnız yarıya (eski 2 M$)
+// çünkü o, geride kalan küçük oyuncunun can simidi. Ekrandaki liste de bu diziden okunur.
+const KATKI_ODUL = [1e7, 7e6, 4e6, 17e5, 1e6];
+// 📈 Ölçek terfi teşviki de aynı sebeple üçte bire indi (eşik × 20.000 → × 7.000):
+// Holding terfisi $400M ödüyordu — tek ödemeyle end-game'e atlatıyordu.
+const OLCEK_TESVIK = 7000;
 const OLCEK = [
   { nm: 'Mikro İşletme', ico: '🏠', esik: 0 },
   { nm: 'Küçük İşletme', ico: '🏢', esik: 300 },       // esik: bir ÜST ölçeğe geçmek için haftalık katkı (MWh)
@@ -3335,7 +3342,7 @@ function katkiHaftaKapat(eskiHafta, katki) {
   if (eski < OLCEK.length - 1 && katki >= OLCEK[eski + 1].esik) {
     // ⬆️ TERFİ: geçen haftaki katkı üst ölçeğin eşiğini aştı — resmî sınıf değişir, teşvik yatar
     G.olcek = eski + 1;
-    const y = OLCEK[G.olcek], odul = y.esik * 20000, ipOdul = G.olcek * 10;
+    const y = OLCEK[G.olcek], odul = y.esik * OLCEK_TESVIK, ipOdul = G.olcek * 10;
     G.cash += odul;
     G.ip = (G.ip || 0) + ipOdul; // 💠 terfi ödülü
     addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta şebekeye ${fmtN(katki)} MWh katkı sağladınız. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki: ${fmt(odul)} + 💠 ${ipOdul} İmtiyaz Puanı. Tebrikler!`, true);
@@ -3362,7 +3369,7 @@ function katkiHaftaKapat(eskiHafta, katki) {
       const sira = Object.entries(t).map(([uid, v]) => ({ uid, mwh: (v && v.mwh) || 0 })).sort((a, b) => b.mwh - a.mwh);
       const ben = sira.findIndex(x => x.uid === NET.id);
       if (ben < 0 || sira[ben].mwh < 1) return;
-      const odul = ben === 0 ? 3e7 : ben === 1 ? 2e7 : ben === 2 ? 1.2e7 : ben < 10 ? 5e6 : 2e6;
+      const odul = ben === 0 ? KATKI_ODUL[0] : ben === 1 ? KATKI_ODUL[1] : ben === 2 ? KATKI_ODUL[2] : ben < 10 ? KATKI_ODUL[3] : KATKI_ODUL[4];
       const ipOdul = ben === 0 ? 50 : ben === 1 ? 30 : ben === 2 ? 20 : ben < 10 ? 10 : 2; // 💠 sıralama ödülü
       G.cash += odul;
       G.ip = (G.ip || 0) + ipOdul;
@@ -6154,7 +6161,7 @@ window.openLeaderboard = (tab) => {
       rows.forEach(r => r.deger = fmtN(r.mwh) + ' MWh');
       const ben = rows.findIndex(r => r.me) + 1;
       el.innerHTML = `<table class="ledger">${rows.slice(0, 20).map(satir).join('')}${ben > 20 ? satir(rows[ben - 1], ben - 1) : ''}</table>
-        <p class="sub">🎁 Hafta kapanış ödülleri: #1 ${fmt(3e7)} · #2 ${fmt(2e7)} · #3 ${fmt(1.2e7)} · ilk 10 ${fmt(5e6)} · katkısı olan herkese ${fmt(2e6)}</p>`;
+        <p class="sub">🎁 Hafta kapanış ödülleri: #1 ${fmt(KATKI_ODUL[0])} · #2 ${fmt(KATKI_ODUL[1])} · #3 ${fmt(KATKI_ODUL[2])} · ilk 10 ${fmt(KATKI_ODUL[3])} · katkısı olan herkese ${fmt(KATKI_ODUL[4])}</p>`;
     }).catch(() => { const el = $('lbicerik'); if (el) el.innerHTML = '<p class="sub">Tablo okunamadı — bağlantını kontrol et.</p>'; });
   }
 };
