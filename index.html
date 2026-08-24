@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-24 17:51) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-24 18:05) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-24 17:51)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-24 18:05)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2597,7 +2597,7 @@ window.adFinishBuild = id => {
     if (!u2 || u2.buildDone <= Date.now()) return;
     u2.buildDone = Date.now();
     u2._ann = true; // "tamamlandı" anonsu bir de buradan yağmasın — toast'ı biz veriyoruz
-    ensureConnections();
+    ensureConnections(); ensureGridLinks();
     const T = TYPE_OF(u2.kind, u2.t);
     toast('🎬 ' + (T ? T.ico + ' ' + T.nm : 'Tesis') + ' inşaatı reklamla TAMAMLANDI!', '', null, 0, true);
     beep(880, .12);
@@ -2660,7 +2660,7 @@ window.ipSatinAl = kod => {
     const liste = G.units.filter(u => u.buildDone > Date.now());
     if (!liste.length || !ipHarca(10)) return;
     liste.forEach(u => { u.buildDone = Date.now(); u._ann = true; });
-    ensureConnections();
+    ensureConnections(); ensureGridLinks();
     toast('💠🏗️ ' + liste.length + ' inşaat anında tamamlandı!', '', null, 0, true);
   } else if (kod === 'arastirma') {
     if (!G.research.active || !ipHarca(12)) return;
@@ -2726,11 +2726,12 @@ const dischSecOf = T => Math.round(30 + 90 * Math.min(1, T.cap / 500));
 // UZAK PAZARA SATIŞ İZNİ — tek kapı. Hayalet aktarımı burada kesiyoruz:
 // uzak bir kareye ancak 🌍 konsorsiyum hattı, ⚡ KENDİ kurduğun hat, 🚨 acil ihale
 // ya da GERÇEKTEN komşu mesafe (≤ NEIGHBOR_KM) ile satabilirsin.
-function transferAllowed(from, to) {
+function transferAllowed(from, to, st) {
   if (!to || from === to) return true;
   const cn = consortiumFor(from);
   if (cn && cn.cell === to) return true;                          // 🌍 konsorsiyum hattı (ittifak/hissedar)
-  if (lineBetween(from, to)) return true;                         // ⚡ kendi hattın (ÇİFT YÖNLÜ, her düğümden)
+  // ⚡ kendi hattın (ÇİFT YÖNLÜ): depo verildiyse YALNIZ o deponun bağlı olduğu hat sayılır
+  if (st ? storeLineTo(st, to) : lineBetween(from, to)) return true;
   if (allyLineTo(from, to)) return true;                          // 🤝 ittifak hattı — her üye kullanır
   const at = G.ally && G.ally.tender;
   if (at && to === at.cell && Date.now() < at.until) return true; // 🚨 acil ihale teslimatı
@@ -2740,7 +2741,7 @@ function transferAllowed(from, to) {
 function sellChunk(st, mwh, targetCell, mult) {
   if (mwh <= 0) return 0;
   // İzinsiz uzak hedef sessizce KENDİ bölgene düşer — arayüz atlansa bile arbitraj açılmaz
-  if (targetCell && targetCell !== st.cell && !transferAllowed(st.cell, targetCell)) targetCell = null;
+  if (targetCell && targetCell !== st.cell && !transferAllowed(st.cell, targetCell, st)) targetCell = null;
   const cell = targetCell || st.cell;
   let gain;
   const at = G.ally && G.ally.tender;
@@ -2780,7 +2781,7 @@ function sellChunk(st, mwh, targetCell, mult) {
     if (allyOnline()) NET.allyLedger(G.allyId, bakim, 'ittifak hattı bakım payı').catch(() => {});
     return gain;
   }
-  const line = targetCell && targetCell !== st.cell ? lineBetween(st.cell, targetCell) : null;
+  const line = targetCell && targetCell !== st.cell ? storeLineTo(st, targetCell) : null;
   if (line) {
     // ⚡ NAKİL HATTI: hedef bölgenin fiyatı, mesafe kaybı düşülür (aktarım bedeli YOK — hattı zaten sen kurdun)
     const r = sellRevenue(cell, mwh);
@@ -3267,7 +3268,7 @@ function placeAt(c, ll) {
   if (PENDING.disc && PENDING.disc < 1) toast('🎬 Reklam indirimi uygulandı: ' + fmt(T.cost - price) + ' cebinde kaldı', '');
   const nu = addUnit(kind, t, ll);
   if (tutActive()) nu.hidden = true; // eğitimde ZORUNLU kurulanlar da başkalarına görünmez (patron kuralı)
-  ensureConnections(); // yeni santral boş slota otomatik bağlanır
+  ensureConnections(); ensureGridLinks(); // yeni santral boş slota, depo menzildeki merkeze otomatik bağlanır
   fetchWeather(); // yeni kare için canlı hava çek
   toast(T.ico + ' ' + T.nm + ' inşaatı başladı — ' + (tutActive() ? 'saniyeler içinde hazır 🎓' : T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn'), '');
   beep(440, .1);
@@ -3640,11 +3641,14 @@ function lineNodes(l) {
   out.push(b);
   return out;
 }
+// 🗼 MERKEZ SAYISI: iki UÇ her zaman birer transfer merkezidir (minimum 2), aralara eklenenler
+// kaybı düşürür. hubs = ARA merkez sayısı; toplam = hubs + 2.
+const hubTotal = hubs => (hubs || 0) + 2;
 function lineCost(km, hubs) {
   const cable = km * LINE.cableKm;
-  const permit = (hubs || 0) * LINE.permitPerHub; // 📜 her transfer merkezi ayrı bir inşaat sahası = ayrı ruhsat
-  const base = cable + LINE.transformer * 2 + permit + (hubs || 0) * LINE.hub;
-  return Math.round(base * (1 + LINE.laborRate));
+  const merkez = LINE.transformer * 2 + (hubs || 0) * LINE.hub; // 2 uç merkezi + ara merkezler
+  const permit = hubTotal(hubs) * LINE.permitPerHub;            // 📜 her merkez ayrı inşaat sahası = ayrı ruhsat
+  return Math.round((cable + merkez + permit) * (1 + LINE.laborRate));
 }
 const lineBuildSec = km => Math.min(86400, Math.round(60 + km * 6)); // en fazla 1 gün (kıtalararası tam sürümde 3 gün)
 const lineBrand = l => BRANDS[brandKey(l && l.brand)] || BRANDS.ortac;
@@ -3674,13 +3678,61 @@ function lineTouches(l, cell) { // bu karedeki deponun hatta erişimi var mı?
   const c = cellCenter(cell);
   return lineNodeCells(l).some(n => n === cell || kmDist(cellCenter(n), c) <= LINE_ACCESS_KM);
 }
+// 🗼 TRANSFER MERKEZİ = hattın şebeke kapısı. Depo bir merkeze BAĞLANARAK hatta girer
+// (patron: "bağlamak istediğim depo da bu transfer merkezine bağlanabilmeli").
+// Bağlantı anahtarı: "<hatId>:<düğümSırası>" — hat sökülünce anahtar geçersizleşir ve temizlenir.
+const gridKey = (l, i) => l.id + ':' + i;
+function gridNodes(l) { return lineNodeCells(l).map((c, i) => ({ line: l, i, cell: c, key: gridKey(l, i), uc: i === 0 || i === lineNodeCells(l).length - 1 })); }
+function allGridNodes() { return (G.lines || []).filter(lineUsable).reduce((a, l) => a.concat(gridNodes(l)), []); }
+const gridNodeOf = key => key ? allGridNodes().find(n => n.key === key) || null : null;
+const storeGridNode = st => (st && st.grid) ? gridNodeOf(st.grid) : null;
+const gridNodeName = n => n ? (placeName(n.cell) + (n.uc ? ' (uç merkez)' : ' (ara merkez)')) : '—';
+// bir deponun bir merkeze bağlanabilmesi için mesafe şartı
+const gridReach = (st, n) => kmDist(cellCenter(n.cell), cellCenter(st.cell)) <= LINE_ACCESS_KM;
+const gridCandidates = st => allGridNodes().filter(n => gridReach(st, n))
+  .sort((a, b) => kmDist(cellCenter(a.cell), cellCenter(st.cell)) - kmDist(cellCenter(b.cell), cellCenter(st.cell)));
+// 🔄 sessiz başarısızlık olmasın: bağlantısı olmayan depo menzilindeki EN YAKIN merkeze
+// kendiliğinden bağlanır (oyuncu elle kestiyse — noGrid — dokunulmaz). Hat sökülünce temizlenir.
+function ensureGridLinks() {
+  if (!G || !G.units) return;
+  for (const st of stores()) {
+    if (st.link) { st.grid = null; continue; }        // bağlı depo grubun MERKEZİNDEN satar
+    if (st.grid && !gridNodeOf(st.grid)) st.grid = null; // hat söküldü / düğüm kalmadı
+    if (st.grid || st.noGrid) continue;
+    const a = gridCandidates(st);
+    if (a.length) st.grid = a[0].key;
+  }
+}
+// deponun KENDİ bağlı olduğu hat ve o hattın açtığı uzak pazarlar
+const storeLine = st => { const n = storeGridNode(st); return (n && lineUsable(n.line)) ? n.line : null; };
+function storeLineTargets(st) {
+  const l = st && !st.link ? storeLine(st) : null;
+  if (!l) return [];
+  const out = [];
+  for (const n of lineNodeCells(l)) {
+    if (n === st.cell || kmDist(cellCenter(n), cellCenter(st.cell)) <= NEIGHBOR_KM) continue;
+    if (!out.some(x => x.cell === n)) out.push({ cell: n, line: l });
+  }
+  return out;
+}
+const storeLineTo = (st, to) => { const l = storeLine(st); return (l && lineTouches(l, to)) ? l : null; };
+// bu karedeki depoların BAĞLI olduğu hatlar
+function cellGridLines(cell) {
+  const out = [];
+  for (const st of stores()) {
+    if (st.cell !== cell || st.link || !st.grid) continue;
+    const n = storeGridNode(st);
+    if (n && !out.some(l => l.id === n.line.id)) out.push(n.line);
+  }
+  return out;
+}
 const myLinesFor = cell => (G.lines || []).filter(l => lineUsable(l) && lineTouches(l, cell));
 // iki kare arasında kullanılabilir EN AZ KAYIPLI hat
-const lineBetween = (from, to) => myLinesFor(from).filter(l => lineTouches(l, to)).sort((a, b) => lineLoss(a) - lineLoss(b))[0] || null;
+const lineBetween = (from, to) => cellGridLines(from).filter(l => lineTouches(l, to)).sort((a, b) => lineLoss(a) - lineLoss(b))[0] || null;
 // bu kareden hatla satılabilecek YENİ pazarlar (komşu mesafede zaten satılabilenler listelenmez)
 function lineTargets(cell) {
   const out = [];
-  for (const l of myLinesFor(cell)) for (const n of lineNodeCells(l)) {
+  for (const l of cellGridLines(cell)) for (const n of lineNodeCells(l)) {
     if (n === cell || kmDist(cellCenter(n), cellCenter(cell)) <= NEIGHBOR_KM) continue;
     const v = out.find(x => x.cell === n);
     if (!v) out.push({ cell: n, line: l });
@@ -4005,7 +4057,7 @@ function drawBarUpdate() {
     ? '✏️ <b>İLK NOKTA</b> — depolu bölgene dokun (hat oradan başlar)'
     : n === 1
       ? '✏️ <b>' + placeName(LDRAW.cells[0]) + '</b> seçildi — şimdi <b>varış noktasına</b> dokun. Aralara dokunursan oraya transfer merkezi kurulur.'
-      : '⚡ ' + LDRAW.cells.map(c => placeName(c)).join(' → ') + '<br><span class="sub">' + fmtN(km) + ' km · 🗼 ' + hubs + ' transfer merkezi · kayıp %' + Math.round(lineBaseLoss({ path: yol, km, hubs })) + '</span>';
+      : '⚡ ' + LDRAW.cells.map(c => placeName(c)).join(' → ') + '<br><span class="sub">' + fmtN(km) + ' km · 🗼 ' + hubTotal(hubs) + ' transfer merkezi · kayıp %' + Math.round(lineBaseLoss({ path: yol, km, hubs })) + '</span>';
   $('drawcost').disabled = n < 2;
   $('drawcost').textContent = n < 2 ? '💰 Maliyet' : '💰 Maliyet — ' + fmt(cost);
 }
@@ -4019,7 +4071,7 @@ window.lineDrawCost = brand => {
   const b = brandKey(brand || G._lastBrand || bestBrand());
   const base = lineCost(km, hubs);
   const price = brandPrice(b, base);
-  const cable = km * LINE.cableKm, permit = hubs * LINE.permitPerHub;
+  const cable = km * LINE.cableKm, permit = hubTotal(hubs) * LINE.permitPerHub;
   const trafo = LINE.transformer * 2, hubC = hubs * LINE.hub;
   const iscilik = base - (cable + permit + trafo + hubC);
   const loss = Math.max(5, Math.min(100, lineBaseLoss({ path: cells, km, hubs }) + BRANDS[b].loss));
@@ -4028,12 +4080,12 @@ window.lineDrawCost = brand => {
   $('modal').innerHTML = `
     <h2>⚡ Hat Maliyeti</h2>
     <p><b>${secilen.map(c => placeName(c)).join(' → ')}</b><br>
-    <span class="sub">${fmtN(km)} km · 🗼 ${hubs} enerji transfer merkezi · varış alım fiyatı <b class="pos">${fmt(cellPriceNow(hedef))}</b>/MWh</span></p>
+    <span class="sub">${fmtN(km)} km · 🗼 ${hubTotal(hubs)} enerji transfer merkezi · varış alım fiyatı <b class="pos">${fmt(cellPriceNow(hedef))}</b>/MWh</span></p>
     <table class="ledger">
       <tr><td>🔌 Hat ücreti — kablo (${fmtN(km)} km × ${fmt(LINE.cableKm)})</td><td>${fmt(cable)}</td></tr>
-      <tr><td>⚙️ Uç trafoları (2 adet)</td><td>${fmt(trafo)}</td></tr>
-      <tr><td>🗼 Enerji transfer merkezi × ${hubs}${zorunlu ? ' <span class="sub">(' + (hubs - zorunlu) + ' senin + ' + zorunlu + ' zorunlu)</span>' : ''}</td><td>${fmt(hubC)}</td></tr>
-      <tr><td>📜 Transfer merkezi ruhsatı (${hubs} inşaat × ${fmt(LINE.permitPerHub)})</td><td>${fmt(permit)}</td></tr>
+      <tr><td>🗼 Uç transfer merkezi (2 adet — her hatta zorunlu)</td><td>${fmt(trafo)}</td></tr>
+      ${hubs ? `<tr><td>🗼 Ara transfer merkezi × ${hubs}${zorunlu ? ' <span class="sub">(' + (hubs - zorunlu) + ' senin + ' + zorunlu + ' zorunlu)</span>' : ''}</td><td>${fmt(hubC)}</td></tr>` : ''}
+      <tr><td>📜 Transfer merkezi ruhsatı (${hubTotal(hubs)} inşaat × ${fmt(LINE.permitPerHub)})</td><td>${fmt(permit)}</td></tr>
       <tr><td>👷 İşçilik (%${LINE.laborRate * 100})</td><td>${fmt(iscilik)}</td></tr>
       <tr><td><b>TOPLAM</b> <span class="sub">${brandLogoHTML(b, 14)} ${BRANDS[b].nm}${brandRel(b) > 0 ? ' · -%' + Math.round(25 * brandRel(b) / 100) + ' sadakat' : ''}</span></td><td><b class="${G.cash < price ? 'neg' : 'pos'}">${fmt(price)}</b></td></tr>
       <tr><td>Hat kaybı · kurulum süresi</td><td>%${Math.round(loss)} · ${fmtHrs(secs / 3600)}</td></tr>
@@ -4063,7 +4115,7 @@ window.lineDrawBuild = brand => {
   G.lines = G.lines || [];
   G.lines.push({ id: G.nextId++, from: cells[0], to: cells[cells.length - 1], path: cells, km, hubs, brand: b, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1) });
   LDRAW = null; ldrawClear(); $('drawbar').classList.remove('show'); setMode(null);
-  toast('⚡ ' + BRANDS[b].ico + ' ' + secilen.map(c => placeName(c)).join(' → ') + ' — ' + fmtN(km) + ' km · 🗼 ' + hubs + ' merkez · ' + fmtHrs(secs / 3600) + ' sonra devrede', '', null, 0, true);
+  toast('⚡ ' + BRANDS[b].ico + ' ' + secilen.map(c => placeName(c)).join(' → ') + ' — ' + fmtN(km) + ' km · 🗼 ' + hubTotal(hubs) + ' merkez · ' + fmtHrs(secs / 3600) + ' sonra devrede', '', null, 0, true);
   beep(500, .12);
   save(); drawOverlay(); openLinePanel();
 };
@@ -4076,15 +4128,100 @@ function lineRota(l) {
 }
 // ✅ ERİŞİM RAPORU: "100 milyon harcadım ama depolar bağlanmıyor" şikâyetinin cevabı ekranda dursun.
 function lineErisimHTML(l) {
-  const depolar = stores().filter(x => x.buildDone <= Date.now() && !x.link && lineTouches(l, x.cell));
-  if (!depolar.length) return `<div class="sub neg">⚠️ Bu hatta bağlı deposu YOK — hattın düğümlerinden birine
-    ${LINE_ACCESS_KM} km içinde bir depo kur, satış ekranında "⚡ HAT ile SAT" belirir.</div>`;
-  const pazar = [...new Set(depolar.flatMap(x => lineTargets(x.cell).filter(h => h.line.id === l.id).map(h => h.cell)))];
+  const depolar = stores().filter(x => x.buildDone <= Date.now() && !x.link && (storeLine(x) || {}).id === l.id);
+  const menzil = stores().filter(x => x.buildDone <= Date.now() && !x.link && !storeLine(x) && gridCandidates(x).some(n => n.line.id === l.id));
+  if (!depolar.length) return `<div class="sub neg">⚠️ Bu hatta bağlı depo YOK — ${menzil.length
+    ? menzil.length + ' depo menzilde: depo sayfasından <b>🗼 Nakil Hattına Bağlan</b> ya da haritada bir 🗼 merkeze dokun.'
+    : 'hattın 🗼 merkezlerinden birine ' + LINE_ACCESS_KM + ' km içinde bir depo kur.'}</div>`;
+  const pazar = [...new Set(depolar.flatMap(x => storeLineTargets(x).filter(h => h.line.id === l.id).map(h => h.cell)))];
   return `<div class="sub pos">✅ ${depolar.length} deponun bu hatta erişimi var${pazar.length
     ? ` · açtığı pazar: ${pazar.slice(0, 3).map(c => placeName(c)).join(', ')}${pazar.length > 3 ? ' +' + (pazar.length - 3) : ''}`
     : ''}</div>${pazar.length ? '' : `<div class="sub">⚠️ Hattın uçları birbirine ${NEIGHBOR_KM} km'den yakın —
     bu pazarlara hat olmadan da satabiliyorsun. Uzak bir şehre hat çekmek gelir getirir.</div>`}`;
 }
+// 🗼 DEPO SAYFASINDAKİ NAKİL HATTI SATIRI (patron: "bağlamak istediğim depo bu transfer
+// merkezine bağlanabilmeli") — hangi merkeze bağlı, hangi pazarları açıyor, bağlan/kes.
+// 🗼 MERKEZE DOKUNUNCA: hangi hat, hangi pazarlar, bağlı depolar + oradan toplu satış
+window.openGridNode = key => {
+  const n = gridNodeOf(key);
+  if (!n) return;
+  const l = n.line, bagli = stores().filter(x => !x.link && x.grid && (storeGridNode(x) || {}).line === l);
+  const stok = bagli.reduce((a, x) => a + (isLinked(x) ? groupStored(x) : x.stored), 0);
+  const pazar = lineNodeCells(l).filter((c, i) => i !== n.i);
+  $('modal').innerHTML = `
+    <h2>🗼 Enerji Transfer Merkezi</h2>
+    <p><b>${placeName(n.cell)}</b> <span class="sub">${n.uc ? '· hattın ucu' : '· ara merkez'}</span><br>
+    <span class="sub">${lineRota(l)} · ${fmtN(l.km)} km · 🗼 ${hubTotal(l.hubs)} merkez · kayıp %${Math.round(lineLoss(l))}</span></p>
+    <p class="sub">Bu merkeze <b>${LINE_ACCESS_KM} km</b> içindeki depolar bağlanabilir. Bağlanan depo,
+    hattın <b>bütün merkezlerinin pazarına</b> satabilir.</p>
+    <table class="ledger">
+      <tr><td>Hatta bağlı depo</td><td>${bagli.length} adet</td></tr>
+      <tr><td>Bağlı depolardaki enerji</td><td class="pos">${fmtE(stok)} MWh</td></tr>
+      <tr><td>Ulaşılan pazar</td><td>${pazar.map(c => placeName(c)).filter((x, i, a) => a.indexOf(x) === i).join(', ') || '—'}</td></tr>
+    </table>
+    ${stok >= .005 ? `<div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">⚡ HATTAN TOPLU SAT <span class="sub">(bağlı ${bagli.length} deponun tamamı)</span></div>
+      ${lineNodeCells(l).filter((c, i, a) => a.indexOf(c) === i).map(c => `<button class="bigsell half" onclick="closeModal();sellGrid(${l.id},'${c}')">⚡ ${placeName(c)} pazarına SAT <span class="sub">· ${fmt(cellPriceNow(c) * (1 - lineLoss(l) / 100))}/MWh</span></button>`).join('')}`
+      : '<p class="sub">Bağlı depolarda satılacak enerji yok.</p>'}
+    <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
+  $('overlay').classList.add('show');
+};
+// ⚡ HATTAN TOPLU SATIŞ (patron: "3 noktalı hatta o 3 depoyu birleşik depo yapmış oluyorum,
+// istediğim herhangi bir bölgeye satış yapmalıyım"). Depoların KAPASİTESİ birleşmez (bileşik
+// depo freni yerinde kalır) — birleşen SATIŞTIR: hepsi aynı anda seçilen pazara boşalır.
+window.sellGrid = (lineId, cell) => {
+  const l = (G.lines || []).find(x => x.id === lineId);
+  if (!l) return;
+  const sts = stores().filter(st => !st.link && !st.disch && st.buildDone <= Date.now()
+    && st.grid && (storeGridNode(st) || {}).line === l
+    && (isLinked(st) ? groupStored(st) : st.stored) >= .005);
+  if (!sts.length) { toast('⚡ Bu hatta satılacak enerjisi olan bağlı depo yok', 'warn'); return; }
+  sts.forEach(st => startDischarge(st.id, 1, null, cell, true));
+  toast('⚡ ' + sts.length + ' depo ' + placeName(cell) + ' pazarına boşaltılıyor — hat kaybı %' + Math.round(lineLoss(l)), '', null, 0, true);
+  save(); renderNav(); renderLinePanel();
+};
+function gridRowHTML(u) {
+  if (u.kind !== 'store' || u.link) return '';
+  const n = storeGridNode(u), aday = gridCandidates(u);
+  if (!n && !aday.length) return `<div class="sub" style="margin-top:4px">🗼 Menzilinde nakil hattı merkezi yok —
+    hat çekersen ya da hattın bir merkezine ${LINE_ACCESS_KM} km içinde depo kurarsan buradan bağlanır.</div>`;
+  if (!n) return `<button class="bigsell half" onclick="startGridLink(${u.id})">🗼 Nakil Hattına Bağlan — haritadan merkez seç</button>
+    <div class="sub">${aday.length} transfer merkezi menzilinde.</div>`;
+  const hedef = storeLineTargets(u);
+  return `<div class="sub pos" style="margin-top:4px">🗼 Nakil hattına bağlı: <b>${gridNodeName(n)}</b>
+    <span class="sub">· ${lineRota(n.line)} · kayıp %${Math.round(lineLoss(n.line))}</span></div>
+    ${hedef.length ? `<div class="sub">Satabildiğin pazarlar: ${hedef.map(h => placeName(h.cell)).join(', ')}</div>`
+      : `<div class="sub">⚠️ Bu hattın açtığı uzak pazar yok — düğümleri ${NEIGHBOR_KM} km içinde.</div>`}
+    ${aday.length > 1 ? `<button class="bigsell half" onclick="startGridLink(${u.id})">🗼 Başka merkeze bağlan</button>` : ''}
+    <button class="bigsell half" onclick="gridUnlink(${u.id})">🔌 Hat bağlantısını kes</button>`;
+}
+// 🗼 BAĞLAMA MODU: haritadaki transfer merkezine dokun (depo/santral bağlamanın kardeşi)
+let GRID_SRC = null;
+window.startGridLink = id => {
+  const st = storeById(id);
+  if (!st) return;
+  if (st.link) { toast('⛔ Bağlı depo hatta giremez — grup MERKEZDEN satar', 'warn', null, 0, true); return; }
+  if (!gridCandidates(st).length) { toast('🗼 Menzilinde (' + LINE_ACCESS_KM + ' km) transfer merkezi yok', 'warn', null, 0, true); return; }
+  GRID_SRC = id;
+  hideSheets(); closeLinePanel();
+  setMode('grid');
+  toast('🗼 Bağlanacak TRANSFER MERKEZİNE haritadan dokun', '', null, 0, true);
+};
+window.gridConnect = (id, key) => {
+  const st = storeById(id), n = gridNodeOf(key);
+  if (!st || !n) return;
+  if (!gridReach(st, n)) { toast('🗼 Bu merkez çok uzak — en fazla ' + LINE_ACCESS_KM + ' km', 'warn', null, 0, true); return; }
+  st.grid = key; st.noGrid = false;
+  toast('🗼 ' + unitName(st) + ' → ' + gridNodeName(n) + ' bağlandı — ' + lineRota(n.line), '', null, 0, true);
+  beep(680, .1);
+  save(); drawOverlay(); openUnitSheet(id);
+};
+window.gridUnlink = id => {
+  const st = storeById(id);
+  if (!st) return;
+  st.grid = null; st.noGrid = true; // ELLE kesildi — oto-bağlama geri bağlamaz
+  toast('🔌 Nakil hattı bağlantısı kesildi', 'warn');
+  save(); drawOverlay(); openUnitSheet(id);
+};
 function gridPanelHTML() {
   const ls = G.lines || [];
   let h = `<div style="font-size:12px;margin:12px 0 4px">⚡ <b>NAKİL HATLARIN</b> <span class="sub">${ls.length} hat</span></div>`;
@@ -4093,7 +4230,7 @@ function gridPanelHTML() {
     const rdy = lineReady(l), loss = Math.round(lineLoss(l)), wear = Math.round(100 - lineWear(l));
     return `<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0">
       <div style="font-size:12.5px;font-weight:700">${lineRota(l)} <span class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</span></div>
-      ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · ${l.hubs} transfer merkezi · yıpranma %${wear}</div>
+      ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · 🗼 ${hubTotal(l.hubs)} transfer merkezi · yıpranma %${wear}</div>
       ${lineErisimHTML(l)}
       <button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))}</button>
       ${wear > 5 ? `<button class="bigsell half" onclick="repairLine(${l.id})">🔧 Hat Bakımı — ${fmt(Math.round(wear * l.km * 900))}</button>` : ''}
@@ -4112,7 +4249,7 @@ function gridPanelHTML() {
       return `<div style="border:1px solid #1f7a5a;border-radius:10px;padding:8px 10px;margin:6px 0">
         <div style="font-size:12.5px;font-weight:700">${placeName(l.from)} → ${placeName(l.to)}
           <span class="sub">${fmtN(l.km)} km · ${l.by || '—'} kurdu</span></div>
-        ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · ${l.hubs} transfer merkezi</div>
+        ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · 🗼 ${hubTotal(l.hubs)} transfer merkezi</div>
           <div class="sub ${yakin ? 'pos' : 'neg'}">${yakin ? '✅ Deponun bu hatta erişimi var — satış ekranında görünür' : '⚠️ Deponun uzak: hattın ucuna ya da bir transfer merkezine ' + ALLY_ACCESS_KM + ' km içinde depo kur'}</div>`
         : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
       </div>`;
@@ -4153,7 +4290,15 @@ function drawLines() {
     // birer transfer merkezidir ve deponun hatta bağlandığı noktadır, haritada görünmeleri şart.
     nodes.forEach((n, i) => {
       const uc = i === 0 || i === nodes.length - 1;
-      overlayLayer.push(L.marker(n, { icon: divIcon('<div style="filter:drop-shadow(0 1px 2px #000)' + (uc ? ';transform:scale(1.18)' : '') + '">' + hubSVG(uc ? 24 : 22, 'h' + l.id + '_' + i) + '</div>', [uc ? 24 : 22, uc ? 24 : 22]), interactive: false }).addTo(map));
+      const key = gridKey(l, i);
+      const mk = L.marker(n, { icon: divIcon('<div style="filter:drop-shadow(0 1px 2px #000)' + (uc ? ';transform:scale(1.18)' : '') + '">' + hubSVG(uc ? 24 : 22, 'h' + l.id + '_' + i) + '</div>', [uc ? 24 : 22, uc ? 24 : 22]), zIndexOffset: 500 }).addTo(map);
+      mk.on('click', ev => {
+        if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
+        if (MODE === 'grid' && GRID_SRC != null) { const src = GRID_SRC; GRID_SRC = null; setMode(null); gridConnect(src, key); return; }
+        if (MODE) { mapTapAt(n); return; } // yerleştirme/çizim sürüyorsa simge dokunuşu YUTMASIN
+        openGridNode(key);
+      });
+      overlayLayer.push(mk);
     });
   }
 }
@@ -5949,7 +6094,7 @@ function aucRemoveAsset(a) {
   if (a.assetKind === 'unit') {
     const i = G.units.findIndex(u => u.id === a.assetId);
     if (i >= 0) { const u = G.units[i]; if (unitMarkers[u.id]) { unitMarkers[u.id].remove(); delete unitMarkers[u.id]; } G.units.splice(i, 1); ok = true; }
-    ensureConnections();
+    ensureConnections(); ensureGridLinks();
   } else if (a.assetKind === 'line') {
     const i = (G.lines || []).findIndex(l => l.id === a.assetId);
     if (i >= 0) { G.lines.splice(i, 1); ok = true; }
@@ -6781,10 +6926,12 @@ function setMode(m) {
       : m === 'line' ? '⚡ Hattın varacağı uzak noktaya dokun'
       : m === 'link' ? '🔗 Bağlanacak DEPOYA haritadan dokun'
       : m === 'plink' ? '🔗 Santralı bağlayacağın İSTASYONA dokun'
+      : m === 'grid' ? '🗼 Bağlanacak TRANSFER MERKEZİNE dokun'
       : 'ℹ️ Bilgi almak istediğin konuma dokun';
   }
   if (m !== 'link') LINK_SRC = null; // mod bırakılınca bağlama seçimi de iptal
   if (m !== 'plink') PLINK_SRC = null;
+  if (m !== 'grid' && typeof GRID_SRC !== 'undefined') GRID_SRC = null;
   $('buildbtn').classList.toggle('on', m === 'build');
   $('infobtn').classList.toggle('on', m === 'info');
 }
@@ -6869,18 +7016,23 @@ function initMap(center, zoom) {
   map.on('click', e => {
     if (!G || !G._started) return;
     if (!MODE) return; // mod seçili değilse harita serbest gezinti — panel açılmaz
-    SEL.cell = cellId([e.latlng.lat, e.latlng.lng]);
-    SEL.ll = [e.latlng.lat, e.latlng.lng];
-    if (MODE === 'draw') { lineDrawAdd(SEL.cell); return; } // ✏️ çok noktalı hat: mod SÜRER, arka arkaya nokta eklenir
-    if (MODE === 'line') { const src = LINE_SRC; setMode(null); if (src) lineConfirm(SEL.cell); return; } // hat hedefi seçildi
-    if (MODE === 'build') { // YERLEŞTİRME: satın alınan ürün bu konuma kurulur
-      if (PENDING) placeAt(SEL.cell, SEL.ll);
-      else { setMode(null); openBuildSheet(); }
-      return;
-    }
-    setMode(null);
-    openCellSheet(SEL.cell, SEL.ll, 'info');
+    mapTapAt([e.latlng.lat, e.latlng.lng]);
   });
+}
+// 🗺️ HARİTA DOKUNUŞUNUN TEK GÖVDESİ: haritadan da, üstteki 🗼 transfer merkezi simgesinden de
+// aynı davranış çıksın (simge, yerleştirme/çizim modunda dokunuşu YUTMASIN).
+function mapTapAt(ll) {
+  SEL.cell = cellId(ll);
+  SEL.ll = ll;
+  if (MODE === 'draw') { lineDrawAdd(SEL.cell); return; } // ✏️ çok noktalı hat: mod SÜRER
+  if (MODE === 'line') { const src = LINE_SRC; setMode(null); if (src) lineConfirm(SEL.cell); return; }
+  if (MODE === 'build') { // YERLEŞTİRME: satın alınan ürün bu konuma kurulur
+    if (PENDING) placeAt(SEL.cell, SEL.ll);
+    else { setMode(null); openBuildSheet(); }
+    return;
+  }
+  setMode(null);
+  openCellSheet(SEL.cell, SEL.ll, 'info');
 }
 const divIcon = (html, size) => L.divIcon({ html, className: '', iconSize: size, iconAnchor: [size[0] / 2, size[1] / 2] });
 function unitIconPx(u) {
@@ -7996,7 +8148,7 @@ function openUnitSheet(id) {
           const g = altSatGain(c, satMwh, 1);
           return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${c}')" ${satMwh < .005 ? 'disabled' : ''}>🔗 ${placeName(c)} ${cellCode(c)} bölgesine SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">bağlı depo hattı · kesinti yok</span></button>`;
         }).join('')}
-      ${lineTargets(u.cell).map(h => ({ h, g: altSatGain(h.cell, satMwh, 1 - lineLoss(h.line) / 100) }))
+      ${storeLineTargets(u).map(h => ({ h, g: altSatGain(h.cell, satMwh, 1 - lineLoss(h.line) / 100) }))
         .sort((a, b) => b.g - a.g).slice(0, 4)
         .map(({ h, g }) => `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${h.cell}')" ${satMwh < .005 || g <= rAll.gain ? 'disabled' : ''}>⚡ HAT ile ${placeName(h.cell)}'e SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">hat kaybı %${Math.round(lineLoss(h.line))} · ${lineBrand(h.line).nm}</span></button>`).join('')}
       ${allyLinesFor(u.cell).map(l => { // 🤝 İTTİFAK HATTI — başkan çekti, HER ÜYE kullanır
@@ -8025,6 +8177,7 @@ function openUnitSheet(id) {
         return `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🔗 DEPO BAĞLANTISI
             <span class="sub">${connCount(u)}/${STORE_TYPES[u.t].conn} nokta dolu</span></div>
           <button class="bigsell half" onclick="startStoreLink(${u.id})" ${bosSlot <= 0 || !aday.length ? 'disabled' : ''}>🔗 Bağlan — haritadan depo seç</button>
+          ${gridRowHTML(u)}
           ${isLinked(u) ? `<button class="bigsell half" onclick="storeUnlinkAsk(${u.id})">🔌 Bağlantıyı Kes</button>` : ''}
           ${bosSlot <= 0 ? '<p class="sub">Bağlantı noktaların dolu — önce bir bağlantı kes.</p>'
             : !aday.length ? '<p class="sub">Bağlanabilecek başka depo yok.</p>' : ''}`;
