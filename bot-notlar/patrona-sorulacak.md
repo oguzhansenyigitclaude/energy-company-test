@@ -1,5 +1,20 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-24 21:13 turu — 1 yeni izlenecek konu (kesinlik/kapsam belirsiz), 1 net düşük riskli düzeltme yapıldı
+
+135 yeni `suggestions` kaydı işlendi (2026-08-23 21:24 – 2026-08-24 20:26 UTC). **1 net/düşük riskli düzeltme yapıldı:** `placeAt()` `PENDING` boşken çöküyordu (bkz. `duzeltmeler.md`, önceki turdaki `countryAt()` çökmesiyle aynı aile — yalnız botların kendi debug-hook çağrılarında tetikleniyor). Aşağıdaki konu **yeni**:
+
+### 1) 💰 Depo SAT tahmini ile gerçekleşen kasa artışı arasında değişken sapma (%2 – %57)
+Kayıtlar: `-P-n4GWmSaSQQx213FWk` (CLBOT1, 09:23, %19.6), `-P-n4SXgLY0MmSgTLj3f` (CLBOT2, 09:24, %8.3), `-P-n4XBubCIUpS_-rfaL` (CLBOT3, 09:24, %45.0 + "YATIRIM DOGRULAMA HATASI: cost=0 unitsBefore=14 unitsAfter=14"), `-P-n4apfMgMYc6Zc1Ws_` (CLBOT4, 09:25, %39.2), `-P-n4fTi8whO_59MNKkj` (CLBOT5, 09:25, %57.0), `-P-niv10_Fp7A54bVRWp` (CLBOT8, 12:25, %20), `-P-pRu5Re--zcnlfuLNM` (CLBOT9, 20:26, %2.1)
+
+7 bağımsız kayıt, gün boyu farklı saatlerde: bot, SAT'a basmadan hemen önce panelde gösterilen "tahmini" kazanç ile işlem sonrası kasadaki gerçek artış arasında %2 ile %57 arasında değişen bir fark bildiriyor. Aynı gün başka bir bot (`-P-pEkGO8Ti4H5rggw49`, CLBOT1, 19:00) bunun "timed-discharge, anında kasa artmıyor (tasarım, bug değil)" olduğunu not etmiş — yani boşaltma (discharge) süresi boyunca fiyat/talep/hava koşulları değiştiği için tahmin ile gerçekleşen zaten doğal olarak ayrışabilir, bu tasarım gereği olabilir. Ayrıca `-P-n4XBubCIUpS_-rfaL` kaydında ek bir anomali var: `wind_3__ortac` santrali "(-0)" maliyetle "satın alındı" görünüyor ama birim sayısı değişmemiş (`unitsBefore=14 unitsAfter=14`) — bu tek kayıt, tekrarlanmadı.
+
+**Neden kendim düzeltmedim:** Sapma oranı çok değişken (%2-%57) ve tutarlı bir kalıp göstermiyor; bir bot bunu açıkça "tasarım, bug değil" olarak işaretlemiş. Kök nedenin (a) boşaltma süresince fiyat/talebin değişmesi (beklenen, ekonomik tasarım) mi, (b) tahmin hesabındaki bir yuvarlama/önbellek sorunu mu, yoksa (c) botların kendi ölçüm zamanlamasındaki bir hata mı olduğu statik kod okumasıyla kesinleştirilemedi — `sellRevenueAfter()`/`startDischarge()` mantığı karmaşık ve talep/fiyat girdileri zamanla değişiyor, riskli bir "düzeltme" yanlış teşhisle ekonomiyi bozabilir. Ekonomi/denge sabitlerine dokunma kuralına da girebilecek bir alan olduğu için size bırakıyorum.
+
+**Öneri (karar sizde):** Eğer bu sapma sizin tasarımınızdaki "boşaltma süresince fiyat değişebilir" davranışıysa ek aksiyon gerekmez — panelde "tahmini" ibaresinin yanına bir tolerans notu ("±%X'e kadar değişebilir") eklenmesi oyuncu beklentisini netleştirebilir. Değilse (tahmin hesaplaması gerçekten hatalıysa), `sellRevenueAfter()`'ın tahmin ile gerçek satış anında kullandığı girdilerin (fiyat, talep) birebir aynı olup olmadığının kontrol edilmesini öneririm. Tekrarlanırsa (özellikle %2 gibi düşük sapmalarda bile eşik aşılıyorsa) önceliklendirilecek.
+
+Aşağıdaki kayıtlar incelendi, bug DEĞİL / zaten bilinen ailelerin tekrarı bulundu (kod değişikliği yapılmadı) — detaylar `islenen.md`'de: `ERR_CONNECTION_RESET` ağ hatası ailesi (botların kendi ortam sorunu), tek seferlik sayfa yükleme timeout'u, `MAX_PER_CELL` dolu kare sessiz red ailesi (tasarım gereği doğru), cloud-save senkron gecikmesi tek seferlik gözlem, botların kendilerinin "bug değil" diye işaretlediği 2 kayıt.
+
 ## 2026-08-23 21:08 turu — 1 yeni konu (veri kaybı riski), 1 net düşük riskli düzeltme yapıldı
 
 140 yeni `suggestions` kaydı işlendi (2026-08-22 21:24 – 2026-08-23 20:25 UTC). **1 net/düşük riskli düzeltme yapıldı:** `countryAt()` bozuk koordinatta çöküyordu (bkz. `duzeltmeler.md`). Aşağıdaki konu **yeni** ve auth/jeton akışına dokunduğu için koda dokunulmadı:

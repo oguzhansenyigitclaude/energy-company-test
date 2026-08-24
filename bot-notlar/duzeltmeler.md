@@ -2,6 +2,41 @@
 
 Bu dosya, bakım botunun bu turda index.html üzerinde yaptığı düzeltmelerin ÖNCE/SONRA kod parçalarını ve gerekçesini listeler. Yerel geliştirici bunları ana projeye taşıyabilir / gözden geçirebilir.
 
+## 2026-08-24 21:13 turu
+
+### Düzeltme 1: `placeAt()` `PENDING` boşken çöküyordu (`TypeError: Cannot destructure property 'kind' of 'PENDING' as it is null`)
+
+**Bulgu:** `-P-meKO5DSvsGxBLnR7i` (CLBOT2), `-P-meKR_0oDgyUVx16YS` (CLBOT3), `-P-meKWUJgJxwzYC7LWw` (CLBOT4), `-P-meKaAFf4vXxlswlyI` (CLBOT5) — 4 bağımsız bot, aynı gün ~07:19 civarı, aynı script hatasını bildirdi:
+```
+TypeError: Cannot destructure property 'kind' of 'PENDING' as it is null.
+    at placeAt (index.html:3237:...)
+```
+
+**Kök neden:** `placeAt(c, ll)` (satır ~3236) hiç kontrolsüz `const { kind, t } = PENDING;` ile başlıyordu. Tek gerçek çağrı noktası olan `mapTapAt()` (satır 7030) `if (PENDING) placeAt(...)` ile zaten koruyor, yani **gerçek oyuncu haritaya tıklama akışında bu satıra `PENDING` boşken ulaşılamaz**. Önceki turda aynı ailede tespit edilen `countryAt()` çökmesiyle (bkz. aşağıdaki "2026-08-23 21:08 turu") aynı kalıp: botlar `window.__setSel`/`window.__addUnit` debug hook'larını kullanan kendi `tryBuild()` test fonksiyonları üzerinden — `doBuild()` (PENDING'i dolduran tek yer) çağrılmadan — `placeAt`'e denk gelen bir yola ulaşınca çöküyor. Yine de savunma ucuz ve risksiz; PENDING boşsa artık sessizce moddan çıkıyor.
+
+**ÖNCESİ** (`index.html`, satır 3236-3238):
+```js
+function placeAt(c, ll) {
+  const { kind, t } = PENDING;
+  const T = TYPE_OF(kind, t);
+```
+
+**SONRASI:**
+```js
+function placeAt(c, ll) {
+  // 🐞 [BOT-FIX] PENDING boşken (gerçek oyuncu akışında ulaşılamaz — yalnız botların kendi
+  // test/debug çağrılarında görüldü, bkz. bot-notlar/duzeltmeler.md) çökme yerine sessizce çık.
+  if (!PENDING) { setMode(null); return; }
+  const { kind, t } = PENDING;
+  const T = TYPE_OF(kind, t);
+```
+
+**Neden düşük risk / ekonomiyi değiştirmiyor:** Tek eklenen şey bir erken-çıkış koşulu. Gerçek oyuncu akışında `placeAt` her zaman `PENDING` doluyken çağrıldığından (`mapTapAt` zaten kontrol ediyor) bu dal hiç tetiklenmez, davranış birebir aynı kalır. Sadece bot/test çağrılarında (veya ileride oluşabilecek benzer bir durumda) çökme yerine modu temizleyip sessizce çıkıyor — kasa, ekonomi, satın alma mantığına dokunulmadı.
+
+**Doğrulama:** `new Function` ile tek inline `<script>` bloğu sözdizim kontrolünden geçti; `npm i playwright` + mevcut `/opt/pw-browsers` Chromium ile yerel `http://` sunucu üzerinden sayfa açılışında `pageerror`/`console.error` üretmedi.
+
+---
+
 ## 2026-08-23 21:08 turu
 
 ### Düzeltme 1: `countryAt()` bozuk/eksik koordinatta çöküyordu (`TypeError: ... reading 'toFixed'`)

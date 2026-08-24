@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-24 18:05)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-24 21:13)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -3234,6 +3234,9 @@ window.doBuild = (kind, t, disc) => { // katalog onayı: ürünü eline al, yerl
   setMode('build'); // "🏗️ <ürün> — kurmak istediğin yere dokun"
 };
 function placeAt(c, ll) {
+  // 🐞 [BOT-FIX] PENDING boşken (gerçek oyuncu akışında ulaşılamaz — yalnız botların kendi
+  // test/debug çağrılarında görüldü, bkz. bot-notlar/duzeltmeler.md) çökme yerine sessizce çık.
+  if (!PENDING) { setMode(null); return; }
   const { kind, t } = PENDING;
   const T = TYPE_OF(kind, t);
   if (!G.licenses[c]) {

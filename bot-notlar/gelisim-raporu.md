@@ -2,6 +2,29 @@
 
 Bu dosya, `suggestions` düğümüne yazan CLBOT1..CLBOT10 oyuncu-botlarının günlük büyüme/durum özetini ve o günkü bulgu/bug istatistiğini tutar. En yeni tur en üstte.
 
+## 2026-08-24 21:13 turu
+
+**Bulgu istatistiği:** 135 yeni kayıt geldi (2026-08-23 21:24 – 2026-08-24 20:26 UTC). 1'i gerçek/net kod hatasıydı ve düzeltildi (`placeAt()` `PENDING` boşken çökmesi, 4 bağımsız bot — `countryAt()` ailesiyle aynı kalıp, yalnız botların kendi debug-hook çağrılarında tetikleniyor). 1'i yeni bir izlenecek konu olarak patrona soruldu (depo SAT tahmini ↔ gerçekleşen arasında %2-%57 değişken sapma, 7 bağımsız bot — muhtemelen boşaltma süresince fiyat/talep değişimi, tasarım olabilir). ~19 kayıt zaten bilinen ailelerin (`MAX_PER_CELL` sessiz-red, ağ/proxy ortam sorunu) tekrarıydı ya da botların kendilerinin "bug değil" diye işaretlediği kayıtlardı. Kalan 114 kayıt saf GELİŞİM/sıralama özetiydi.
+
+**CLBOT büyümesi (turun ilk → son kaydı):**
+
+| Bot | Kayıt | Sıralama (ilk → son) | Şirket değeri (ilk → son) | Tesis (son) | Not |
+|---|---|---|---|---|---|
+| CLBOT1 | 14 | #10/23 → #10/43 | $63,54M → $71,3M | 19 | Hedef "Claude Enerji" ($78,79M), fark ~$7,5M'ye düştü |
+| CLBOT2 | 14 | #16/23 → #13/43 | $50,05M → $52,1M | 16 | |
+| CLBOT3 | 13 | #17/23 → #15/43 | $43,99M → ~$54,8M | 16 | Kasa çok düştü (79,9K), bir sonraki tur yatırım önceliği |
+| CLBOT4 | 13 | #15/23 → #16/43 | $42,79M → $48,0M | 20 | |
+| CLBOT5 | 13 | #20/23 → #14/43 | $38,68M → ~$54,8M | 17 | |
+| CLBOT6 | 14 | #14 → #8/~28 | ~$50,2M (gün içi zirve ~$52,6M) → **$11,66M (RESTART)** | 4 | 72 saatlik devriye doldu, Adana'da sıfırdan yeni şirket kuruldu |
+| CLBOT7 | 14 | #18 → #8/~28 | ~$44,8M (gün içi zirve ~$48,3M) → **$11,65M (RESTART)** | 4 | Aynı restart, Konya'da yeniden kuruldu |
+| CLBOT8 | 13 | #17 → #8/~28 | ~$47,6M (gün içi zirve ~$49,7M) → **$11,65M (RESTART)** | 4 | Aynı restart, Samsun'da yeniden kuruldu |
+| CLBOT9 | 14 | #16 → #8/~28 | ~$47,6M (gün içi zirve ~$50,5M) → **$11,66M (RESTART)** | 4 | Aynı restart, Trabzon'da yeniden kuruldu |
+| CLBOT10 | 13 | #19 → #8/~28 | ~$45,0M (gün içi zirve ~$51,9M) → **$11,65M (RESTART)** | 4 | Aynı restart, Gaziantep'te yeniden kuruldu |
+
+Not: CLBOT1-5 (43 katılımcılı havuz) gün boyu istikrarlı büyüdü, hiçbiri gerilemedi. CLBOT6-10 ise gün içinde ~$48-53M'ye kadar büyüdükten sonra, günün son kaydında (20:26) 72 saatlik devriyeleri dolup **aynı şehirlerde ($10M başlangıç kasasıyla) sıfırdan yeni şirket kurdu** — bu, 22 Ağustos'taki CLBOT1-5 restart'ıyla aynı beklenen döngüsel davranış (bkz. "2026-08-22 21:07 turu" notu aşağıda), bug değil. Yeni havuzda (~28 katılımcı) 5 bot da aynı anda #8 sırada başladı, hedef "Solaris Group" (~$90K fark).
+
+Kod değişikliği: `placeAt()` `PENDING` boşken çökme koruması (bkz. `duzeltmeler.md`). BUILD_TAG/version.json `2026-08-24 21:13` olarak güncellendi.
+
 ## 2026-08-23 21:08 turu
 
 **Bulgu istatistiği:** 140 yeni kayıt geldi (2026-08-22 21:24 – 2026-08-23 20:25 UTC). 1'i gerçek/net kod hatasıydı ve düzeltildi (`countryAt()` çökmesi, 3 bağımsız bot). 1'i yeni ve ciddi bir konu olarak patrona soruldu (RTDB yazma 401 Unauthorized / veri kaybı riski, 2 bağımsız bot). ~20 kayıt zaten bilinen bug ailelerinin (bulut-kaydı-throttle, vendor/leaflet 404, `placeAt()` sessiz-red) tekrarıydı ya da botların kendi test aracı/kararı sorunuydu (bkz. `islenen.md` ve `patrona-sorulacak.md` için detay). Kalan 109 kayıt saf GELİŞİM/sıralama özetiydi.
