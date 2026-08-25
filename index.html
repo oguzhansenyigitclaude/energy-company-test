@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 20:07) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 20:14) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 20:07)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 20:14)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -6502,9 +6502,11 @@ function chatFeed(room) {
   if (NET.on()) { // GERÇEK sohbet (sunucudan) + bot şirketlerin sohbeti (yalnızlık hissi olmasın)
     const live = (NET.chat[room] || []).map(m => ({ ...m, me: m.who === G.company }));
     const mine = (G.chat[room] || []).filter(m => !live.some(l => l.txt === m.txt && Math.abs(l.ts - m.ts) < 5000));
-    return live.concat(mine).concat(botChat(room)).sort((a, b) => a.ts - b.ts).slice(-40);
+    return live.concat(mine).concat(botChat(room)).filter(m => m.me || !isBlocked(m.who))
+      .sort((a, b) => a.ts - b.ts).slice(-40);
   }
-  return botChat(room).concat(G.chat[room] || []).sort((a, b) => a.ts - b.ts).slice(-40);
+  return botChat(room).concat(G.chat[room] || []).filter(m => m.me || !isBlocked(m.who))
+    .sort((a, b) => a.ts - b.ts).slice(-40);
 }
 // 🤖 BOT ŞİRKETLER — sohbete ara ara basit mesajlar yazarlar (patron: "biraz düşük zekalı insan gibi")
 function botChat(room) {
@@ -6539,7 +6541,8 @@ function renderChatBody(room) {
   // 💡 patron isteği: İttifak sekmesinin yanında Öneri/İstek — oyuncu istekleri yönetime posta gider
   $('chat_rooms').innerHTML = Object.entries(CHAT_ROOMS).map(([k, v]) =>
     `<button class="${k === room ? 'on' : ''}" onclick="setChatRoom('${k}')" ${k === 'ally' && !G.ally ? 'disabled' : ''}>${v.nm}</button>`).join('')
-    + `<button style="color:var(--gold)" onclick="suggestAsk()">💡 Öneri/İstek</button>`;
+    + `<button style="color:var(--gold)" onclick="suggestAsk()">💡 Öneri/İstek</button>`
+    + `<button style="color:var(--danger)" onclick="openBlockList()">🚫 Engellenenler${(G.blocked || []).length ? ' (' + G.blocked.length + ')' : ''}</button>`;
   const msgs = room === 'ally' && !G.ally ? [] : chatFeed(room);
   $('chat_msgs').innerHTML = msgs.length ? msgs.map(m => {
     const on = m.me ? true : playerOnline(m.idx || 0);
@@ -6653,6 +6656,7 @@ window.openPlayerCard = (nm, geriSekme) => {
     : wi >= 0 ? botCard(wi) : { nm, unknown: true };
   const row = (l, v) => v === undefined || v === null ? '' : `<tr><td>${l}</td><td><b>${v}</b></td></tr>`;
   const friend = (G.friends || []).some(f => f.nm === nm);
+  const blok = isBlocked(nm);
   $('modal').innerHTML = `
     <h2 style="margin-bottom:2px">🏢 ${nm}</h2>
     <p class="sub" style="margin-top:0">
@@ -6670,10 +6674,43 @@ window.openPlayerCard = (nm, geriSekme) => {
       ${c.ally ? row('🤝 İttifak', c.ally) : ''}
     </table>
     <p class="sub" style="margin-top:6px">Kasa, ciro ve stok bilgileri gizlidir — herkes için.</p>`}
-    <button class="bigsell half" onclick="closeModal();openDM('${nm.replace(/'/g, '')}')">✉️ Mesaj Gönder</button>
-    ${friend ? '' : `<button class="bigsell half" onclick="sendFriendReq('${nm.replace(/'/g, '')}');closeModal()">👥 Arkadaş Ekle</button>`}
+    ${blok ? '<p class="sub neg" style="margin-top:6px">🚫 Bu şirketi engelledin — sohbet mesajları ve postaları sana görünmüyor.</p>'
+      : `<button class="bigsell half" onclick="closeModal();openDM('${nm.replace(/'/g, '')}')">✉️ Mesaj Gönder</button>
+    ${friend ? '' : `<button class="bigsell half" onclick="sendFriendReq('${nm.replace(/'/g, '')}');closeModal()">👥 Arkadaş Ekle</button>`}`}
     <button class="bigsell half" style="color:var(--warn)" onclick="reportPlayerAsk('${nm.replace(/'/g, '')}')">🚩 Şikayet Et</button>
+    <button class="bigsell half" style="color:${blok ? 'var(--acc)' : 'var(--danger)'}" onclick="toggleBlock('${nm.replace(/'/g, '')}','kart')">${blok ? '✅ Engeli Kaldır' : '🚫 Engelle'}</button>
     <button class="primary ghostbtn" onclick="${geri}">${geriSekme ? '← Sıralamaya Dön' : 'Kapat'}</button>`;
+  $('overlay').classList.add('show');
+};
+// ── 🚫 OYUNCU ENGELLEME ──
+// Google Play'in kullanıcı üretimi içerik (UGC) politikası, oyuncular arası iletişim olan
+// uygulamalarda HEM şikayet HEM engelleme ister. Şikayet vardı, engelleme yoktu — bu tek
+// başına yayın reddi sebebi. Engel YERELDİR ve geri alınabilir: engellenen oyuncunun
+// sohbet mesajları ve postaları SANA görünmez, sunucudaki verisine dokunulmaz.
+const isBlocked = nm => !!nm && (G.blocked || []).indexOf(String(nm)) >= 0;
+window.toggleBlock = (nm, geri) => {
+  nm = String(nm || '').trim();
+  if (!nm || nm === G.company) return;
+  G.blocked = G.blocked || [];
+  const i = G.blocked.indexOf(nm);
+  if (i >= 0) { G.blocked.splice(i, 1); toast('✅ ' + nm + ' engeli kaldırıldı', ''); }
+  else { G.blocked.push(nm); toast('🚫 ' + nm + ' engellendi — mesajları ve postaları artık görünmeyecek', 'warn', null, 0, true); }
+  save();
+  if (geri === 'liste') openBlockList();
+  else if (geri === 'kart') openPlayerCard(nm);
+  else closeModal();
+  if ($('chatpanel') && $('chatpanel').classList.contains('open')) renderChat();
+};
+window.openBlockList = () => {
+  const b = G.blocked || [];
+  $('modal').innerHTML = `
+    <h2>🚫 Engellenen Şirketler</h2>
+    <p class="sub" style="margin-top:0">Engellediğin şirketlerin sohbet mesajları ve postaları sana görünmez.
+    Engel yalnız SENİN oyununda geçerlidir ve istediğin an kaldırılabilir.</p>
+    ${b.length ? b.map(nm => `<button class="bigsell half" style="text-align:left" onclick="toggleBlock('${jsStr(nm)}','liste')">
+        🚫 <b>${nm}</b><div class="sub">dokun → engeli kaldır</div></button>`).join('')
+      : '<p class="sub">Kimseyi engellemedin.</p>'}
+    <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
   $('overlay').classList.add('show');
 };
 // ── 🚩 ŞİKAYET SİSTEMİ (patron: "oyuncular hilecileri şikayet edebilsinler") ──
@@ -6769,7 +6806,8 @@ function seedMail() { // ilk açılışta yönetici duyuruları (sunucuda gerçe
 }
 window.openMailSheet = () => {
   hideSheets(); seedMail();
-  const ms = G.mail || [];
+  // 🚫 engellenen şirketin postası listelenmez — sistem/yönetim postası her zaman görünür
+  const ms = (G.mail || []).filter(m => m.sys || !isBlocked(m.from));
   $('mail_body').innerHTML = `
     <button class="bigsell half" onclick="openDM('')">✉️ Yeni Mesaj Yaz</button>
     ${ms.length ? ms.map(m => `
