@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 16:43) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 17:09) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 16:43)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 17:09)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -3735,7 +3735,19 @@ const gridKey = (l, i) => l.id + ':' + i;
 function gridNodes(l) { return lineNodeCells(l).map((c, i) => ({ line: l, i, cell: c, key: gridKey(l, i), uc: i === 0 || i === lineNodeCells(l).length - 1 })); }
 function allGridNodes() { return (G.lines || []).filter(lineUsable).reduce((a, l) => a.concat(gridNodes(l)), []); }
 const gridNodeOf = key => key ? allGridNodes().find(n => n.key === key) || null : null;
-const storeGridNode = st => (st && st.grid) ? gridNodeOf(st.grid) : null;
+// 🔴 SIRA NUMARASI TUZAĞI (patron 25 Ağu, ekran görüntüsüyle bildirdi): anahtar "hatId:sıraNo"
+// olduğu için `addHub` hattın ORTASINA yeni karo sokunca bütün sıralar kayıyordu — Kocaeli'deki
+// depo aynı anahtarla bir anda MANİSA düğümüne bağlı görünüyordu ("depo yalnız kendi karosundaki
+// merkeze bağlanır" kuralı sessizce deliniyordu). Çözüm: anahtardan yalnız HAT KİMLİĞİ okunur,
+// düğüm ise deponun KENDİ KAROSUNDAN bulunur. Böylece sıra kayması hiçbir şeyi bozamaz ve
+// kural okuma anında da zorlanmış olur. Sıra numarasına GERİ DÖNME.
+const storeGridNode = st => {
+  if (!st || !st.grid) return null;
+  const lid = Number(String(st.grid).split(':')[0]);
+  const l = (G.lines || []).find(x => x.id === lid && lineUsable(x));
+  if (!l) return null;
+  return gridNodes(l).find(n => n.cell === st.cell) || null; // yalnız KENDİ karosundaki düğüm
+};
 const gridNodeName = n => n ? (placeName(n.cell) + (n.uc ? ' (uç merkez)' : ' (ara merkez)')) : '—';
 // bir deponun bir merkeze bağlanabilmesi: merkez AYNI KAREDE olmalı
 const gridReach = (st, n) => !!st && !!n && n.cell === st.cell;
@@ -3746,9 +3758,9 @@ function ensureGridLinks() {
   if (!G || !G.units) return;
   for (const st of stores()) {
     if (st.link) { st.grid = null; continue; }        // bağlı depo grubun MERKEZİNDEN satar
-    if (st.grid && !gridNodeOf(st.grid)) st.grid = null; // hat söküldü / düğüm kalmadı
-    // 🔄 eski kural (60 km) ile BAŞKA karedeki merkeze bağlanmış depoyu çöz
-    if (st.grid) { const nn = gridNodeOf(st.grid); if (nn && nn.cell !== st.cell) st.grid = null; }
+    // hat söküldü / bu karoda düğüm kalmadı → bağlantı düşer. storeGridNode zaten deponun
+    // KENDİ karosunda arar, yani eski kuralla (60 km) başka karoya bağlanmış kayıtlar da burada çözülür.
+    if (st.grid) { const nn = storeGridNode(st); st.grid = nn ? nn.key : null; } // anahtarı güncel sıraya yaz
     if (st.grid || st.noGrid) continue;
     const a = gridCandidates(st); // yalnız KENDİ karesindeki merkezler
     if (a.length) st.grid = a[0].key;
@@ -4001,6 +4013,7 @@ window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça a
     l.path.splice(bi, 0, cellId([(a[0] + b2[0]) / 2, (a[1] + b2[1]) / 2]));
     l.km = Math.round(pathKm(l.path)); // kareye hizalama uzunluğu biraz değiştirir — dürüst kalsın
   }
+  ensureGridLinks(); // ⚠️ path'e karo eklendi → düğüm sıraları kaydı; depo anahtarları tazelenmeli
   toast('🏗️ Transfer merkezi eklendi — kayıp %' + Math.round(lineBaseLoss(l)), '');
   save(); renderLinePanel(); drawOverlay();
 };
@@ -4273,7 +4286,7 @@ function gridRowHTML(u) {
   const hedef = storeLineTargets(u);
   return `<div class="sub pos" style="margin-top:4px">🗼 Nakil hattına bağlı: <b>${gridNodeName(n)}</b>
     <span class="sub">· ${lineRota(n.line)} · kayıp %${Math.round(lineLoss(n.line))}</span></div>
-    ${hedef.length ? `<div class="sub">Satabildiğin pazarlar: ${hedef.map(h => placeName(h.cell)).join(', ')}</div>`
+    ${hedef.length ? `<div class="sub">Satabildiğin pazarlar: ${hedef.map(h => placeName(h.cell)).filter((x, i, a) => a.indexOf(x) === i).join(', ')}</div>`
       : '<div class="sub">⚠️ Bu hat henüz ek pazar açmıyor.</div>'}
     ${aday.length > 1 ? `<button class="bigsell half" onclick="startGridLink(${u.id})">🗼 Başka merkeze bağlan</button>` : ''}
     <button class="bigsell half" onclick="gridUnlink(${u.id})">🔌 Hat bağlantısını kes</button>`;
@@ -9354,6 +9367,7 @@ function startGame(resumed) {
   migrateStoreGroups(); // 🔄 Bileşik depo 2.0: fazla/uzak üyeleri kopar (tek sefer)
   migratePlantLinks(); // 🔄 kural değişimi: köle depoya bağlı eski santralleri merkeze taşı
   ensureConnections(); // eski kayıtlar / yeni birimler için bağlantıları kur
+  ensureGridLinks(); // 🗼 kayıtta kalmış kaymış/başka karodaki merkez anahtarlarını yükleme anında onar
   const hc = IL_COORD[G.il] || [39, 35];
   initMap(hc, 11);
   for (const u of G.units) addUnitMarker(u);
