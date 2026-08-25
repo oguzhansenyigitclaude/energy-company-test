@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 21:51) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 23:32) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 21:51)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 23:32)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2087,6 +2087,9 @@ function freshState() {
     units: [], // {id, kind:'plant'|'store', t, ll, cell, cond, on, buildDone, stored, lifeProd, _ann}
     licenses: {}, // cellId -> true (oyuncu başına ruhsat — kimse kimseyi engellemez)
     loan: null, loanNo: 0, // 🏦 kurtarma kredisi — eski kayıtlarda undefined, kod && ile korunur
+    inv: null, invNo: 0, invKar: 0, // 💱 yatırım pozisyonu — aynı anda TEK pozisyon (bölüp kaçış yok)
+    kredi: null, krediNo: 0, krediNot: 70, krediBekle: 0, notGun: 0, // 🏗️ büyüme kredisi + bankacılık sicili
+    acil: null, acilBekle: 0, // ⚡ acil nakit kredisi — saatlik faiz, tek seferde tamamı kapanır
     leases: {}, // cellId -> bitiş ts (3 günlük imtiyaz: +%20 satış primi — YEKA tarzı alım garantisi)
     offers: {}, maintDiscount: 1, starterClaimed: false, founded: Date.now(),
     research: { lvl: { coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0 }, active: null },
@@ -2932,8 +2935,12 @@ function dischargeTick(dtSec) {
 function estimateBulkGain(frac) {
   const soldTmp = {};
   let gain = 0;
+  // 🐞 [BOT-FIX] sellAll(frac) BAĞLI (uydu) depoları atlayıp hub'ın grup toplamını (groupStored)
+  // satıyor; bu tahmin fonksiyonu ise her depoyu (uydu dahil) kendi st.stored'ıyla ayrı ayrı
+  // sayıyordu — buton etiketi ile gerçekleşen satış arasında ~%28 sapma oluyordu.
   for (const st of stores()) {
-    const mwh = st.stored * frac;
+    if (st.link) continue; // uydu tek başına satılmaz — grup toplamı aşağıda hub üzerinden sayılıyor
+    const mwh = (isLinked(st) ? groupStored(st) : st.stored) * frac;
     if (mwh < .005) continue;
     const base = cellPriceNow(st.cell); // her karenin KENDİ alım fiyatı (+imtiyazda ×1.2)
     const remaining = Math.max(0, demandLeft(st.cell) - (soldTmp[st.cell] || 0));
@@ -7089,14 +7096,21 @@ window.renderFriendSearch = () => {
 };
 // bot şirketler YAVAŞ gelişir (patron): günlük artış gerçek oyuncunun çok altında
 const botWorth = i => { const days = Math.floor(Date.now() / 864e5) - 20655; return (2000 + (i * 13777 % 6000) + days * (120 + (i * 7919) % 260)) * 1000; };
-const myWorth = () => G.cash + G.units.reduce((s, u) => s + TYPE_OF(u.kind, u.t).cost * .7, 0);
+// 💱 Yatırım hesabı da şirket varlığıdır — kasadan çıkan para yok olmuyor, enstrümana dönüyor.
+// ⚠️ BORÇ DÜŞÜLÜR: net değer = varlık − borç. Bu olmadan kredi çeken oyuncunun şirket
+// değeri anında kredi kadar şişiyordu — sıralamada haksız yükselme ve yatırım tavanını
+// borçla büyütme kapısı. Kredi bir varlık değil, kasaya giren paranın karşılığında
+// doğan bir yükümlülüktür.
+const borcToplam = () => (krediVar() ? krediKalan() : 0) + (yatVar() ? G.kredi.borc : 0) + acilBorc();
+const myWorth = () => G.cash + G.units.reduce((s, u) => s + TYPE_OF(u.kind, u.t).cost * .7, 0) + invValue() - borcToplam();
 // 💸 GİDER DEFTERİ (patron: "653M ciro, 306M tesis, 8M kasa — geri kalan nerede?")
 // Ciro GELİRDİR, kâr değil: para tesise, yakıta, bakıma, ruhsata, hatta, ihaleye gider.
 // Bu defter olmadan oyuncu parasının nereye gittiğini göremiyordu. Her kasa çıkışı kalemlenir;
 // iadeler (kaybedilen ihale/müzayede teklifi) negatif yazılır, yani defter NET gideri tutar.
 const GIDER_ADI = { yatirim: '🏭 Tesis yatırımı', yakit: '⛽ Yakıt', bakim: '🔧 Bakım ve onarım',
   ruhsat: '📜 Ruhsat · ofis · lisans', altyapi: '⚡ Nakil hattı', arastirma: '🔬 Araştırma',
-  ihale: '🏛️ İhale / alım garantisi', muzayede: '🔨 Müzayede', ittifak: '🤝 İttifak / konsorsiyum', ceza: '⚖️ Cezalar' };
+  ihale: '🏛️ İhale / alım garantisi', muzayede: '🔨 Müzayede', ittifak: '🤝 İttifak / konsorsiyum', ceza: '⚖️ Cezalar',
+  borsa: '💱 Yatırım işlem bedeli ve vergi' };
 function gider(k, n) { if (!G || !n) return; G.spend = G.spend || {}; G.spend[k] = Math.max(0, (G.spend[k] || 0) + n); }
 const giderToplam = () => Object.values((G && G.spend) || {}).reduce((a, b) => a + b, 0);
 
@@ -7135,6 +7149,10 @@ const krediKalan = () => krediVar() ? G.loan.borc - G.loan.odenen : 0;
 // Kredi ancak GERÇEKTEN sıkışıkken açılır: ihtiyaç var ve kasan onu karşılamıyor
 function krediUygun() {
   if (!G || krediVar()) return false;
+  // 🚫 İSTİSMAR KAPISI KAPALI: açık yatırım pozisyonu varken kurtarma kredisi verilmez.
+  // Yoksa oyuncu parasını borsaya park eder, "kasam boş" deyip bedava kredi alırdı.
+  // Gerçek bankada da önce kendi varlığını nakde çevirmen istenir.
+  if (invVar()) return false;
   const n = krediIhtiyaci();
   return n > 0 && G.cash < n;
 }
@@ -7156,7 +7174,46 @@ function krediKilidi(ne) {
 // Böylece krediyi öderken aynı çukura düşmek matematiksel olarak imkânsız olur.
 function satisGeliri(gain) {
   if (!(gain > 0)) return 0;
-  if (!krediVar()) { G.cash += gain; return gain; }
+  if (!krediVar()) {
+    // 🔴 BÜYÜME KREDİSİ TEMERRÜDÜ: taksitler ödenmediği için banka otomatik tahsilata geçti.
+    // Aynı emniyet valfi burada da geçerli — bekleyen bakım kasanı aşıyorsa pay alınmaz,
+    // yoksa oyuncu tesislerini ayağa kaldıramaz ve banka da alacağını hiç alamaz.
+    if (yatVar() && G.kredi.temerrut && maintCost() <= G.cash) {
+      const K = G.kredi;
+      const kes = Math.min(K.borc, Math.round(gain * KREDI_TAHSIL));
+      K.borc -= kes; K.odenen += kes;
+      K.odenenAdet = Math.min(K.vade, Math.ceil(K.odenen / K.taksit)); // tahsilat taksit yerine geçer
+      gider('kredi', kes);
+      G.cash += gain - kes;
+      if (K.borc <= 0) yatKapat();
+      return gain - kes;
+    }
+    // 🔴 ACİL NAKİT HACZİ (patron): 3 gün ödenmezse her satıştan %30 doğrudan bankaya,
+    // borcun TAMAMI kapanana kadar. Aynı emniyet valfi: bekleyen bakım kasanı aşıyorsa
+    // haciz o satışa dokunmaz — yoksa tesisler ayağa kalkmaz, banka da alacağını alamaz.
+    if (acilVar() && G.acil.temerrut && maintCost() <= G.cash) {
+      const borc = acilBorc();
+      const kes = Math.min(borc, Math.round(gain * ACIL_HACIZ));
+      gider('kredi', kes);
+      G.cash += gain - kes;
+      if (kes >= borc) {
+        G.acil = null;
+        toast('⚡ Haciz tamamlandı — acil nakit borcun kapandı.', '', null, 0, true);
+        addMail('🏦 Banka', 'Haciz tamamlandı — borcun kapandı',
+          'Acil nakit borcunun tamamı satış hacziyle tahsil edildi. Haciz kalktı; '
+          + 'yeniden kredi alabilir ve yatırım yapabilirsin.<br><br>Kredi notun: <b>' + notKademe().ad + '</b>', true);
+      } else {
+        // Haciz anaparayı düşürür; faiz zaten tavanda olduğu için sayaç yeniden kurulur
+        const kalan = borc - kes;
+        G.acil.anapara = Math.round(kalan / (1 + ACIL_FAIZ_TAVAN));
+        G.acil.ts = Date.now() - ACIL_FAIZ_TAVAN / ACIL_SAATLIK * 36e5; // faiz tavanda kalsın
+        G.acil.donukMs = 0; G.acil.donduTs = null;
+      }
+      save();
+      return gain - kes;
+    }
+    G.cash += gain; return gain;
+  }
   if (maintCost() > G.cash) { G.cash += gain; return gain; } // valf açık: bu satış tamamen senin
   const pay = Math.min(krediKalan(), Math.round(gain * LOAN_CUT));
   G.loan.odenen += pay;
@@ -7221,12 +7278,20 @@ function krediUygula(tutar) {
 }
 
 // 🏦 BANKA EKRANI — girişi üstteki kasa rakamına dokunmak
-window.openBank = () => {
+window.openBank = (tab) => {
   if (!G || !G._started) return;
   const ihtiyac = krediIhtiyaci();
   const kat = LOAN_RATE[Math.min(G.loanNo || 0, LOAN_RATE.length - 1)];
-  let h = '<h2>🏦 Banka</h2>';
-  if (krediVar()) {
+  const sekme = bankTab = tab || bankTab || 'kredi';
+  if (sekme === 'inv') { invFetch(); invSpark(invSecBuf); }
+  let h = '<h2>🏦 Banka</h2>' + bankTabBar(sekme);
+  if (sekme === 'inv') {
+    h += invPanel();
+  } else if (sekme === 'acil') {
+    h += acilPanel();
+  } else if (sekme === 'yat') {
+    h += yatPanel();
+  } else if (krediVar()) {
     const L = G.loan;
     const yuzde = Math.round(100 * L.odenen / L.borc);
     const valf = maintCost() > G.cash;
@@ -7286,6 +7351,943 @@ window.krediAl = () => {
   beep(440, .15);
   save(); refreshUnitMarkers(); openBank();
 };
+// ═══════════ ⚡ BANKA — ACİL NAKİT KREDİSİ (patron 26 Ağu) ═══════════
+// PATRONUN FİKRİ: "Santral kurmak için parası var ama biraz eksik kalmış — bunu çekip kursun."
+// Gerçek hayattaki karşılığı KREDİLİ MEVDUAT HESABI (KMH): anında, teminatsız, küçük,
+// ödeme planı yok, istediğin an kapatırsın — ve tam da bu yüzden pahalıdır.
+//
+// 📐 ORAN PATRON KARARI: saatlik %2,5. İlk denemede %0,25 önerildi ve patron REDDETTİ:
+// "Bu çok az geldi — 500 bin çekip 1 hafta kapatmasam faiz 290 bin. Oyuncu bunu aynı gün,
+//  en bilemedin 2 güne kapatmalı." Doğru itiraz: köprü kredisi saatlerle ölçülmeli.
+//   1 saat  = %2,5   ·  4 saat = %10  ·  12 saat = %30  ·  24 saat = %60  ·  72 saat = %180
+// ⚠️ %2,5 × 24 = %60/gün eder (patron örneğinde %50 demişti — oran açıkça %2,5 istendiği
+// için oran esas alındı, örnekteki yuvarlama değil).
+// 🎯 TAVAN (%180) İLE HACİZ EŞİĞİ (72 saat) BİLEREK AYNI ANA DENK GELİR: %2,5 × 72 = %180.
+// Yani faiz tam haczin başladığı saniyede tavana vurur — ikisi birbirine kilitli.
+// Tavan olmasa borç sonsuza büyür ve oyuncu geri dönemez; tavandan sonra ceza haciz olur.
+const ACIL_LIMIT = 0.05;        // şirket değerinin en fazla %5'i (patron)
+const ACIL_SAATLIK = 0.025;     // saatlik faiz — basit faiz, bileşik değil
+const ACIL_FAIZ_TAVAN = 1.80;   // biriken faiz anaparanın en fazla %180'i (patron)
+const ACIL_BEKLE_SA = 48;       // yeni acil kredi: AÇILIŞTAN 48 saat sonra (patron)
+// 🔴 3 GÜN ÖDENMEZSE HACİZ (patron: "acil durumda kullanıp hemen kapatsın, yoksa banka
+// söke söke alsın"). Faiz tavanı 40 saatte dolduğu için tek başına yaptırım değildi —
+// oyuncu borcun üstüne oturup bekleyebiliyordu. Haciz o kapıyı kapatır.
+const ACIL_TEMERRUT_SA = 72;    // 3 gün
+const ACIL_HACIZ = 0.30;        // temerrütte her satıştan doğrudan kesilen pay
+const ACIL_NOT_CEZA = 35;       // kredi notuna vurulan darbe
+
+const acilVar = () => !!(G && G.acil && G.acil.anapara > 0);
+// Biriken faiz oranı. Kurtarma kredisi açıkken DONDURULUR (büyüme kredisiyle aynı moratoryum).
+function acilFaizOran() {
+  if (!acilVar()) return 0;
+  const A = G.acil;
+  const bitis = A.donduTs || Date.now();
+  const saat = Math.max(0, (bitis - A.ts - (A.donukMs || 0)) / 36e5);
+  return Math.min(ACIL_FAIZ_TAVAN, saat * ACIL_SAATLIK);
+}
+const acilBorc = () => acilVar() ? Math.round(G.acil.anapara * (1 + acilFaizOran())) : 0;
+// Açılıştan 48 saat — erken kapatmak beklemeyi kısaltmaz (büyüme kredisiyle aynı ilke)
+const acilBeklemeKalan = () => {
+  if (!G || !G.acilBekle) return 0;
+  return Math.max(0, Math.ceil((G.acilBekle - Date.now()) / 36e5));
+};
+const acilLimit = () => {
+  if (!G || acilVar() || yatVar() || krediVar() || acilBeklemeKalan() > 0) return 0;
+  return Math.max(0, Math.floor(myWorth() * ACIL_LIMIT));
+};
+
+// Kredinin açık kaldığı NET süre (donuk geçen zaman düşülmüş)
+const acilSaat = () => acilVar() ? Math.max(0, ((G.acil.donduTs || Date.now()) - G.acil.ts - (G.acil.donukMs || 0)) / 36e5) : 0;
+
+// 🧊 Moratoryum saatini işle + 🔴 3 GÜN SONRA HACİZ (patron kararı)
+function acilIsle() {
+  if (!acilVar()) return;
+  const A = G.acil;
+  if (krediVar()) { if (!A.donduTs) A.donduTs = Date.now(); }
+  else if (A.donduTs) { A.donukMs = (A.donukMs || 0) + (Date.now() - A.donduTs); A.donduTs = null; }
+  // Temerrüt yalnız DONUK OLMAYAN sürede işler — kurtarma kredisi sırasında haciz başlamaz
+  if (!A.temerrut && !A.donduTs && acilSaat() >= ACIL_TEMERRUT_SA) {
+    A.temerrut = true;
+    G.krediNot = Math.max(0, notu() - ACIL_NOT_CEZA);
+    addMail('🏦 Banka', '🔴 HACİZ BAŞLADI — acil nakit borcun 3 günü geçti',
+      'Acil nakit kredin <b>' + ACIL_TEMERRUT_SA / 24 + ' günden</b> fazladır ödenmedi. Sözleşme gereği banka '
+      + '<b>hacze</b> geçti: borcun tamamı kapanana kadar <b>her enerji satışının %' + (ACIL_HACIZ * 100) + '\'u</b> '
+      + 'doğrudan bankaya gidecek.<br><br>Kalan borç: <b class="neg">' + fmt(acilBorc()) + '</b><br>'
+      + 'Kredi notun <b>' + notKademe().ad + '</b> seviyesine düştü.<br><br>'
+      + 'Haczi durdurmanın tek yolu borcu kapatmak. Tesislerine el konmadı.', true);
+    save();
+  }
+}
+
+window.acilAl = () => {
+  if (!G || !G._started) return;
+  if (acilVar()) { toast('⚡ Zaten açık bir acil nakit kredin var.', 'warn'); return; }
+  if (yatVar()) { toast('⚡ Büyüme kredin sürerken acil nakit kredisi alamazsın.', 'warn'); return; }
+  if (krediVar()) { toast('⚡ Kurtarma kredin sürerken acil nakit kredisi alamazsın.', 'warn'); return; }
+  const bek = acilBeklemeKalan();
+  if (bek > 0) { toast('⚡ Yeni acil nakit için ' + bek + ' saat daha beklemelisin.', 'warn', null, 6000); return; }
+  const limit = acilLimit();
+  const tutar = Math.floor(+acilAmtBuf || 0);
+  if (!(tutar >= 10000)) { toast('⚡ En az $10.000 çekilir', 'warn'); return; }
+  if (tutar > limit) { toast('⚡ Limitini aşıyor — en fazla ' + fmt(limit), 'warn'); return; }
+  G.acil = { anapara: tutar, ts: Date.now(), donukMs: 0, donduTs: null };
+  G.acilBekle = Date.now() + ACIL_BEKLE_SA * 36e5;   // açılıştan sayılır
+  G.cash += tutar;
+  acilAmtBuf = '';
+  toast('⚡ ' + fmt(tutar) + ' acil nakit kasana girdi — saatlik ' + yz(ACIL_SAATLIK, 1) + ' faiz işliyor. Aynı gün kapat!', '', null, 0, true);
+  beep(600, .12); save(); openBank('acil');
+};
+
+// 💵 ÖDEME TEK SEFERDE VE TAMAMINI KAPATMA (patron kararı) — kısmi ödeme YOK.
+// Köprü kredisinin mantığı bu: al, işini gör, tek hamlede kapat. Taksit planı olmadığı
+// için kısmi ödeme faiz sayacını karmaşıklaştırırdı; büyüme kredisi zaten taksitli seçenek.
+window.acilOde = () => {
+  if (!acilVar()) return;
+  acilIsle();
+  const borc = acilBorc();
+  if (G.cash < borc) { toast('⚡ Tamamını kapatmak için ' + fmt(borc) + ' gerekiyor — enerji sat, sonra öde.', 'warn', null, 6000); return; }
+  const A = G.acil, faiz = borc - A.anapara;
+  G.cash -= borc;
+  gider('kredi', borc);
+  G.acil = null;
+  toast('⚡ Acil nakit kredin kapandı — ' + fmt(borc) + ' ödendi (faiz ' + fmt(faiz) + ')', '', null, 0, true);
+  addMail('🏦 Banka', 'Acil nakit kredin kapandı',
+    fmt(A.anapara) + ' anapara + <b>' + fmt(faiz) + '</b> faiz = <b>' + fmt(borc) + '</b> ödendi.<br><br>'
+    + 'Kredi ' + fmtHrs((Date.now() - A.ts - (A.donukMs || 0)) / 36e5) + ' açık kaldı.<br><br>'
+    + 'Yeni acil nakit için <b>' + acilBeklemeKalan() + ' saat</b> beklemelisin — bekleme, '
+    + 'kapanıştan değil kredinin <b>açılışından</b> sayılır.', true);
+  beep(880, .15);
+  save(); openBank('acil');
+};
+
+// ═══════════ 🏗️ BANKA — BÜYÜME KREDİSİ (patron 26 Ağu) ═══════════
+// PATRONUN FİKRİ: "Oyuncu yeni bir tesis kuracak ya da hat çekecek ve bankamızdan kredi
+// istiyor. Bu durumda oyuncuyu oyuna bağlayalım — kredi taksitini ELLE kendi ödeyecek.
+// Taksit günlük ödenir ve gece 00:00'a kadar ödenmeyen taksit ertesi gün faiz yer."
+//
+// KURTARMA KREDİSİNDEN FARKI: o bir halat, bu bir kaldıraç. Para kasaya GİRER ve oyuncu
+// istediği yere harcar. Bedeli de o yüzden ağır: %30 faiz + her gün elle ödenen taksit.
+//
+// 📐 ORAN NEREDEN GELDİ: oyunda santral kendini brüt 4-6 günde ödüyor (ölçüldü). Gerçek
+// hayatta ~10 yılda öder ve kredi ~%8/yıl. Bu oranı birebir taşısak günde %8 faiz çıkıyordu —
+// 10 günde anaparanın %80'i, kimse almazdı. Gerçek hayattan ORANI değil MANTIĞINI aldık:
+// vade yatırımın geri ödeme süresine yakın (10 gün), taksit eşit, gecikmede zam var.
+// ⚠️ Oyuncuya "günlük %3" YAZILMAZ, "%30 faiz" yazılır (patron kararı) — gerçek kredi
+// reklamları da toplam maliyeti yazar, günlüğe bölmek gerçek bedeli gizler.
+// ⏱️ VADE OYUNCUNUN SEÇİMİ. Faiz gerçek hayattaki gibi SÜREYLE ÖLÇEKLENİR (faiz = oran × süre):
+// kısa vade ucuz ama günlük taksit ağır, uzun vade pahalı ama hafif. Gerçek bir karar.
+// ⚠️ Oyuncuya günlük oran GÖSTERİLMEZ — hep toplam yazılır ("%15 faiz"). Patron kararı.
+const KREDI_VADELER = [5, 10, 20];
+const KREDI_VADE = 10;          // varsayılan — santralin geri ödeme süresine yakın (ölçüldü: 4-6 gün)
+// 🔒 BEKLEME KREDİNİN BAŞLANGICINDAN SAYILIR VE VADEDEN BAĞIMSIZDIR.
+// Eskiden `vade + 5` idi; o hâliyle 5 gün vade seçen 10 günde bir döngü çeviriyordu ve
+// patronun kapattığımız kredi döngüsü istismarı kısa vadeden geri sızıyordu. Sabit pencere
+// sayesinde vade ne seçilirse seçilsin döngü HEP 15 gün.
+const KREDI_BEKLE_GUN = 15;
+const KREDI_LIMIT = 0.20;       // şirket değerinin en fazla %20'si (patron: %50 çok hızlı büyütür)
+const KREDI_CEZA = 0.10;        // ödenmeyen taksite her gecikme gününde binen zam
+const KREDI_TEMERRUT = 3;       // bu kadar gecikmede banka otomatik tahsilata geçer
+const KREDI_TAHSIL = 0.50;      // temerrütte satışlardan alınan pay
+
+// 🔁 KREDİ DÖNGÜSÜ İSTİSMARI KAPALI (patron yakaladı):
+// "Oyuncu krediyi çekip santrallerden geliri toplayıp krediyi tek seferde kapatıp tekrar
+//  kredi çekecek, santral kuracak, depoyu 1 günde dolduracak, satıp tekrar aynısını yapacak."
+// Santral 10 günde maliyetinin ~%150'sini üretirken %30 faiz ödemek bedava para olurdu.
+// Üstelik TOPLU KAPAMA, bu özelliğin amacını da yok ediyordu: patron "her gün elle taksit
+// ödesin, oyuna bağlansın" istedi — toplu kapama varsa günlük ödeme diye bir şey kalmaz.
+// Üç kilit (üçü de gerçek bankacılıktan):
+//   1) İLERİYE TAKSİT ÖDENMEZ — günde en fazla bir taksit (taksitli kredide ödeme planı
+//      vardır; 2. günde 7. taksit ödenmez). Geciken taksitler her zaman ödenebilir.
+//   2) ERKEN KAPAMA FAİZİ DÜŞÜRMEZ (make-whole şartı — ticari kredilerde standart).
+//      Kapı açık bırakıldı ki tatile giden borcunu temizleyebilsin, ama kazancı yok.
+//   3) BEKLEME SÜRESİ KAPANIŞTAN DEĞİL VADEDEN SAYILIR — erken kapatmak beklemeyi kısaltmaz.
+// Sonuç: bir kredi döngüsü EN AZ vade(10) + bekleme(5) = 15 gün.
+
+// 📊 KREDİ NOTU — gerçek bankacılık sicili. Patron: "hem ödül hem ceza."
+// Zamanında ödeyen ucuzlar ve limiti büyür; geciken pahalılaşır ve limiti daralır.
+// Bu, patronun "oyuncuyu oyuna bağlayalım" hedefinin asıl kancasıdır.
+// `gunluk` = günlük faiz oranı; toplam faiz = gunluk × vade. B notu + 10 gün = %30 (patron ayarı).
+const KREDI_NOT_BAS = 70;       // yeni şirket B notuyla başlar → 10 günde tam olarak %30 faiz
+const KREDI_NOTLAR = [
+  { min: 85, ad: 'A · Güvenilir',   gunluk: .025, carpan: 1.25 },
+  { min: 65, ad: 'B · İyi',         gunluk: .030, carpan: 1.00 },
+  { min: 45, ad: 'C · Riskli',      gunluk: .040, carpan: 0.70 },
+  { min: 25, ad: 'D · Yüksek risk', gunluk: .055, carpan: 0.40 },
+  { min: 0,  ad: 'E · Kredi yok',   gunluk: null, carpan: 0 }
+];
+// Seçilen vadenin TOPLAM faizi — ekranda hep bu gösterilir, günlük oran asla.
+const krediFaizi = (vade) => { const k = notKademe(); return k.gunluk === null ? null : k.gunluk * vade; };
+const KREDI_NOT_ODUL = 2, KREDI_NOT_CEZA = 15, KREDI_NOT_TEMERRUT = 40;
+// 📈 NOT ZAMANLA TOPARLANIR — gerçek sicillerde de olumsuz kayıtlar zamanla düşer.
+// ⚠️ BU OLMADAN ÖLÜ DÖNGÜ VAR: 'E' notuna düşen oyuncu kredi alamaz, kredi alamayınca
+// puan kazanamaz, bir daha asla krediye erişemez. Pasif toparlanma 'C · Riskli'de DURUR —
+// yeniden borçlanabilirsin (pahalı ve düşük limitle), ama iyi notu ödeme yaparak hak edersin.
+const NOT_TOPARLA_TAVAN = 50, NOT_TOPARLA_GUN = 3;
+function notTazele() {
+  if (!G || yatVar() || krediVar()) return;   // açık borç varken sicil kendiliğinden düzelmez
+  const bugun = trGun(Date.now());
+  if (G.notGun === undefined || G.notGun > bugun) { G.notGun = bugun; return; }
+  const gecen = bugun - G.notGun;
+  if (gecen <= 0) return;
+  G.notGun = bugun;
+  if (notu() < NOT_TOPARLA_TAVAN) {
+    G.krediNot = Math.min(NOT_TOPARLA_TAVAN, notu() + gecen * NOT_TOPARLA_GUN);
+    save();
+  }
+}
+
+// Türkiye takvim günü (UTC+3, DST yok — kalıcı saat dilimi). Taksit sınırı gece 00:00 TR.
+const trGun = (ts) => Math.floor((ts + 3 * 36e5) / 864e5);
+
+const notu = () => Math.max(0, Math.min(100, G && G.krediNot !== undefined ? G.krediNot : KREDI_NOT_BAS));
+const notKademe = () => KREDI_NOTLAR.find(n => notu() >= n.min);
+const yatVar = () => !!(G && G.kredi && G.kredi.borc > 0);
+// 🔒 Bekleme süresi VADEDEN sayılır (kapanıştan değil) — erken kapatan avantaj kazanmasın.
+const yatBeklemeKalan = () => {
+  if (!G || !G.krediBekle) return 0;
+  return Math.max(0, G.krediBekle - trGun(Date.now()));
+};
+// Limit: şirket değerinin %20'si × kredi notu çarpanı. Açık kredi ya da bekleme varken 0.
+const yatLimit = () => {
+  if (!G || yatVar() || acilVar() || krediVar() || yatBeklemeKalan() > 0) return 0;
+  const k = notKademe();
+  if (k.gunluk === null) return 0;
+  return Math.max(0, Math.floor(myWorth() * KREDI_LIMIT * k.carpan));
+};
+// Bugün ödenebilecek taksit ADEDİ: geciken taksitler + BUGÜNKÜ taksit. İleriye ödeme YOK.
+const yatOdenebilir = () => {
+  if (!yatVar()) return 0;
+  const K = G.kredi;
+  return Math.max(0, Math.min(K.vade, yatGereken(K) + 1) - K.odenenAdet);
+};
+// Ödenmesi GEREKEN taksit adedi. İlk tam gün ödemesiz (gerçek kredilerdeki ödemesiz dönem):
+// krediyi gece 23:00'te alan oyuncu 1 saat sonra temerrüde düşmesin.
+const yatGereken = (K, gun) => Math.max(0, Math.min(K.vade, (gun === undefined ? trGun(Date.now()) : gun) - K.bas - 1));
+const yatGeciken = () => { const K = G.kredi; return K ? Math.max(0, yatGereken(K) - K.odenenAdet) : 0; };
+
+// ⏰ GÜN DÖNÜMÜ İŞLEME — çevrimdışıyken geçen günler de burada işlenir.
+// Sunucu yok; oyuncu döndüğünde kaçırdığı her gün tek tek işlenir ki gecikme zammı
+// "girmediğim için birikmedi" diye kaçırılamasın.
+function yatIsle() {
+  if (!yatVar()) return;
+  const K = G.kredi, bugun = trGun(Date.now());
+  if (K.sonIslem === undefined) K.sonIslem = K.bas;
+  if (K.sonIslem >= bugun) return;
+  // 🧊 MORATORYUM: kurtarma kredisi açıkken büyüme kredisi DONDURULUR. Oyuncu zaten
+  // batmış durumda; üstüne gecikme zammı bindirmek onu oyundan atardı. Gerçek bankalar
+  // da yeniden yapılandırmada ödeme tatili verir.
+  // ⚠️ SIRA ÖNEMLİ: önce bas ötelenir, sonra sonIslem güncellenir. Ters sırada yazılırsa
+  // fark sıfırlanır, vade hiç ötelenmez ve kurtarma bitince oyuncu birden çok taksit borçlu çıkar.
+  if (krediVar()) { K.bas += bugun - K.sonIslem; K.sonIslem = bugun; K.dondu = true; return; }
+  let cezaTop = 0, gecikenGun = 0;
+  for (let g = K.sonIslem + 1; g <= bugun; g++) {
+    const eksik = Math.max(0, yatGereken(K, g) - K.odenenAdet);
+    if (eksik > 0) {
+      const ceza = Math.round(K.taksit * eksik * KREDI_CEZA);
+      K.borc += ceza; cezaTop += ceza; gecikenGun++;
+      K.gecikme = (K.gecikme || 0) + 1;
+      G.krediNot = Math.max(0, notu() - KREDI_NOT_CEZA);
+    }
+  }
+  K.sonIslem = bugun;
+  if (cezaTop > 0) {
+    if (!K.temerrut && K.gecikme >= KREDI_TEMERRUT) {
+      K.temerrut = true;
+      G.krediNot = Math.max(0, notu() - KREDI_NOT_TEMERRUT);
+      addMail('🏦 Banka', '🔴 TEMERRÜT — otomatik tahsilat başladı',
+        'Üst üste ' + K.gecikme + ' taksit gecikti. Sözleşme gereği banka <b>otomatik tahsilata</b> geçti: '
+        + 'borcun bitene kadar her satışının <b>%' + (KREDI_TAHSIL * 100) + '</b>\'si doğrudan bankaya gidecek '
+        + 've yeni kredi alamayacaksın.<br><br>Tesislerine el konmadı — ödeyince kısıt kalkar. '
+        + 'Kredi notun <b>' + notKademe().ad + '</b> seviyesine düştü.', true);
+    } else {
+      addMail('🏦 Banka', '⚠️ Taksit gecikti — gecikme zammı işledi',
+        gecikenGun + ' gün taksitin ödenmedi. Borcuna <b class="neg">' + fmt(cezaTop) + '</b> gecikme zammı eklendi.<br><br>'
+        + 'Kalan borç: <b>' + fmt(K.borc) + '</b> · Geciken taksit: <b>' + yatGeciken() + '</b><br>'
+        + 'Toplam ' + K.gecikme + ' gecikme oldu; ' + KREDI_TEMERRUT + ' gecikmede banka otomatik tahsilata geçer.<br><br>'
+        + 'Kredi notun: <b>' + notKademe().ad + '</b>', true);
+    }
+    save();
+  }
+}
+
+// 🏗️ KREDİYİ AL — para KASAYA girer (kurtarma kredisinden farkı bu), oyuncu istediği yere harcar
+window.yatAl = () => {
+  if (!G || !G._started) return;
+  if (yatVar()) { toast('🏗️ Zaten açık bir kredin var — önce onu bitir.', 'warn'); return; }
+  if (krediVar()) { toast('🏗️ Kurtarma kredin sürerken büyüme kredisi alamazsın.', 'warn'); return; }
+  if (acilVar()) { toast('🏗️ Acil nakit borcun varken büyüme kredisi alamazsın — aynı anda tek kredi.', 'warn', null, 6000); return; }
+  const bek = yatBeklemeKalan();
+  if (bek > 0) { toast('🏗️ Yeni kredi için ' + bek + ' gün daha beklemelisin (önceki kredinin vadesinden sonra).', 'warn', null, 6000); return; }
+  const kd = notKademe();
+  if (kd.gunluk === null) { toast('🏗️ Kredi notun çok düşük — banka kredi vermiyor. Notun eski borçları ödedikçe düzelir.', 'warn', null, 7000); return; }
+  const limit = yatLimit();
+  const tutar = Math.floor(+yatAmtBuf || 0);
+  if (!(tutar >= 1e5)) { toast('🏗️ En az $100.000 kredi çekilir', 'warn'); return; }
+  if (tutar > limit) { toast('🏗️ Limitini aşıyor — en fazla ' + fmt(limit), 'warn'); return; }
+  const vade = KREDI_VADELER.includes(+yatVadeBuf) ? +yatVadeBuf : KREDI_VADE;
+  const faiz = krediFaizi(vade);
+  const borc = Math.round(tutar * (1 + faiz));
+  const bugun = trGun(Date.now());
+  G.kredi = { anapara: tutar, borc, taksit: Math.round(borc / vade), vade,
+    odenen: 0, odenenAdet: 0, gecikme: 0, temerrut: false, faiz,
+    bas: bugun, sonIslem: bugun, ts: Date.now(), no: (G.krediNo || 0) + 1 };
+  G.krediNo = G.kredi.no;
+  G.cash += tutar;
+  yatAmtBuf = '';
+  toast('🏗️ Kredi onaylandı — ' + fmt(tutar) + ' kasana girdi. Günlük taksit ' + fmt(G.kredi.taksit), '', null, 0, true);
+  addMail('🏦 Banka', 'Büyüme kredisi sözleşmesi',
+    fmt(tutar) + ' tutarında büyüme kredin onaylandı ve <b>kasana aktarıldı</b>.<br><br>'
+    + '<table class="ledger"><tr><td>Aldığın</td><td>' + fmt(tutar) + '</td></tr>'
+    + '<tr><td>Faiz</td><td>%' + Math.round(faiz * 100) + ' <span class="sub">(' + vade + ' gün · ' + kd.ad + ')</span></td></tr>'
+    + '<tr><td>Toplam borç</td><td class="neg">' + fmt(borc) + '</td></tr>'
+    + '<tr><td>Vade</td><td>' + vade + ' gün</td></tr>'
+    + '<tr><td>Günlük taksit</td><td><b>' + fmt(G.kredi.taksit) + '</b></td></tr></table><br>'
+    + '⏰ <b>Taksiti her gün ELLE ödersin.</b> Gece <b>00:00</b>\'a kadar ödenmeyen taksit '
+    + '%' + (KREDI_CEZA * 100) + ' gecikme zammı yer ve kredi notunu düşürür.<br>'
+    + '🔴 ' + KREDI_TEMERRUT + ' gecikmede banka otomatik tahsilata geçer: satışlarının %' + (KREDI_TAHSIL * 100) + '\'sine el koyar.<br>'
+    + '🔒 İleriye taksit ödenmez — günde en fazla bir taksit. Erken kapatmak faizi düşürmez.', true);
+  beep(520, .15); save(); openBank('yat');
+};
+
+// 💵 TAKSİT ÖDE — patronun asıl istediği mekanik: ELLE, her gün.
+window.yatOde = (adet) => {
+  if (!yatVar()) return;
+  const K = G.kredi;
+  const olabilir = yatOdenebilir();
+  if (olabilir <= 0) { toast('🏗️ Bugünkü taksitini ödedin — yarın yine bekleriz.', '', null, 5000); return; }
+  const n = Math.max(1, Math.min(adet || 1, olabilir));
+  const tutar = Math.min(K.borc, K.taksit * n);
+  if (G.cash < tutar) { toast('🏗️ Kasanda ' + fmt(tutar) + ' yok', 'warn'); return; }
+  G.cash -= tutar;
+  gider('kredi', tutar);
+  K.borc -= tutar; K.odenen += tutar; K.odenenAdet += n;
+  // Zamanında ödeyen kredi notunu yükseltir (patron: "hem ödül hem ceza")
+  if (yatGeciken() <= 0) G.krediNot = Math.min(100, notu() + KREDI_NOT_ODUL);
+  if (K.borc <= 0) yatKapat();
+  else { toast('💵 ' + n + ' taksit ödendi — kalan borç ' + fmt(K.borc), '', null, 0, true); beep(700, .1); }
+  save(); openBank('yat');
+};
+
+// 🔓 ERKEN KAPAMA — faizi DÜŞÜRMEZ (make-whole) ve bekleme süresini KISALTMAZ.
+window.yatErkenKapat = () => {
+  if (!yatVar()) return;
+  const K = G.kredi;
+  if (G.cash < K.borc) { toast('🏗️ Erken kapatmak için ' + fmt(K.borc) + ' gerekiyor', 'warn'); return; }
+  G.cash -= K.borc;
+  gider('kredi', K.borc);
+  K.odenen += K.borc; K.borc = 0;
+  yatKapat(true);
+  save(); openBank('yat');
+};
+
+function yatKapat(erken) {
+  const K = G.kredi;
+  // Bekleme VADEDEN sayılır: erken kapatan bekleme süresini kısaltamaz
+  // Bekleme kredinin BAŞLANGICINDAN sayılır ve vadeden bağımsızdır
+  // (kısa vade seçerek döngü hızlandırma kapısı böylece kapalı kalır).
+  G.krediBekle = K.bas + KREDI_BEKLE_GUN;
+  if (!K.gecikme) G.krediNot = Math.min(100, notu() + KREDI_NOT_ODUL * 2); // sicili temiz bitirene ek ödül
+  const bek = Math.max(0, G.krediBekle - trGun(Date.now()));
+  G.kredi = null;
+  toast('🏗️ KREDİN BİTTİ! ' + (erken ? 'Erken kapattın. ' : '') + 'Kredi notun: ' + notKademe().ad, '', null, 0, true);
+  addMail('🏦 Banka', 'Büyüme kredin kapandı',
+    fmt(K.anapara) + ' tutarındaki büyüme kredin tamamen ödendi' + (erken ? ' (erken kapatma — faiz indirimi uygulanmaz)' : '')
+    + '.<br><br>Gecikme sayın: <b>' + (K.gecikme || 0) + '</b> · Kredi notun: <b>' + notKademe().ad + '</b>'
+    + '<br><br>Yeni kredi için <b>' + bek + ' gün</b> beklemelisin. '
+    + 'Bekleme, kredinin <b>başlangıcından</b> sayılır ve vadeden bağımsızdır.', true);
+  beep(880, .18);
+}
+
+// ═══════════ 💱 BANKA — YATIRIM (patron 26 Ağu: "gerçek hayatı kullanacağız") ═══════════
+// İKİ fren var; her biri patronun ayrı bir endişesini karşılıyor:
+//   1) HACİM  → kademeli işlem bedeli. Patron: "işlem hacmi ne kadar büyükse işlem bedeli de
+//      alınsın, ZARAR EDERSE DE ALINSIN." Hem alışta hem satışta, kâr/zarar fark etmez.
+//   2) KAZANÇ → katlanarak büyüyen spekülatif kazanç vergisi, YALNIZ kârdan.
+//      Patron ayarı: "kazancın %50'si bizim olsun." Tablo tam oraya oturuyor.
+// Üstüne anapara tavanı: şirket değerinin en fazla %40'ı yatırımda durabilir.
+//
+// ⚠️ ÜÇ FİKİR TASARLANDI VE ÜÇÜ DE REDDEDİLDİ — GERİ EKLEME:
+//   • "48 saatte zorunlu kapanış" (patron: "bu şartlar altında bunu kapatabiliriz")
+//   • "günlük taşıma bedeli" — patron: "Kazancın zaten yarısını aldık. Oyunu 20 gün bırakan
+//     biri zaten santrallerden para almayacak; sadece yatırımla da bu kazanç oranlarıyla
+//     diğer insanların önüne geçemez." Doğrulandı: $4 milyarlık pozisyon 20 günde BTC +%30
+//     yapsa bile net $394M kalıyor — aynı 20 günün santral geliri bunun çok üstünde.
+//     SÜRE CEZASI ÇİFTE CEZA OLURDU: uzakta geçen günün asıl bedeli kazanılmayan üretimdir.
+//   • "%5 düz işlem bedeli" — başa baş için +%10,8 hareket gerekiyordu; Euro ve Altın
+//     tamamen ölüyordu (Euro günde ~%0,3 oynar). Ağır kol BEDEL değil VERGİ olmalı:
+//     bedel oyuncuyu kapıda durdurur, vergi ancak gerçekten para yaratıldığında ısırır.
+//
+// ⚠️ "DOLAR" NEDEN YOK: oyuncunun kasası zaten dolar. Dolarla dolar alınmaz — oyuncu tanımı
+// gereği zaten dolar pozisyonundadır. Onun yerine EURO var; dolarla euro almak gerçek bir karar.
+
+// 💲 Oyun ekonomisi gerçeğin ×1000'i (kasa $10M, elektrik ~$40K/MWh). Enstrüman fiyatlarını da
+// aynı ölçekle çarpıyoruz ki adetler gerçekçi görünsün: $4 milyarlık oyuncu 50.000 değil 50 BTC alsın.
+// ⚠️ BU KOZMETİKTİR, EKONOMİK ETKİSİ SIFIRDIR: fiyat ×1000 olunca aynı parayla 1000 kat az adet
+// alınır, ikisi birbirini tam götürür — kâr yüzdeseldir. Dengeyi ölçek değil, aşağıdaki iki tablo kurar.
+const INV_SCALE = 1000;
+const INV_CAP = 0.40;   // şirket değerinin en fazla %40'ı yatırımda durabilir
+// Marjinal dilimler — eşik kenarında sıçrama (uçurum) olmaz.
+const INV_FEE = [[1e7, .010], [1e8, .015], [1e9, .020], [1e10, .025], [Infinity, .030]];
+// $500K kâr → %20 · $50M → %47 · $500M → %58 · $5B → %68 etkin oran.
+const INV_TAX = [[1e6, .20], [1e7, .35], [1e8, .50], [1e9, .60], [Infinity, .70]];
+
+const INV_TYPES = {
+  gold: { nm: 'Altın', ico: '🥇', birim: 'ons', sym: 'PAXGUSDT',
+    not: 'PAX Gold — 1 adet = 1 ons fiziki altın. Fiyatı gerçek ons altını birebir izler.' },
+  eur:  { nm: 'Euro', ico: '💶', birim: 'euro', sym: 'EURUSDT',
+    not: 'Kasan dolar. Euro güçlenirse kazanır, dolar güçlenirse kaybedersin.' },
+  btc:  { nm: 'Bitcoin', ico: '₿', birim: 'adet', sym: 'BTCUSDT',
+    not: 'En oynak enstrüman. Günde %10 oynayabilir — hem en çok kazandıran hem en çok yakan.' }
+};
+
+// Canlı fiyat deposu: { gold:{px,chg,ts}, ... }  px = GERÇEK piyasa fiyatı (ölçeklenmemiş)
+const INV_PX = {};
+let invFetching = false, invLastTry = 0;
+let bankTab = 'kredi', invSecBuf = 'gold', invAmtBuf = '', yatAmtBuf = '', yatVadeBuf = 10, acilAmtBuf = '';
+
+window.acilAmt = (v) => { acilAmtBuf = v; const d = $('acil_onizle'); if (d) d.innerHTML = acilOnizleHTML(); };
+window.acilHizli = (o) => { acilAmtBuf = String(Math.floor(acilLimit() * o)); openBank('acil'); };
+
+function acilOnizleHTML() {
+  const limit = acilLimit(), tutar = Math.floor(+acilAmtBuf || 0);
+  let h = '';
+  if (tutar > 0) {
+    const sa = (n) => Math.round(tutar * (1 + Math.min(ACIL_FAIZ_TAVAN, n * ACIL_SAATLIK)));
+    h += '<table class="ledger">'
+      + '<tr><td>Alacağın <span class="sub">(kasana girer)</span></td><td class="pos">' + fmt(tutar) + '</td></tr>'
+      + '<tr><td colspan="2" style="padding-top:6px"><b style="color:var(--acc2);font-size:11px">NE ZAMAN KAPATIRSAN NE ÖDERSİN</b></td></tr>'
+      + '<tr><td>2 saat sonra <span class="sub">(' + yz(2 * ACIL_SAATLIK) + ')</span></td><td class="pos">' + fmt(sa(2)) + '</td></tr>'
+      + '<tr><td>6 saat sonra <span class="sub">(' + yz(6 * ACIL_SAATLIK) + ')</span></td><td>' + fmt(sa(6)) + '</td></tr>'
+      + '<tr><td>12 saat sonra <span class="sub">(' + yz(12 * ACIL_SAATLIK) + ')</span></td><td class="neg">' + fmt(sa(12)) + '</td></tr>'
+      + '<tr><td>24 saat sonra <span class="sub">(' + yz(24 * ACIL_SAATLIK) + ')</span></td><td class="neg">' + fmt(sa(24)) + '</td></tr>'
+      + '<tr><td>72 saat <span class="sub">(' + yz(ACIL_FAIZ_TAVAN, 0) + ' — tavan, haciz başlar)</span></td><td class="neg"><b>' + fmt(sa(72)) + '</b></td></tr>'
+      + '</table>'
+      + '<p class="sub" style="color:var(--warn);margin:4px 0 0">⏱️ Bu kredi <b>saatlerle</b> ölçülür, günlerle değil. '
+      + 'Aynı gün kapat — ' + Math.round(ACIL_FAIZ_TAVAN / ACIL_SAATLIK) + ' saatte faiz tavana (' + yz(ACIL_FAIZ_TAVAN, 0) + ') çarpar.</p>'
+      // 🔴 Patron: "bu kredi anlaşması yapılırken de bu bilgilendirme oyuncuya verilsin"
+      + '<div style="border:1px solid var(--danger);border-radius:9px;padding:8px 10px;margin:8px 0 0;background:rgba(255,92,92,.08)">'
+      + '<p class="sub" style="margin:0;color:var(--danger)">🔴 <b>' + ACIL_TEMERRUT_SA / 24 + ' GÜN İÇİNDE ÖDENMEZSE HACİZ.</b> '
+      + 'Banka, borcun tamamı kapanana kadar <b>her enerji satışının %' + (ACIL_HACIZ * 100) + '\'unu</b> doğrudan keser '
+      + 've kredi notun ağır darbe alır. Tesislerine el konmaz — ama parana el konur.</p></div>';
+  }
+  const gecerli = tutar >= 10000 && tutar <= limit;
+  h += '<button class="primary" onclick="acilAl()" ' + (gecerli ? '' : 'disabled') + '>⚡ '
+    + (tutar > 0 ? fmt(tutar) + ' Acil Nakit Çek' : 'Acil Nakit Çek') + '</button>';
+  if (tutar > limit && limit > 0) h += '<p class="sub neg">Limitini aşıyor — en fazla ' + fmt(limit) + '.</p>';
+  return h;
+}
+
+function acilPanel() {
+  acilIsle();
+  let h = '<div id="acil_wrap">';
+  if (acilVar()) {
+    const A = G.acil, borc = acilBorc(), faiz = borc - A.anapara, oran = acilFaizOran();
+    const sure = (Date.now() - A.ts - (A.donukMs || 0)) / 36e5;
+    h += '<div style="border:1px solid var(--gold);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--panel2)">'
+      + '<div style="font-weight:800;color:var(--gold);margin-bottom:4px">⚡ ACİL NAKİT KREDİSİ</div>'
+      + '<table class="ledger">'
+      + '<tr><td>Anapara</td><td>' + fmt(A.anapara) + '</td></tr>'
+      + '<tr><td>Açık kaldığı süre</td><td>' + fmtHrs(sure) + (A.donduTs ? ' <span class="sub">(donduruldu)</span>' : '') + '</td></tr>'
+      + '<tr><td>Biriken faiz <span class="sub">(' + yz(oran) + ')</span></td><td class="neg">+' + fmt(faiz) + '</td></tr>'
+      + '<tr><td><b>Şimdi kapatırsan</b></td><td><b class="neg">' + fmt(borc) + '</b></td></tr>'
+      + '</table></div>';
+    if (A.temerrut) h += '<p class="sub" style="color:var(--danger)">🔴 <b>HACİZ AÇIK.</b> Borcun ' + ACIL_TEMERRUT_SA / 24
+      + ' günü geçti — her enerji satışının <b>%' + (ACIL_HACIZ * 100) + '\'u</b> doğrudan bankaya gidiyor ve borç kapanana kadar sürecek. '
+      + 'Kredi notun ağır darbe aldı. Tesislerine el konmadı; borcu kapatınca haciz kalkar.</p>';
+    else if (A.donduTs) h += '<p class="sub">🧊 <b>Faiz donduruldu</b> — kurtarma kredin sürerken acil nakit faizi işlemez ve haciz sayacı durur.</p>';
+    else if (oran >= ACIL_FAIZ_TAVAN) h += '<p class="sub" style="color:var(--warn)">⚠️ Faiz <b>tavana</b> ulaştı (' + yz(ACIL_FAIZ_TAVAN, 0) + ') — daha fazla artmayacak, ama haciz eşiğindesin.</p>';
+    else h += '<p class="sub" style="color:var(--warn)">⏱️ Saatlik <b>' + yz(ACIL_SAATLIK, 1) + '</b> faiz işliyor — her saat '
+      + fmt(Math.round(A.anapara * ACIL_SAATLIK)) + ' ekleniyor. Tavana (' + yz(ACIL_FAIZ_TAVAN, 0) + ') '
+      + Math.max(0, Math.round((ACIL_FAIZ_TAVAN - oran) / ACIL_SAATLIK)) + ' saat kaldı. <b>Bugün kapat.</b></p>';
+    h += '<button class="primary" onclick="acilOde()" ' + (G.cash >= borc ? '' : 'disabled') + '>💵 Tamamını Kapat — ' + fmt(borc) + '</button>';
+    if (G.cash < borc) h += '<p class="sub neg">Kasanda yetmiyor — enerji sat, sonra kapat.</p>';
+    h += '<p class="sub">Ödeme <b>tek seferde ve tamamı</b> olarak yapılır — kısmi ödeme yoktur. '
+      + 'Taksitli borçlanmak istiyorsan <b>🏗️ Büyüme</b> kredisine bak.</p>';
+    return h + '</div>';
+  }
+  const bek = acilBeklemeKalan();
+  if (bek > 0) return h + '<p class="sub">⏳ <b>Yeni acil nakit için ' + bek + ' saat beklemelisin.</b></p>'
+    + '<p class="sub">Bekleme, kredinin <b>açılışından</b> ' + ACIL_BEKLE_SA + ' saat olarak sayılır — erken kapatmak onu kısaltmaz.</p></div>';
+  if (yatVar() || krediVar()) return h + '<p class="sub">🔒 <b>Açık bir kredin var.</b> Aynı anda tek kredi kullanılır.</p>'
+    + '<button class="primary ghostbtn" onclick="openBank(\'' + (krediVar() ? 'kredi' : 'yat') + '\')">Açık kredine git</button></div>';
+
+  const limit = acilLimit();
+  h += '<p class="sub" style="margin-top:0">Santral kurmaya paran <b>az kaldıysa</b> aradaki farkı anında çekersin. '
+    + 'Ödeme planı yok — istediğin an <b>tek seferde tamamını</b> kapatırsın.</p>'
+    + '<table class="ledger">'
+    + '<tr><td>Limitin</td><td><b>' + fmt(limit) + '</b> <span class="sub">(şirket değerinin ' + yz(ACIL_LIMIT, 0) + '\'i)</span></td></tr>'
+    + '<tr><td>Faiz</td><td>saatlik <b>' + yz(ACIL_SAATLIK, 1) + '</b> <span class="sub">(günde ' + yz(24 * ACIL_SAATLIK, 0) + ')</span></td></tr>'
+    + '</table>'
+    + '<div style="display:flex;gap:6px;align-items:center;margin:10px 0 4px">'
+    + '<input id="acil_amt" type="number" inputmode="numeric" placeholder="Tutar ($)" value="' + (acilAmtBuf || '') + '" oninput="acilAmt(this.value)" '
+    + 'style="flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:15px;font-weight:700">'
+    + '<button onclick="acilHizli(.5)" style="padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--acc2);cursor:pointer;font-size:12px">%50</button>'
+    + '<button onclick="acilHizli(1)" style="padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--acc2);cursor:pointer;font-size:12px">Tümü</button>'
+    + '</div>'
+    + '<div id="acil_onizle">' + acilOnizleHTML() + '</div>'
+    + '<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:8px">'
+    + '<div style="font-size:11px;color:var(--acc2);font-weight:800;margin-bottom:4px">📋 KURALLAR — hepsi baştan yazılı</div>'
+    + '<p class="sub" style="margin:0">'
+    + '• <b>Faiz saatlik işler</b> (' + yz(ACIL_SAATLIK, 1) + '/saat = günde ' + yz(24 * ACIL_SAATLIK, 0) + '). Bu kredi <b>saatlerle</b> ölçülür — aynı gün kapat.<br>'
+    + '• <b>Ödeme tek seferde ve tamamı</b> — kısmi ödeme ve taksit yok.<br>'
+    + '• Faiz tavanı ' + yz(ACIL_FAIZ_TAVAN, 0) + ' — ' + ACIL_TEMERRUT_SA + ' saatte oraya çarpar, sonra artmaz.<br>'
+    + '• 🔴 <b>' + ACIL_TEMERRUT_SA / 24 + ' gün içinde ödenmezse HACİZ:</b> borç kapanana kadar her enerji satışının <b>%'
+    + (ACIL_HACIZ * 100) + '\'u</b> doğrudan kesilir ve kredi notun ağır darbe alır.<br>'
+    + '• Limit: şirket değerinin ' + yz(ACIL_LIMIT, 0) + '\'i. Aynı anda <b>tek kredi</b> kullanılır.<br>'
+    + '• Yeni acil nakit, kredinin <b>açılışından ' + ACIL_BEKLE_SA + ' saat sonra</b> çekilebilir.<br>'
+    + '• Borçluyken <b>borsaya girilemez</b> — o para tesis içindir.'
+    + '</p></div>';
+  return h + '</div>';
+}
+
+
+// 📊 Günlük gelir tahmini — bankanın "Borç Servisi Karşılama Oranı" hesabı için.
+// Gerçek bankalar krediyi vermeden önce tam olarak bunu sorar: "bu şirketin nakit akışı
+// taksiti kaç kez karşılıyor?" Oyuncu SÖZLEŞMEYİ İMZALAMADAN ÖNCE bunu görmeli —
+// yoksa gaz santrali kurup taksiti yakıttan sonra ödeyemediğini sonradan öğrenir.
+function gunlukGelirTahmini() {
+  let mwh = 0;
+  for (const u of plants()) {
+    if (!u.on || u.buildDone > Date.now()) continue;
+    mwh += plantOutput(u) * 24;
+  }
+  return Math.round(mwh * PRICE_BASE * (1 + greenBonus()));
+}
+
+window.yatAmt = (v) => {
+  yatAmtBuf = v;
+  const d = $('yat_onizle'); if (d) d.innerHTML = yatOnizleHTML();
+};
+window.yatHizli = (o) => { yatAmtBuf = String(Math.floor(yatLimit() * o)); openBank('yat'); };
+window.yatVade = (v) => { yatVadeBuf = v; openBank('yat'); };
+
+function yatOnizleHTML() {
+  const limit = yatLimit(), kd = notKademe();
+  const tutar = Math.floor(+yatAmtBuf || 0);
+  let h = '';
+  const vade = KREDI_VADELER.includes(+yatVadeBuf) ? +yatVadeBuf : KREDI_VADE;
+  const faiz = krediFaizi(vade);
+  if (tutar > 0 && faiz !== null) {
+    const borc = Math.round(tutar * (1 + faiz)), taksit = Math.round(borc / vade);
+    const gelir = gunlukGelirTahmini();
+    const oran = gelir > 0 ? taksit / gelir : Infinity;
+    h += '<table class="ledger">'
+      + '<tr><td>Alacağın <span class="sub">(kasana girer)</span></td><td class="pos">' + fmt(tutar) + '</td></tr>'
+      + '<tr><td>Faiz <span class="sub">(' + vade + ' gün · ' + kd.ad + ')</span></td><td>%' + Math.round(faiz * 100) + '</td></tr>'
+      + '<tr><td>Ödeyeceğin toplam</td><td class="neg">' + fmt(borc) + '</td></tr>'
+      + '<tr><td><b>Günlük taksit</b> <span class="sub">(' + vade + ' gün)</span></td><td><b>' + fmt(taksit) + '</b></td></tr>'
+      + '</table>'
+      // 📊 Borç Servisi Karşılama Oranı — bankanın gerçek hayattaki ilk sorusu
+      + '<div style="border-left:3px solid ' + (oran > 1 ? 'var(--danger)' : oran > .7 ? 'var(--warn)' : 'var(--acc)')
+      + ';padding:6px 8px;margin:6px 0;background:var(--panel2);border-radius:0 8px 8px 0">'
+      + '<div style="font-size:11px;font-weight:800;color:var(--acc2)">📊 BORÇ SERVİSİ KARŞILAMA</div>'
+      + '<p class="sub" style="margin:2px 0 0">Şu anki günlük gelirin <b>' + fmt(gelir) + '</b>. '
+      + (gelir <= 0
+        ? '<b class="neg">Hiç üretimin yok</b> — taksiti neyle ödeyeceğini şimdiden düşün.'
+        : 'Günlük taksit bunun <b class="' + (oran > 1 ? 'neg' : oran > .7 ? '' : 'pos') + '">%' + Math.round(oran * 100) + '</b>\'i.')
+      + (oran > 1 ? ' <b class="neg">⚠️ Mevcut gelirin taksiti KARŞILAMIYOR.</b> Kredinin kuracağı santral devreye girene kadar açığı kasandan kapatman gerekir.'
+        : oran > .7 ? ' ⚠️ Marj dar — yakıt ve bakım giderlerini de hesaba kat.' : ' Rahat ödenir.')
+      + '</p></div>';
+  }
+  const gecerli = tutar >= 1e5 && tutar <= limit && faiz !== null;
+  h += '<button class="primary" onclick="yatAl()" ' + (gecerli ? '' : 'disabled') + '>🏗️ '
+    + (tutar > 0 ? fmt(tutar) + ' Kredi Çek' : 'Kredi Çek') + '</button>';
+  if (tutar > limit && limit > 0) h += '<p class="sub neg">Limitini aşıyor — en fazla ' + fmt(limit) + '.</p>';
+  return h;
+}
+
+function yatPanel() {
+  yatIsle();
+  const kd = notKademe();
+  const notRenk = notu() >= 85 ? 'var(--ok,#3ddc97)' : notu() >= 65 ? 'var(--acc)' : notu() >= 45 ? 'var(--warn)' : 'var(--danger)';
+  let h = '<div id="yat_wrap">'
+    // Kredi notu her zaman üstte — patronun "oyuna bağlayalım" kancası görünür olmalı
+    + '<div style="display:flex;align-items:center;gap:8px;margin:0 0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)">'
+    + '<div style="flex:1"><div style="font-size:11px;color:var(--acc2);font-weight:800">📊 KREDİ NOTUN</div>'
+    + '<div style="font-weight:800;color:' + notRenk + '">' + kd.ad + ' <span class="sub">(' + notu() + '/100)</span></div></div>'
+    + '<div style="text-align:right"><div class="sub">günlük faiz</div><div style="font-weight:800">' + (kd.gunluk !== null ? yz(kd.gunluk) : '—') + '</div></div>'
+    + '</div>'
+    + '<div style="height:6px;background:var(--bg);border-radius:4px;overflow:hidden;margin:-6px 0 10px">'
+    + '<i style="display:block;height:100%;width:' + notu() + '%;background:' + notRenk + '"></i></div>';
+
+  if (krediVar()) {
+    return h + '<p class="sub">🧊 <b>Kurtarma kredin sürüyor.</b> O bitene kadar büyüme kredisi alınamaz. '
+      + 'Açık bir büyüme kredin varsa <b>dondurulur</b> — gecikme zammı işlemez.</p>'
+      + '<button class="primary ghostbtn" onclick="openBank(\'kredi\')">🏦 Kurtarma kredisi ekranına dön</button></div>';
+  }
+
+  if (yatVar()) {
+    const K = G.kredi, gec = yatGeciken(), olabilir = yatOdenebilir();
+    const yuzde = Math.round(100 * K.odenenAdet / K.vade);
+    h += '<div style="border:1px solid ' + (K.temerrut ? 'var(--danger)' : gec ? 'var(--warn)' : 'var(--gold)')
+      + ';border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--panel2)">'
+      + '<div style="font-weight:800;color:var(--gold);margin-bottom:4px">🏗️ BÜYÜME KREDİSİ SÖZLEŞMESİ</div>'
+      + '<table class="ledger">'
+      + '<tr><td>Aldığın</td><td>' + fmt(K.anapara) + '</td></tr>'
+      + '<tr><td>Toplam borç</td><td>' + fmt(Math.round(K.anapara * (1 + K.faiz))) + ' <span class="sub">(%' + Math.round(K.faiz * 100) + ' faiz)</span></td></tr>'
+      + '<tr><td>Ödenen</td><td class="pos">' + fmt(K.odenen) + ' <span class="sub">(' + K.odenenAdet + '/' + K.vade + ' taksit)</span></td></tr>'
+      + '<tr><td><b>Kalan borç</b></td><td><b class="neg">' + fmt(K.borc) + '</b></td></tr>'
+      + '<tr><td>Günlük taksit</td><td>' + fmt(K.taksit) + '</td></tr>'
+      + (K.gecikme ? '<tr><td>Gecikme sayısı</td><td class="neg">' + K.gecikme + '</td></tr>' : '')
+      + '</table>'
+      + '<div style="height:8px;background:var(--bg);border-radius:5px;overflow:hidden;margin:8px 0">'
+      + '<i style="display:block;height:100%;width:' + yuzde + '%;background:linear-gradient(90deg,#ffc24a,#3ddc97)"></i></div></div>';
+
+    if (K.temerrut) h += '<p class="sub" style="color:var(--danger)">🔴 <b>TEMERRÜT — otomatik tahsilat açık.</b> '
+      + 'Her satışının %' + (KREDI_TAHSIL * 100) + '\'si doğrudan bankaya gidiyor ve yeni kredi alamazsın. '
+      + 'Tesislerine el konmadı — borç bitince kısıt kalkar.</p>';
+    else if (gec) h += '<p class="sub" style="color:var(--warn)">⚠️ <b>' + gec + ' taksitin gecikti.</b> '
+      + 'Her gecikme günü %' + (KREDI_CEZA * 100) + ' zam bindirir ve kredi notunu düşürür. '
+      + (KREDI_TEMERRUT - K.gecikme > 0 ? KREDI_TEMERRUT - K.gecikme + ' gecikme daha olursa banka otomatik tahsilata geçer.' : '') + '</p>';
+
+    if (olabilir > 0) {
+      const tutar = Math.min(K.borc, K.taksit * olabilir);
+      h += '<button class="primary" onclick="yatOde(' + olabilir + ')" ' + (G.cash >= tutar ? '' : 'disabled') + '>'
+        + '💵 ' + (gec ? 'Geciken + bugünkü taksiti öde' : 'Bugünkü taksiti öde') + ' — ' + fmt(tutar) + '</button>';
+      if (G.cash < tutar) h += '<p class="sub neg">Kasanda yetmiyor — enerji sat, sonra öde.</p>';
+    } else {
+      h += '<p class="sub pos">✅ <b>Bugünkü taksitini ödedin.</b> Yarın 00:00\'a kadar bir sonraki taksit var — yarın yine bekleriz.</p>';
+    }
+    h += '<button class="primary ghostbtn" onclick="yatErkenKapat()" ' + (G.cash >= K.borc ? '' : 'disabled') + '>'
+      + '🔓 Krediyi Erken Kapat — ' + fmt(K.borc) + '</button>'
+      + '<p class="sub">🔒 İleriye taksit ödenmez; günde en fazla bir taksit. Erken kapatmak <b>faizi düşürmez</b> '
+      + 've yeni kredi bekleme süresini <b>kısaltmaz</b> — bekleme, kapanıştan değil kredinin vadesinden sayılır.</p>';
+    return h + '</div>';
+  }
+
+  // ── Açık kredi yok: başvuru ekranı ──
+  const bek = yatBeklemeKalan(), limit = yatLimit();
+  if (bek > 0) {
+    return h + '<p class="sub">⏳ <b>Yeni kredi için ' + bek + ' gün beklemelisin.</b></p>'
+      + '<p class="sub">Bekleme, önceki kredinin <b>başlangıcından</b> sayılır ve <b>vadeden bağımsızdır</b> — ne kısa vade seçmek ne de erken kapatmak onu kısaltır. '
+      + 'Bu kural, krediyi çekip hemen kapatıp tekrar çekerek sonsuz büyüme döngüsü kurmayı engeller.</p></div>';
+  }
+  if (kd.gunluk === null) {
+    return h + '<p class="sub neg">🚫 <b>Kredi notun çok düşük — banka kredi vermiyor.</b></p>'
+      + '<p class="sub">Notun, geciken borçlarını ödedikçe ve yeni kredileri düzenli kapattıkça yükselir.</p></div>';
+  }
+  h += '<p class="sub" style="margin-top:0">Yeni santral, depo ya da hat için borçlanırsın. '
+    + '<b>Para doğrudan kasana girer</b> — istediğin yere harcarsın.</p>'
+    + '<table class="ledger">'
+    + '<tr><td>Kredi limitin</td><td><b>' + fmt(limit) + '</b> <span class="sub">(şirket değerinin %' + Math.round(KREDI_LIMIT * 100) + '\'si × ' + kd.carpan + ')</span></td></tr>'
+    + '</table>'
+    + '<div style="font-size:11px;color:var(--acc2);font-weight:800;margin:10px 0 4px">⏱️ VADE SEÇ — kısa vade ucuz ama taksiti ağır</div>'
+    + '<div style="display:flex;gap:6px">'
+    + KREDI_VADELER.map(v => {
+        const sec = v === (KREDI_VADELER.includes(+yatVadeBuf) ? +yatVadeBuf : KREDI_VADE);
+        return '<button onclick="yatVade(' + v + ')" style="flex:1;padding:8px 4px;border:1px solid '
+          + (sec ? 'var(--gold)' : 'var(--line)') + ';border-radius:9px;background:' + (sec ? 'var(--panel2)' : 'transparent')
+          + ';color:var(--ink);cursor:pointer;text-align:center">'
+          + '<div style="font-weight:800;font-size:14px">' + v + ' gün</div>'
+          + '<div style="font-size:11px" class="sub">%' + Math.round(krediFaizi(v) * 100) + ' faiz</div></button>';
+      }).join('')
+    + '</div>'
+    + '<div style="display:flex;gap:6px;align-items:center;margin:10px 0 4px">'
+    + '<input id="yat_amt" type="number" inputmode="numeric" placeholder="Kredi tutarı ($)" value="' + (yatAmtBuf || '') + '" oninput="yatAmt(this.value)" '
+    + 'style="flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:15px;font-weight:700">'
+    + '<button onclick="yatHizli(.5)" style="padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--acc2);cursor:pointer;font-size:12px">%50</button>'
+    + '<button onclick="yatHizli(1)" style="padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--acc2);cursor:pointer;font-size:12px">Tümü</button>'
+    + '</div>'
+    + '<div id="yat_onizle">' + yatOnizleHTML() + '</div>'
+    + '<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:8px">'
+    + '<div style="font-size:11px;color:var(--acc2);font-weight:800;margin-bottom:4px">📋 KURALLAR — hepsi baştan yazılı</div>'
+    + '<p class="sub" style="margin:0">'
+    + '• <b>Taksiti her gün ELLE ödersin.</b> Gece <b>00:00</b>\'a kadar ödenmeyen taksit %' + (KREDI_CEZA * 100) + ' zam yer.<br>'
+    + '• <b>İleriye taksit ödenmez</b> — günde en fazla bir taksit. Kredi seçtiğin vade kadar sürer.<br>'
+    + '• <b>Faiz vadeyle büyür:</b> ' + KREDI_VADELER.map(v => v + ' gün → %' + Math.round(krediFaizi(v) * 100)).join(' · ') + '.<br>'
+    + '• <b>Erken kapatmak faizi düşürmez</b> ve bekleme süresini kısaltmaz.<br>'
+    + '• Yeni kredi, önceki kredinin <b>başlangıcından ' + KREDI_BEKLE_GUN + ' gün sonra</b> açılır — vade ne seçilirse seçilsin.<br>'
+    + '• ' + KREDI_TEMERRUT + ' gecikmede <b>temerrüt</b>: banka satışlarının %' + (KREDI_TAHSIL * 100) + '\'sine el koyar. Tesise el konmaz.<br>'
+    + '• <b>Kredi notu:</b> zamanında ödeyen ucuzlar ve limiti büyür; geciken pahalılaşır.<br>'
+    + '• Kredi parasıyla <b>borsaya girilemez</b> — o para tesis içindir.'
+    + '</p></div>';
+  return h + '</div>';
+}
+
+
+
+const invPx = k => INV_PX[k] ? INV_PX[k].px * INV_SCALE : 0;   // oyun fiyatı
+const invLive = () => Object.keys(INV_TYPES).every(k => INV_PX[k] && Date.now() - INV_PX[k].ts < 15 * 60000);
+
+// 📡 FİYAT ÇEKME — anahtarsız + CORS açık kaynaklar. Binance üçünü TEK istekte verir.
+// ⚠️ SİMÜLASYON YEDEĞİ BİLEREK YOK: hava simülasyonu kimseye para kazandırmaz ama fiyat
+// simülasyonu kazandırır — oyun istemci tarafında, formülü okuyan bedava para basar.
+// Onun yerine ÜÇ BAĞIMSIZ KAYNAK var; hepsi düşerse piyasa KAPANIR (alım-satım durur),
+// açık pozisyon son bilinen gerçek fiyattan değerlenir.
+async function invFetch(zorla) {
+  if (invFetching || (!zorla && Date.now() - invLastTry < 50000)) return;
+  invFetching = true; invLastTry = Date.now();
+  const yaz = (k, px, chg) => { if (px > 0) INV_PX[k] = { px, chg: chg || 0, ts: Date.now() }; };
+  try {
+    const syms = Object.values(INV_TYPES).map(t => '"' + t.sym + '"').join(',');
+    const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=%5B' + encodeURIComponent(syms) + '%5D');
+    if (!r.ok) throw 0;
+    const arr = await r.json();
+    for (const k of Object.keys(INV_TYPES)) {
+      const row = arr.find(x => x.symbol === INV_TYPES[k].sym);
+      if (row) yaz(k, +row.lastPrice, +row.priceChangePercent);
+    }
+  } catch (e) { /* aşağıdaki yedeklere düş */ }
+  const bayat = k => !INV_PX[k] || Date.now() - INV_PX[k].ts > 60000;
+  try { if (bayat('gold')) { const j = await (await fetch('https://api.gold-api.com/price/XAU')).json(); yaz('gold', +j.price, (INV_PX.gold || {}).chg); } } catch (e) {}
+  try { if (bayat('eur')) { const j = await (await fetch('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD')).json(); yaz('eur', +j.rates.USD, (INV_PX.eur || {}).chg); } } catch (e) {}
+  try { if (bayat('btc')) { const j = await (await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true')).json(); yaz('btc', +j.bitcoin.usd, +j.bitcoin.usd_24h_change); } } catch (e) {}
+  invFetching = false;
+  if ($('overlay').classList.contains('show') && $('inv_wrap')) openBank('inv');
+}
+
+// Marjinal dilim toplayıcı: [[üstSınır, oran], ...] tablosuna göre tutarın bedelini hesaplar.
+function dilimBedel(tutar, tablo) {
+  let kalan = Math.max(0, tutar), alt = 0, top = 0;
+  for (const [ust, oran] of tablo) {
+    if (kalan <= 0) break;
+    const dilim = Math.min(kalan, ust - alt);
+    top += dilim * oran; kalan -= dilim; alt = ust;
+  }
+  return Math.round(top);
+}
+const etkinOran = (tutar, tablo) => tutar > 0 ? dilimBedel(tutar, tablo) / tutar : 0;
+
+const invVar = () => !!(G && G.inv && G.inv.adet > 0);
+function invBrut() {   // pozisyonun şu anki değeri; fiyat yoksa defter değeri
+  if (!invVar()) return 0;
+  const px = invPx(G.inv.k);
+  return px > 0 ? G.inv.adet * px : G.inv.anapara;
+}
+const invValue = () => invVar() ? Math.round(invBrut()) : 0;
+
+// Kapatma hesabının TEK KAPISI — hem ekran hem gerçek satış bunu kullanır ki
+// "gördüğün = aldığın" sözü burada da bozulmasın.
+function invHesap() {
+  if (!invVar()) return null;
+  const P = G.inv;
+  const brut = invBrut();
+  const satisBedel = dilimBedel(brut, INV_FEE);
+  const eline = brut - satisBedel;
+  const kar = eline - P.maliyet;               // maliyet = kasadan çıkan TOPLAM (alış bedeli dâhil)
+  const vergi = kar > 0 ? dilimBedel(kar, INV_TAX) : 0;
+  return { brut, satisBedel, eline, kar, vergi, net: Math.round(eline - vergi),
+    sonuc: Math.round(kar - vergi), gun: (Date.now() - P.ts) / 864e5 };
+}
+const invTavan = () => Math.max(0, Math.floor(myWorth() * INV_CAP) - invValue());
+
+window.invAl = (k) => {
+  if (!G || !G._started) return;
+  if (krediKilidi('yatırım')) return;
+  // 🔒 KREDİNİN KULLANIM AMACI KOVENANTİ (gerçek kredilerde "use of proceeds" şartı):
+  // büyüme kredisi TESİS kurmak içindir. Borç parasıyla Bitcoin'e girilmesi engellenir —
+  // yoksa oyuncu %30 faizle borçlanıp kaldıraçlı spekülasyon yapardı.
+  if (yatVar()) { toast('🏗️ Büyüme kredin sürerken yatırım yapamazsın — o para tesis içindi.', 'warn', null, 6000); return; }
+  if (acilVar()) { toast('⚡ Acil nakit borcun varken yatırım yapamazsın — önce borcunu kapat.', 'warn', null, 6000); return; }
+  if (invVar()) { toast('💱 Zaten açık bir pozisyonun var — önce onu kapat.', 'warn'); return; }
+  if (!invLive()) { toast('💱 Piyasa kapalı — canlı fiyat alınamıyor. Alım yapılamaz.', 'warn'); return; }
+  // ⚠️ Tutarın TEK KAYNAĞI invAmtBuf. DOM input'undan okumak, önizleme tablosuyla
+  // gerçek alımın ayrışmasına yol açıyordu (oyuncu yazar, önizleme güncellenmez).
+  const tutar = Math.floor(+invAmtBuf || 0);
+  if (!(tutar >= 1000)) { toast('💱 En az $1.000 ile işlem yapılır', 'warn'); return; }
+  if (tutar > G.cash) { toast('💱 Kasanda bu kadar yok', 'warn'); return; }
+  if (tutar > invTavan()) { toast('💱 Tavanı aşıyor — en fazla ' + fmt(invTavan()), 'warn', null, 6000); return; }
+  const px = invPx(k);
+  if (!(px > 0)) { toast('💱 Fiyat alınamadı', 'warn'); return; }
+  const bedel = dilimBedel(tutar, INV_FEE);
+  const anapara = tutar - bedel;
+  if (!(anapara > 0)) { toast('💱 Tutar işlem bedelini karşılamıyor', 'warn'); return; }
+  G.cash -= tutar;
+  gider('borsa', bedel);
+  G.inv = { k, adet: anapara / px, fiyat: px, anapara, maliyet: tutar, alisBedel: bedel, ts: Date.now() };
+  invAmtBuf = '';
+  toast(INV_TYPES[k].ico + ' ' + fmt(anapara) + ' ' + INV_TYPES[k].nm + '\'e yatırıldı — işlem bedeli ' + fmt(bedel), '', null, 0, true);
+  beep(660, .12); save(); openBank('inv');
+};
+
+window.invSat = () => {
+  if (!invVar()) return;
+  if (!invLive()) { toast('💱 Piyasa kapalı — canlı fiyat alınamıyor. Satış yapılamaz.', 'warn'); return; }
+  const h = invHesap(), P = G.inv, T = INV_TYPES[P.k];
+  G.cash += h.net;
+  gider('borsa', h.satisBedel + h.vergi);
+  G.invNo = (G.invNo || 0) + 1;
+  G.invKar = (G.invKar || 0) + h.sonuc;
+  G.inv = null;
+  const iyi = h.sonuc >= 0;
+  toast(T.ico + ' Pozisyon kapandı — ' + (iyi ? 'kâr ' : 'zarar ') + fmt(Math.abs(h.sonuc)), '', null, 0, true);
+  addMail('🏦 Banka', 'Yatırım hesabı ekstresi',
+    T.ico + ' <b>' + T.nm + '</b> pozisyonun kapandı (' + fmtHrs(h.gun * 24) + ' tutuldu).<br><br>'
+    + '<table class="ledger"><tr><td>Kasadan çıkan</td><td>' + fmt(P.maliyet) + '</td></tr>'
+    + '<tr><td>Piyasa değeri</td><td>' + fmt(h.brut) + '</td></tr>'
+    + '<tr><td>💱 Satış işlem bedeli</td><td class="neg">−' + fmt(h.satisBedel) + '</td></tr>'
+    + (h.vergi ? '<tr><td>🧾 Spekülatif kazanç vergisi</td><td class="neg">−' + fmt(h.vergi) + '</td></tr>' : '')
+    + '<tr><td><b>Kasaya giren</b></td><td><b class="pos">' + fmt(h.net) + '</b></td></tr>'
+    + '<tr><td><b>Sonuç</b></td><td><b class="' + (iyi ? 'pos' : 'neg') + '">' + (iyi ? '+' : '−') + fmt(Math.abs(h.sonuc)) + '</b></td></tr></table>', true);
+  beep(iyi ? 880 : 300, .15); save(); openBank('inv');
+};
+
+// 48 saatlik mini grafik — Binance klines (anahtarsız, CORS açık). Süs değil: oyuncu
+// kararını gerçek veriye bakarak versin diye.
+const INV_SPARK = {};
+async function invSpark(k) {
+  if (INV_SPARK[k] && Date.now() - INV_SPARK[k].ts < 10 * 60000) return INV_SPARK[k].d;
+  try {
+    const r = await fetch('https://api.binance.com/api/v3/klines?symbol=' + INV_TYPES[k].sym + '&interval=1h&limit=48');
+    const d = (await r.json()).map(c => +c[4]);
+    if (d.length > 2) { INV_SPARK[k] = { d, ts: Date.now() }; return d; }
+  } catch (e) {}
+  return null;
+}
+function sparkSVG(d) {
+  if (!d || d.length < 2) return '';
+  const lo = Math.min(...d), hi = Math.max(...d), r = (hi - lo) || 1;
+  const pts = d.map((v, i) => (i / (d.length - 1) * 100).toFixed(1) + ',' + (26 - (v - lo) / r * 24).toFixed(1)).join(' ');
+  const up = d[d.length - 1] >= d[0];
+  return '<svg viewBox="0 0 100 28" preserveAspectRatio="none" style="width:100%;height:34px;display:block">'
+    + '<polyline points="' + pts + '" fill="none" stroke="' + (up ? '#3ddc97' : '#e0491a') + '" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>';
+}
+window.invSec = (k) => { invSecBuf = k; invSpark(k).then(() => openBank('inv')); openBank('inv'); };
+window.invAmt = (v) => {
+  invAmtBuf = v;
+  // Yalnız önizleme bloğunu tazeliyoruz — tüm paneli yeniden basmak yazı imlecini kaçırırdı
+  const d = $('inv_onizle'); if (d) d.innerHTML = invOnizleHTML();
+};
+window.invHizli = (o) => { invAmtBuf = String(Math.floor(Math.min(G.cash, invTavan()) * o)); openBank('inv'); };
+
+function bankTabBar(sekme) {
+  const t = (k, ad) => '<button onclick="openBank(\'' + k + '\')" style="flex:1;padding:8px 4px;border:0;border-bottom:2px solid '
+    + (sekme === k ? 'var(--gold)' : 'transparent') + ';background:none;color:' + (sekme === k ? 'var(--gold)' : 'var(--dim)')
+    + ';font-weight:800;font-size:11px;line-height:1.25;cursor:pointer">' + ad + '</button>';
+  return '<div style="display:flex;gap:1px;margin:-2px 0 10px;border-bottom:1px solid var(--line)">'
+    + t('kredi', '🏦 Kurtarma') + t('acil', '⚡ Acil') + t('yat', '🏗️ Büyüme') + t('inv', '💱 Yatırım') + '</div>';
+}
+const yz = (o, d) => '%' + (o * 100).toFixed(d === undefined ? 1 : d).replace('.', ',').replace(/,0$/, '');
+const invFiyatYaz = (k) => {
+  const px = invPx(k);
+  return px >= 1e6 ? fmt(px) : '$' + px.toLocaleString('tr-TR', { maximumFractionDigits: px < 100 ? 2 : 0 });
+};
+
+// Tutar kutusuna her yazıldığında YALNIZ bu blok yeniden basılır (imleç kaçmasın diye).
+// invAl() ile AYNI değişkeni (invAmtBuf) okur — "gördüğün = aldığın" burada da geçerli.
+function invOnizleHTML() {
+  const secili = invSecBuf, T = INV_TYPES[secili];
+  const tavan = invTavan(), sinir = Math.min(G.cash, tavan), canli = invLive();
+  const tutar = Math.floor(+invAmtBuf || 0);
+  const bedel = tutar > 0 ? dilimBedel(tutar, INV_FEE) : 0;
+  let h = '';
+  if (tutar > 0) {
+    const px = invPx(secili), adet = px > 0 ? (tutar - bedel) / px : 0, o = etkinOran(tutar, INV_FEE);
+    h += '<table class="ledger">'
+      + '<tr><td>Kasadan çıkacak</td><td>' + fmt(tutar) + '</td></tr>'
+      + '<tr><td>💱 İşlem bedeli <span class="sub">(' + yz(o) + ')</span></td><td class="neg">−' + fmt(bedel) + '</td></tr>'
+      + '<tr><td>Piyasaya girecek</td><td class="pos">' + fmt(tutar - bedel) + '</td></tr>'
+      + '<tr><td>Alacağın</td><td><b>' + fmtE(adet) + ' ' + T.birim + '</b></td></tr>'
+      + '<tr><td class="sub">Başa baş için gereken hareket</td><td class="sub">' + (px > 0 ? '+' + yz(1 / ((1 - o) * (1 - o)) - 1) : '—') + '</td></tr>'
+      + '</table>';
+  }
+  const gecerli = tutar >= 1000 && tutar <= sinir && canli;
+  h += '<button class="primary" onclick="invAl(\'' + secili + '\')" ' + (gecerli ? '' : 'disabled') + '>'
+    + T.ico + ' ' + (tutar > 0 ? fmt(tutar) + ' ile ' + T.nm + ' Al' : T.nm + ' Al') + '</button>';
+  if (tutar > sinir && sinir > 0) h += '<p class="sub neg">Tavanı aşıyor — en fazla ' + fmt(sinir) + '.</p>';
+  if (!tavan) h += '<p class="sub neg">Şirket değerine göre yatırım tavanın dolu.</p>';
+  return h;
+}
+
+function invPanel() {
+  // 🔒 Kovenant: borçluyken yatırım yok — kredi ekranındaki kuralın aynısı
+  if (krediVar()) {
+    return '<div id="inv_wrap"><p class="sub" style="margin-top:0">🔒 <b>Kredi sözleşmen sürüyor.</b> Borcun bitene kadar '
+      + 'yatırım yapamazsın — kurtarma kredisi bir büyüme aracı değil, kurtarma halatıdır.</p>'
+      + '<p class="sub">Kalan borç: <b class="neg">' + fmt(krediKalan()) + '</b></p>'
+      + '<button class="primary ghostbtn" onclick="openBank(\'kredi\')">🏦 Kredi ekranına dön</button></div>';
+  }
+  const canli = invLive();
+  let h = '<div id="inv_wrap">';
+  if (!canli) h += '<p class="sub" style="margin-top:0;color:var(--warn)">⚠️ <b>Piyasa kapalı</b> — canlı fiyat alınamıyor. '
+    + 'Alım ve satım durduruldu. Fiyatı uydurmuyoruz: veri yoksa işlem de yok.</p>';
+
+  if (invVar()) {
+    const P = G.inv, T = INV_TYPES[P.k], c = invHesap();
+    const iyi = c.sonuc >= 0, fark = P.fiyat > 0 ? (invPx(P.k) - P.fiyat) / P.fiyat : 0;
+    h += '<div style="border:1px solid var(--gold);border-radius:10px;padding:10px 12px;margin:0 0 10px;background:var(--panel2)">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      + '<span style="font-size:22px">' + T.ico + '</span>'
+      + '<div><div style="font-weight:800;color:var(--gold)">' + T.nm + ' pozisyonu</div>'
+      + '<div class="sub">' + fmtE(P.adet) + ' ' + T.birim + ' · ' + fmtHrs(c.gun * 24) + ' açık</div></div></div>'
+      + sparkSVG((INV_SPARK[P.k] || {}).d)
+      + '<table class="ledger">'
+      + '<tr><td>Alış fiyatı</td><td>' + fmt(P.fiyat) + '</td></tr>'
+      + '<tr><td>Güncel fiyat</td><td class="' + (fark >= 0 ? 'pos' : 'neg') + '">' + invFiyatYaz(P.k) + ' (' + (fark >= 0 ? '+' : '−') + yz(Math.abs(fark)) + ')</td></tr>'
+      + '<tr><td colspan="2" style="padding-top:6px"><b style="color:var(--acc2);font-size:11px">ŞİMDİ KAPATIRSAN</b></td></tr>'
+      + '<tr><td>Kasadan çıkmıştı</td><td>' + fmt(P.maliyet) + '</td></tr>'
+      + '<tr><td>Piyasa değeri</td><td>' + fmt(c.brut) + '</td></tr>'
+      + '<tr><td>💱 Satış işlem bedeli <span class="sub">(' + yz(etkinOran(c.brut, INV_FEE)) + ')</span></td><td class="neg">−' + fmt(c.satisBedel) + '</td></tr>'
+      + (c.vergi ? '<tr><td>🧾 Kazanç vergisi <span class="sub">(' + yz(etkinOran(c.kar, INV_TAX)) + ')</span></td><td class="neg">−' + fmt(c.vergi) + '</td></tr>'
+        : '<tr><td>🧾 Kazanç vergisi</td><td class="sub">yok — kâr yok</td></tr>')
+      + '<tr><td><b>Kasaya girecek</b></td><td><b class="pos">' + fmt(c.net) + '</b></td></tr>'
+      + '<tr><td><b>Sonuç</b></td><td><b class="' + (iyi ? 'pos' : 'neg') + '">' + (iyi ? '+' : '−') + fmt(Math.abs(c.sonuc)) + '</b></td></tr>'
+      + '</table></div>';
+    // ℹ️ SÜRE BEDELİ YOK (patron kararı) — bekleme cezasını kazanılmayan santral geliri zaten veriyor.
+    h += '<p class="sub">Pozisyonu istediğin kadar açık tutabilirsin — süre sınırı ve süre bedeli yok. '
+      + 'Riski piyasanın kendisi taşır: fiyat düşerse zararın büyür.</p>'
+      + '<button class="primary" onclick="invSat()" ' + (canli ? '' : 'disabled') + '>💱 Pozisyonu Kapat — ' + fmt(c.net) + ' al</button>'
+      + '<p class="sub">Aynı anda tek pozisyon tutulur. Kapatmadan yenisi açılmaz — bu, işlemi bölerek düşük işlem bedeli kademesinde kalmayı engeller.</p>';
+    return h + '</div>';
+  }
+
+  // ── Pozisyon yok: alım ekranı ──
+  const secili = invSecBuf, T = INV_TYPES[secili];
+  h += '<p class="sub" style="margin-top:0">Kasanı enstrümana çevirirsin; fiyat <b>gerçek piyasadan</b> gelir. '
+    + 'Oyun ekonomisi gerçeğin ×1000\'i olduğu için fiyatlar da aynı ölçekle gösterilir.</p>'
+    + '<div style="display:flex;gap:6px;margin:8px 0">';
+  for (const k of Object.keys(INV_TYPES)) {
+    const t = INV_TYPES[k], sec = k === secili, px = INV_PX[k], chg = px ? px.chg : 0;
+    h += '<button onclick="invSec(\'' + k + '\')" style="flex:1;padding:8px 4px;border:1px solid ' + (sec ? 'var(--gold)' : 'var(--line)')
+      + ';border-radius:9px;background:' + (sec ? 'var(--panel2)' : 'transparent') + ';color:var(--ink);cursor:pointer;text-align:center">'
+      + '<div style="font-size:19px">' + t.ico + '</div>'
+      + '<div style="font-size:11px;font-weight:700">' + t.nm + '</div>'
+      + '<div style="font-size:10px" class="' + (chg >= 0 ? 'pos' : 'neg') + '">' + (px ? (chg >= 0 ? '+' : '−') + yz(Math.abs(chg) / 100) : '—') + '</div>'
+      + '</button>';
+  }
+  h += '</div>'
+    + '<div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel2)">'
+    + '<div style="font-weight:800;color:var(--gold);margin-bottom:2px">' + T.ico + ' ' + T.nm + '</div>'
+    + '<div class="sub" style="margin-bottom:6px">' + T.not + '</div>'
+    + sparkSVG((INV_SPARK[secili] || {}).d)
+    + '<table class="ledger"><tr><td>Oyun fiyatı <span class="sub">(1 ' + T.birim + ')</span></td><td><b>' + (INV_PX[secili] ? invFiyatYaz(secili) : '—') + '</b></td></tr>'
+    + (INV_PX[secili] ? '<tr><td class="sub">↳ gerçek piyasa</td><td class="sub">$' + INV_PX[secili].px.toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + '</td></tr>' : '')
+    + '<tr><td>Yatırabileceğin en fazla</td><td><b>' + fmt(Math.min(G.cash, invTavan())) + '</b> <span class="sub">(şirket değerinin ' + yz(INV_CAP, 0) + '\'ı)</span></td></tr>'
+    + '</table></div>'
+    + '<div style="display:flex;gap:6px;align-items:center;margin:10px 0 4px">'
+    + '<input id="inv_amt" type="number" inputmode="numeric" placeholder="Tutar ($)" value="' + (invAmtBuf || '') + '" oninput="invAmt(this.value)" '
+    + 'style="flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:15px;font-weight:700">'
+    + '<button onclick="invHizli(.25)" style="padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--acc2);cursor:pointer;font-size:12px">%25</button>'
+    + '<button onclick="invHizli(.5)" style="padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--acc2);cursor:pointer;font-size:12px">%50</button>'
+    + '<button onclick="invHizli(1)" style="padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--acc2);cursor:pointer;font-size:12px">Tümü</button>'
+    + '</div>'
+    + '<div id="inv_onizle">' + invOnizleHTML() + '</div>'
+    + '<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:8px">'
+    + '<div style="font-size:11px;color:var(--acc2);font-weight:800;margin-bottom:4px">📋 KURALLAR — hepsi baştan yazılı</div>'
+    + '<p class="sub" style="margin:0">'
+    + '• <b>Tavan:</b> şirket değerinin en fazla ' + yz(INV_CAP, 0) + '\'ı yatırımda durabilir.<br>'
+    + '• <b>İşlem bedeli</b> hacim büyüdükçe artar (' + yz(INV_FEE[0][1]) + ' → ' + yz(INV_FEE[INV_FEE.length - 1][1]) + '); hem alışta hem satışta, <b>kâr da etsen zarar da</b> alınır.<br>'
+    + '• <b>Kazanç vergisi</b> yalnız kârdan alınır ve kâr büyüdükçe katlanır (' + yz(INV_TAX[0][1], 0) + ' → ' + yz(INV_TAX[INV_TAX.length - 1][1], 0) + ').<br>'
+    + '• <b>Süre sınırı ve süre bedeli yok</b> — pozisyonu istediğin kadar tutabilirsin.<br>'
+    + '• Aynı anda <b>tek pozisyon</b>. Borçluyken yatırım yapılamaz.<br>'
+    + '• Fiyat gerçek piyasadan gelir; <b>veri yoksa işlem de yoktur</b> — uydurma fiyat kullanmayız.'
+    + '</p></div>'
+    // 💡 PATRONUN NOTU: "Amaç şu — yatırım işi ara verince mantıklı, aksi halde her gün oynayan
+    // biri daha çok kazanacağını bilsin." Piyasa hakkında tutamayacağımız söz VERMİYORUZ.
+    + '<div style="margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--panel2)">'
+    + '<p class="sub" style="margin:0">💡 <b>Ne zaman mantıklı?</b> Oyuna birkaç gün ara verecek olursan yatırım iyi fikirdir — '
+    + 'santralin dursa bile paran piyasada durur. Ama şunu bilerek yap: <b>her gün gelip üretimini satan oyuncu, '
+    + 'en iyi yatırımcıyı bile geçer.</b> Bu oyunun en kârlı yatırımı, hep çalışan bir santraldir.</p></div>';
+  return h + '</div>';
+}
+
+// Pozisyon açıkken şirket değeri doğru görünsün diye arka planda da fiyat tazele
+setInterval(() => { if (invVar()) invFetch(); }, 5 * 60000);
+// 🏗️ Gün dönümünü yakala: gece 00:00 geçtiyse ödenmeyen taksit zam yesin. Oyuncu
+// açıkken de kapalıyken de işler — çevrimdışı geçen günler dönüşte tek tek işlenir.
+setTimeout(() => { yatIsle(); notTazele(); acilIsle(); }, 9000);
+setInterval(() => { yatIsle(); notTazele(); acilIsle(); }, 60000);
+
 const BOT_PLANTS = [
   { b: 3, nm: 'Taklamakan Çölü', ll: [38.9, 82.2], t: 'solar_2', n: 3 },
   { b: 0, nm: 'Berlin', ll: [52.52, 13.40], t: 'wind_2', n: 2 },
