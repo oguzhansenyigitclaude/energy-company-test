@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 21:34) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 21:51) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 21:34)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 21:51)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1135,6 +1135,7 @@ function countryReport(iso) {
   };
 }
 window.startCountryStudy = (iso, ad) => {
+  if (krediKilidi('araştırma başlatma')) return;
   if (!iso) { toast('🌊 Bu konumda araştırılacak ülke yok', 'warn'); return; }
   if (studyOf(iso)) { toast('✅ Bu ülke zaten araştırıldı', ''); return; }
   if (G.countryStudyActive) { toast('🔎 Zaten bir bölge araştırması sürüyor', 'warn'); return; }
@@ -1408,6 +1409,7 @@ function botMaybeBid(cell) {
   }
 }
 window.placeBid = cell => {
+  if (krediKilidi('ihaleye teklif')) return;
   const a = auctionOf(cell), w = auctionWindow();
   if (bidBlocked(cell)) { toast('🏛️ Geçen ihaleyi SEN kazandın — tekel önleme kuralı gereği bu haftaki ihaleye katılamazsın', 'warn'); return; }
   if (!w.open) { toast('İhale penceresi kapalı (Pazar 09:00-21:00)', 'warn'); return; }
@@ -1472,6 +1474,7 @@ window.directRentConfirm = cell => {
   $('overlay').classList.add('show');
 };
 window.directRent = cell => {
+  if (krediKilidi('doğrudan kiralama')) return;
   // ⛔ tek kapı: sahibi olan karo doğrudan kiralanamaz (patron 25 Ağu bug'ı)
   if (!directRentOpen(cell)) {
     const sahip = myLease(cell) ? 'SENDE' : botLease(cell);
@@ -2083,6 +2086,7 @@ function freshState() {
     country: null, il: null, company: null, cash: 1e7,
     units: [], // {id, kind:'plant'|'store', t, ll, cell, cond, on, buildDone, stored, lifeProd, _ann}
     licenses: {}, // cellId -> true (oyuncu başına ruhsat — kimse kimseyi engellemez)
+    loan: null, loanNo: 0, // 🏦 kurtarma kredisi — eski kayıtlarda undefined, kod && ile korunur
     leases: {}, // cellId -> bitiş ts (3 günlük imtiyaz: +%20 satış primi — YEKA tarzı alım garantisi)
     offers: {}, maintDiscount: 1, starterClaimed: false, founded: Date.now(),
     research: { lvl: { coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0 }, active: null },
@@ -2791,7 +2795,7 @@ function sellChunk(st, mwh, targetCell, mult) {
     gain = r.gain * (mult || 1) * (1 - CONS_LOSS / 100);
     st.stored = Math.max(0, st.stored - mwh);
     noteSold(cell, mwh);
-    G.cash += gain;
+    satisGeliri(gain); // 🏦 borç varsa bankanın payı burada kesilir
     G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain;
     G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
     // kWh payı hattı İŞLETEN ittifakın kasasına; hissedar olarak kullanıyorsan kasan yoksa pay yanmaz, sende kalır
@@ -2812,7 +2816,7 @@ function sellChunk(st, mwh, targetCell, mult) {
     gain = r.gain * (mult || 1) * (1 - lineLoss(aline) / 100);
     st.stored = Math.max(0, st.stored - mwh);
     noteSold(cell, mwh);
-    G.cash += gain;
+    satisGeliri(gain); // 🏦 borç varsa bankanın payı burada kesilir
     G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain;
     G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
     const bakim = mwh * ALLY_LINE_FEE;
@@ -2827,7 +2831,7 @@ function sellChunk(st, mwh, targetCell, mult) {
     gain = r.gain * (mult || 1) * (1 - lineLoss(line) / 100);
     st.stored = Math.max(0, st.stored - mwh);
     noteSold(cell, mwh);
-    G.cash += gain;
+    satisGeliri(gain); // 🏦 borç varsa bankanın payı burada kesilir
     G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain;
     G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
     return gain;
@@ -2852,7 +2856,7 @@ function sellChunk(st, mwh, targetCell, mult) {
   }
   st.stored = Math.max(0, st.stored - mwh);
   noteSold(cell, mwh);
-  G.cash += gain;
+  satisGeliri(gain); // 🏦 borç varsa bankanın payı burada kesilir
   G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain; // ofis bölge raporu (kaynak bölgeye yazılır)
   const wasBoosted = G.totalEarned < BOOST_CAP;
   G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
@@ -3211,6 +3215,7 @@ window.openDetail = (t, mode) => {
   $('overlay').classList.add('show');
 };
 window.buyLicense = () => {
+  if (krediKilidi('ruhsat alma')) return;
   const c = SEL.cell;
   if (G.licenses[c]) return;
   if (!officeCovers(c)) { toast('🏢 Bu bölgede ofisin yok — ruhsattan önce bölgeye ofis açmalısın', 'warn'); return; }
@@ -3254,6 +3259,7 @@ window.buyCapLic = cat => {
   $('overlay').classList.add('show');
 };
 window.doBuyCapLic = cat => {
+  if (krediKilidi('kapasite lisansı alma')) return;
   const nt = nextCapTier(cat);
   if (!nt) return;
   if (G.cash < nt.fee) { toast('Lisans için ' + fmt(nt.fee) + ' gerekli', 'warn'); return; }
@@ -3283,6 +3289,7 @@ window.doBuild = (kind, t, disc) => { // katalog onayı: ürünü eline al, yerl
   setMode('build'); // "🏗️ <ürün> — kurmak istediğin yere dokun"
 };
 function placeAt(c, ll) {
+  if (krediKilidi('yeni tesis kurma')) return;
   // 🐞 [BOT-FIX] PENDING boşken (gerçek oyuncu akışında ulaşılamaz — yalnız botların kendi
   // test/debug çağrılarında görüldü) çökme yerine sessizce çık.
   if (!PENDING) { setMode(null); return; }
@@ -3356,6 +3363,7 @@ window.buildOfficeAsk = () => {
   $('overlay').classList.add('show');
 };
 window.doBuildOffice = () => {
+  if (krediKilidi('ofis açma')) return;
   if (offices().length >= maxOffices() || G.cash < OFFICE.cost) return;
   G.cash -= OFFICE.cost; gider('ruhsat', OFFICE.cost);
   const c = SEL.cell, ll = SEL.ll || cellCenter(c);
@@ -3988,6 +3996,7 @@ window.pickBrand = (toCell, km, hubs) => {
   $('overlay').classList.add('show');
 };
 window.buildLine = (toCell, km, hubs, brand) => {
+  if (krediKilidi('hat çekme')) return;
   if (!LINE_SRC || !toCell) { toast('Hat başlangıcı seçilmedi', 'warn'); return; } // bozuk hat kaydı oluşmasın
   brand = brand || 'voltas';
   const cost = brandPrice(brand, lineCost(km, hubs));
@@ -4024,6 +4033,7 @@ window.buildLine = (toCell, km, hubs, brand) => {
   save(); drawOverlay();
 };
 window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça aralara yeni merkez alıp kaybı azalt")
+  if (krediKilidi('yeni transfer merkezi')) return; // repairLine BAKIM olduğu için SERBEST
   let l = (G.lines || []).find(x => x.id === id), ally = false;
   // 🤝 İttifak hattı da BAKIM GÖREBİLMELİ: eskiden yalnız G.lines aranıyordu, yani ittifağın
   // kasadan ödediği hat ne merkez alabiliyor ne onarılabiliyordu — yıprandıkça kaybı %100'e
@@ -6105,6 +6115,7 @@ window.offerBuy = oid => {
   $('overlay').classList.add('show');
 };
 window.doOfferBuy = oid => {
+  if (krediKilidi('müzayededen alım')) return;
   const o = window.__lastOther;
   if (!o || o.oid !== oid) return;
   const ask = otherValue(o);
@@ -7088,6 +7099,193 @@ const GIDER_ADI = { yatirim: '🏭 Tesis yatırımı', yakit: '⛽ Yakıt', baki
   ihale: '🏛️ İhale / alım garantisi', muzayede: '🔨 Müzayede', ittifak: '🤝 İttifak / konsorsiyum', ceza: '⚖️ Cezalar' };
 function gider(k, n) { if (!G || !n) return; G.spend = G.spend || {}; G.spend[k] = Math.max(0, (G.spend[k] || 0) + n); }
 const giderToplam = () => Object.values((G && G.spend) || {}).reduce((a, b) => a + b, 0);
+
+// ═══════════ 🏦 BANKA — KURTARMA KREDİSİ (patron 26 Ağu) ═══════════
+// PATRONUN FİKRİ: "Parası bitip tamir/ikmal yapamayan oyuncu sıkışıyor, hesabı silmek
+// zorunda kalıyor. Kredi olsa ama cezasını da çekse."
+// NEDEN SAĞLAM: bu bir BÜYÜME KALDIRACI DEĞİL, kurtarma halatı. Para zorla tamire ve
+// ikmale gider; oyuncu onunla öne geçemez, yani "kestirme yok" ilkesi delinmez.
+// Rakip yorumlarında "banka/kredi sistemi" 14 beğeniyle istenen özellikler listesindeydi.
+const LOAN_CUT = 0.70;          // her satışın bankaya giden payı
+const LOAN_RATE = [2, 2.5, 3];  // 1./2./3.+ kredide borç çarpanı — tekrar batan pahalı öder
+
+// Yakıt ikmali için gereken PARA (depo alımı + nükleer yakıt çubuğu)
+function yakitIhtiyaciTL() {
+  let nakit = 0;
+  const gerek = { coal: 0, gas: 0 };
+  for (const u of plants()) {
+    const T = PLANT_TYPES[u.t];
+    if (!T || !T.fuel) continue;
+    const missH = FUEL_HOURS - (u.fuelH || 0);
+    if (missH < .2) continue;
+    const f = fuelOf(u);
+    if (!f) { nakit += Math.round(T.fuel * T.mw * missH); continue; } // nükleer: doğrudan para
+    gerek[f] += tonsFor(u, missH);
+  }
+  for (const f of ['coal', 'gas']) {
+    const eksik = Math.max(0, gerek[f] - fuelStock(f));
+    if (eksik > .5) nakit += Math.ceil(eksik) * FUEL_TYPES[f].price;
+  }
+  return Math.round(nakit);
+}
+// Krediye konu toplam ihtiyaç — FAZLASI VERİLMEZ (istismar kapısı kapalı)
+const krediIhtiyaci = () => Math.round(maintCost() + yakitIhtiyaciTL());
+const krediVar = () => !!(G && G.loan && G.loan.borc > G.loan.odenen);
+const krediKalan = () => krediVar() ? G.loan.borc - G.loan.odenen : 0;
+// Kredi ancak GERÇEKTEN sıkışıkken açılır: ihtiyaç var ve kasan onu karşılamıyor
+function krediUygun() {
+  if (!G || krediVar()) return false;
+  const n = krediIhtiyaci();
+  return n > 0 && G.cash < n;
+}
+
+// 🔒 KOVENANT: borçluyken YENİ YATIRIM YASAK. Yalnız yakıt, bakım ve tamir serbest.
+// Bu madde olmadan oyuncu kendine kalan payı yeni santrale yatırır ve aynı çukura düşer;
+// ayrıca kredi bir büyüme aracına dönüşürdü. Cezanın ikinci yarısı da budur.
+function krediKilidi(ne) {
+  if (!krediVar()) return false;
+  toast('🏦 Kredi sözleşmen sürüyor — borcun bitene kadar ' + (ne || 'yeni yatırım') +
+    ' yapamazsın. Kalan borç: ' + fmt(krediKalan()), 'warn', 'kredikilit', 6000);
+  return true;
+}
+
+// 💵 SATIŞ GELİRİ TEK KAPI: borç varsa bankanın payı burada kesilir.
+// 🛡 EMNİYET VALFİ (patron: "gelen paradan yakıt ve ikmal masrafı da ayarlanmalı"):
+// bekleyen bakım borcun kasanı aşıyorsa banka o satıştan HİÇ pay almaz. Gerçek hayatta da
+// işletme gideri borç servisinden önce gelir — yoksa şirket batar, banka da alacağını alamaz.
+// Böylece krediyi öderken aynı çukura düşmek matematiksel olarak imkânsız olur.
+function satisGeliri(gain) {
+  if (!(gain > 0)) return 0;
+  if (!krediVar()) { G.cash += gain; return gain; }
+  if (maintCost() > G.cash) { G.cash += gain; return gain; } // valf açık: bu satış tamamen senin
+  const pay = Math.min(krediKalan(), Math.round(gain * LOAN_CUT));
+  G.loan.odenen += pay;
+  gider('kredi', pay);
+  G.cash += gain - pay;
+  if (G.loan.odenen >= G.loan.borc) {
+    const al = G.loan.al;
+    G.loan = null;
+    toast('🏦 BORCUN BİTTİ! Kredi sözleşmen kapandı — yatırım kısıtların kalktı.', '', null, 0, true);
+    addMail('🏦 Banka', 'Kredi borcun kapandı', fmt(al) + ' tutarındaki kurtarma kredin tamamen ödendi. Sözleşme kısıtları kalktı; yeniden santral, ruhsat ve hat alabilirsin.', true);
+  }
+  return gain - pay;
+}
+
+// 💸 KREDİ PARASI ELİN DEĞMEDEN İŞE GİDER: önce bakım, sonra yakıt deposu, sonra ikmal.
+// Kasaya HİÇ girmez — bu yüzden kredi bir büyüme aracına dönüşemez.
+function krediUygula(tutar) {
+  let kalan = tutar;
+  const rapor = { bakim: 0, yakit: 0, tamir: 0, ikmal: 0 };
+  G.cellSpent = G.cellSpent || {};
+  for (const u of maintList().slice().sort((a, b) => unitRepairCost(b) - unitRepairCost(a))) {
+    const c = unitRepairCost(u);
+    if (c < 1 || c > kalan) continue;
+    kalan -= c; rapor.bakim += c; rapor.tamir++;
+    G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + c;
+    u.cond = 100;
+  }
+  gider('bakim', rapor.bakim);
+  for (const u of G.units.filter(x => x.kind === 'fueldepot')) {
+    const T = DEPOT_TYPES[u.t]; if (!T) continue;
+    const F = FUEL_TYPES[T.fuel];
+    const space = depotCap(u) - (u.fuel || 0);
+    const n = Math.floor(Math.min(space, kalan / F.price));
+    if (n < 1) continue;
+    const c = n * F.price;
+    kalan -= c; rapor.yakit += c;
+    u.fuel = (u.fuel || 0) + n;
+    G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + c;
+  }
+  for (const u of plants()) {
+    const T = PLANT_TYPES[u.t]; if (!T || !T.fuel) continue;
+    const missH = FUEL_HOURS - (u.fuelH || 0);
+    if (missH < .2) continue;
+    const f = fuelOf(u);
+    if (!f) {
+      const c = Math.round(T.fuel * T.mw * missH);
+      if (c > kalan) continue;
+      kalan -= c; rapor.yakit += c; rapor.ikmal++;
+      G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + c;
+      u.fuelH = FUEL_HOURS;
+      continue;
+    }
+    const need = tonsFor(u, missH), have = fuelStock(f);
+    if (have < .5) continue;
+    const use = Math.min(need, have);
+    consumeFuel(f, use);
+    u.fuelH = Math.min(FUEL_HOURS, (u.fuelH || 0) + missH * use / need);
+    rapor.ikmal++;
+  }
+  gider('yakit', rapor.yakit);
+  return rapor;
+}
+
+// 🏦 BANKA EKRANI — girişi üstteki kasa rakamına dokunmak
+window.openBank = () => {
+  if (!G || !G._started) return;
+  const ihtiyac = krediIhtiyaci();
+  const kat = LOAN_RATE[Math.min(G.loanNo || 0, LOAN_RATE.length - 1)];
+  let h = '<h2>🏦 Banka</h2>';
+  if (krediVar()) {
+    const L = G.loan;
+    const yuzde = Math.round(100 * L.odenen / L.borc);
+    const valf = maintCost() > G.cash;
+    h += '<p class="sub" style="margin-top:0">Yürürlükte bir <b>kurtarma kredisi sözleşmen</b> var.</p>'
+      + '<table class="ledger">'
+      + '<tr><td>Aldığın</td><td>' + fmt(L.al) + '</td></tr>'
+      + '<tr><td>Toplam borç</td><td>' + fmt(L.borc) + ' <span class="sub">(x' + L.kat + ')</span></td></tr>'
+      + '<tr><td>Ödenen</td><td class="pos">' + fmt(L.odenen) + '</td></tr>'
+      + '<tr><td><b>Kalan</b></td><td><b class="neg">' + fmt(krediKalan()) + '</b></td></tr></table>'
+      + '<div style="height:8px;background:#1b2942;border-radius:5px;overflow:hidden;margin:8px 0">'
+      + '<i style="display:block;height:100%;width:' + yuzde + '%;background:linear-gradient(90deg,#ffc24a,#3ddc97)"></i></div>'
+      + '<p class="sub">Borca giden pay: her satışın <b>%' + (LOAN_CUT * 100) + '</b></p>'
+      + (valf
+        ? '<p class="sub pos">🛡 <b>Emniyet valfi açık:</b> bekleyen bakım borcun (' + fmt(maintCost()) + ') kasandan büyük — banka şu an satışlarından <b>hiç pay almıyor</b>. Önce tesislerini ayağa kaldır.</p>'
+        : '<p class="sub">🛡 Bakım borcun kasanı aşarsa banka o satışlardan pay almaz — ışıkların hiçbir zaman sönmez.</p>')
+      + '<p class="sub neg">🔒 Borcun bitene kadar yeni santral, depo, ruhsat, ofis ve hat alamaz; ihaleye ve müzayedeye giremez, araştırma başlatamazsın. Yakıt, bakım ve tamir serbesttir.</p>';
+  } else if (!ihtiyac) {
+    h += '<p class="sub" style="margin-top:0">Tesislerinin bakımı tam ve yakıtı yerinde — <b>kredi gerekmiyor.</b></p>'
+      + '<p class="sub">Kurtarma kredisi yalnız <b>gerçekten sıkıştığında</b> açılır: bakım ya da yakıt masrafını karşılayamadığın anda. Parası doğrudan tamire ve ikmale gider, eline geçmez.</p>';
+  } else if (!krediUygun()) {
+    h += '<p class="sub" style="margin-top:0">Bekleyen masrafın <b>' + fmt(ihtiyac) + '</b>, kasanda <b>' + fmt(G.cash) + '</b> var — <b>kendi paranla ödeyebilirsin.</b></p>'
+      + '<p class="sub">Kurtarma kredisi yalnız kasan yetmediğinde açılır. Bankaya faiz ödemek yerine kendi paranı kullan.</p>';
+  } else {
+    const borc = Math.round(ihtiyac * kat);
+    h += '<p class="sub" style="margin-top:0">Tesislerin duruyor ve kasan yetmiyor. Banka <b>yalnız bu durumda</b> devreye girer.</p>'
+      + '<div style="border:1px solid var(--gold);border-radius:10px;padding:10px 12px;margin:10px 0;background:#1b2942">'
+      + '<div style="font-weight:800;color:var(--gold);margin-bottom:6px">🏦 KURTARMA KREDİSİ SÖZLEŞMESİ</div>'
+      + '<table class="ledger">'
+      + '<tr><td>Alacağın</td><td><b>' + fmt(ihtiyac) + '</b></td></tr>'
+      + '<tr><td>Ödeyeceğin</td><td><b class="neg">' + fmt(borc) + '</b> <span class="sub">(x' + kat + ')</span></td></tr>'
+      + '<tr><td>Bekleyen bakım</td><td>' + fmt(maintCost()) + '</td></tr>'
+      + '<tr><td>Yakıt ikmali</td><td>' + fmt(yakitIhtiyaciTL()) + '</td></tr></table>'
+      + '<p class="sub" style="margin:8px 0 0">Para <b>eline geçmez</b> — doğrudan tamire ve ikmale gider.'
+      + '<br>Borca giden pay: her satışın <b>%' + (LOAN_CUT * 100) + '</b>'
+      + '<br>🛡 Bakım borcun kasanı aşarsa banka <b>hiç pay almaz</b> — aynı çukura düşmezsin.'
+      + '<br>🔒 Borcun bitene kadar <b>yeni yatırım yapamazsın</b>; yakıt, bakım ve tamir serbest.'
+      + '<br>Bir kredin bitmeden yenisi açılmaz.'
+      + ((G.loanNo || 0) > 0 ? '<br>⚠ Bu <b>' + ((G.loanNo || 0) + 1) + '. kredin</b> — tekrarlayan kullanımda faiz artar.' : '')
+      + '</p></div>'
+      + '<button class="primary" onclick="krediAl()">🏦 Sözleşmeyi Kabul Et — ' + fmt(ihtiyac) + ' al, ' + fmt(borc) + ' öde</button>';
+  }
+  h += '<button class="primary ghostbtn" onclick="closeModal()">Kapat</button>';
+  $('modal').innerHTML = h;
+  $('overlay').classList.add('show');
+};
+
+window.krediAl = () => {
+  if (!krediUygun()) { toast('🏦 Şu an kredi şartların oluşmadı', 'warn'); return; }
+  const tutar = krediIhtiyaci();
+  const kat = LOAN_RATE[Math.min(G.loanNo || 0, LOAN_RATE.length - 1)];
+  const borc = Math.round(tutar * kat);
+  G.loanNo = (G.loanNo || 0) + 1;
+  G.loan = { al: tutar, borc, odenen: 0, kat, ts: Date.now(), no: G.loanNo };
+  const r = krediUygula(tutar);
+  toast('🏦 Kredi onaylandı — ' + r.tamir + ' tesis onarıldı, ' + r.ikmal + ' santral ikmal edildi. Borç: ' + fmt(borc), '', null, 0, true);
+  addMail('🏦 Banka', 'Kurtarma kredisi sözleşmesi', fmt(tutar) + ' tutarında kurtarma kredin onaylandı; tamamı doğrudan tamire (' + fmt(r.bakim) + ') ve yakıt ikmaline (' + fmt(r.yakit) + ') aktarıldı.<br><br>Toplam borcun <b>' + fmt(borc) + '</b>. Borca giden pay: her satışın %' + (LOAN_CUT * 100) + '. Bekleyen bakım borcun kasanı aşarsa o satışlardan pay alınmaz.<br><br>Borcun bitene kadar yeni yatırım yapamazsın; yakıt, bakım ve tamir serbesttir.', true);
+  beep(440, .15);
+  save(); refreshUnitMarkers(); openBank();
+};
 const BOT_PLANTS = [
   { b: 3, nm: 'Taklamakan Çölü', ll: [38.9, 82.2], t: 'solar_2', n: 3 },
   { b: 0, nm: 'Berlin', ll: [52.52, 13.40], t: 'wind_2', n: 2 },
@@ -9732,6 +9930,11 @@ $('sellhalfbtn').addEventListener('click', () => { sellAll(.5); renderPriceSheet
 $('claimbtn').addEventListener('click', claimWeek);
 $('helpbtn').addEventListener('click', openHelp);
 $('bugbtn').addEventListener('click', reportBug);
+// 🏦 Bankanın girişi: üstteki KASA rakamı. Alt bar dolu, oyuncu zaten sürekli
+// parasına bakıyor — parasına dokununca finans ekranının açılması en sezgisel yol.
+$('cash').style.cursor = 'pointer';
+$('cash').title = 'Banka';
+$('cash').addEventListener('click', () => { if (G && G._started) openBank(); });
 $('iphandle').addEventListener('click', () => { if (G && G._started) openImtiyazShop(); });
 $('mgbtn2').addEventListener('click', startMinigame);
 $('demolink').addEventListener('click', () => {
