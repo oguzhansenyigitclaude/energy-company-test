@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 16:24) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 16:43) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 16:24)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 16:43)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1499,6 +1499,10 @@ const leaseTaxRate = cell => (!myLease(cell) && leaseOwnerOf(cell)) ? LEASE_PRIM
 const cellPriceFactor = c => { const [cy, cx] = c.split('_').map(Number); return .8 + hash01(cy, cx, 77) * .5; };
 const cellPriceNow = c => priceNow() * cellPriceFactor(c) * (myLease(c) ? 1 + LEASE_PRIM : 1) * (G.allyBuffUntil > Date.now() ? 1.5 : 1); // 🤝 ittifak zaferi: +%50 alım fiyatı
 const TRANSFER_FEE = 0.30; // (komşu pazar kalktı — yalnız genel yolda emniyet kemeri olarak duruyor)
+// ⚡ KAYIP-KAÇAK BEDELİ (gerçek elektrik faturasındaki kalem): şebekeye verilen enerjinin
+// bir kısmı iletim/dağıtımda kaybolur. Oyunda hem GERÇEK bir gider kalemi hem de tahmin↔gerçek
+// arasındaki küçük sapmanın oyuncuya dürüst adı. Tahminde de satışta da AYNI oranda uygulanır.
+const LOSS_LEAK = 0.03;
 // ⛔ KOMŞU PAZAR TAMAMEN KALDIRILDI (patron 25 Ağu): "hat yoksa satış yok."
 // Tarihçe: önce mesafe sınırı yoktu (Kanada'dan İstanbul'a satılıyordu) → 120 km + %10 →
 // 60 km + %30 → ve nihayet kaldırıldı. Sebep: her ara kademe, milyon dolarlık ⚡ nakil hattı
@@ -1521,15 +1525,15 @@ function doygunGelir(cell, mwh, oncekiMwh) {
   const tam = Math.min(inD, tazeKota), doygun = inD - tam;
   return { inD, excess, kalan, carpan: (tam + doygun * SATURATE_RATE) / (inD || 1), doygunMwh: doygun };
 }
-function sellRevenueAfter(cell, mwh, oncekiMwh) {
-  const base = cellPriceNow(cell);
+function sellRevenueAfter(cell, mwh, oncekiMwh, sabitFiyat) {
+  const base = sabitFiyat || cellPriceNow(cell);
   const d = doygunGelir(cell, mwh, oncekiMwh);
   const gb = 1 + greenBonus();
-  return { gain: (d.inD * base * d.carpan + d.excess * base * DUMP_RATE) * gb * ipSatBoost(),
+  return { gain: (d.inD * base * d.carpan + d.excess * base * DUMP_RATE) * gb * ipSatBoost() * (1 - LOSS_LEAK),
     inD: d.inD, excess: d.excess, remaining: d.kalan, price: base, green: gb - 1, doygun: d.doygunMwh };
 }
-function sellRevenue(cell, mwh) {
-  const base = cellPriceNow(cell);
+function sellRevenue(cell, mwh, sabitFiyat) {
+  const base = sabitFiyat || cellPriceNow(cell);
   const remaining = demandLeft(cell);
   const inD = Math.min(mwh, remaining);
   const excess = mwh - inD;
@@ -1537,7 +1541,7 @@ function sellRevenue(cell, mwh) {
   // 💠 Satış Primi takviyesi (İmtiyaz Mağazası, 24 sa): TAHMİN ve GERÇEK satış aynı fonksiyondan
   // geçtiği için "gördüğün = aldığın" sözü takviyede de korunur.
   const dg = doygunGelir(cell, mwh, 0);
-  const ham = (inD * base * dg.carpan + excess * base * DUMP_RATE) * gb * ipSatBoost();
+  const ham = (inD * base * dg.carpan + excess * base * DUMP_RATE) * gb * ipSatBoost() * (1 - LOSS_LEAK);
   const vRate = leaseTaxRate(cell), vergi = ham * vRate; // 🏛️ garanti sahibine giden pay
   return { gain: ham - vergi, inD, excess, remaining, price: base, green: gb - 1, leaseTax: vergi, leaseTaxRate: vRate, leaseOwner: vRate ? leaseOwnerOf(cell) : null };
 }
@@ -2768,6 +2772,8 @@ function transferAllowed(from, to, st) {
 // Muhasebenin tek kapısı: bir depodan mwh kadar enerjiyi hedef pazara sat (aktarım kesintisi dahil)
 function sellChunk(st, mwh, targetCell, mult) {
   if (mwh <= 0) return 0;
+  // ⚡ boşaltma başlarken dondurulan birim fiyat: tahmin ile gerçek arasındaki zaman kaymasını kapatır
+  const px = (st.disch && st.disch.px) || 0;
   // İzinsiz uzak hedef sessizce KENDİ bölgene düşer — arayüz atlansa bile arbitraj açılmaz
   if (targetCell && targetCell !== st.cell && !transferAllowed(st.cell, targetCell, st)) targetCell = null;
   const cell = targetCell || st.cell;
@@ -2776,7 +2782,7 @@ function sellChunk(st, mwh, targetCell, mult) {
   // 🌍 Konsorsiyum hattı: ittifak üyesine (ve HİSSEDARA) ÜCRETSİZ taşıma
   const cn = targetCell && targetCell !== st.cell ? consortiumFor(st.cell) : null;
   if (cn && cn.cell === targetCell) {
-    const r = sellRevenue(cell, mwh);
+    const r = sellRevenue(cell, mwh, px);
     gain = r.gain * (mult || 1) * (1 - CONS_LOSS / 100);
     st.stored = Math.max(0, st.stored - mwh);
     noteSold(cell, mwh);
@@ -2797,7 +2803,7 @@ function sellChunk(st, mwh, targetCell, mult) {
   // küçük bir bakım payı ittifak kasasına yazılır (hattı ayakta tutan ortak gider).
   const aline = targetCell && targetCell !== st.cell ? allyLineTo(st.cell, targetCell) : null;
   if (aline) {
-    const r = sellRevenue(cell, mwh);
+    const r = sellRevenue(cell, mwh, px);
     gain = r.gain * (mult || 1) * (1 - lineLoss(aline) / 100);
     st.stored = Math.max(0, st.stored - mwh);
     noteSold(cell, mwh);
@@ -2812,7 +2818,7 @@ function sellChunk(st, mwh, targetCell, mult) {
   const line = targetCell && targetCell !== st.cell ? storeLineTo(st, targetCell) : null;
   if (line) {
     // ⚡ NAKİL HATTI: hedef bölgenin fiyatı, mesafe kaybı düşülür (aktarım bedeli YOK — hattı zaten sen kurdun)
-    const r = sellRevenue(cell, mwh);
+    const r = sellRevenue(cell, mwh, px);
     gain = r.gain * (mult || 1) * (1 - lineLoss(line) / 100);
     st.stored = Math.max(0, st.stored - mwh);
     noteSold(cell, mwh);
@@ -2831,11 +2837,11 @@ function sellChunk(st, mwh, targetCell, mult) {
     // ⚠️ HATA AVI (yüksek): tavan yalnız SAYACA uygulanıyordu, ÖDEMEYE değil — tavan üstü MWh
     // de sınırsız talep fiyatından ödeniyordu. Artık tavan üstü kısım normal satış kurallarına
     // (kalan talep + DUMP_RATE) tabi; mesaj da gerçeği söylüyor.
-    const fazla = sellRevenue(cell, mwh - cnt);
+    const fazla = sellRevenue(cell, mwh - cnt, px);
     gain = (cnt * cellPriceNow(cell) * (1 + greenBonus()) + fazla.gain) * (mult || 1);
     if (cnt < mwh - .01) toast('🤝 Katkı tavanına ulaştın (%40) — kalan ' + fmtE(mwh - cnt) + ' MWh normal fiyattan satıldı', 'warn', 'allycap', 30000);
   } else {
-    const r = sellRevenue(cell, mwh);
+    const r = sellRevenue(cell, mwh, px);
     gain = r.gain * (mult || 1);
     if (targetCell && targetCell !== st.cell) gain *= 1 - TRANSFER_FEE; // -%10 aktarım bedeli
   }
@@ -2862,7 +2868,9 @@ window.startDischarge = (id, frac, adMult, targetCell, quiet) => {
   const amt = (isLinked(st) ? groupStored(st) : st.stored) * frac;
   if (amt < .005) return;
   grantDailyResPt();
-  st.disch = { left: amt, mult: adMult || 1, target: targetCell || null, sold: 0, gain: 0, full: frac >= .99 };
+  // 🧊 FİYATI DONDUR: boşaltma boyunca birim fiyat sabit kalır — "gördüğün = aldığın" sözü korunur
+  st.disch = { left: amt, mult: adMult || 1, target: targetCell || null, sold: 0, gain: 0, full: frac >= .99,
+    px: cellPriceNow(targetCell || st.cell) };
   // PATRON KURALI: boşaltma boyunca bu depoya bağlı cihazlar KAPANIR ve yeniden açılamaz (bitince açılabilir)
   // _autoOff: OYUN kapattı (oyuncu değil) — boşaltma bitince/çevrimdışı dönüşte otomatik geri açılır
   plants().forEach(p => { if (p.st === st.id && p.on) { p.on = false; p._autoOff = true; } });
@@ -5555,6 +5563,26 @@ const NET = {
     if (!this.on()) return null;
     try { return await this.get('saves/' + this.id); } catch (e) { return null; }
   },
+  // 🔐 jetonu ZORLA tazele (önbelleği atlayarak) — 401 sonrası tek deneme için
+  async freshToken() {
+    const a = this.auth;
+    if (!a || a.local) return null;
+    a.at = 0; // önbelleği geçersiz kıl
+    try {
+      const fa = (window.firebase && firebase.apps && firebase.apps.length) ? firebase.auth() : null;
+      if (fa && fa.currentUser) { const t = await fa.currentUser.getIdToken(true); a.token = t; a.at = Date.now(); this.saveAuth(); return t; }
+    } catch (e) {}
+    return this.token();
+  },
+  // 🔴 SESSİZ VERİ KAYBI KALKANI: yazma yetkisi kalıcı olarak reddediliyorsa oyuncu BİLMELİ
+  yetkiUyar(path, kod) {
+    if (this._yetkiUyari && Date.now() - this._yetkiUyari < 60000) return;
+    this._yetkiUyari = Date.now();
+    try {
+      toast('🔴 SUNUCUYA YAZILAMIYOR (' + kod + ') — ilerlemen şu an BULUTA KAYDEDİLMİYOR. Oyunu kapatma; sayfayı yenile ya da 🏢 Şirket ekranından hesabını yeniden bağla.', 'warn', 'authfail', 0, true);
+    } catch (e) { console.warn('[NET] yetki uyarısı gösterilemedi'); }
+    console.warn('[NET] yazma reddedildi:', kod, path);
+  },
   async req(path, method, body, kapanis) {
     const o = { method, cache: 'no-store' };
     if (body !== undefined) { o.headers = { 'Content-Type': 'application/json' }; o.body = JSON.stringify(body); }
@@ -5565,10 +5593,26 @@ const NET = {
     // Kurallar auth.uid'ye geçirilmeden ÖNCE bu sürümün yayılmış olması şart, aksi halde
     // eski sürümdeki oyuncular anında kilitlenir (devam notundaki sıra birebir bu).
     const tok = await this.token();
-    const r = await fetch(this.db + '/' + path + '.json' + (tok ? '?auth=' + encodeURIComponent(tok) : ''), o);
+    const url = t2 => this.db + '/' + path + '.json' + (t2 ? '?auth=' + encodeURIComponent(t2) : '');
+    let r = await fetch(url(tok), o);
+    // 🔐 401/403: jeton eskimiş olabilir — ZORLA tazeleyip BİR KEZ tekrar dene (bot bulgusu 23 Ağu)
+    if ((r.status === 401 || r.status === 403) && !this._retrying) {
+      this._retrying = true;
+      try {
+        const t2 = await this.freshToken();
+        if (t2 && t2 !== tok) {
+          if (o.body !== undefined) o.body = typeof o.body === 'string' ? o.body : JSON.stringify(o.body);
+          r = await fetch(url(t2), o);
+        }
+      } catch (e) {} finally { this._retrying = false; }
+    }
     // ⚠️ HATA AVI (yüksek): başarısız YAZMA da null dönüyordu, yani "başarılı" sayılıyordu.
     // Oyuncu sunucuda var olmayan bir ittifağa katılmış gibi kilitleniyordu. Yazmalarda artık atıyoruz.
-    if (!r.ok && method && method !== 'GET') throw new Error('HTTP ' + r.status + ' @ ' + path);
+    if (!r.ok && method && method !== 'GET') {
+      if (r.status === 401 || r.status === 403) this.yetkiUyar(path, r.status); // 🔴 sessiz kayma yok
+      throw new Error('HTTP ' + r.status + ' @ ' + path);
+    }
+    if (r.ok && this._yetkiUyari && method && method !== 'GET') this._yetkiUyari = 0; // düzeldi
     return r.ok ? r.json() : null;
   },
   get(p) { return this.req(p, 'GET'); },
@@ -8213,6 +8257,7 @@ function openUnitSheet(id) {
         <button class="bigsell" style="background:#8a6cff;color:#0d0a1a;margin-top:8px" onclick="adFinishDischarge(${u.id})">🎬 Reklam İzle — Satışı HEMEN Bitir (kalan ${fmtE(u.disch.left)} MWh)</button>
       </div>` : `
       <button class="bigsell" onclick="sellUnit(${u.id},1)" ${satMwh < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(satMwh)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * satMwh / T.cap))} sn)</button>
+      <p class="sub" style="margin:2px 0 6px;text-align:center">⚡ Tutara <b>kayıp-kaçak bedeli −%${LOSS_LEAK * 100}</b> dahildir (iletim/dağıtım kaybı). Boşaltma boyunca birim fiyat <b>sabitlenir</b> — gördüğün tutarı alırsın.</p>
       ${alt ? (() => { // 🚨 acil ihale teslimatı — tam fiyat, kesinti yok
         const g = altSatGain(alt.c, satMwh, 1);
         return `<button class="bigsell" style="background:var(--danger);color:#fff" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${satMwh < .005 ? 'disabled' : ''}>🚨 ACİL İHALEYE SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">${cellCode(alt.c)} · tam fiyat, kesinti yok</span></button>`;
