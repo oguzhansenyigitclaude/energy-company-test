@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 17:09) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 17:20) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 17:09)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 17:20)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -3811,15 +3811,33 @@ function lineTargets(cell) {
 const ALLY_ACCESS_KM = 150;
 const ALLY_LINE_FEE = 700; // taşınan MWh başına ittifak KASASINA giden bakım payı (~%1,7) — fiyat 1/3'e inince ölçeklendi
 const allyLines = () => (G.ally && G.ally.lines) || [];
-function allyLineNodes(l) { // çıkış ucu + hat üzerindeki transfer merkezleri (varış ucu hariç)
-  return lineNodes(l).slice(0, -1);
+// 🔴 TEK YÖNLÜLÜK TUZAĞI — kişisel hatlarda 24 Ağu'da çözülmüştü, ittifak hattında DURUYORDU
+// (patron 25 Ağu: "çıkış yapmadan önce ittifak/konsorsiyum düzgün çalıştığından emin olmalıyız").
+// Eski hâli `lineNodes(l).slice(0, -1)` idi: varış ucu "pazar", gerisi "erişim noktası" sayılıyordu.
+// Sonuç: (a) varış ucunda deposu olan üye hattı HİÇ kullanamıyordu, (b) ara transfer merkezleri
+// pazar değildi — Bursa'daki üye yalnız Kocaeli'ye satabiliyor, İzmir/Manisa/Balıkesir'e satamıyordu.
+// Yeni kural kişisel hatla AYNI: hat, geçtiği HER düğümde şebekeye açılan çift yönlü bir koridordur.
+function allyLineNodes(l) { // iki uç + bütün transfer merkezleri
+  return lineNodes(l);
 }
 function allyLinesFor(cell) {
   if (!G.ally) return [];
   const c = cellCenter(cell);
   return allyLines().filter(l => lineReady(l) && lineLoss(l) < 100 && allyLineNodes(l).some(n => kmDist(n, c) <= ALLY_ACCESS_KM));
 }
-const allyLineTo = (cell, target) => allyLinesFor(cell).find(l => l.to === target);
+// hattın HERHANGİ bir düğümü hedefse satış serbest (yalnız varış ucu değil)
+const allyLineTo = (cell, target) => allyLinesFor(cell).find(l => lineTouches(l, target));
+// bir üyenin ittifak hatlarıyla ulaşabildiği bütün pazarlar (kişisel lineTargets'ın eşi)
+function allyLineTargets(cell) {
+  const out = [];
+  for (const l of allyLinesFor(cell)) for (const n of lineNodeCells(l)) {
+    if (n === cell) continue;
+    const v = out.find(x => x.cell === n);
+    if (!v) out.push({ cell: n, line: l });
+    else if (lineLoss(l) < lineLoss(v.line)) v.line = l;
+  }
+  return out;
+}
 window.startLineFrom = (cell, ally) => { // hedef seçme moduna geç
   LINE_SRC = cell;
   LINE_ALLY = !!ally;
@@ -4001,11 +4019,24 @@ window.buildLine = (toCell, km, hubs, brand) => {
   save(); drawOverlay();
 };
 window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça aralara yeni merkez alıp kaybı azalt")
-  const l = (G.lines || []).find(x => x.id === id);
+  let l = (G.lines || []).find(x => x.id === id), ally = false;
+  // 🤝 İttifak hattı da BAKIM GÖREBİLMELİ: eskiden yalnız G.lines aranıyordu, yani ittifağın
+  // kasadan ödediği hat ne merkez alabiliyor ne onarılabiliyordu — yıprandıkça kaybı %100'e
+  // çıkıp KALICI ölüyordu. (patron 25 Ağu: "çıkış yapmadan önce emin olmalıyız".)
+  if (!l) { l = allyLines().find(x => x.id === id); ally = !!l; }
   if (!l) return;
+  if (ally && !canAllyLine()) { toast('🤝 İttifak hattına merkez eklemek başkan/yardımcı yetkisidir', 'warn'); return; }
   const c = brandPrice(l.brand || 'voltas', LINE.hub) + LINE.permitPerHub; // 🗼 merkez + 📜 inşaat ruhsatı
-  if (G.cash < c) { toast('Transfer merkezi için ' + fmt(c) + ' gerekli', 'warn'); return; }
-  G.cash -= c; gider('altyapi', c); l.hubs++; brandBuy(l.brand || 'voltas');
+  if (ally) {
+    if ((G.ally.treasury || 0) < c) { toast('💰 İttifak kasasında ' + fmt(c) + ' yok — 📣 bağış çağrısı aç', 'warn'); return; }
+    G.ally.treasury -= c;
+    if (allyOnline()) NET.allyLedger(G.allyId, -c, 'transfer merkezi: ' + placeName(l.to)).catch(() => {});
+  } else {
+    if (G.cash < c) { toast('Transfer merkezi için ' + fmt(c) + ' gerekli', 'warn'); return; }
+    G.cash -= c; gider('altyapi', c);
+  }
+  l.hubs++; brandBuy(l.brand || 'voltas');
+  if (ally) { allyLineWrite(l); addMail('🤝 ' + G.ally.name, 'Hatta yeni transfer merkezi', `${G.company}, ${placeName(l.from)} → ${placeName(l.to)} ittifak hattına kasadan ${fmt(c)} ödeyerek bir transfer merkezi daha ekledi. Hat kaybı düştü, yeni merkez tüm üyelere açık.`, true); }
   if (l.path && l.path.length >= 2) { // 🗼 en uzun bölümün ORTASINA yeni transfer merkezi
     let bi = 1, bk = -1;
     for (let i = 1; i < l.path.length; i++) { const k = kmDist(cellCenter(l.path[i - 1]), cellCenter(l.path[i])); if (k > bk) { bk = k; bi = i; } }
@@ -4018,12 +4049,23 @@ window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça a
   save(); renderLinePanel(); drawOverlay();
 };
 window.repairLine = id => {
-  const l = (G.lines || []).find(x => x.id === id);
+  let l = (G.lines || []).find(x => x.id === id), ally = false;
+  if (!l) { l = allyLines().find(x => x.id === id); ally = !!l; } // 🤝 ittifak hattı da onarılabilir
   if (!l) return;
+  if (ally && !canAllyLine()) { toast('🤝 İttifak hattının bakımı başkan/yardımcı yetkisidir', 'warn'); return; }
   const c = Math.round((100 - lineWear(l)) * l.km * 900);
-  if (c < 1 || G.cash < c) { if (G.cash < c) toast('Hat bakımı için ' + fmt(c) + ' gerekli', 'warn'); return; }
-  G.cash -= c; gider('altyapi', c); l.built = Date.now();
-  toast('🔧 Hat bakımı yapıldı — ' + fmt(c), '');
+  if (c < 1) return;
+  if (ally) {
+    if ((G.ally.treasury || 0) < c) { toast('💰 İttifak kasasında hat bakımı için ' + fmt(c) + ' yok', 'warn'); return; }
+    G.ally.treasury -= c;
+    if (allyOnline()) NET.allyLedger(G.allyId, -c, 'hat bakımı: ' + placeName(l.to)).catch(() => {});
+  } else {
+    if (G.cash < c) { toast('Hat bakımı için ' + fmt(c) + ' gerekli', 'warn'); return; }
+    G.cash -= c; gider('altyapi', c);
+  }
+  l.built = Date.now();
+  if (ally) allyLineWrite(l);
+  toast('🔧 Hat bakımı yapıldı — ' + fmt(c) + (ally ? ' (kasadan)' : ''), '');
   save(); renderLinePanel();
 };
 window.demolishLine = id => {
@@ -4341,13 +4383,22 @@ function gridPanelHTML() {
   if (G.ally && al.length) {
     h += `<div style="font-size:12px;margin:12px 0 4px">🤝 <b>İTTİFAK HATLARI</b> <span class="sub">${G.ally.name} · ortak mal</span></div>`;
     h += al.map(l => {
-      const rdy = lineReady(l), loss = Math.round(lineLoss(l));
+      const rdy = lineReady(l), loss = Math.round(lineLoss(l)), wear = Math.round(lineWear(l));
       const yakin = allyLineNodes(l).some(n => stores().some(s => kmDist(n, cellCenter(s.cell)) <= ALLY_ACCESS_KM));
+      // hattın açtığı pazarlar: iki uç + bütün transfer merkezleri (çift yönlü)
+      const ad = lineNodeCells(l).map(c => placeName(c)).filter((x, i, a2) => a2.indexOf(x) === i);
+      const yetki = canAllyLine(), bakimC = Math.round((100 - wear) * l.km * 900);
+      const hubC = brandPrice(l.brand || 'voltas', LINE.hub) + LINE.permitPerHub;
       return `<div style="border:1px solid #1f7a5a;border-radius:10px;padding:8px 10px;margin:6px 0">
         <div style="font-size:12.5px;font-weight:700">${placeName(l.from)} → ${placeName(l.to)}
           <span class="sub">${fmtN(l.km)} km · ${l.by || '—'} kurdu</span></div>
-        ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · 🗼 ${hubTotal(l.hubs)} transfer merkezi</div>
-          <div class="sub ${yakin ? 'pos' : 'neg'}">${yakin ? '✅ Deponun bu hatta erişimi var — satış ekranında görünür' : '⚠️ Deponun uzak: hattın ucuna ya da bir transfer merkezine ' + ALLY_ACCESS_KM + ' km içinde depo kur'}</div>`
+        ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · 🗼 ${hubTotal(l.hubs)} transfer merkezi · yıpranma %${100 - wear}</div>
+          <div class="sub">🎯 Açtığı pazarlar: ${ad.join(', ')} <span class="sub">— her üye iki yönde de satabilir</span></div>
+          <div class="sub ${yakin ? 'pos' : 'neg'}">${yakin ? '✅ Deponun bu hatta erişimi var — satış ekranında görünür' : '⚠️ Deponun uzak: hattın ucuna ya da bir transfer merkezine ' + ALLY_ACCESS_KM + ' km içinde depo kur'}</div>
+          ${yetki ? `<div style="display:flex;gap:5px;margin-top:6px">
+            <button class="bigsell half" style="margin:0" onclick="addHub(${l.id})">🗼 Merkez Ekle <span class="sub">${fmt(hubC)} kasadan</span></button>
+            ${bakimC > 0 ? `<button class="bigsell half" style="margin:0" onclick="repairLine(${l.id})">🔧 Bakım <span class="sub">${fmt(bakimC)} kasadan</span></button>` : ''}
+          </div>` : '<div class="sub">🔒 Merkez ekleme ve bakım başkan/yardımcı yetkisidir.</div>'}`
         : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
       </div>`;
     }).join('');
@@ -4442,6 +4493,15 @@ function allySyncCount() { G.ally.members = allyRoster().length; }
 // Sunucu yoksa/çevrimdışıysa eski bot simülasyonu aynen sürer — oyun kilitlenmez.
 const allyOnline = () => NET.on() && !!G.allyId;
 const ALLY_INV_TAG = '[[ITT-DAVET]]';
+let ALLY_LINE_KEYS = {}; // hat no → sunucu anahtarı (KAYDEDİLMEZ, her senkronda tazelenir)
+// ⚠️ Kurallar yalnız bu alanlara izin verir (docs/firebase-guvenlik-kurallari.json → allies/$aid/lines/$lid).
+// `path` DAHİL DEĞİL — ittifak hattına çizim yolu eklersen ÖNCE kuralı güncelle, yoksa yazma 401 alır.
+const allyLineRec = l => ({ id: l.id, from: l.from, to: l.to, km: l.km, hubs: l.hubs,
+  brand: l.brand, built: l.built, done: l.done, ally: l.ally, by: l.by });
+const allyLineWrite = l => { // hattı ORİJİNAL anahtarına yaz (kopya kayıt açma)
+  if (!allyOnline()) return;
+  NET.allyLineSet(G.allyId, ALLY_LINE_KEYS[l.id] || (NET.id + '_' + l.id), allyLineRec(l)).catch(() => {});
+};
 function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
   if (!rec || !rec.meta) return;
   const mem = rec.members || {};
@@ -4469,12 +4529,25 @@ function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
   // kasa = defterin toplamı (tek yazılan sayı değil → eşzamanlı bağışlar birbirini silmez)
   a.treasury = Math.max(0, led.reduce((s, e) => s + (e.amt || 0), 0));
   a.donations = {};
+  a.donPid = {};   // 🔑 aynı bağışlar OYUNCU KİMLİĞİNE göre — hisse anahtarı şirket adı OLAMAZ
+  a.pidName = {};  // kimlik → şirket adı (hisse listesini okunur göstermek için)
   for (const e of led) if ((e.amt || 0) > 0 && e.nm) {
     const d = a.donations[e.nm] = a.donations[e.nm] || { total: 0, week: 0 };
     d.total += e.amt;
     if (Date.now() - (e.ts || 0) < 6048e5) d.week += e.amt;
+    if (e.pid) { a.donPid[e.pid] = (a.donPid[e.pid] || 0) + e.amt; a.pidName[e.pid] = e.nm; }
   }
-  a.lines = Object.values(rec.lines || {});
+  // 🌍 KONSORSİYUM ORTAK KAYIT (25 Ağu): eskiden yalnız BAŞKANIN oyununda duruyordu —
+  // üyeler ne hattı görüyor ne de bağış yaptıkları hâlde hisse alabiliyorlardı. Artık ittifak
+  // kaydının parçası: kim okursa aynısını görür. ⚠️ meta/consortium güvenlik kurallarında
+  // TANIMLI OLMALI, yoksa yazma 401 alır ve özellik "çalışıyor" görünüp senkron olmaz.
+  a.consortium = rec.meta.consortium || null;
+  if (a.consortium && a.consortium.shares) consRightsSync(a.consortium);
+  // ⚠️ Sunucu anahtarı (kuran oyuncunun kimliği + hat no) KAYITTA TUTULAMAZ: kurallarda
+  // allies/$aid/lines/$lid altında `$other: validate false` var, fazladan alan yazarsan
+  // yazma sessizce 401 alır. Bu yüzden anahtarları AYRI ve KAYDEDİLMEYEN bir haritada tutuyoruz —
+  // yardımcı başkan hatta merkez eklerken kendi kimliğiyle KOPYA kayıt açmasın diye.
+  a.lines = Object.entries(rec.lines || {}).map(([k, l]) => { if (l && l.id != null) ALLY_LINE_KEYS[l.id] = k; return l; });
   a.pts = a.pts || 0;
 }
 async function allySync() {
@@ -4695,6 +4768,7 @@ const CONSORTIUM_ROUTES = [
 window.proposeConsortium = i => {
   const r = CONSORTIUM_ROUTES[i];
   if (!G.ally || G.ally.consortium) return;
+  if (!canAllyLine()) { toast('🌍 Konsorsiyum kurmak başkan/yardımcı yetkisidir', 'warn'); return; }
   const partner = ['Kuzey Şebeke Birliği', 'Avrupa Enerji Konseyi', 'Akdeniz Grid Paktı', 'Baltık Volt Birliği'][i % 4];
   $('modal').innerHTML = `
     <h2>🌍 Konsorsiyum Teklifi</h2>
@@ -4709,12 +4783,15 @@ window.proposeConsortium = i => {
 };
 window.sendConsortium = (i, partner) => {
   const r = CONSORTIUM_ROUTES[i];
+  if (!canAllyLine()) { toast('🌍 Konsorsiyum teklifi başkan/yardımcı yetkisidir', 'warn'); return; }
   G.ally.consortium = { route: i, partner, status: 'pending', since: Date.now() };
+  consortiumPush();
   toast('📤 ' + partner + ' ittifakına konsorsiyum teklifi gönderildi — yanıt bekleniyor', '', null, 0, true);
   addMail('🌍 ' + partner, 'Konsorsiyum teklifiniz', `${r.nm} projesi için teklifinizi aldık, yönetim kurulumuz değerlendiriyor. En geç birkaç saat içinde dönüş yapacağız.`);
   setTimeout(() => {
     if (!G.ally || !G.ally.consortium || G.ally.consortium.status !== 'pending') return;
     G.ally.consortium.status = 'accepted';
+    consortiumPush();
     addMail('🌍 ' + partner, 'Konsorsiyum KABUL', `${r.nm} projesinde ortağız! Maliyetin yarısını üstleniyoruz. Sizin payınız ${fmt(r.cost / 2)} — kasanızdan aktardığınızda inşaat başlar (3 gün).`);
     toast('🤝 ' + partner + ' konsorsiyumu KABUL ETTİ — kasadan payınızı aktarın', '', null, 0, true);
     save(); refreshAllyUI();
@@ -4724,23 +4801,33 @@ window.sendConsortium = (i, partner) => {
 window.fundConsortium = () => {
   const c = G.ally && G.ally.consortium;
   if (!c || c.status !== 'accepted') return;
+  if (!canAllyLine()) { toast('🌍 Kasadan finansman başkan/yardımcı yetkisidir', 'warn'); return; }
   const r = CONSORTIUM_ROUTES[c.route], share = r.cost / 2;
   if ((G.ally.treasury || 0) < share) { toast('Kasada ' + fmt(share) + ' olmalı — bağış çağrısı aç', 'warn'); return; }
   G.ally.treasury -= share;
   // ⚖️ HİSSE SÖZLEŞMESİ (patron sorusu: "başkan parayı alıp üyeleri atarsa?"):
   // Finansman anında bağış defteri DONDURULUR ve herkesin payı hatta HİSSE olarak yazılır.
   // Hisse KİŞİYE aittir — ittifaktan ayrılsan/atılsan da hattı kullanma hakkın devam eder.
-  const dons = G.ally.donations || {};
-  const total = Object.values(dons).reduce((s, d) => s + d.total, 0) || 1;
-  c.shares = {};
-  for (const [nm, d] of Object.entries(dons)) c.shares[nm] = +(d.total / total * 100).toFixed(2);
-  const myShare = c.shares[G.company] || 0;
-  if (myShare > 0) { // kişisel hak defterine yaz (ittifaktan bağımsız saklanır)
-    G.consRights = G.consRights || [];
-    G.consRights.push({ route: c.route, share: myShare, ally: G.ally.name, since: Date.now() });
+  // Hisse anahtarı OYUNCU KİMLİĞİ olmalı: şirket adı değişebilir, aynı ada iki oyuncu düşebilir
+  // ve Firebase anahtarında yasak karakter içerebilir. Çevrimdışı oynanan kayıtta kimlik yoksa
+  // eski davranışa (şirket adı) düşülür — o durumda zaten tek oyuncu vardır.
+  const pidDon = (allyOnline() && G.ally.donPid && Object.keys(G.ally.donPid).length) ? G.ally.donPid : null;
+  c.shares = {}; c.names = {};
+  if (pidDon) {
+    const total = Object.values(pidDon).reduce((s, v) => s + v, 0) || 1;
+    for (const [pid, v] of Object.entries(pidDon)) {
+      c.shares[pid] = +(v / total * 100).toFixed(2);
+      c.names[pid] = (G.ally.pidName || {})[pid] || '';
+    }
+  } else {
+    const dons = G.ally.donations || {};
+    const total = Object.values(dons).reduce((s, d) => s + d.total, 0) || 1;
+    for (const [nm, d] of Object.entries(dons)) { c.shares[nm] = +(d.total / total * 100).toFixed(2); c.names[nm] = nm; }
   }
   c.status = 'building';
   c.done = Date.now() + 3 * 864e5 / (G.demo ? 60 : 1); // kıtalararası: 3 gün (patron)
+  consortiumPush();  // üyeler de görsün
+  consRightsSync(c); // finanse edenin (ve okuyan her üyenin) hissesi defterine yazılır
   toast('🏗️ Kıtalararası hat inşaatı başladı — 3 gün', '', null, 0, true);
   addMail('🌍 ' + c.partner, 'İnşaat başladı', `${r.nm} hattının inşaatı başladı. 3 gün içinde devreye girecek; gelir paylaşımı otomatik işleyecek.`);
   save(); refreshAllyUI();
@@ -4749,6 +4836,7 @@ function consortiumTick() {
   const c = G.ally && G.ally.consortium;
   if (!c || c.status !== 'building' || Date.now() < c.done) return;
   c.status = 'live';
+  consortiumPush(); // hat devreye girdi — bütün üyeler görsün
   G.ally.pts += 3;
   const r = CONSORTIUM_ROUTES[c.route];
   toast('🌍 KITALARARASI HAT DEVREDE! ' + r.nm + ' — +3 ittifak puanı, kasaya kWh geliri akmaya başladı', '', null, 0, true);
@@ -4756,6 +4844,35 @@ function consortiumTick() {
   save(); refreshAllyUI();
 }
 const consortiumLive = () => G.ally && G.ally.consortium && G.ally.consortium.status === 'live';
+// 🌍 Konsorsiyum durumunu ORTAK kayda yaz (yalnız başkan/yardımcı çağırır)
+const consortiumPush = () => {
+  const c = G.ally && G.ally.consortium;
+  if (!c || !allyOnline()) return;
+  // ⚠️ Firebase anahtarında `. # $ [ ] /` YASAK. Çevrimdışı kayıtta hisseler şirket ADINA
+  // yazılmış olabilir; bozuk tek anahtar TÜM yazmayı 401'e düşürür — süzüp gönderiyoruz.
+  const temiz = { route: c.route, status: c.status };
+  if (c.partner) temiz.partner = String(c.partner).slice(0, 40);
+  if (c.since) temiz.since = c.since;
+  if (c.done) temiz.done = c.done;
+  const ok = k => k && !/[.#$\[\]\/]/.test(k);
+  if (c.shares) { temiz.shares = {}; for (const [k, v] of Object.entries(c.shares)) if (ok(k)) temiz.shares[k] = v; }
+  if (c.names) { temiz.names = {}; for (const [k, v] of Object.entries(c.names)) if (ok(k)) temiz.names[k] = String(v).slice(0, 28); }
+  NET.allyMetaSet(G.allyId, 'consortium', temiz).catch(() => {});
+};
+// ⚖️ HİSSE TESLİMİ: ortak kayıttaki hisse listesinde kendi kimliğini görürsen hakkı KENDİ
+// defterine yazarsın. Patronun kuralı buydu: "başkan parayı toplayıp üyeleri atarsa, bir dünya
+// para verdikleri hattı kullanamazlar" — hak kişiye ait, ittifaktan bağımsız saklanır.
+// Eskiden hisse yalnız fundConsortium'u ÇALIŞTIRAN kişide (başkanda) oluşuyordu: bağış yapan
+// üyeye hiç ulaşmıyordu. Artık her üye kendi payını buradan alır.
+function consRightsSync(c) {
+  if (!c || !c.shares || (c.status !== 'building' && c.status !== 'live')) return;
+  const pay = c.shares[NET.id] || (G.company ? c.shares[G.company] : 0) || 0; // eski ada göre kayıtlar da onurlandırılır
+  if (pay <= 0) return;
+  G.consRights = G.consRights || [];
+  if (G.consRights.some(r => r.route === c.route)) return;
+  G.consRights.push({ route: c.route, share: pay, ally: (G.ally && G.ally.name) || '', since: Date.now() });
+  addMail('🌍 Konsorsiyum', 'Hisse hakkın işlendi', `Finansmana katkın karşılığında ${CONSORTIUM_ROUTES[c.route] ? CONSORTIUM_ROUTES[c.route].nm : 'ortak hat'} projesinde <b>%${pay}</b> hissen var. Bu hak SANA aittir: ittifaktan ayrılsan ya da çıkarılsan bile hattı kullanmaya devam edersin.`, true);
+}
 // ⚖️ HİSSEDAR HAKKI: ittifaktan ayrılsan/atılsan bile finanse ettiğin hattı kullanmaya devam edersin.
 // (Patron: "başkan parayı toplayıp üyeleri atarsa bir dünya para verdikleri hattı kullanamazlar" — bu kapıyı kapatır.)
 const myRightRoutes = () => (G.consRights || []).map(r => r.route);
@@ -5750,6 +5867,7 @@ const NET = {
   // biri diğerinin hattını SESSİZCE eziyordu. Oyuncu kimliğiyle önekleyip benzersiz yapıyoruz.
   // Ek fayda: anahtar sayısal olmaktan çıkınca Firebase düğümü diziye çevirmiyor (null delik yok).
   allyLineAdd(aid, l) { return this.put('allies/' + aid + '/lines/' + this.id + '_' + l.id, l); },
+  allyLineSet(aid, key, l) { return this.put('allies/' + aid + '/lines/' + key, l); }, // mevcut hattı GÜNCELLE
   sendMail(toId, subj, body) { return this.push('mail/' + toId, { from: G.company, subj, body, ts: Date.now() }); },
   // ⚠️ HATA AVI (yüksek): oda anahtarı kapsamsızdı — DÜNYADAKİ TÜM ittifaklar aynı 'ally'
   // düğümünü, tüm ülkeler aynı 'country' düğümünü paylaşıyordu. Anahtarı kapsamla üretiyoruz.
@@ -8288,11 +8406,13 @@ function openUnitSheet(id) {
       ${storeLineTargets(u).map(h => ({ h, g: altSatGain(h.cell, satMwh, 1 - lineLoss(h.line) / 100) }))
         .sort((a, b) => b.g - a.g).slice(0, 6)
         .map(({ h, g }) => `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${h.cell}')" ${satMwh < .005 || g <= rAll.gain ? 'disabled' : ''}>🗼 ${placeName(h.cell)} transfer merkezine SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">${g <= rAll.gain ? 'kendi bölgen daha kârlı — kayıp %' + Math.round(lineLoss(h.line)) : 'hat kaybı %' + Math.round(lineLoss(h.line)) + ' · ' + lineBrand(h.line).nm}</span></button>`).join('')}
-      ${allyLinesFor(u.cell).map(l => { // 🤝 İTTİFAK HATTI — başkan çekti, HER ÜYE kullanır
-        const g = altSatGain(l.to, satMwh, 1 - lineLoss(l) / 100);
-        return `<button class="bigsell" style="background:#1f7a5a;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${satMwh < .005 || g <= rAll.gain ? 'disabled' : ''}>
-          🤝 İTTİFAK HATTI ile ${placeName(l.to)}'e SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}
-          <span style="font-size:10px">(hat kaybı %${Math.round(lineLoss(l))} · ÜCRETSİZ · MWh başına ${fmt(ALLY_LINE_FEE)} kasaya)</span></button>`;
+      ${allyLineTargets(u.cell).map(h => ({ h, g: altSatGain(h.cell, satMwh, 1 - lineLoss(h.line) / 100) }))
+        .sort((a, b) => b.g - a.g).slice(0, 6)
+        .map(({ h, g }) => { // 🤝 İTTİFAK HATTI — başkan çekti, HER ÜYE hattın HER merkezine satar
+        return `<button class="bigsell" style="background:#1f7a5a;color:#fff" onclick="startDischarge(${u.id},1,null,'${h.cell}')" ${satMwh < .005 || g <= rAll.gain ? 'disabled' : ''}>
+          🤝 İTTİFAK HATTI ile ${placeName(h.cell)}'e SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}
+          <span style="font-size:10px">${g <= rAll.gain ? 'kendi bölgen daha kârlı — hat kaybı %' + Math.round(lineLoss(h.line))
+            : 'hat kaybı %' + Math.round(lineLoss(h.line)) + ' · ÜCRETSİZ · MWh başına ' + fmt(ALLY_LINE_FEE) + ' kasaya'}</span></button>`;
       }).join('')}
       ${(() => { // 🌍 İTTİFAK KONSORSİYUM HATTI — üyelere ÜCRETSİZ (patron kuralı)
         const cn = consortiumFor(u.cell);
