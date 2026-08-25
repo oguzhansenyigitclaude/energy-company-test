@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 21:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 21:30) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 21:26)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 21:30)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -8246,6 +8246,26 @@ function hideSheets() {
 }
 window.hideSheets = hideSheets;
 function showSheet(id) { $('sheetdim').style.display = 'block'; $(id).classList.add('show'); }
+// 🏭 KARO YOĞUNLUĞU (patron 26 Ağu): "ihaleye girecek adam oradan gelecek geliri az çok
+// tahmin edebilsin — bir karoda 1000 oyuncunun 8 bin santrali varsa %20 bile dehşet para."
+// Doğru istek: ihaleyi kazanan o karodaki BÜTÜN satışlardan %20 vergi topluyor (LEASE_PRIM),
+// yani karonun kalabalığı teklifin değerini doğrudan belirliyor. Sayı üç kaynaktan gelir:
+// kendi birimlerin + sunucudaki gerçek oyuncular + bot/simülasyon şirketleri.
+// ⚠️ Gelir TAHMİNİ yazmıyoruz — satış hacmini bilmiyoruz, uydurma rakam vermek yanıltır.
+// Onun yerine ÖLÇÜLEBİLİR olanı veriyoruz: santral sayısı ve kurulu güç.
+function cellDensity(c) {
+  let adet = 0, mw = 0, benim = 0;
+  const say = (kind, t, seninMi) => {
+    if (kind !== 'plant') return;
+    adet++; if (seninMi) benim++;
+    const T = PLANT_TYPES[t];
+    if (T && Number.isFinite(T.mw)) mw += T.mw;
+  };
+  for (const u of G.units) if (u.cell === c) say(u.kind, u.t, true);
+  try { for (const o of othersInCell(c)) say(o.kind, o.t, false); } catch (e) {}
+  for (const bp of BOT_PLANTS) if (cellId(bp.ll) === c) say('plant', bp.t, false);
+  return { adet, mw: Math.round(mw * 10) / 10, benim };
+}
 function openCellSheet(c, ll, mode) {
   hideSheets();
   SEL.buildGeneric = false;
@@ -8309,7 +8329,15 @@ function openCellSheet(c, ll, mode) {
            <button class="bigsell" onclick="buyLicense()" ${G.cash < licenseFee(c) || Object.keys(G.licenses).length >= licCap() ? 'disabled' : ''}>📜 Ruhsat Al — ${fmt(licenseFee(c))}${Object.keys(G.licenses).length >= licCap() ? ' (LİMİT DOLU)' : ''}</button>`
         : `<p class="sub">🏢 Bu bölgede ofisin yok — ruhsat için önce ofis aç (${offices().length}/${maxOffices()}).</p>
            <button class="bigsell" onclick="buildOfficeAsk()" ${G.cash < OFFICE.cost || offices().length >= maxOffices() ? 'disabled' : ''}>🏢 Buraya Ofis Aç — ${fmt(OFFICE.cost)}</button>`)
-        : `<p style="font-size:11.5px;color:var(--dim)">Kurmak için: <b>🏗️ İnşa</b>'dan ürün satın al, sonra bu konuma dokun.</p>`}` + auctionPanelHTML(c);
+        : `<p style="font-size:11.5px;color:var(--dim)">Kurmak için: <b>🏗️ İnşa</b>'dan ürün satın al, sonra bu konuma dokun.</p>`}`
+      + (() => { // 🏭 ihale panelinin HEMEN ÜSTÜ: karo ne kadar kalabalık?
+        const d = cellDensity(c);
+        if (!d.adet) return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b>henüz santral yok</b> — ihaleyi kazanırsan vergi toplayacağın üretim de yok demektir.</p>`;
+        return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b class="pos">${fmtN(d.adet)} santral</b> var
+          <span class="sub">(~${fmtE(d.mw)} MW kurulu güç${d.benim ? ' · ' + d.benim + ' tanesi senin' : ''})</span><br>
+          İhaleyi kazanan, bu karodaki <b>bütün satışlardan %${LEASE_PRIM * 100} vergi</b> toplar — karo ne kadar kalabalıksa teklif o kadar değerli.</p>`;
+      })()
+      + auctionPanelHTML(c);
   } else if (!licensed) {
     if (!officeCovers(c)) {
       // OFİS KURALI (patron, rakip paraleli): bölgede ofis yoksa ruhsat YOK — önce ofis aç
