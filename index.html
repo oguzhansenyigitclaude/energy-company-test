@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-24 18:05) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 12:59) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-24 21:13)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 12:59)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -3234,9 +3234,6 @@ window.doBuild = (kind, t, disc) => { // katalog onayı: ürünü eline al, yerl
   setMode('build'); // "🏗️ <ürün> — kurmak istediğin yere dokun"
 };
 function placeAt(c, ll) {
-  // 🐞 [BOT-FIX] PENDING boşken (gerçek oyuncu akışında ulaşılamaz — yalnız botların kendi
-  // test/debug çağrılarında görüldü, bkz. bot-notlar/duzeltmeler.md) çökme yerine sessizce çık.
-  if (!PENDING) { setMode(null); return; }
   const { kind, t } = PENDING;
   const T = TYPE_OF(kind, t);
   if (!G.licenses[c]) {
@@ -3713,7 +3710,7 @@ function storeLineTargets(st) {
   if (!l) return [];
   const out = [];
   for (const n of lineNodeCells(l)) {
-    if (n === st.cell || kmDist(cellCenter(n), cellCenter(st.cell)) <= NEIGHBOR_KM) continue;
+    if (n === st.cell) continue;                       // kendi karesi zaten yerel satış
     if (!out.some(x => x.cell === n)) out.push({ cell: n, line: l });
   }
   return out;
@@ -4148,23 +4145,55 @@ function lineErisimHTML(l) {
 window.openGridNode = key => {
   const n = gridNodeOf(key);
   if (!n) return;
-  const l = n.line, bagli = stores().filter(x => !x.link && x.grid && (storeGridNode(x) || {}).line === l);
+  const l = n.line;
+  const kayip = Math.round(lineLoss(l));
+  const bagli = stores().filter(x => !x.link && x.grid && (storeGridNode(x) || {}).line === l);
+  const buMerkez = bagli.filter(x => x.grid === key);                       // BU merkeze bağlı olanlar
   const stok = bagli.reduce((a, x) => a + (isLinked(x) ? groupStored(x) : x.stored), 0);
-  const pazar = lineNodeCells(l).filter((c, i) => i !== n.i);
+  // bu merkezin hizmet alanındaki (LINE_ACCESS_KM) kendi tesislerin
+  const yakinDepo = stores().filter(x => !x.link && x.buildDone <= Date.now() && kmDist(cellCenter(n.cell), cellCenter(x.cell)) <= LINE_ACCESS_KM);
+  const yakinSantral = plants().filter(p => p.buildDone <= Date.now() && kmDist(cellCenter(n.cell), cellCenter(p.cell)) <= LINE_ACCESS_KM);
+  const uretim = yakinSantral.reduce((a, p) => a + plantOutput(p), 0);
+  const pazarlar = lineNodeCells(l).filter((c, i, a) => a.indexOf(c) === i);
+  const enIyi = pazarlar.map(c => ({ c, p: cellPriceNow(c) })).sort((a, b) => b.p - a.p)[0];
+  const yerel = cellPriceNow(n.cell);
+  // 💡 TAVSİYE: durumdan türetilir, boş laf değil
+  const tav = [];
+  if (!buMerkez.length && yakinDepo.some(x => !x.grid))
+    tav.push('🔌 Menzilinde <b>bağlanmamış depo</b> var — aşağıdan tek dokunuşla bağla, satış ekranında hat pazarları belirir.');
+  if (!yakinDepo.length)
+    tav.push('🔋 Bu merkezin ' + LINE_ACCESS_KM + ' km çevresinde deponuz yok. Buraya depo kurarsanız merkez işe yarar.');
+  if (kayip > 20)
+    tav.push('🏗️ Hat kaybı <b>%' + kayip + '</b> — <b>Transfer Merkezi Ekle</b> ile en uzun bölüm ikiye bölünür, kayıp düşer.');
+  if (enIyi && enIyi.p > yerel * 1.1)
+    tav.push('💰 En pahalı alan pazar <b>' + placeName(enIyi.c) + '</b> (' + fmt(enIyi.p) + '/MWh) — kendi bölgen ' + fmt(yerel) + '/MWh.');
+  if (uretim > 0 && !yakinDepo.length)
+    tav.push('⚠️ Çevrede <b>' + fmtE(uretim) + ' MW</b> üretim var ama depo yok — üretilen enerji boşa gidiyor.');
+  if (!tav.length) tav.push('✅ Bu merkez düzgün çalışıyor. Kayıp düşürmek için ara merkez ekleyebilirsin.');
   $('modal').innerHTML = `
     <h2>🗼 Enerji Transfer Merkezi</h2>
-    <p><b>${placeName(n.cell)}</b> <span class="sub">${n.uc ? '· hattın ucu' : '· ara merkez'}</span><br>
-    <span class="sub">${lineRota(l)} · ${fmtN(l.km)} km · 🗼 ${hubTotal(l.hubs)} merkez · kayıp %${Math.round(lineLoss(l))}</span></p>
-    <p class="sub">Bu merkeze <b>${LINE_ACCESS_KM} km</b> içindeki depolar bağlanabilir. Bağlanan depo,
-    hattın <b>bütün merkezlerinin pazarına</b> satabilir.</p>
+    <p><b>${placeName(n.cell)}</b> <span class="sub">${cellCode(n.cell)} · ${n.uc ? 'hattın ucu' : 'ara merkez'}</span><br>
+    <span class="sub">${lineRota(l)} · ${fmtN(l.km)} km · 🗼 ${hubTotal(l.hubs)} merkez</span></p>
     <table class="ledger">
-      <tr><td>Hatta bağlı depo</td><td>${bagli.length} adet</td></tr>
-      <tr><td>Bağlı depolardaki enerji</td><td class="pos">${fmtE(stok)} MWh</td></tr>
-      <tr><td>Ulaşılan pazar</td><td>${pazar.map(c => placeName(c)).filter((x, i, a) => a.indexOf(x) === i).join(', ') || '—'}</td></tr>
+      <tr><td>📉 Aktarım kesintisi <span class="sub">(hat kaybı)</span></td><td class="${kayip >= 50 ? 'neg' : kayip <= 15 ? 'pos' : ''}"><b>%${kayip}</b></td></tr>
+      <tr><td>💰 Bu bölgenin alım fiyatı</td><td>${fmt(yerel)}/MWh</td></tr>
+      <tr><td>⚡ Çevredeki üretim <span class="sub">(${LINE_ACCESS_KM} km · ${yakinSantral.length} santral)</span></td><td>${fmtE(uretim)} MW</td></tr>
+      <tr><td>🔋 Çevredeki depon</td><td>${yakinDepo.length} adet <span class="sub">(${buMerkez.length} bu merkeze bağlı)</span></td></tr>
+      <tr><td>🔗 Hatta bağlı toplam enerji</td><td class="pos">${fmtE(stok)} MWh</td></tr>
+      <tr><td>🎯 Ulaşılan pazar</td><td>${pazarlar.filter(c => c !== n.cell).map(c => placeName(c)).filter((x, i, a) => a.indexOf(x) === i).join(', ') || '—'}</td></tr>
     </table>
-    ${stok >= .005 ? `<div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">⚡ HATTAN TOPLU SAT <span class="sub">(bağlı ${bagli.length} deponun tamamı)</span></div>
-      ${lineNodeCells(l).filter((c, i, a) => a.indexOf(c) === i).map(c => `<button class="bigsell half" onclick="closeModal();sellGrid(${l.id},'${c}')">⚡ ${placeName(c)} pazarına SAT <span class="sub">· ${fmt(cellPriceNow(c) * (1 - lineLoss(l) / 100))}/MWh</span></button>`).join('')}`
+    <div style="font-size:11px;color:var(--acc2);margin:9px 0 2px">🔌 DEPO BAĞLANTISI <span class="sub">(${LINE_ACCESS_KM} km içindekiler)</span></div>
+    ${yakinDepo.length ? yakinDepo.map(x => {
+      const nd = storeGridNode(x), buna = x.grid === key;
+      return `<button class="bigsell half" style="text-align:left" onclick="${buna ? 'closeModal();gridUnlink(' + x.id + ')' : 'closeModal();gridConnect(' + x.id + ",'" + key + "')"}">
+        ${buna ? '🔴' : nd ? '🟡' : '⚪'} <b>${unitName(x)}</b> <span class="sub">· ${placeName(x.cell)} · ${fmtE(isLinked(x) ? groupStored(x) : x.stored)} MWh</span>
+        <div class="sub">${buna ? 'BU merkeze bağlı — dokun: bağlantıyı kes' : nd ? 'şu an ' + placeName(nd.cell) + ' merkezinde — dokun: buraya al' : 'bağlı değil — dokun: buraya bağla'}</div></button>`;
+    }).join('') : `<p class="sub">Bu merkezin ${LINE_ACCESS_KM} km çevresinde deponuz yok.</p>`}
+    ${stok >= .005 ? `<div style="font-size:11px;color:var(--acc2);margin:9px 0 2px">⚡ HATTAN TOPLU SAT <span class="sub">(bu hatta bağlı ${bagli.length} deponun tamamı)</span></div>
+      ${pazarlar.map(c => `<button class="bigsell half" onclick="closeModal();sellGrid(${l.id},'${c}')">⚡ ${placeName(c)} pazarına SAT <span class="sub">· ${fmt(cellPriceNow(c) * (c === n.cell ? 1 : 1 - kayip / 100))}/MWh${c === n.cell ? ' · yerel, kesinti yok' : ''}</span></button>`).join('')}`
       : '<p class="sub">Bağlı depolarda satılacak enerji yok.</p>'}
+    <div style="font-size:11px;color:var(--gold);margin:9px 0 2px">💡 TAVSİYE</div>
+    ${tav.map(x => `<p class="sub" style="margin:3px 0">${x}</p>`).join('')}
     <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
   $('overlay').classList.add('show');
 };
@@ -4303,6 +4332,14 @@ function drawLines() {
       });
       overlayLayer.push(mk);
     });
+    // 🔴 BAĞLI DEPOLARIN BESLEME KABLOSU: depodan merkeze kırmızı KESİKLİ hat
+    for (const st of stores()) {
+      if (st.link || !st.grid) continue;
+      const nd = storeGridNode(st);
+      if (!nd || nd.line.id !== l.id) continue;
+      overlayLayer.push(L.polyline([st.ll, cellCenter(nd.cell)],
+        { color: '#ff3b30', weight: 3, opacity: .85, dashArray: '7 6', interactive: false, renderer: VEC || undefined }).addTo(map));
+    }
   }
 }
 
@@ -8143,7 +8180,7 @@ function openUnitSheet(id) {
         const g = altSatGain(alt.c, satMwh, alt.emergency ? 1 : 1 - TRANSFER_FEE);
         return `<button class="bigsell" style="background:${alt.emergency ? 'var(--danger);color:#fff' : 'var(--gold);color:#131313'}" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${satMwh < .005 ? 'disabled' : ''}>${alt.emergency
           ? '🚨 ACİL İHALEYE SAT — ~' + fmt(g) + karRozeti(g, rAll.gain) + '<br><span style="font-size:10px">' + cellCode(alt.c) + ' · tam fiyat, kesinti yok</span>'
-          : '🔁 ' + cellCode(alt.c) + ' pazarına SAT — ~' + fmt(g) + karRozeti(g, rAll.gain) + '<br><span style="font-size:10px">-%' + Math.round(TRANSFER_FEE * 100) + ' aktarım dahil</span>'}</button>`;
+          : '🔁 KOMŞU PAZAR — ' + placeName(alt.c) + ' ' + cellCode(alt.c) + ' — ~' + fmt(g) + karRozeti(g, rAll.gain) + '<br><span style="font-size:10px">' + NEIGHBOR_KM + ' km içindeki komşu şebeke · tesis GEREKMEZ · -%' + Math.round(TRANSFER_FEE * 100) + ' aktarım bedeli</span>'}</button>`;
       })() : ''}
       ${/* 🔗 ÇAPRAZ SATIŞ (patron): merkez depo grubun TÜM bölgelerine satabilir. Bağlantı
             hattı zaten ödendiği için aktarım kesintisi YOK. Bağlı değilse bu butonlar çıkmaz. */
@@ -8152,8 +8189,8 @@ function openUnitSheet(id) {
           return `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${c}')" ${satMwh < .005 ? 'disabled' : ''}>🔗 ${placeName(c)} ${cellCode(c)} bölgesine SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">bağlı depo hattı · kesinti yok</span></button>`;
         }).join('')}
       ${storeLineTargets(u).map(h => ({ h, g: altSatGain(h.cell, satMwh, 1 - lineLoss(h.line) / 100) }))
-        .sort((a, b) => b.g - a.g).slice(0, 4)
-        .map(({ h, g }) => `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${h.cell}')" ${satMwh < .005 || g <= rAll.gain ? 'disabled' : ''}>⚡ HAT ile ${placeName(h.cell)}'e SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">hat kaybı %${Math.round(lineLoss(h.line))} · ${lineBrand(h.line).nm}</span></button>`).join('')}
+        .sort((a, b) => b.g - a.g).slice(0, 6)
+        .map(({ h, g }) => `<button class="bigsell" style="background:#2f6fd0;color:#fff" onclick="startDischarge(${u.id},1,null,'${h.cell}')" ${satMwh < .005 || g <= rAll.gain ? 'disabled' : ''}>🗼 ${placeName(h.cell)} transfer merkezine SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">${g <= rAll.gain ? 'kendi bölgen daha kârlı — kayıp %' + Math.round(lineLoss(h.line)) : 'hat kaybı %' + Math.round(lineLoss(h.line)) + ' · ' + lineBrand(h.line).nm}</span></button>`).join('')}
       ${allyLinesFor(u.cell).map(l => { // 🤝 İTTİFAK HATTI — başkan çekti, HER ÜYE kullanır
         const g = altSatGain(l.to, satMwh, 1 - lineLoss(l) / 100);
         return `<button class="bigsell" style="background:#1f7a5a;color:#fff" onclick="startDischarge(${u.id},1,null,'${l.to}')" ${satMwh < .005 || g <= rAll.gain ? 'disabled' : ''}>
