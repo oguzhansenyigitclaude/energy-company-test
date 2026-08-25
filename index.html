@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 20:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 20:33) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 20:22)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 20:33)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -5515,6 +5515,29 @@ const NET = {
   // dönüyor ve oyuncu Google onayını verdiği hâlde giriş yapmamış olarak geri geliyordu.
   // Kalıcı çözüm auth handler'ı kendi köküne taşımak ama uygulama github.io'da bir ALT
   // YOLDA (/energy-company-test/) — alan adının kökü bizde değil. Bu yüzden POPUP birincil.
+  // 📱 YEREL (NATIVE) GOOGLE GİRİŞİ — Play'den inen APK için TEK doğru yol.
+  // NEDEN: APK artık oyunu kendi içinden yüklüyor, yani sayfanın kökeni github.io değil
+  // `https://localhost`. Google OAuth istemcisi o kökeni tanımaz; üstelik Google, gömülü
+  // WebView içindeki OAuth akışlarını `disallowed_useragent` ile zaten engelliyor.
+  // Çözüm: jetonu Android'in KENDİ hesap seçicisinden almak. Böylece köken sorunu da,
+  // WebView engeli de ortadan kalkar. Eklenti: @capacitor-firebase/authentication.
+  // Tarayıcıda `window.Capacitor` yoktur → null döner ve akış GIS'e devam eder.
+  nativeAuth() {
+    const C = window.Capacitor;
+    if (!C || !C.isNativePlatform || !C.isNativePlatform()) return null;
+    return (C.Plugins && C.Plugins.FirebaseAuthentication) || null;
+  },
+  async nativeGoogleToken() { // Android hesap seçicisini açar, kimlik jetonu döndürür
+    const p = this.nativeAuth();
+    if (!p) return null;
+    try {
+      const r = await p.signInWithGoogle();
+      return (r && r.credential && r.credential.idToken) || null;
+    } catch (e) { // oyuncu vazgeçti ya da eklenti hata verdi
+      console.warn('[NET] yerel google', e && e.message);
+      return null;
+    }
+  },
   // 🔐 GIS (Google Identity Services): bölünmüş depolamalı tarayıcıda ÇALIŞAN TEK YOL.
   // Kimlik jetonunu doğrudan sayfaya verir; çapraz köken iframe/çerez dansı yok.
   async gisLoad() {
@@ -5572,6 +5595,13 @@ const NET = {
   async googleLogin() {
     const a = this.fbInit();
     if (!a) throw new Error('Google girişi hazır değil');
+    // 📱 APK içindeysek yerel hesap seçici — WebView'da web akışı çalışmaz
+    if (this.nativeAuth()) {
+      const nt = await this.nativeGoogleToken();
+      if (!nt) throw new Error('Giriş iptal edildi — dilediğin zaman yeniden deneyebilirsin');
+      const r = await a.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(nt));
+      return this.adoptUser(r.user);
+    }
     if (this.clientId && (await this.gisLoad())) {
       const g = await this.googleLoginGIS();
       if (!g) throw new Error('Giriş iptal edildi — dilediğin zaman yeniden deneyebilirsin');
@@ -5633,8 +5663,15 @@ const NET = {
     const a = this.fbInit();
     if (!a) throw new Error('Google girişi hazır değil');
     const prov = new firebase.auth.GoogleAuthProvider();
-    const gisVar = !!this.clientId && (await this.gisLoad());
+    const yerel = !!this.nativeAuth(); // APK'da hesap seçici; tarayıcıda false
+    const gisVar = !yerel && !!this.clientId && (await this.gisLoad());
     if (a.currentUser && a.currentUser.isAnonymous) {
+      if (yerel) { // uid AYNI kalır — en temiz yol
+        const nt = await this.nativeGoogleToken();
+        if (!nt) throw new Error('Bağlama iptal edildi — dilediğin zaman yeniden deneyebilirsin');
+        const res = await a.currentUser.linkWithCredential(firebase.auth.GoogleAuthProvider.credential(nt));
+        return { mode: 'link', auth: await this.adoptUser(res.user) };
+      }
       // GERÇEK LINK — uid AYNI kalır, hiçbir şey taşınmaz. GIS butonu birincil:
       // linkWithPopup da firebaseapp.com handler'ından geçiyor ve telefonda
       // "missing initial state" ile kırılıyordu (patronun bildirdiği hata).
@@ -5650,7 +5687,9 @@ const NET = {
     const oldId = this.id;
     // REST misafiri: Google'a girilir, uid değişir → bulut kaydı taşınır. GIS butonu birincil.
     let auth = null;
-    if (gisVar) {
+    if (yerel) {
+      auth = await this.googleLogin(); // yerel yol; iptalde kendi hatasını fırlatır
+    } else if (gisVar) {
       auth = await this.googleLoginGIS();
       if (!auth) throw new Error('Bağlama iptal edildi — dilediğin zaman yeniden deneyebilirsin');
     } else auth = await this.adoptUser((await a.signInWithPopup(prov)).user);
