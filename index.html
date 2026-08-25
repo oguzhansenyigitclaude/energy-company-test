@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 16:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 16:24) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 16:22)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 16:24)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -825,7 +825,8 @@ const noktaUlke = (x, y) => { // ham test: nokta hangi poligonun içinde?
 // çıkıyordu: ülkesi bulunamıyor, ofis açılamıyor, adı "Açık deniz" görünüyordu.
 // Çözüm: doğrudan isabet yoksa çevreye bak. Pay küçük tutuldu ki açık deniz yine deniz kalsın.
 function countryAt(ll, pay) {
-  if (!LAND_BOX || !ll) return null;
+  // 🐞 [BOT-FIX] ll[0]/ll[1] sayı değilse (bozuk/eksik koordinat) eskiden burada çöküyordu.
+  if (!LAND_BOX || !ll || typeof ll[0] !== 'number' || typeof ll[1] !== 'number') return null;
   const t = pay === undefined ? 0.12 : pay; // ~12 km
   const key = ll[0].toFixed(2) + ',' + ll[1].toFixed(2) + ',' + t;
   if (key in CAT_CACHE) return CAT_CACHE[key];
@@ -3269,6 +3270,9 @@ window.doBuild = (kind, t, disc) => { // katalog onayı: ürünü eline al, yerl
   setMode('build'); // "🏗️ <ürün> — kurmak istediğin yere dokun"
 };
 function placeAt(c, ll) {
+  // 🐞 [BOT-FIX] PENDING boşken (gerçek oyuncu akışında ulaşılamaz — yalnız botların kendi
+  // test/debug çağrılarında görüldü) çökme yerine sessizce çık.
+  if (!PENDING) { setMode(null); return; }
   const { kind, t } = PENDING;
   const T = TYPE_OF(kind, t);
   if (!G.licenses[c]) {
