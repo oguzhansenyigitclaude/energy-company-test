@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 20:33) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 20:53) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 20:33)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 20:53)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -5527,14 +5527,21 @@ const NET = {
     if (!C || !C.isNativePlatform || !C.isNativePlatform()) return null;
     return (C.Plugins && C.Plugins.FirebaseAuthentication) || null;
   },
+  // ⚠️ HATAYI YUTMA: ilk denemede eklenti çalışma zamanında patladı (kütüphane APK'ya
+  // girmemişti) ama ekranda "vazgeçtin" yazıyordu — kör kaldık. Gerçek sebebi saklıyoruz.
+  _yerelHata: '',
   async nativeGoogleToken() { // Android hesap seçicisini açar, kimlik jetonu döndürür
     const p = this.nativeAuth();
     if (!p) return null;
+    this._yerelHata = '';
     try {
       const r = await p.signInWithGoogle();
       return (r && r.credential && r.credential.idToken) || null;
-    } catch (e) { // oyuncu vazgeçti ya da eklenti hata verdi
-      console.warn('[NET] yerel google', e && e.message);
+    } catch (e) {
+      const m = (e && (e.message || e.errorMessage)) || String(e);
+      console.warn('[NET] yerel google', m);
+      // gerçek iptal mi, yoksa arıza mı? iptal dışındaki her şeyi oyuncuya GÖSTER
+      this._yerelHata = /cancel|iptal|12501|16:/i.test(m) ? '' : m;
       return null;
     }
   },
@@ -5598,7 +5605,9 @@ const NET = {
     // 📱 APK içindeysek yerel hesap seçici — WebView'da web akışı çalışmaz
     if (this.nativeAuth()) {
       const nt = await this.nativeGoogleToken();
-      if (!nt) throw new Error('Giriş iptal edildi — dilediğin zaman yeniden deneyebilirsin');
+      if (!nt) throw new Error(this._yerelHata
+        ? 'Google girişi açılamadı: ' + this._yerelHata
+        : 'Giriş iptal edildi — dilediğin zaman yeniden deneyebilirsin');
       const r = await a.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(nt));
       return this.adoptUser(r.user);
     }
@@ -5668,7 +5677,9 @@ const NET = {
     if (a.currentUser && a.currentUser.isAnonymous) {
       if (yerel) { // uid AYNI kalır — en temiz yol
         const nt = await this.nativeGoogleToken();
-        if (!nt) throw new Error('Bağlama iptal edildi — dilediğin zaman yeniden deneyebilirsin');
+        if (!nt) throw new Error(this._yerelHata
+          ? 'Google girişi açılamadı: ' + this._yerelHata
+          : 'Bağlama iptal edildi — dilediğin zaman yeniden deneyebilirsin');
         const res = await a.currentUser.linkWithCredential(firebase.auth.GoogleAuthProvider.credential(nt));
         return { mode: 'link', auth: await this.adoptUser(res.user) };
       }
