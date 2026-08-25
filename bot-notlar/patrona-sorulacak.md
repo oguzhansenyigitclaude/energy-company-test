@@ -1,5 +1,20 @@
 # Patrona Sorulacaklar / Bilgi Notları
 
+## 2026-08-25 21:17 turu — 1 yeni tasarım/denge konusu, 1 net düşük riskli düzeltme yapıldı
+
+147 yeni `suggestions` kaydı işlendi (2026-08-24 20:26 – 2026-08-25 20:26 UTC, CLBOT1..CLBOT10). **1 net/düşük riskli düzeltme yapıldı:** `estimateBulkGain()` ("Tüm Depoları Sat" buton etiketi) bağlı/uydu depoyu grup toplamıyla birleştirmiyordu, tahmin gerçekleşenden ~%28 sapıyordu (bkz. `duzeltmeler.md`). Aşağıdaki konu **yeni** ve araştırma puanı/ilerleme kuralına (denge sabiti sayılabilir) dokunduğu için koda dokunulmadı:
+
+### 1) 🔬 Araştırma puanı kazanma koşulu, tüm ruhsatlı kareler doluyken büyümeyi kilitleyebiliyor
+Kayıt: `-P-uPEoa7E0R660aOmKV` (CLBOT2, 2026-08-25 19:32)
+
+Bot: "YATIRIM ENGELLENDI: tüm ruhsatlı karelerde birim limiti dolu, araştırma puanım yok (daily=0, weekly=0) -> yeni ruhsat/ofis alamıyorum, büyüme durdu." Kod incelemesi (`G.resPts`, satır ~2091, 3455-3459, 9059): Sv1-10 için günlük araştırma puanı GÜNÜN İLK SATIŞINDA kazanılıyor (`grantDailyResPt()`, `startDischarge()` içinden çağrılıyor, satır 2870), Sv11+ için haftalık puan yalnızca haftalık görev ödülüyle geliyor. Yeni ruhsat/ofis almak için gereken araştırma dalının açılması bu puanlara bağlı. Botun senaryosunda: tüm mevcut ruhsatlı karelerdeki birim limiti (`MAX_PER_CELL`) dolu VE o gün henüz satış yapmadığı (ya da Sv11+ ise haftalık görevi henüz tamamlamadığı) için yeni bölgeye genişleyemiyor — bu turda bizzat botun kendisi bu döngüyü "büyüme durdu" olarak tarif etti.
+
+**Neden kendim düzeltmedim:** Bu, oyunun ilerleme/denge sabitlerinden biri (araştırma puanı kazanma koşulu, `MAX_PER_CELL` ile birlikte) — kurallarım gereği ekonomi/denge sabitlerine dokunmam yasak. Ayrıca kod okumasıyla bu bir HATA değil, tasarım gereği çalışıyor gibi görünüyor (satış yapınca puan geliyor, döngü kendini çözüyor) — botun "kilitlendim" ifadesi muhtemelen geçici bir turdaki durumu yansıtıyor (satış yapabildiği an puan kazanacak). Yine de sizin onayınız olmadan bu alana dokunmak istemedim.
+
+**Öneri (karar sizde):** Eğer bu gerçekten kalıcı bir kilitlenmeye yol açabiliyorsa (ör. tüm depoları da doluysa ve satacak bir şeyi yoksa puan hiç gelmeyebilir), araştırma puanı kazanma yollarına bir "yedek" (ör. X saat aktif oynama başına 1 puan) eklenmesi düşünülebilir. Şimdilik tek, kendi ifadesiyle geçici bir rapor — tekrarlanırsa (özellikle "birden fazla tur üst üste satış da yapamadım" şeklinde) önceliklendirilecek.
+
+---
+
 ## 2026-08-24 21:13 turu — 1 yeni izlenecek konu (kesinlik/kapsam belirsiz), 1 net düşük riskli düzeltme yapıldı
 
 135 yeni `suggestions` kaydı işlendi (2026-08-23 21:24 – 2026-08-24 20:26 UTC). **1 net/düşük riskli düzeltme yapıldı:** `placeAt()` `PENDING` boşken çöküyordu (bkz. `duzeltmeler.md`, önceki turdaki `countryAt()` çökmesiyle aynı aile — yalnız botların kendi debug-hook çağrılarında tetikleniyor). Aşağıdaki konu **yeni**:

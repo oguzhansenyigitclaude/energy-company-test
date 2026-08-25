@@ -2,6 +2,29 @@
 
 Bu dosya, `suggestions` düğümüne yazan CLBOT1..CLBOT10 oyuncu-botlarının günlük büyüme/durum özetini ve o günkü bulgu/bug istatistiğini tutar. En yeni tur en üstte.
 
+## 2026-08-25 21:17 turu
+
+**Bulgu istatistiği:** 147 yeni kayıt geldi (2026-08-24 20:26 – 2026-08-25 20:26 UTC). 1'i gerçek/net kod hatasıydı ve düzeltildi (`estimateBulkGain()` bağlı depo tahmini, CLBOT4'ün detaylı repro'su). 1'i yeni bir tasarım/denge konusu olarak patrona soruldu (araştırma puanı kazanma koşulu, ruhsatlı kareler doluyken büyümeyi kilitleyebiliyor). ~27 kayıt zaten bilinen ailelerin (leaflet 404, bulut-kaydı-throttle, botların kendi test/proxy/script ortam sorunları, `MAX_PER_CELL` sessiz-red) tekrarıydı. Kalan 118 kayıt saf GELİŞİM/sıralama özetiydi.
+
+**CLBOT büyümesi (turun ilk → son kaydı):**
+
+| Bot | Kayıt | Sıralama (ilk → son) | Şirket değeri (ilk → son) | Tesis (son) | Not |
+|---|---|---|---|---|---|
+| CLBOT1 | 18 | #10/44 → #11/32 | $71,79M → ~$77,2M+ | 22 | Hedef "Claude Enerji" ($78,79M), fark ~$0,94M'ye düştü — çok yakın |
+| CLBOT2 | 17 | #13/44 → #13/32 | $55,69M → ~$58,3M+ | 18 | Turun sonunda "araştırma puanı yok + ruhsatlı kareler dolu" nedeniyle yatırım engellendi (patrona soruldu) |
+| CLBOT3 | 17 | #14/44 → #19/32 | $54,86M → ~$56,3M | 16 | Fosil ağırlıklı portföy, rekabette nispeten zayıf (bot kendi ifadesi) |
+| CLBOT4 | 18 | #16/44 → #15/32 | $52,94M → ~$61,5M | 23 | Depo/arbitraj stratejisi, sermaye birikimi yavaş (bot kendi ifadesi) |
+| CLBOT5 | 17 | #14/44 → #12/32 | $55,58M → ~$59,1M | 18 | Müzayede: `aucBid` iki aşamalı çağrı öğreniyor (bot script notu, oyun hatası değil) |
+| CLBOT6 | 10 | #1/21 (lider) → #19/44-45 | ~$52,7M → $56,23M | 12-15 arası dalgalandı | Havuz aynı gün içinde ~21'den ~45 katılımcıya büyüdü (yeni katılımcılar) |
+| CLBOT7 | 9 | #1/21 (lider) → #22/45 | ~$48,7M → $50,35M | 11-15 arası | |
+| CLBOT8 | 10 | #1/21 (lider) → #21/45 | ~$49,98M → $51,81M | 7-11 arası | Kasa 3M eşiğini geçince "ZORUNLU yatırım" kuralı tetiklendi (wind_1 alındı) |
+| CLBOT9 | 10 | #1/21 (lider) → #20/45 | ~$50,97M → $53,85M | 9-15 arası | Hidro/jeo santral önceliği karaktere uygun (bot kendi ifadesi) |
+| CLBOT10 | 11 | #8/~28 (yeni kuruluş) → #17/45 | $11,65M → $58,66M | 4 → 15 | Bir önceki turda (24 Ağu) restart olmuştu, bu tur boyunca hızlı büyüdü |
+
+Not: CLBOT1-5 (32-44 katılımcılı havuz, gün içinde katılımcı sayısı değişti) istikrarlı büyümeye devam etti. CLBOT6-10 ise bir önceki gün (24 Ağustos 20:26 civarı) restart olmuş yeni şirketlerdi (~$10-12M ile başladılar) — bu tur içinde havuzları da ~21'den ~45 katılımcıya büyüdü ve hepsi gün içinde LİDER (#1) konumuna kısa süreliğine ulaştı, gün sonunda yeni büyük havuzda #17-22 aralığına yerleşti. Beklenen döngüsel restart/büyüme deseni (bkz. önceki turlardaki notlar), bug değil.
+
+Kod değişikliği: `estimateBulkGain()` bağlı depo tahmin düzeltmesi (bkz. `duzeltmeler.md`). BUILD_TAG/version.json `2026-08-25 21:17` olarak güncellendi.
+
 ## 2026-08-24 21:13 turu
 
 **Bulgu istatistiği:** 135 yeni kayıt geldi (2026-08-23 21:24 – 2026-08-24 20:26 UTC). 1'i gerçek/net kod hatasıydı ve düzeltildi (`placeAt()` `PENDING` boşken çökmesi, 4 bağımsız bot — `countryAt()` ailesiyle aynı kalıp, yalnız botların kendi debug-hook çağrılarında tetikleniyor). 1'i yeni bir izlenecek konu olarak patrona soruldu (depo SAT tahmini ↔ gerçekleşen arasında %2-%57 değişken sapma, 7 bağımsız bot — muhtemelen boşaltma süresince fiyat/talep değişimi, tasarım olabilir). ~19 kayıt zaten bilinen ailelerin (`MAX_PER_CELL` sessiz-red, ağ/proxy ortam sorunu) tekrarıydı ya da botların kendilerinin "bug değil" diye işaretlediği kayıtlardı. Kalan 114 kayıt saf GELİŞİM/sıralama özetiydi.

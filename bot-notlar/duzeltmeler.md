@@ -2,6 +2,62 @@
 
 Bu dosya, bakım botunun bu turda index.html üzerinde yaptığı düzeltmelerin ÖNCE/SONRA kod parçalarını ve gerekçesini listeler. Yerel geliştirici bunları ana projeye taşıyabilir / gözden geçirebilir.
 
+## 2026-08-25 21:17 turu
+
+### Düzeltme 1: `estimateBulkGain()` — "Tüm Depoları Sat" buton etiketi bağlı (uydu) depoyu yanlış sayıyordu (tahmin gerçekleşenden ~%28 sapıyordu)
+
+**Bulgu:** `-P-qy3fwf80tYXEQnlDO` (CLBOT4, 2026-08-25 03:29) — bot, "Tüm Depoları Sat" buton yazısının (satır ~8822, `estimateBulkGain(1)`) tahmini **1.514.704** dediğini, gerçek satış sonrası kasa artışının **1.089.369** (-%28) olduğunu bildirdi. Bot kök nedeni de doğru tespit etti: `estimateBulkGain` bağlı/uydu depoyu grup toplamıyla (`groupStored`) birleştirmiyor; hem onay ekranı (`sellAllStoresAsk`, satır ~7787, 2026-08-20 14:59 turunda düzeltildi) hem gerçek satış (`sellAll`→`startDischarge`, satır ~2868, 2026-08-21 turlarında düzeltildi) hub'ın grup toplamını kullanıyor.
+
+**Kök neden:** 2026-08-20/21 turlarında aynı "bağlı depo filtresi eksik" ailesi `sellAllStoresAsk()` (onay ekranı) ve `sellAll(frac)` (gerçek satış) fonksiyonlarında düzeltilmişti (bkz. aşağıdaki "2026-08-21 14:58" ve "2026-08-20 14:59" turları), ama BUTON ETİKETİNİ dolduran üçüncü, ayrı bir fonksiyon (`estimateBulkGain`, satır 2923) o turlarda gözden kaçmış — hâlâ her depoyu (bağlı uydu dahil) kendi `st.stored` değeriyle tek tek sayıyordu. Sonuç: buton "1.514.704" yazıyor ama tıklanınca (onay ekranı zaten doğru göstermiş olsa da) gerçek kasa artışı farklı çıkıyor — "gördüğün = aldığın" sözü buton etiketinde bozuluyordu.
+
+**ÖNCESİ** (`index.html`, satır 2923-2937):
+```js
+function estimateBulkGain(frac) {
+  const soldTmp = {};
+  let gain = 0;
+  for (const st of stores()) {
+    const mwh = st.stored * frac;
+    if (mwh < .005) continue;
+    const base = cellPriceNow(st.cell); // her karenin KENDİ alım fiyatı (+imtiyazda ×1.2)
+    const remaining = Math.max(0, demandLeft(st.cell) - (soldTmp[st.cell] || 0));
+    const inD = Math.min(mwh, remaining);
+    const excess = mwh - inD;
+    gain += (inD * base + excess * base * DUMP_RATE) * (1 + greenBonus());
+    soldTmp[st.cell] = (soldTmp[st.cell] || 0) + mwh;
+  }
+  return gain;
+}
+```
+
+**SONRASI:**
+```js
+function estimateBulkGain(frac) {
+  const soldTmp = {};
+  let gain = 0;
+  // 🐞 [BOT-FIX] sellAll(frac) BAĞLI (uydu) depoları atlayıp hub'ın grup toplamını (groupStored)
+  // satıyor; bu tahmin fonksiyonu ise her depoyu (uydu dahil) kendi st.stored'ıyla ayrı ayrı
+  // sayıyordu — buton etiketi ile gerçekleşen satış arasında büyük sapma oluyordu (bkz. duzeltmeler.md).
+  for (const st of stores()) {
+    if (st.link) continue; // uydu tek başına satılmaz — grup toplamı aşağıda hub üzerinden sayılıyor
+    const mwh = (isLinked(st) ? groupStored(st) : st.stored) * frac;
+    if (mwh < .005) continue;
+    const base = cellPriceNow(st.cell); // her karenin KENDİ alım fiyatı (+imtiyazda ×1.2)
+    const remaining = Math.max(0, demandLeft(st.cell) - (soldTmp[st.cell] || 0));
+    const inD = Math.min(mwh, remaining);
+    const excess = mwh - inD;
+    gain += (inD * base + excess * base * DUMP_RATE) * (1 + greenBonus());
+    soldTmp[st.cell] = (soldTmp[st.cell] || 0) + mwh;
+  }
+  return gain;
+}
+```
+
+**Neden düşük risk / ekonomiyi değiştirmiyor:** Salt gösterim (buton etiketi) düzeltmesi — gerçek satış mantığı (`sellAll`/`startDischarge`) hiç değişmedi, zaten doğru satıyordu. Filtre (`!st.link`, `isLinked(st) ? groupStored(st) : st.stored`) tam olarak `sellAll(frac)`'ın (satır 2938-2946, önceki turda düzeltilen) kullandığı filtreyle birebir aynı — yeni bir kural eklemiyor, sadece tahmini gerçek satışla hizalıyor.
+
+**Doğrulama:** `node`'da tüm inline `<script>` blokları `new Function()` ile sözdizimi kontrolünden geçti (0 hata). `npm i playwright` + mevcut `/opt/pw-browsers` Chromium ile yerel `http://` sunucu üzerinden sayfa açılışında `pageerror` üretmedi.
+
+---
+
 ## 2026-08-24 21:13 turu
 
 ### Düzeltme 1: `placeAt()` `PENDING` boşken çöküyordu (`TypeError: Cannot destructure property 'kind' of 'PENDING' as it is null`)
