@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 21:30) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 21:34) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 21:30)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 21:34)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -8252,7 +8252,8 @@ function showSheet(id) { $('sheetdim').style.display = 'block'; $(id).classList.
 // yani karonun kalabalığı teklifin değerini doğrudan belirliyor. Sayı üç kaynaktan gelir:
 // kendi birimlerin + sunucudaki gerçek oyuncular + bot/simülasyon şirketleri.
 // ⚠️ Gelir TAHMİNİ yazmıyoruz — satış hacmini bilmiyoruz, uydurma rakam vermek yanıltır.
-// Onun yerine ÖLÇÜLEBİLİR olanı veriyoruz: santral sayısı ve kurulu güç.
+// Onun yerine ÖLÇÜLEBİLİR olanı veriyoruz: santral sayısı. (Kurulu güç hesaplanıyor
+// ama EKRANDA GÖSTERİLMİYOR — patron: ihale biraz kumar kalsın.)
 function cellDensity(c) {
   let adet = 0, mw = 0, benim = 0;
   const say = (kind, t, seninMi) => {
@@ -8333,8 +8334,10 @@ function openCellSheet(c, ll, mode) {
       + (() => { // 🏭 ihale panelinin HEMEN ÜSTÜ: karo ne kadar kalabalık?
         const d = cellDensity(c);
         if (!d.adet) return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b>henüz santral yok</b> — ihaleyi kazanırsan vergi toplayacağın üretim de yok demektir.</p>`;
-        return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b class="pos">${fmtN(d.adet)} santral</b> var
-          <span class="sub">(~${fmtE(d.mw)} MW kurulu güç${d.benim ? ' · ' + d.benim + ' tanesi senin' : ''})</span><br>
+        // ⚠️ KURULU GÜÇ (MW) BİLEREK GÖSTERİLMİYOR (patron 26 Ağu): "burdan hesap yapıp
+        // ihaleye öyle girerler, biraz risk olsun." MW verilirse vergi geliri neredeyse
+        // kesin hesaplanır ve ihale bir kumar olmaktan çıkar. Adet yeterli sinyal. GERİ EKLEME.
+        return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b class="pos">${fmtN(d.adet)} santral</b> var${d.benim ? ` <span class="sub">(${d.benim} tanesi senin)</span>` : ''}<br>
           İhaleyi kazanan, bu karodaki <b>bütün satışlardan %${LEASE_PRIM * 100} vergi</b> toplar — karo ne kadar kalabalıksa teklif o kadar değerli.</p>`;
       })()
       + auctionPanelHTML(c);
