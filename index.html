@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 23:32) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 23:53) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 23:32)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 23:53)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -6364,6 +6364,9 @@ window.aucCancel = id => {
   save(); openAucSheet();
 };
 window.aucBid = (id, onayli, onayTutar) => {
+  // ⚠️ Kovenant kapısı burada EKSİKTİ: doOfferBuy'da krediKilidi vardı ama müzayede
+  // TEKLİFİnde yoktu — borçlu oyuncu ihaleye giremiyor ama müzayededen tesis alabiliyordu.
+  if (krediKilidi('müzayedeye teklif')) return;
   const a = aucList().find(x => x.id === id);
   if (!a || a.mine) return;
   const next = Math.round((a.top || a.start) * (a.top ? 1.08 : 1) / 1e5) * 1e5;
@@ -7110,7 +7113,8 @@ const myWorth = () => G.cash + G.units.reduce((s, u) => s + TYPE_OF(u.kind, u.t)
 const GIDER_ADI = { yatirim: '🏭 Tesis yatırımı', yakit: '⛽ Yakıt', bakim: '🔧 Bakım ve onarım',
   ruhsat: '📜 Ruhsat · ofis · lisans', altyapi: '⚡ Nakil hattı', arastirma: '🔬 Araştırma',
   ihale: '🏛️ İhale / alım garantisi', muzayede: '🔨 Müzayede', ittifak: '🤝 İttifak / konsorsiyum', ceza: '⚖️ Cezalar',
-  borsa: '💱 Yatırım işlem bedeli ve vergi' };
+  borsa: '💱 Yatırım işlem bedeli ve vergi',
+  kredi: '🏦 Kredi taksiti, faiz ve haciz' };
 function gider(k, n) { if (!G || !n) return; G.spend = G.spend || {}; G.spend[k] = Math.max(0, (G.spend[k] || 0) + n); }
 const giderToplam = () => Object.values((G && G.spend) || {}).reduce((a, b) => a + b, 0);
 
@@ -7172,15 +7176,30 @@ function krediKilidi(ne) {
 // bekleyen bakım borcun kasanı aşıyorsa banka o satıştan HİÇ pay almaz. Gerçek hayatta da
 // işletme gideri borç servisinden önce gelir — yoksa şirket batar, banka da alacağını alamaz.
 // Böylece krediyi öderken aynı çukura düşmek matematiksel olarak imkânsız olur.
+// 🛡 EMNİYET VALFİ 2.0 — DENETİMDE KRİTİK AÇIK BULUNDU, ÖNCEKİ HÂLİNE DÖNME.
+// ESKİ HÂLİ: `if (maintCost() > G.cash) { tüm satış senin; return; }`
+// İKİ AYRI KUSUR vardı ve ikisi de bankaya tek kuruş bırakmıyordu:
+//  1) maintList() DURAN santralleri de sayıyor (u.on filtresi yok) ve yıpranma yalnız
+//     çalışırken işleyip cond 25'te tabana oturuyor. Oyuncu tek bir dev santrali bozup
+//     ⏸ Durdur'a basınca maintCost() KALICI olarak yüksek kalıyordu — üretmeyen, daha
+//     fazla yıpranmayan bir tesis sonsuza dek valfi açık tutuyordu.
+//  2) "Hep veya hiç" idi: 1 kuruşluk açık, milyonluk satışın TAMAMINI muaf kılıyordu.
+// DÜZELTME: (a) valf yalnız ÇALIŞAN tesislerin bakımına bakar — duran tesisin işletme
+// gideri yoktur, valfin gerekçesi ("ışıklar sönmesin") ona uymaz. (b) muafiyet yalnız
+// AÇIK KADAR: oyuncu bakım açığını kapatacak parayı alır, fazlasından banka payını alır.
+const maintCostAktif = () => maintList().filter(u => u.on).reduce((s, u) => s + unitRepairCost(u), 0);
+// Bu satıştan bankaya kesilebilecek kısım (bakım açığı düşülmüş)
+const kesilebilirGelir = (gain) => Math.max(0, gain - Math.max(0, maintCostAktif() - G.cash));
+
 function satisGeliri(gain) {
   if (!(gain > 0)) return 0;
   if (!krediVar()) {
     // 🔴 BÜYÜME KREDİSİ TEMERRÜDÜ: taksitler ödenmediği için banka otomatik tahsilata geçti.
     // Aynı emniyet valfi burada da geçerli — bekleyen bakım kasanı aşıyorsa pay alınmaz,
     // yoksa oyuncu tesislerini ayağa kaldıramaz ve banka da alacağını hiç alamaz.
-    if (yatVar() && G.kredi.temerrut && maintCost() <= G.cash) {
+    if (yatVar() && G.kredi.temerrut) {
       const K = G.kredi;
-      const kes = Math.min(K.borc, Math.round(gain * KREDI_TAHSIL));
+      const kes = Math.min(K.borc, Math.round(kesilebilirGelir(gain) * KREDI_TAHSIL));
       K.borc -= kes; K.odenen += kes;
       K.odenenAdet = Math.min(K.vade, Math.ceil(K.odenen / K.taksit)); // tahsilat taksit yerine geçer
       gider('kredi', kes);
@@ -7191,9 +7210,9 @@ function satisGeliri(gain) {
     // 🔴 ACİL NAKİT HACZİ (patron): 3 gün ödenmezse her satıştan %30 doğrudan bankaya,
     // borcun TAMAMI kapanana kadar. Aynı emniyet valfi: bekleyen bakım kasanı aşıyorsa
     // haciz o satışa dokunmaz — yoksa tesisler ayağa kalkmaz, banka da alacağını alamaz.
-    if (acilVar() && G.acil.temerrut && maintCost() <= G.cash) {
+    if (acilVar() && G.acil.temerrut) {
       const borc = acilBorc();
-      const kes = Math.min(borc, Math.round(gain * ACIL_HACIZ));
+      const kes = Math.min(borc, Math.round(kesilebilirGelir(gain) * ACIL_HACIZ));
       gider('kredi', kes);
       G.cash += gain - kes;
       if (kes >= borc) {
@@ -7214,8 +7233,7 @@ function satisGeliri(gain) {
     }
     G.cash += gain; return gain;
   }
-  if (maintCost() > G.cash) { G.cash += gain; return gain; } // valf açık: bu satış tamamen senin
-  const pay = Math.min(krediKalan(), Math.round(gain * LOAN_CUT));
+  const pay = Math.min(krediKalan(), Math.round(kesilebilirGelir(gain) * LOAN_CUT));
   G.loan.odenen += pay;
   gider('kredi', pay);
   G.cash += gain - pay;
@@ -7424,6 +7442,7 @@ window.acilAl = () => {
   if (acilVar()) { toast('⚡ Zaten açık bir acil nakit kredin var.', 'warn'); return; }
   if (yatVar()) { toast('⚡ Büyüme kredin sürerken acil nakit kredisi alamazsın.', 'warn'); return; }
   if (krediVar()) { toast('⚡ Kurtarma kredin sürerken acil nakit kredisi alamazsın.', 'warn'); return; }
+  if (invVar()) { toast('⚡ Açık yatırım pozisyonun varken kredi alamazsın — önce pozisyonunu kapat.', 'warn', null, 6000); return; }
   const bek = acilBeklemeKalan();
   if (bek > 0) { toast('⚡ Yeni acil nakit için ' + bek + ' saat daha beklemelisin.', 'warn', null, 6000); return; }
   const limit = acilLimit();
@@ -7524,10 +7543,13 @@ const KREDI_NOT_ODUL = 2, KREDI_NOT_CEZA = 15, KREDI_NOT_TEMERRUT = 40;
 // yeniden borçlanabilirsin (pahalı ve düşük limitle), ama iyi notu ödeme yaparak hak edersin.
 const NOT_TOPARLA_TAVAN = 50, NOT_TOPARLA_GUN = 3;
 function notTazele() {
-  if (!G || yatVar() || krediVar()) return;   // açık borç varken sicil kendiliğinden düzelmez
+  if (!G) return;
   const bugun = trGun(Date.now());
   if (G.notGun === undefined || G.notGun > bugun) { G.notGun = bugun; return; }
+  // ⚠️ notGun BORÇLUYKEN DE İLERLETİLİR. Eskiden erken return notGun'u bayat bırakıyordu;
+  // borç kapanınca geçen bütün günler GERİYE DÖNÜK toplu puan olarak yazılıyordu.
   const gecen = bugun - G.notGun;
+  if (yatVar() || krediVar() || acilVar()) { G.notGun = bugun; return; } // sicil açık borçta düzelmez
   if (gecen <= 0) return;
   G.notGun = bugun;
   if (notu() < NOT_TOPARLA_TAVAN) {
@@ -7616,6 +7638,9 @@ window.yatAl = () => {
   if (yatVar()) { toast('🏗️ Zaten açık bir kredin var — önce onu bitir.', 'warn'); return; }
   if (krediVar()) { toast('🏗️ Kurtarma kredin sürerken büyüme kredisi alamazsın.', 'warn'); return; }
   if (acilVar()) { toast('🏗️ Acil nakit borcun varken büyüme kredisi alamazsın — aynı anda tek kredi.', 'warn', null, 6000); return; }
+  // ⚠️ Ters yön kontrolü: invAl zaten kredi varken yatırımı engelliyordu ama burada invVar()
+  // yoktu — oyuncu ÖNCE borsaya yatırıp SONRA kredi çekerek kovenantı deliyordu.
+  if (invVar()) { toast('🏗️ Açık yatırım pozisyonun varken kredi alamazsın — önce pozisyonunu kapat.', 'warn', null, 6000); return; }
   const bek = yatBeklemeKalan();
   if (bek > 0) { toast('🏗️ Yeni kredi için ' + bek + ' gün daha beklemelisin (önceki kredinin vadesinden sonra).', 'warn', null, 6000); return; }
   const kd = notKademe();
@@ -7656,7 +7681,10 @@ window.yatOde = (adet) => {
   const olabilir = yatOdenebilir();
   if (olabilir <= 0) { toast('🏗️ Bugünkü taksitini ödedin — yarın yine bekleriz.', '', null, 5000); return; }
   const n = Math.max(1, Math.min(adet || 1, olabilir));
-  const tutar = Math.min(K.borc, K.taksit * n);
+  // ⚠️ taksit = Math.round(borc/vade) AŞAĞI yuvarlayabildiği için vade×taksit < borç kalıyordu
+  // ve kredi taksitle HİÇ kapanmıyordu. SON taksit kalan borcun tamamını kapatır.
+  const sonTaksit = K.odenenAdet + n >= K.vade;
+  const tutar = sonTaksit ? K.borc : Math.min(K.borc, K.taksit * n);
   if (G.cash < tutar) { toast('🏗️ Kasanda ' + fmt(tutar) + ' yok', 'warn'); return; }
   G.cash -= tutar;
   gider('kredi', tutar);
