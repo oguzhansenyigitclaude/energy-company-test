@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 12:59) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 13:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 12:59)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 13:26)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1472,13 +1472,13 @@ const leaseTaxRate = cell => (!myLease(cell) && leaseOwnerOf(cell)) ? LEASE_PRIM
 // İmtiyaz kazananın avantajı artık ALIM FİYATINA +%20 (ek prim kalemine değil — patron düzeltmesi).
 const cellPriceFactor = c => { const [cy, cx] = c.split('_').map(Number); return .8 + hash01(cy, cx, 77) * .5; };
 const cellPriceNow = c => priceNow() * cellPriceFactor(c) * (myLease(c) ? 1 + LEASE_PRIM : 1) * (G.allyBuffUntil > Date.now() ? 1.5 : 1); // 🤝 ittifak zaferi: +%50 alım fiyatı
-const TRANSFER_FEE = 0.30; // başka bölgenin pazarına satışta -%30 aktarım bedeli (patron: arbitraj kapatıldı)
-// 🔁 "KOMŞU pazar" GERÇEKTEN komşu olmalı (telefon testi hatası): mesafe sınırı yokken
-// Kanada'daki depodan İstanbul'a %10 kesintiyle satılabiliyordu — bu, milyon dolarlık
-// ⚡ nakil hattı sistemini tamamen anlamsız kılıyordu. Uzak pazar = hat şart.
-// 🌍 patron onayı (fren C): 120 km + %10 kesinti, nakil hattını anlamsız kılıyordu
-// (Antarktika'dan komşu pazara %504 kârla satış). Artık 60 km + %30 kesinti: gerçek arbitraj
-// için ⚡ nakil hattı çekmek şart.
+const TRANSFER_FEE = 0.30; // (komşu pazar kalktı — yalnız genel yolda emniyet kemeri olarak duruyor)
+// ⛔ KOMŞU PAZAR TAMAMEN KALDIRILDI (patron 25 Ağu): "hat yoksa satış yok."
+// Tarihçe: önce mesafe sınırı yoktu (Kanada'dan İstanbul'a satılıyordu) → 120 km + %10 →
+// 60 km + %30 → ve nihayet kaldırıldı. Sebep: her ara kademe, milyon dolarlık ⚡ nakil hattı
+// sistemini anlamsız kılmaya devam etti. Artık kendi karen dışına satmak = HAT.
+// NEIGHBOR_KM artık satış kuralı DEĞİL; yalnız transfer merkezi hizmet yarıçapının (LINE_ACCESS_KM)
+// tarihsel referansı olarak duruyor. Geri açmak istersen: transferAllowed() sonundaki `return false`.
 const NEIGHBOR_KM = 60;
 // Aynı karede DAHA ÖNCE satılmış varsayılan miktarı hesaba katan sürüm (toplu satış tahmini için)
 // 📉 TALEP DOYGUNLUĞU (patron onayı, fren D): bir karenin günlük talebinin YARISINI aştıktan
@@ -2724,8 +2724,10 @@ window.adFinishDischarge = id => {
 // en küçük depo ~35 sn, en büyüğü TAM dolulukta 2 dk. Para akan enerjiyle birlikte akar.
 const dischSecOf = T => Math.round(30 + 90 * Math.min(1, T.cap / 500));
 // UZAK PAZARA SATIŞ İZNİ — tek kapı. Hayalet aktarımı burada kesiyoruz:
-// uzak bir kareye ancak 🌍 konsorsiyum hattı, ⚡ KENDİ kurduğun hat, 🚨 acil ihale
-// ya da GERÇEKTEN komşu mesafe (≤ NEIGHBOR_KM) ile satabilirsin.
+// ⛔ KOMŞU PAZAR KALDIRILDI (patron 25 Ağu): "hat yoksa satış yok."
+// Kendi karen dışına satmanın TEK yolu bir HATTIR: ⚡ kendi hattın (deponun bir transfer
+// merkezine bağlı olmalı) · 🤝 ittifak hattı · 🌍 konsorsiyum · 🚨 acil ihale teslimatı.
+// Mesafeye bakan eski kural (≤ NEIGHBOR_KM) kasıtlı olarak SİLİNDİ — geri koyma.
 function transferAllowed(from, to, st) {
   if (!to || from === to) return true;
   const cn = consortiumFor(from);
@@ -2735,7 +2737,7 @@ function transferAllowed(from, to, st) {
   if (allyLineTo(from, to)) return true;                          // 🤝 ittifak hattı — her üye kullanır
   const at = G.ally && G.ally.tender;
   if (at && to === at.cell && Date.now() < at.until) return true; // 🚨 acil ihale teslimatı
-  return kmDist(cellCenter(from), cellCenter(to)) <= NEIGHBOR_KM; // 🔁 komşu pazar
+  return false; // ⛔ hat yoksa uzak satış YOK (komşu pazar kaldırıldı)
 }
 // Muhasebenin tek kapısı: bir depodan mwh kadar enerjiyi hedef pazara sat (aktarım kesintisi dahil)
 function sellChunk(st, mwh, targetCell, mult) {
@@ -3663,7 +3665,7 @@ const linesOf = cell => (G.lines || []).filter(l => l.from === cell && lineReady
 // Yeni kural: hat iki kare arasında değil, GEÇTİĞİ HER DÜĞÜMDE şebekeye açılan bir koridordur.
 // Bir düğüme LINE_ACCESS_KM içindeki her deponun hatta erişimi vardır ve hattın DİĞER
 // düğümlerinin pazarına satabilir — yön farketmez.
-const LINE_ACCESS_KM = 60; // komşu pazar yarıçapıyla (NEIGHBOR_KM) aynı: transfer merkezi çevresine hizmet eder
+const LINE_ACCESS_KM = 60; // 🗼 transfer merkezinin hizmet yarıçapı: bu mesafedeki depolar merkeze bağlanabilir
 function lineNodeCells(l) { // uçlar + transfer merkezleri (kare kimliği olarak)
   if (!l) return [];
   if (l.path && l.path.length >= 2) return l.path.slice();
@@ -3729,11 +3731,11 @@ function cellGridLines(cell) {
 const myLinesFor = cell => (G.lines || []).filter(l => lineUsable(l) && lineTouches(l, cell));
 // iki kare arasında kullanılabilir EN AZ KAYIPLI hat
 const lineBetween = (from, to) => cellGridLines(from).filter(l => lineTouches(l, to)).sort((a, b) => lineLoss(a) - lineLoss(b))[0] || null;
-// bu kareden hatla satılabilecek YENİ pazarlar (komşu mesafede zaten satılabilenler listelenmez)
+// bu kareden hatla satılabilecek pazarlar (kare düzeyi; depo düzeyi için storeLineTargets)
 function lineTargets(cell) {
   const out = [];
   for (const l of cellGridLines(cell)) for (const n of lineNodeCells(l)) {
-    if (n === cell || kmDist(cellCenter(n), cellCenter(cell)) <= NEIGHBOR_KM) continue;
+    if (n === cell) continue;
     const v = out.find(x => x.cell === n);
     if (!v) out.push({ cell: n, line: l });
     else if (lineLoss(l) < lineLoss(v.line)) v.line = l;
@@ -4136,8 +4138,7 @@ function lineErisimHTML(l) {
   const pazar = [...new Set(depolar.flatMap(x => storeLineTargets(x).filter(h => h.line.id === l.id).map(h => h.cell)))];
   return `<div class="sub pos">✅ ${depolar.length} deponun bu hatta erişimi var${pazar.length
     ? ` · açtığı pazar: ${pazar.slice(0, 3).map(c => placeName(c)).join(', ')}${pazar.length > 3 ? ' +' + (pazar.length - 3) : ''}`
-    : ''}</div>${pazar.length ? '' : `<div class="sub">⚠️ Hattın uçları birbirine ${NEIGHBOR_KM} km'den yakın —
-    bu pazarlara hat olmadan da satabiliyorsun. Uzak bir şehre hat çekmek gelir getirir.</div>`}`;
+    : ''}</div>${pazar.length ? '' : '<div class="sub">⚠️ Bu hattın açtığı ek pazar görünmüyor — merkezlerine bağlı depo yok.</div>'}`;
 }
 // 🗼 DEPO SAYFASINDAKİ NAKİL HATTI SATIRI (patron: "bağlamak istediğim depo bu transfer
 // merkezine bağlanabilmeli") — hangi merkeze bağlı, hangi pazarları açıyor, bağlan/kes.
@@ -4222,7 +4223,7 @@ function gridRowHTML(u) {
   return `<div class="sub pos" style="margin-top:4px">🗼 Nakil hattına bağlı: <b>${gridNodeName(n)}</b>
     <span class="sub">· ${lineRota(n.line)} · kayıp %${Math.round(lineLoss(n.line))}</span></div>
     ${hedef.length ? `<div class="sub">Satabildiğin pazarlar: ${hedef.map(h => placeName(h.cell)).join(', ')}</div>`
-      : `<div class="sub">⚠️ Bu hattın açtığı uzak pazar yok — düğümleri ${NEIGHBOR_KM} km içinde.</div>`}
+      : '<div class="sub">⚠️ Bu hat henüz ek pazar açmıyor.</div>'}
     ${aday.length > 1 ? `<button class="bigsell half" onclick="startGridLink(${u.id})">🗼 Başka merkeze bağlan</button>` : ''}
     <button class="bigsell half" onclick="gridUnlink(${u.id})">🔌 Hat bağlantısını kes</button>`;
 }
@@ -8122,18 +8123,9 @@ function openUnitSheet(id) {
     const space = (isLinked(u) ? groupCap(u) : T.cap) - (isLinked(u) ? groupStored(u) : u.stored);
     const fut = priceAt(nowMin() + 60) * cellPriceFactor(u.cell) * (myLease(u.cell) ? 1 + LEASE_PRIM : 1);
     const up = fut > base * 1.03, dn = fut < base * .97;
-    // 🔁 KOMŞU PAZAR (patron tasarımı): ruhsatlı başka bir kare daha pahalıya alıyorsa -%10 aktarımla oraya sat
+    // ⛔ KOMŞU PAZAR KALDIRILDI (patron 25 Ağu) — burada yalnız 🚨 ACİL İHALE teslimatı kaldı.
     const at = G.ally && G.ally.tender && Date.now() < G.ally.tender.until ? G.ally.tender : null;
-    const alt = at && at.cell !== u.cell ? { c: at.cell, p: cellPriceNow(at.cell), emergency: true } : (() => {
-      let best = null;
-      for (const c2 of Object.keys(G.licenses)) {
-        if (c2 === u.cell || demandLeft(c2) < 1) continue;
-        if (kmDist(cellCenter(u.cell), cellCenter(c2)) > NEIGHBOR_KM) continue; // uzak pazar = ⚡ hat şart
-        const p2 = cellPriceNow(c2) * (1 - TRANSFER_FEE);
-        if (!best || p2 > best.p) best = { c: c2, p: p2 };
-      }
-      return best && best.p > base * 1.02 ? best : null;
-    })();
+    const alt = at && at.cell !== u.cell ? { c: at.cell, p: cellPriceNow(at.cell), emergency: true } : null;
     const wasOpen = !!($('us_det') && $('us_det').open); // canlı tazelemede Ayrıntılar açık kalsın
     $('us_title').innerHTML = `<b>${T.cap} MWh</b> <span style="font-weight:600">${unitName(u)}</span> <span style="cursor:pointer;font-size:13px;opacity:.8" onclick="renameUnit(${u.id})" title="Yeniden isimlendir">✏️</span>`;
     $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` + adFinishBtnHTML(u) : `
@@ -8176,12 +8168,14 @@ function openUnitSheet(id) {
         <button class="bigsell" style="background:#8a6cff;color:#0d0a1a;margin-top:8px" onclick="adFinishDischarge(${u.id})">🎬 Reklam İzle — Satışı HEMEN Bitir (kalan ${fmtE(u.disch.left)} MWh)</button>
       </div>` : `
       <button class="bigsell" onclick="sellUnit(${u.id},1)" ${satMwh < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(satMwh)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * satMwh / T.cap))} sn)</button>
-      ${alt ? (() => { // patron: fiyat/MWh değil KAZANILACAK TUTAR + yerele göre kâr/zarar
-        const g = altSatGain(alt.c, satMwh, alt.emergency ? 1 : 1 - TRANSFER_FEE);
-        return `<button class="bigsell" style="background:${alt.emergency ? 'var(--danger);color:#fff' : 'var(--gold);color:#131313'}" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${satMwh < .005 ? 'disabled' : ''}>${alt.emergency
-          ? '🚨 ACİL İHALEYE SAT — ~' + fmt(g) + karRozeti(g, rAll.gain) + '<br><span style="font-size:10px">' + cellCode(alt.c) + ' · tam fiyat, kesinti yok</span>'
-          : '🔁 KOMŞU PAZAR — ' + placeName(alt.c) + ' ' + cellCode(alt.c) + ' — ~' + fmt(g) + karRozeti(g, rAll.gain) + '<br><span style="font-size:10px">' + NEIGHBOR_KM + ' km içindeki komşu şebeke · tesis GEREKMEZ · -%' + Math.round(TRANSFER_FEE * 100) + ' aktarım bedeli</span>'}</button>`;
+      ${alt ? (() => { // 🚨 acil ihale teslimatı — tam fiyat, kesinti yok
+        const g = altSatGain(alt.c, satMwh, 1);
+        return `<button class="bigsell" style="background:var(--danger);color:#fff" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${satMwh < .005 ? 'disabled' : ''}>🚨 ACİL İHALEYE SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">${cellCode(alt.c)} · tam fiyat, kesinti yok</span></button>`;
       })() : ''}
+      ${/* ⛔ hattı olmayan depo yalnız KENDİ karesine satar — sebebini söyle, oyuncu boşuna aramasın */
+        (!storeLineTargets(u).length && !isLinked(u)) ? `<p class="sub" style="margin:6px 0;border:1px dashed var(--line);border-radius:8px;padding:6px 8px">
+        ⚡ <b>Başka bölgeye satmak için nakil hattı şart.</b> Bu deponun bağlı olduğu bir transfer merkezi yok —
+        soldaki 🗼 pencereden hat çek ya da mevcut hattın bir merkezine dokunup bu depoyu bağla.</p>` : ''}
       ${/* 🔗 ÇAPRAZ SATIŞ (patron): merkez depo grubun TÜM bölgelerine satabilir. Bağlantı
             hattı zaten ödendiği için aktarım kesintisi YOK. Bağlı değilse bu butonlar çıkmaz. */
         groupCells(u).filter(c => c !== u.cell).map(c => {
