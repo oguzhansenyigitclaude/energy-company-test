@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 21:08) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 21:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 21:17)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 21:26)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -658,6 +658,11 @@ function lonSteps(cy) {
   const lat = Math.abs((cy + .5) * CELL);
   return lat >= 82.8 ? 8 : lat >= 75.5 ? 4 : lat >= 60 ? 2 : 1; // CELL'in katı
 }
+// ⚠️ Harita koordinatı GEÇERLİ mi? Sunucudan/eski kayıttan bozuk `ll` gelebiliyor
+// (null, dizi değil, NaN, aralık dışı). Leaflet böyle bir değerde istisna atar.
+const gecerliLL = ll => Array.isArray(ll) && ll.length >= 2
+  && Number.isFinite(+ll[0]) && Number.isFinite(+ll[1])
+  && Math.abs(+ll[0]) <= 90 && Math.abs(+ll[1]) <= 180;
 const cellId = ll => { const cy = Math.floor(ll[0] / CELL), k = lonSteps(cy); return cy + '_' + Math.floor(ll[1] / (CELL * k)) * k; };
 // Eski kayıtlardaki hizasız kimlikler de doğru çizilsin diye sınırlar hesaplanırken hizalanır
 const cellSnap = id => { const [cy, cx] = id.split('_').map(Number); const k = lonSteps(cy); return cy + '_' + Math.floor(cx / k) * k; };
@@ -2923,12 +2928,8 @@ function dischargeTick(dtSec) {
 function estimateBulkGain(frac) {
   const soldTmp = {};
   let gain = 0;
-  // 🐞 [BOT-FIX] sellAll(frac) BAĞLI (uydu) depoları atlayıp hub'ın grup toplamını (groupStored)
-  // satıyor; bu tahmin fonksiyonu ise her depoyu (uydu dahil) kendi st.stored'ıyla ayrı ayrı
-  // sayıyordu — buton etiketi ile gerçekleşen satış arasında büyük sapma oluyordu (bkz. duzeltmeler.md).
   for (const st of stores()) {
-    if (st.link) continue; // uydu tek başına satılmaz — grup toplamı aşağıda hub üzerinden sayılıyor
-    const mwh = (isLinked(st) ? groupStored(st) : st.stored) * frac;
+    const mwh = st.stored * frac;
     if (mwh < .005) continue;
     const base = cellPriceNow(st.cell); // her karenin KENDİ alım fiyatı (+imtiyazda ×1.2)
     const remaining = Math.max(0, demandLeft(st.cell) - (soldTmp[st.cell] || 0));
@@ -5911,7 +5912,12 @@ const NET = {
         // patlıyor, bu yüzden ne diğer oyuncular çiziliyor ne de "göster/gizle" düğmesi
         // işini bitirebiliyordu (istisna save() ve panel tazelemesinden ÖNCE atılıyordu).
         if (!u || !u.c || u.c !== cell) continue;
-        out.push({ oid: pid + '_' + uid, owner: this.nameOf(pid) || 'Oyuncu', ownerIdx: 0, netOwner: pid, kind: u.k, t: u.t, cell, ll: u.ll, since: u.s, hq: !!u.hq, net: true });
+        // 🔴 KOORDİNAT DOĞRULAMASI (26 Ağu): `ll` sunucudan doğrulanmadan geliyordu. Bozuk bir
+        // kayıt L.marker'a girince Leaflet istisna atıyor, istisna `zoomend` dinleyicisini
+        // yarıda kesiyor ve Leaflet'in KENDİ canvas katmanları yeniden konumlanamıyor →
+        // dünya çizilmiyor, ruhsat karoları kayıyor. Bozuk kaydı en kaynakta eliyoruz.
+        if (!gecerliLL(u.ll)) continue;
+        out.push({ oid: pid + '_' + uid, owner: this.nameOf(pid) || 'Oyuncu', ownerIdx: 0, netOwner: pid, kind: u.k, t: u.t, cell, ll: [+u.ll[0], +u.ll[1]], since: u.s, hq: !!u.hq, net: true });
       }
     }
     return out;
@@ -6018,10 +6024,13 @@ function drawOthers() {
         : o.t.startsWith('nuke') ? nukeSVG(px, uq)
         : `<span style="font-size:${px}px">${T.ico}</span>`;
       const lbl = o.kind === 'office' ? `<div class="bd" style="background:#000a">${(o.owner || '').slice(0, 12)}</div>` : '';
-      const m = L.marker(o.ll, { icon: divIcon(`<div class="umark" style="opacity:.72;filter:saturate(.7)">${vis}${lbl}</div>`, [px + 10, px + 20]) }).addTo(map);
-      // 🏢 patron: ŞİRKET MERKEZİNE tıklayınca tesis sayfası değil ŞİRKET KARTI açılsın
-      m.on('click', () => (o.hq && o.owner && o.owner !== 'Oyuncu') ? openPlayerCard(o.owner) : openOtherSheet(o));
-      othersLayer.push(m);
+      if (!gecerliLL(o.ll)) continue; // bozuk koordinat: bu tesisi atla, çizimi durdurma
+      try {
+        const m = L.marker(o.ll, { icon: divIcon(`<div class="umark" style="opacity:.72;filter:saturate(.7)">${vis}${lbl}</div>`, [px + 10, px + 20]) }).addTo(map);
+        // 🏢 patron: ŞİRKET MERKEZİNE tıklayınca tesis sayfası değil ŞİRKET KARTI açılsın
+        m.on('click', () => (o.hq && o.owner && o.owner !== 'Oyuncu') ? openPlayerCard(o.owner) : openOtherSheet(o));
+        othersLayer.push(m);
+      } catch (e) { console.warn('[drawOthers] tesis atlandı', o.oid, e && e.message); }
     }
    }
   }
@@ -7382,8 +7391,23 @@ function initMap(center, zoom) {
   setTimeout(() => map.invalidateSize(), 600);
   try { new ResizeObserver(() => map && map.invalidateSize()).observe($('mapwrap')); } catch (e) {}
   window.addEventListener('resize', () => map && map.invalidateSize());
-  map.on('zoomend', () => { if (G && G._started) { G.units.forEach(u => u._lastIcon = null); refreshUnitMarkers(); drawOverlay(); drawOthers(); } });
-  map.on('moveend', () => { if (G && G._started) { if (MAPVIEW !== 'normal') drawOverlay(); drawOthers(); } });
+  // 🔴 YAPISAL KORUMA (26 Ağu): Leaflet olay dinleyicilerini SIRAYLA çağırır ve istisnayı
+  // YAKALAMAZ — birinden atılan hata, sonraki dinleyicileri (Leaflet'in kendi canvas
+  // katmanlarını yeniden konumlandıran kodu dahil) hiç çalıştırmaz. Bizim çizim
+  // işlevlerimizden biri patlarsa harita bayat kalıyordu: dünya çizilmiyor, ruhsat karoları
+  // tesislerden kayıyordu. Artık her biri kendi kabuğunda — biri düşse de harita yaşar.
+  const guvenli = (ad, fn) => { try { fn(); } catch (e) { console.warn('[harita] ' + ad, e && e.message); } };
+  map.on('zoomend', () => {
+    if (!(G && G._started)) return;
+    guvenli('refreshUnitMarkers', () => { G.units.forEach(u => u._lastIcon = null); refreshUnitMarkers(); });
+    guvenli('drawOverlay', drawOverlay);
+    guvenli('drawOthers', drawOthers);
+  });
+  map.on('moveend', () => {
+    if (!(G && G._started)) return;
+    if (MAPVIEW !== 'normal') guvenli('drawOverlay', drawOverlay);
+    guvenli('drawOthers', drawOthers);
+  });
   map.on('click', e => {
     if (!G || !G._started) return;
     if (!MODE) return; // mod seçili değilse harita serbest gezinti — panel açılmaz
