@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 20:14) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 20:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 20:14)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 20:22)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -9108,11 +9108,15 @@ window.resetAccountAsk = () => {
   $('overlay').classList.add('show');
 };
 window.resetAccount = async () => {
+  // ⚖️ Google Play, hesap açtıran uygulamalarda VERİ SİLME yolu şart koşuyor ve gizlilik
+  // politikamız "hepsi silinir" diyor — o söz tutulmalı. players/ düğümü (canlı durum,
+  // şirket adı, ofis/ruhsat sayıları) eskiden silinmiyordu, oyuncu adı listelerde kalıyordu.
   const del = NET.on() ? NET.req('saves/' + NET.id, 'DELETE').catch(() => {}) : null; // bulut kaydı da silinir
   const del2 = NET.on() ? NET.req('units/' + NET.id, 'DELETE').catch(() => {}) : null;
+  const del3 = NET.on() ? NET.req('players/' + NET.id, 'DELETE').catch(() => {}) : null;
   G = null; // KRİTİK: otokayıt ve sayfa-kapanış kaydı sıfırlamayı geri yazmasın (telefon testi bug'ı)
   localStorage.removeItem(SAVE_KEY);
-  try { await Promise.race([Promise.all([del, del2]), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
+  try { await Promise.race([Promise.all([del, del2, del3]), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
   location.reload();
 };
 function renderMenu() {
