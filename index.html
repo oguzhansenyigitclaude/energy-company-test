@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 20:53) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 21:07) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 20:53)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 21:07)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -5530,19 +5530,38 @@ const NET = {
   // ⚠️ HATAYI YUTMA: ilk denemede eklenti çalışma zamanında patladı (kütüphane APK'ya
   // girmemişti) ama ekranda "vazgeçtin" yazıyordu — kör kaldık. Gerçek sebebi saklıyoruz.
   _yerelHata: '',
+  // İKİ YOLLU: Android'in yeni Credential Manager'ı (şık, aşağıdan açılan hesap kutusu)
+  // Google Play Hizmetleri'ne muhtaç ve her cihazda çalışmıyor — GMS'siz ya da eski sürümlü
+  // telefonlarda hata veriyor. Başarısız olursa eklentinin KLASİK GoogleSignIn ekranına
+  // düşüyoruz (`useCredentialManager: false`). 12 testçinin telefonu birbirinden farklı
+  // olacağı için tek yola güvenmek riskli.
+  _yerelHata: '',
   async nativeGoogleToken() { // Android hesap seçicisini açar, kimlik jetonu döndürür
     const p = this.nativeAuth();
     if (!p) return null;
     this._yerelHata = '';
-    try {
-      const r = await p.signInWithGoogle();
+    const iptalMi = m => /cancel|iptal|12501|16:|activity is cancelled/i.test(m);
+    const dene = async opts => {
+      const r = await p.signInWithGoogle(opts);
       return (r && r.credential && r.credential.idToken) || null;
-    } catch (e) {
-      const m = (e && (e.message || e.errorMessage)) || String(e);
-      console.warn('[NET] yerel google', m);
-      // gerçek iptal mi, yoksa arıza mı? iptal dışındaki her şeyi oyuncuya GÖSTER
-      this._yerelHata = /cancel|iptal|12501|16:/i.test(m) ? '' : m;
-      return null;
+    };
+    try {
+      return await dene({});
+    } catch (e1) {
+      const m1 = (e1 && (e1.message || e1.errorMessage)) || String(e1);
+      console.warn('[NET] yerel google (credential manager)', m1);
+      if (iptalMi(m1)) return null; // oyuncu kapattı — ikinci ekranı açıp taciz etme
+      try { // 🔁 YEDEK YOL: klasik Google hesap seçme ekranı
+        const t = await dene({ useCredentialManager: false });
+        if (t) return t;
+        this._yerelHata = m1;
+        return null;
+      } catch (e2) {
+        const m2 = (e2 && (e2.message || e2.errorMessage)) || String(e2);
+        console.warn('[NET] yerel google (klasik)', m2);
+        this._yerelHata = iptalMi(m2) ? '' : (m1 + ' | yedek yol: ' + m2);
+        return null;
+      }
     }
   },
   // 🔐 GIS (Google Identity Services): bölünmüş depolamalı tarayıcıda ÇALIŞAN TEK YOL.
