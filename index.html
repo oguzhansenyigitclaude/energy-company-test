@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 13:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-25 16:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 13:26)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-25 16:22)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -1371,8 +1371,9 @@ function auctionOf(cell) {
 function resolveAuction(cell, a) {
   if (!a || a.resolved) return;
   a.resolved = true;
+  a.leaseUntil = nextSunday00(a.windowEnd); // 🗓️ dönem: ihale bitişinden SONRAKİ Pazar 00:00'a kadar
   if (a.topBy === 'SEN' && a.top > 0) {
-    G.leases[cell] = a.windowEnd + LEASE_MS; // 1 HAFTALIK imtiyaz (escrow = ödeme, geri gelmez)
+    G.leases[cell] = a.leaseUntil; // imtiyaz dönemi (escrow = ödeme, geri gelmez)
     G.wonWeek = G.wonWeek || {}; G.wonWeek[cell] = weekIdx(); // gelecek hafta bu karede ihaleye giremezsin
     toast('🏛️ İHALEYİ KAZANDIN! ' + fmt(a.top) + ' — 1 hafta boyunca bu bölge senden +%20 pahalı fiyatla alır. (Gelecek haftaki ihaleye katılamazsın — tekel önleme)', '', null, 0, true);
     a.myEscrow = 0;
@@ -1426,42 +1427,66 @@ window.withdrawBid = cell => {
 // BOŞ KARO — DOĞRUDAN TEMİN: ihalede teklif çıkmadıysa HERKES (bekleme cezalısı dahil) haftanın
 // herhangi bir günü taban tutarla kiralayabilir. DİKKAT: dönem süreye değil TAKVİME bağlı —
 // her halükârda İHALE GÜNÜ (Pazar 09:00) biter. Pazartesi kiralayan ~6 gün, cumartesi kiralayan ~1 gün kullanır.
-function nextSunday09() {
-  const d = clockDate();
+// 🗓️ DÖNEM SONU = PAZAR 00:00 (patron takvimi): karo Pazar gecesi boşa düşer, 09:00'da ihale
+// açılır, 21:00'de kapanır ve kazanan BİR SONRAKİ Pazar 00:00'a kadar sahibi olur.
+function nextSunday00(from) {
+  const d = from ? new Date(from) : clockDate();
   const e = new Date(d);
   const toSun = (7 - d.getDay()) % 7;
-  e.setDate(e.getDate() + (toSun === 0 && d.getHours() >= 9 ? 7 : toSun));
-  e.setHours(9, 0, 0, 0);
+  e.setDate(e.getDate() + (toSun === 0 ? 7 : toSun)); // bugün Pazar ise BU Pazar 00:00 geçti → sonraki
+  e.setHours(0, 0, 0, 0);
   return +e;
 }
+// ⛔ DOĞRUDAN TEMİN yalnız karo GERÇEKTEN boşken: sahibi (sen ya da rakip) varsa tek yol ihale.
+// Ayrıca PAZAR 00:00–21:00 ihale günüdür — o aralıkta doğrudan kiralama kapalıdır ki
+// ihale, gece yarısı karoyu kapan biri tarafından baypas edilmesin.
+function directRentOpen(cell) {
+  const a = auctionOf(cell), w = auctionWindow();
+  if (myLease(cell) || botLease(cell)) return false; // sahibi var → yalnız ihaleyle alınır
+  if (a.top > 0) return false;                       // bu dönemin ihalesinde teklif var
+  if (G.demo) return true;
+  const d = clockDate();
+  if (d.getDay() === 0 && d.getHours() < 21) return false; // Pazar 00:00–21:00 = ihale günü
+  return !w.open;
+}
 window.directRentConfirm = cell => {
+  if (!directRentOpen(cell)) {
+    const sahip = myLease(cell) ? 'SENDE' : botLease(cell);
+    toast(sahip ? '🏛️ Bu karonun alım garantisi ' + sahip + ' — elinden almanın tek yolu PAZAR ihalesini kazanmak' : '🏛️ Şu an doğrudan kiralama kapalı — Pazar ihalesini bekle', 'warn', null, 0, true);
+    return;
+  }
   const fee = minBid(cell);
-  const days = Math.max(0, (nextSunday09() - Date.now()) / 864e5);
+  const days = Math.max(0, (nextSunday00() - Date.now()) / 864e5);
   $('modal').innerHTML = `
     <h2>🏛️ Doğrudan Temin — Boş Karo</h2>
-    <p style="color:var(--warn)"><b>⚠️ Dikkat: Kiralama dönemi İHALE GÜNÜ sona erer.</b></p>
-    <p>Bu karoyu şimdi kiralarsan alım garantin <b>Pazar 09:00'da</b> (ihale başlangıcı) biter — yani yaklaşık <b>${days.toFixed(1)} gün</b> faydalanırsın. Erken kiralayan çok, geç kiralayan az kullanır; ücret aynıdır: <b>${fmt(fee)}</b>.</p>
+    <p style="color:var(--warn)"><b>⚠️ Dikkat: Kiralama dönemi PAZAR 00:00'da sona erer.</b></p>
+    <p>Bu karoyu şimdi kiralarsan alım garantin <b>Pazar gecesi 00:00'da</b> biter — yani yaklaşık <b>${days.toFixed(1)} gün</b> faydalanırsın. Ardından karo boşa düşer ve <b>Pazar 09:00–21:00 ihalesinde</b> yeniden sahiplenilir. Erken kiralayan çok, geç kiralayan az kullanır; ücret aynıdır: <b>${fmt(fee)}</b>.</p>
     <button class="primary" onclick="closeModal();directRent('${cell}')">🏛️ Onayla ve Kirala — ${fmt(fee)}</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
 window.directRent = cell => {
-  const a = auctionOf(cell), w = auctionWindow();
-  if (a.top > 0 || myLease(cell)) return;
-  if (w.open && !G.demo) { toast('İhale penceresi açık — doğrudan kiralama yerine teklif ver', 'warn'); return; }
+  // ⛔ tek kapı: sahibi olan karo doğrudan kiralanamaz (patron 25 Ağu bug'ı)
+  if (!directRentOpen(cell)) {
+    const sahip = myLease(cell) ? 'SENDE' : botLease(cell);
+    toast(sahip ? '🏛️ Bu karonun alım garantisi ' + sahip + ' — yalnız PAZAR ihalesiyle alınır' : '🏛️ Doğrudan kiralama şu an kapalı', 'warn', null, 0, true);
+    return;
+  }
   const fee = minBid(cell);
   if (G.cash < fee) { toast('Doğrudan kiralama için ' + fmt(fee) + ' gerekli', 'warn'); return; }
   G.cash -= fee; gider('ihale', fee);
-  G.leases[cell] = nextSunday09(); // TAKVİM kuralı: dönem Pazar 09:00'da biter
-  toast('🏛️ Boş karo kiralandı (+%20 prim) — dönem Pazar 09:00\'da, ihale başlarken biter', '', null, 0, true);
+  G.leases[cell] = nextSunday00(); // TAKVİM kuralı: dönem PAZAR 00:00'da biter, karo boşa düşer
+  toast('🏛️ Boş karo kiralandı (+%20 prim) — dönem Pazar 00:00\'da biter, sonra ihaleye çıkar', '', null, 0, true);
   beep(700, .12);
   save(); openCellSheet(cell, SEL.ll);
 };
 function myLease(cell) { return G.leases[cell] && G.leases[cell] > Date.now(); }
-function botLease(cell) { // bilgi ekranı için: kazanılmamış karede bot imtiyazı görünümü
+function botLease(cell) { // rakip şirketin bu dönemki alım garantisi (dönem PAZAR 00:00'da biter)
   if (myLease(cell)) return null;
   const a = (G.auctions || {})[cell];
-  return a && a.resolved && a.topBy && a.topBy !== 'SEN' ? a.topBy : null;
+  if (!a || !a.resolved || !a.topBy || a.topBy === 'SEN') return null;
+  const until = a.leaseUntil || nextSunday00(a.windowEnd);
+  return Date.now() < until ? a.topBy : null;
 }
 // 🏛️ ALIM GARANTİSİ VERGİSİ (patron): kareyi başkası kazandıysa o karedeki satış gelirinin
 // %20'si garanti sahibine vergi olarak gider. İhaleye girmenin ikinci sebebi budur:
@@ -2929,7 +2954,15 @@ function restartAll() {
 // ── Bakım: PANELLİ (patron tasarımı) — cihaz listesi + tik + toplam, onayla yap ──
 const FUEL_HOURS = 12; // yakıt stoğu: tam depoyla ~12 saat → günde 2 ikmal oturumu
 const maintList = () => plants().filter(u => u.buildDone <= Date.now() && u.cond < 99.5);
-const unitRepairCost = u => Math.round((100 - u.cond) * 5000 * (todayEvent().maint || 1) * (G.maintDiscount || 1));
+// 🔧 BAKIM BEDELİ (patron 25 Ağu: "bakim bedelleri az, özellikle BÜYÜK santrallerin bakımı
+// daha maliyetli olmalı"). Eski formül SABİTTİ: (100-cond)×5.000 — tesis boyutundan BAĞIMSIZ.
+// Ölçüm: tam bakım 1 MW çatı panelinde sermayenin %25'i, 150 MW nükleerde %0,09'u idi (regresif!).
+// Artık bedel SERMAYEYE oranlı: tam yıpranmadan (cond 25) tam bakıma kadar sermayenin %MAINT_FULL'ü.
+const MAINT_FULL = 0.06; // tam bakım = tesis bedelinin %6'sı (75 puanlık yıpranma) — denge kolu burada
+const unitRepairCost = u => {
+  const T0 = PLANT_TYPES[u.t] || TYPE_OF(u.kind, u.t) || { cost: 3e6 };
+  return Math.round((100 - u.cond) / 75 * (T0.cost || 3e6) * MAINT_FULL * (todayEvent().maint || 1) * (G.maintDiscount || 1));
+};
 const maintCost = () => maintList().reduce((s, u) => s + unitRepairCost(u), 0);
 function openMaintSheet() {
   hideSheets();
@@ -3665,7 +3698,11 @@ const linesOf = cell => (G.lines || []).filter(l => l.from === cell && lineReady
 // Yeni kural: hat iki kare arasında değil, GEÇTİĞİ HER DÜĞÜMDE şebekeye açılan bir koridordur.
 // Bir düğüme LINE_ACCESS_KM içindeki her deponun hatta erişimi vardır ve hattın DİĞER
 // düğümlerinin pazarına satabilir — yön farketmez.
-const LINE_ACCESS_KM = 60; // 🗼 transfer merkezinin hizmet yarıçapı: bu mesafedeki depolar merkeze bağlanabilir
+// 🗼 KURAL (patron 25 Ağu): depo YALNIZ KENDİ KARESİNDEKİ transfer merkezine bağlanır.
+// Mesafe toleransı (eski 60 km hizmet yarıçapı) KALDIRILDI — bir karodaki depo, başka karodaki
+// merkeze bağlanamaz. Hat çekerken deponun karesine dokunmak zorundasın; ara merkezler
+// kendi karelerinde oturur ve oraya depo kurulursa bağlanabilir. GERİ GEVŞETME.
+const LINE_ACCESS_KM = 0; // 0 = yalnız aynı kare (sabit, geriye dönük metinlerde kullanılıyor)
 function lineNodeCells(l) { // uçlar + transfer merkezleri (kare kimliği olarak)
   if (!l) return [];
   if (l.path && l.path.length >= 2) return l.path.slice();
@@ -3675,10 +3712,9 @@ function lineNodeCells(l) { // uçlar + transfer merkezleri (kare kimliği olara
   return out;
 }
 const lineUsable = l => lineReady(l) && lineLoss(l) < 100;
-function lineTouches(l, cell) { // bu karedeki deponun hatta erişimi var mı?
+function lineTouches(l, cell) { // hattın bu KAREDE bir transfer merkezi var mı?
   if (!l || !cell) return false;
-  const c = cellCenter(cell);
-  return lineNodeCells(l).some(n => n === cell || kmDist(cellCenter(n), c) <= LINE_ACCESS_KM);
+  return lineNodeCells(l).indexOf(cell) >= 0;
 }
 // 🗼 TRANSFER MERKEZİ = hattın şebeke kapısı. Depo bir merkeze BAĞLANARAK hatta girer
 // (patron: "bağlamak istediğim depo da bu transfer merkezine bağlanabilmeli").
@@ -3689,10 +3725,9 @@ function allGridNodes() { return (G.lines || []).filter(lineUsable).reduce((a, l
 const gridNodeOf = key => key ? allGridNodes().find(n => n.key === key) || null : null;
 const storeGridNode = st => (st && st.grid) ? gridNodeOf(st.grid) : null;
 const gridNodeName = n => n ? (placeName(n.cell) + (n.uc ? ' (uç merkez)' : ' (ara merkez)')) : '—';
-// bir deponun bir merkeze bağlanabilmesi için mesafe şartı
-const gridReach = (st, n) => kmDist(cellCenter(n.cell), cellCenter(st.cell)) <= LINE_ACCESS_KM;
-const gridCandidates = st => allGridNodes().filter(n => gridReach(st, n))
-  .sort((a, b) => kmDist(cellCenter(a.cell), cellCenter(st.cell)) - kmDist(cellCenter(b.cell), cellCenter(st.cell)));
+// bir deponun bir merkeze bağlanabilmesi: merkez AYNI KAREDE olmalı
+const gridReach = (st, n) => !!st && !!n && n.cell === st.cell;
+const gridCandidates = st => allGridNodes().filter(n => gridReach(st, n));
 // 🔄 sessiz başarısızlık olmasın: bağlantısı olmayan depo menzilindeki EN YAKIN merkeze
 // kendiliğinden bağlanır (oyuncu elle kestiyse — noGrid — dokunulmaz). Hat sökülünce temizlenir.
 function ensureGridLinks() {
@@ -3700,8 +3735,10 @@ function ensureGridLinks() {
   for (const st of stores()) {
     if (st.link) { st.grid = null; continue; }        // bağlı depo grubun MERKEZİNDEN satar
     if (st.grid && !gridNodeOf(st.grid)) st.grid = null; // hat söküldü / düğüm kalmadı
+    // 🔄 eski kural (60 km) ile BAŞKA karedeki merkeze bağlanmış depoyu çöz
+    if (st.grid) { const nn = gridNodeOf(st.grid); if (nn && nn.cell !== st.cell) st.grid = null; }
     if (st.grid || st.noGrid) continue;
-    const a = gridCandidates(st);
+    const a = gridCandidates(st); // yalnız KENDİ karesindeki merkezler
     if (a.length) st.grid = a[0].key;
   }
 }
@@ -4133,8 +4170,8 @@ function lineErisimHTML(l) {
   const depolar = stores().filter(x => x.buildDone <= Date.now() && !x.link && (storeLine(x) || {}).id === l.id);
   const menzil = stores().filter(x => x.buildDone <= Date.now() && !x.link && !storeLine(x) && gridCandidates(x).some(n => n.line.id === l.id));
   if (!depolar.length) return `<div class="sub neg">⚠️ Bu hatta bağlı depo YOK — ${menzil.length
-    ? menzil.length + ' depo menzilde: depo sayfasından <b>🗼 Nakil Hattına Bağlan</b> ya da haritada bir 🗼 merkeze dokun.'
-    : 'hattın 🗼 merkezlerinden birine ' + LINE_ACCESS_KM + ' km içinde bir depo kur.'}</div>`;
+    ? menzil.length + ' depo hattın karosunda: depo sayfasından <b>🗼 Nakil Hattına Bağlan</b> ya da haritada bir 🗼 merkeze dokun.'
+    : 'hattın 🗼 merkezlerinden birinin BULUNDUĞU karoya depo kur.'}</div>`;
   const pazar = [...new Set(depolar.flatMap(x => storeLineTargets(x).filter(h => h.line.id === l.id).map(h => h.cell)))];
   return `<div class="sub pos">✅ ${depolar.length} deponun bu hatta erişimi var${pazar.length
     ? ` · açtığı pazar: ${pazar.slice(0, 3).map(c => placeName(c)).join(', ')}${pazar.length > 3 ? ' +' + (pazar.length - 3) : ''}`
@@ -4152,8 +4189,8 @@ window.openGridNode = key => {
   const buMerkez = bagli.filter(x => x.grid === key);                       // BU merkeze bağlı olanlar
   const stok = bagli.reduce((a, x) => a + (isLinked(x) ? groupStored(x) : x.stored), 0);
   // bu merkezin hizmet alanındaki (LINE_ACCESS_KM) kendi tesislerin
-  const yakinDepo = stores().filter(x => !x.link && x.buildDone <= Date.now() && kmDist(cellCenter(n.cell), cellCenter(x.cell)) <= LINE_ACCESS_KM);
-  const yakinSantral = plants().filter(p => p.buildDone <= Date.now() && kmDist(cellCenter(n.cell), cellCenter(p.cell)) <= LINE_ACCESS_KM);
+  const yakinDepo = stores().filter(x => !x.link && x.buildDone <= Date.now() && x.cell === n.cell);
+  const yakinSantral = plants().filter(p => p.buildDone <= Date.now() && p.cell === n.cell);
   const uretim = yakinSantral.reduce((a, p) => a + plantOutput(p), 0);
   const pazarlar = lineNodeCells(l).filter((c, i, a) => a.indexOf(c) === i);
   const enIyi = pazarlar.map(c => ({ c, p: cellPriceNow(c) })).sort((a, b) => b.p - a.p)[0];
@@ -4163,7 +4200,7 @@ window.openGridNode = key => {
   if (!buMerkez.length && yakinDepo.some(x => !x.grid))
     tav.push('🔌 Menzilinde <b>bağlanmamış depo</b> var — aşağıdan tek dokunuşla bağla, satış ekranında hat pazarları belirir.');
   if (!yakinDepo.length)
-    tav.push('🔋 Bu merkezin ' + LINE_ACCESS_KM + ' km çevresinde deponuz yok. Buraya depo kurarsanız merkez işe yarar.');
+    tav.push('🔋 Bu karoda deponuz yok. <b>Merkez ancak kendi karosundaki depoya bağlanır</b> — buraya depo kurun.');
   if (kayip > 20)
     tav.push('🏗️ Hat kaybı <b>%' + kayip + '</b> — <b>Transfer Merkezi Ekle</b> ile en uzun bölüm ikiye bölünür, kayıp düşer.');
   if (enIyi && enIyi.p > yerel * 1.1)
@@ -4175,21 +4212,23 @@ window.openGridNode = key => {
     <h2>🗼 Enerji Transfer Merkezi</h2>
     <p><b>${placeName(n.cell)}</b> <span class="sub">${cellCode(n.cell)} · ${n.uc ? 'hattın ucu' : 'ara merkez'}</span><br>
     <span class="sub">${lineRota(l)} · ${fmtN(l.km)} km · 🗼 ${hubTotal(l.hubs)} merkez</span></p>
+    <p class="sub">🗼 Bu merkeze <b>yalnız AYNI KARODAKİ</b> (${cellCode(n.cell)}) depolar bağlanır.
+    Bağlanan depo, hattın <b>bütün merkezlerinin pazarına</b> satabilir.</p>
     <table class="ledger">
       <tr><td>📉 Aktarım kesintisi <span class="sub">(hat kaybı)</span></td><td class="${kayip >= 50 ? 'neg' : kayip <= 15 ? 'pos' : ''}"><b>%${kayip}</b></td></tr>
       <tr><td>💰 Bu bölgenin alım fiyatı</td><td>${fmt(yerel)}/MWh</td></tr>
-      <tr><td>⚡ Çevredeki üretim <span class="sub">(${LINE_ACCESS_KM} km · ${yakinSantral.length} santral)</span></td><td>${fmtE(uretim)} MW</td></tr>
-      <tr><td>🔋 Çevredeki depon</td><td>${yakinDepo.length} adet <span class="sub">(${buMerkez.length} bu merkeze bağlı)</span></td></tr>
+      <tr><td>⚡ Bu karodaki üretimin <span class="sub">(${yakinSantral.length} santral)</span></td><td>${fmtE(uretim)} MW</td></tr>
+      <tr><td>🔋 Bu karodaki depon</td><td>${yakinDepo.length} adet <span class="sub">(${buMerkez.length} bu merkeze bağlı)</span></td></tr>
       <tr><td>🔗 Hatta bağlı toplam enerji</td><td class="pos">${fmtE(stok)} MWh</td></tr>
       <tr><td>🎯 Ulaşılan pazar</td><td>${pazarlar.filter(c => c !== n.cell).map(c => placeName(c)).filter((x, i, a) => a.indexOf(x) === i).join(', ') || '—'}</td></tr>
     </table>
-    <div style="font-size:11px;color:var(--acc2);margin:9px 0 2px">🔌 DEPO BAĞLANTISI <span class="sub">(${LINE_ACCESS_KM} km içindekiler)</span></div>
+    <div style="font-size:11px;color:var(--acc2);margin:9px 0 2px">🔌 DEPO BAĞLANTISI <span class="sub">(yalnız bu karodakiler)</span></div>
     ${yakinDepo.length ? yakinDepo.map(x => {
       const nd = storeGridNode(x), buna = x.grid === key;
       return `<button class="bigsell half" style="text-align:left" onclick="${buna ? 'closeModal();gridUnlink(' + x.id + ')' : 'closeModal();gridConnect(' + x.id + ",'" + key + "')"}">
         ${buna ? '🔴' : nd ? '🟡' : '⚪'} <b>${unitName(x)}</b> <span class="sub">· ${placeName(x.cell)} · ${fmtE(isLinked(x) ? groupStored(x) : x.stored)} MWh</span>
         <div class="sub">${buna ? 'BU merkeze bağlı — dokun: bağlantıyı kes' : nd ? 'şu an ' + placeName(nd.cell) + ' merkezinde — dokun: buraya al' : 'bağlı değil — dokun: buraya bağla'}</div></button>`;
-    }).join('') : `<p class="sub">Bu merkezin ${LINE_ACCESS_KM} km çevresinde deponuz yok.</p>`}
+    }).join('') : `<p class="sub">Bu karoda (${cellCode(n.cell)}) deponuz yok — buraya depo kurarsanız merkeze bağlanır.</p>`}
     ${stok >= .005 ? `<div style="font-size:11px;color:var(--acc2);margin:9px 0 2px">⚡ HATTAN TOPLU SAT <span class="sub">(bu hatta bağlı ${bagli.length} deponun tamamı)</span></div>
       ${pazarlar.map(c => `<button class="bigsell half" onclick="closeModal();sellGrid(${l.id},'${c}')">⚡ ${placeName(c)} pazarına SAT <span class="sub">· ${fmt(cellPriceNow(c) * (c === n.cell ? 1 : 1 - kayip / 100))}/MWh${c === n.cell ? ' · yerel, kesinti yok' : ''}</span></button>`).join('')}`
       : '<p class="sub">Bağlı depolarda satılacak enerji yok.</p>'}
@@ -4215,10 +4254,10 @@ window.sellGrid = (lineId, cell) => {
 function gridRowHTML(u) {
   if (u.kind !== 'store' || u.link) return '';
   const n = storeGridNode(u), aday = gridCandidates(u);
-  if (!n && !aday.length) return `<div class="sub" style="margin-top:4px">🗼 Menzilinde nakil hattı merkezi yok —
-    hat çekersen ya da hattın bir merkezine ${LINE_ACCESS_KM} km içinde depo kurarsan buradan bağlanır.</div>`;
+  if (!n && !aday.length) return `<div class="sub" style="margin-top:4px">🗼 Bu karoda (${cellCode(u.cell)}) nakil hattı merkezi yok —
+    depo <b>yalnız kendi karosundaki</b> merkeze bağlanır. Bu karodan geçen bir hat çekersen bağlanır.</div>`;
   if (!n) return `<button class="bigsell half" onclick="startGridLink(${u.id})">🗼 Nakil Hattına Bağlan — haritadan merkez seç</button>
-    <div class="sub">${aday.length} transfer merkezi menzilinde.</div>`;
+    <div class="sub">Bu karoda ${aday.length} transfer merkezi var.</div>`;
   const hedef = storeLineTargets(u);
   return `<div class="sub pos" style="margin-top:4px">🗼 Nakil hattına bağlı: <b>${gridNodeName(n)}</b>
     <span class="sub">· ${lineRota(n.line)} · kayıp %${Math.round(lineLoss(n.line))}</span></div>
@@ -4233,7 +4272,7 @@ window.startGridLink = id => {
   const st = storeById(id);
   if (!st) return;
   if (st.link) { toast('⛔ Bağlı depo hatta giremez — grup MERKEZDEN satar', 'warn', null, 0, true); return; }
-  if (!gridCandidates(st).length) { toast('🗼 Menzilinde (' + LINE_ACCESS_KM + ' km) transfer merkezi yok', 'warn', null, 0, true); return; }
+  if (!gridCandidates(st).length) { toast('🗼 Bu karoda transfer merkezi yok — depo yalnız KENDİ karosundaki merkeze bağlanır', 'warn', null, 0, true); return; }
   GRID_SRC = id;
   hideSheets(); closeLinePanel();
   setMode('grid');
@@ -4242,7 +4281,7 @@ window.startGridLink = id => {
 window.gridConnect = (id, key) => {
   const st = storeById(id), n = gridNodeOf(key);
   if (!st || !n) return;
-  if (!gridReach(st, n)) { toast('🗼 Bu merkez çok uzak — en fazla ' + LINE_ACCESS_KM + ' km', 'warn', null, 0, true); return; }
+  if (!gridReach(st, n)) { toast('🗼 Bu merkez BAŞKA karoda (' + placeName(n.cell) + ') — depo yalnız kendi karosundaki merkeze bağlanır', 'warn', null, 0, true); return; }
   st.grid = key; st.noGrid = false;
   toast('🗼 ' + unitName(st) + ' → ' + gridNodeName(n) + ' bağlandı — ' + lineRota(n.line), '', null, 0, true);
   beep(680, .1);
@@ -8072,9 +8111,10 @@ function auctionPanelHTML(c) {
   const a = auctionOf(c), w = auctionWindow();
   const ml = myLease(c);
   let h = `<div style="font-size:11px;color:var(--gold);margin:10px 0 2px">🏛️ BÖLGE İHALESİ <span class="sub">(her PAZAR 09:00–21:00 · kazanana 1 HAFTA bölge ALIM FİYATI +%${LEASE_PRIM * 100})</span></div>`;
-  if (ml) h += `<p style="font-size:12px" class="pos">✅ Alım Garantisi SENDE — kalan ~${fmtHrs((G.leases[c] - Date.now()) / 36e5)}. Bu bölge senden +%20 pahalı fiyatla alıyor.</p>`;
+  if (ml) h += `<p style="font-size:12px" class="pos">✅ Alım Garantisi SENDE — kalan ~${fmtHrs((G.leases[c] - Date.now()) / 36e5)}. Bu bölge senden +%20 pahalı fiyatla alıyor.</p>
+    <p style="font-size:12px" class="pos">✅ Bu karoda satış yapan <b>HERKESTEN %${LEASE_PRIM * 100} satış vergisi</b> toplarsın — rakibin buradaki her satışından payını alırsın.</p>`;
   else if (bidBlocked(c)) h += `<p style="font-size:12px;color:var(--warn)">⛔ Bu karonun geçen ihalesini sen kazandın — <b>tekel önleme</b>: bu haftaki ihaleye katılamazsın, 3. hafta yeniden girebilirsin.</p>
-      ${a.top === 0 && (!w.open || G.demo) ? `<button class="bigsell" onclick="directRentConfirm('${c}')" ${G.cash < minBid(c) ? 'disabled' : ''}>🏛️ Boş Karoyu Doğrudan Kirala — ${fmt(minBid(c))} (dönem Pazar 09:00'da biter)</button><p class="sub">İhalede kimse teklif vermedi — boş karolar doğrudan teminle kiralanabilir (bekleme cezalıları dahil).</p>` : ''}`;
+      ${directRentOpen(c) ? `<button class="bigsell" onclick="directRentConfirm('${c}')" ${G.cash < minBid(c) ? 'disabled' : ''}>🏛️ Boş Karoyu Doğrudan Kirala — ${fmt(minBid(c))} (dönem Pazar 00:00'da biter)</button><p class="sub">İhalede kimse teklif vermedi — <b>boş</b> karolar doğrudan teminle kiralanabilir (bekleme cezalıları dahil).</p>` : ''}`;
   else {
     const next = a.top > 0 ? Math.round(a.top * BID_STEP / 1e5) * 1e5 : minBid(c);
     h += `<table class="ledger" style="margin:4px 0">
@@ -8087,7 +8127,8 @@ function auctionPanelHTML(c) {
       ${a.topBy === 'SEN' ? '<p class="sub">🏆 Öndesin — 21:00\'e kadar üstüne çıkılmazsa alım garantisi senin.</p>' : ''}
       <button class="bigsell" onclick="placeBid('${c}')" ${!w.open || a.topBy === 'SEN' || G.cash < next - a.myEscrow ? 'disabled' : ''}>🏛️ Teklif Ver — ${fmt(next)}</button>
       ${a.myEscrow > 0 ? `<button class="bigsell half" onclick="withdrawBid('${c}')" style="color:var(--danger)">↩️ Teklifi Çek — %20 ceza (${fmt(Math.round(a.myEscrow * WITHDRAW_PENALTY))} yanar)</button>` : ''}
-      ${a.top === 0 && (!w.open || G.demo) ? `<button class="bigsell half" onclick="directRentConfirm('${c}')" ${G.cash < minBid(c) ? 'disabled' : ''}>🏛️ Boş Karoyu Doğrudan Kirala — ${fmt(minBid(c))} (dönem Pazar 09:00'da biter)</button><p class="sub">Geçen ihalede teklif çıkmadı — boş karolar doğrudan teminle kiralanabilir.</p>` : ''}`;
+      ${directRentOpen(c) ? `<button class="bigsell half" onclick="directRentConfirm('${c}')" ${G.cash < minBid(c) ? 'disabled' : ''}>🏛️ Boş Karoyu Doğrudan Kirala — ${fmt(minBid(c))} (dönem Pazar 00:00'da biter)</button><p class="sub">Geçen ihalede teklif çıkmadı — <b>boş</b> karolar doğrudan teminle kiralanabilir.</p>` : ''}
+      ${(myLease(c) || botLease(c)) && !w.open ? `<p class="sub">🔒 Bu karonun alım garantisi <b>${myLease(c) ? 'SENDE' : botLease(c)}</b> — dönem bitmeden doğrudan kiralanamaz. Sahiplik yalnız <b>Pazar 09:00–21:00 ihalesiyle</b> el değiştirir.</p>` : ''}`;
   }
   return h;
 }
