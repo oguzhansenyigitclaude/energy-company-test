@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-25 23:53) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 00:40) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-25 23:53)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 00:40)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -8178,12 +8178,76 @@ window.invAmt = (v) => {
 };
 window.invHizli = (o) => { invAmtBuf = String(Math.floor(Math.min(G.cash, invTavan()) * o)); openBank('inv'); };
 
+// ═══════════ 🏦 BANKA SEKME İKONLARI ═══════════
+// Patron: "kredi simgelerini beğenmedim, Gemini'ye güzel tasarımlar yaptır ve onları kullan."
+// Tasarım Gemini'ye (gemini-3.6-flash) yaptırıldı; brief `tools/_istek-banka-ikon.txt`,
+// ham çıktı `tools/_cikti-banka-ikon.md`. Emoji yerine SVG seçildi çünkü oyunun kendi ikon
+// dili zaten inline SVG (turbineSVG, officeSVG, coalSVG...) ve emoji her cihazda başka çiziliyor.
+//
+// ⚠️ GEMİNİ ÇIKTISI DENETLENDİ VE ÜÇ YERDE DÜZELTİLDİ (hafıza: gemini-arac-kullanimi):
+//  1) KURTARMA'da köşelerde 4 küçük halka vardı — 16 pikselde 2 piksellik kir olur, silindi.
+//     (ölçüldü: 10 eleman → kalabalık eşiği 8) Ayrıca çift çizilen iç çember kaldırıldı.
+//  2) ACİL'de paranın içinde stroke-dasharray'li çember vardı — 16 pikselde kesikler
+//     1,6px'e inip çamura dönüyordu; düz ve soluk çembere çevrildi. Üstünü şimşek örttüğü
+//     için okunmayan $ işareti kaldırıldı.
+//  3) ACİL'de şimşek TURUNCU idi ve turuncu paranın üstünde kayboluyordu — KREM yapıldı.
+// Silüet ve kavram Gemini'nin; yalnız küçük boyutta okunurluk düzeltildi.
+const BANK_ICON = {
+  // Can simidi — kurtarma halatı. Krem gövde + turuncu cankurtaran dilimleri.
+  kredi: '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs><linearGradient id="bnk-kurt-1" x1="0" y1="0" x2="1" y2="1">'
+    + '<stop offset="0%" stop-color="#f0e6d2"/><stop offset="100%" stop-color="#d6c7a7"/></linearGradient></defs>'
+    + '<path d="M 20 4 A 16 16 0 1 0 20 36 A 16 16 0 1 0 20 4 Z M 20 13 A 7 7 0 1 1 20 27 A 7 7 0 1 1 20 13 Z" fill="url(#bnk-kurt-1)" stroke="#13213a" stroke-width="2" fill-rule="evenodd" stroke-linejoin="round"/>'
+    + '<path d="M 14 5.5 L 26 5.5 L 23.5 13.5 L 16.5 13.5 Z" fill="#ff8a1f" stroke="#13213a" stroke-width="2" stroke-linejoin="round"/>'
+    + '<path d="M 14 34.5 L 26 34.5 L 23.5 26.5 L 16.5 26.5 Z" fill="#ff8a1f" stroke="#13213a" stroke-width="2" stroke-linejoin="round"/>'
+    + '<path d="M 5.5 14 L 5.5 26 L 13.5 23.5 L 13.5 16.5 Z" fill="#ff8a1f" stroke="#13213a" stroke-width="2" stroke-linejoin="round"/>'
+    + '<path d="M 34.5 14 L 34.5 26 L 26.5 23.5 L 26.5 16.5 Z" fill="#ff8a1f" stroke="#13213a" stroke-width="2" stroke-linejoin="round"/></svg>',
+  // Altın para + şimşek — anında gelen pahalı para. Kırmızı rozet aciliyeti söyler.
+  acil: '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs><linearGradient id="bnk-aci-1" x1="0" y1="0" x2="1" y2="1">'
+    + '<stop offset="0%" stop-color="#ffd166"/><stop offset="100%" stop-color="#ff8a1f"/></linearGradient></defs>'
+    + '<circle cx="17" cy="22" r="12" fill="url(#bnk-aci-1)" stroke="#13213a" stroke-width="2"/>'
+    + '<circle cx="17" cy="22" r="8" fill="none" stroke="#13213a" stroke-width="1.5" opacity="0.4"/>'
+    + '<path d="M 26 3 L 15 18 L 22 18 L 13 37 L 33 16 L 25 16 Z" fill="#f0e6d2" stroke="#13213a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'
+    + '<circle cx="33" cy="7" r="3.5" fill="#ff5c5c" stroke="#13213a" stroke-width="1.5"/></svg>',
+  // Yükselen sütunlar + yeşil büyüme oku — taksitli yatırım kredisi.
+  yat: '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs><linearGradient id="bnk-buy-1" x1="0" y1="1" x2="0" y2="0">'
+    + '<stop offset="0%" stop-color="#3ddc97"/><stop offset="100%" stop-color="#4ea8ff"/></linearGradient></defs>'
+    + '<line x1="4" y1="35" x2="36" y2="35" stroke="#13213a" stroke-width="2" stroke-linecap="round"/>'
+    + '<rect x="6" y="24" width="7" height="11" rx="1.5" fill="#334155" stroke="#13213a" stroke-width="2"/>'
+    + '<rect x="16" y="17" width="7" height="18" rx="1.5" fill="#475569" stroke="#13213a" stroke-width="2"/>'
+    + '<rect x="26" y="10" width="7" height="25" rx="1.5" fill="#f0e6d2" stroke="#13213a" stroke-width="2"/>'
+    + '<path d="M 7 20 L 19 12 L 23 16 L 33 5" fill="none" stroke="#13213a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<path d="M 7 20 L 19 12 L 23 16 L 33 5" fill="none" stroke="url(#bnk-buy-1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<polygon points="34,4 26,5 33,12" fill="#3ddc97" stroke="#13213a" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  // Altın külçe + piyasa grafiği — gerçek fiyatla enstrüman alım satımı.
+  inv: '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs><linearGradient id="bnk-yat-1" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="#ffd166"/><stop offset="100%" stop-color="#ff8a1f"/></linearGradient></defs>'
+    + '<polygon points="10,23 30,23 34,28 6,28" fill="#f0e6d2" stroke="#13213a" stroke-width="2" stroke-linejoin="round"/>'
+    + '<polygon points="6,28 34,28 31,35 9,35" fill="url(#bnk-yat-1)" stroke="#13213a" stroke-width="2" stroke-linejoin="round"/>'
+    + '<path d="M 4 16 L 12 7 L 20 14 L 28 5 L 36 10" fill="none" stroke="#13213a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<path d="M 4 16 L 12 7 L 20 14 L 28 5 L 36 10" fill="none" stroke="#4ea8ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<circle cx="12" cy="7" r="2.5" fill="#f0e6d2" stroke="#13213a" stroke-width="1.5"/>'
+    + '<circle cx="20" cy="14" r="2.5" fill="#4ea8ff" stroke="#13213a" stroke-width="1.5"/>'
+    + '<circle cx="28" cy="5" r="2.5" fill="#3ddc97" stroke="#13213a" stroke-width="1.5"/></svg>'
+};
+// Aynı SVG birden çok kez basılınca gradyan id'leri çakışmasın diye sekmeye özel önek verilir
+const bankIcon = (k, px) => BANK_ICON[k]
+  .replace('<svg ', '<svg width="' + px + '" height="' + px + '" style="display:block;margin:0 auto" ')
+  .replace(/id="bnk-/g, 'id="bnk' + k + '-').replace(/url\(#bnk-/g, 'url(#bnk' + k + '-');
+
 function bankTabBar(sekme) {
-  const t = (k, ad) => '<button onclick="openBank(\'' + k + '\')" style="flex:1;padding:8px 4px;border:0;border-bottom:2px solid '
+  // İkon üstte, yazı altta — 4 sekme 360px'e yan yana sığsın ve simge net okunsun diye.
+  // Seçili olmayan sekmenin ikonu hafif soluk; seçili olan tam parlak (dikkat oraya gitsin).
+  const t = (k, ad) => '<button onclick="openBank(\'' + k + '\')" style="flex:1;padding:6px 2px 5px;border:0;border-bottom:2px solid '
     + (sekme === k ? 'var(--gold)' : 'transparent') + ';background:none;color:' + (sekme === k ? 'var(--gold)' : 'var(--dim)')
-    + ';font-weight:800;font-size:11px;line-height:1.25;cursor:pointer">' + ad + '</button>';
+    + ';font-weight:800;font-size:10.5px;line-height:1.2;cursor:pointer">'
+    + '<span style="display:block;opacity:' + (sekme === k ? '1' : '.55') + '">' + bankIcon(k, 22) + '</span>'
+    + '<span style="display:block;margin-top:3px">' + ad + '</span></button>';
   return '<div style="display:flex;gap:1px;margin:-2px 0 10px;border-bottom:1px solid var(--line)">'
-    + t('kredi', '🏦 Kurtarma') + t('acil', '⚡ Acil') + t('yat', '🏗️ Büyüme') + t('inv', '💱 Yatırım') + '</div>';
+    + t('kredi', 'Kurtarma') + t('acil', 'Acil') + t('yat', 'Büyüme') + t('inv', 'Yatırım') + '</div>';
 }
 const yz = (o, d) => '%' + (o * 100).toFixed(d === undefined ? 1 : d).replace('.', ',').replace(/,0$/, '');
 const invFiyatYaz = (k) => {
