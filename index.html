@@ -470,7 +470,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:29) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:33) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -592,7 +592,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:29)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:33)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2134,7 +2134,7 @@ function freshState() {
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
   };
 }
-const BOOST_CAP = 5e7, BOOST_MULT = 10; // patron ayarı: $50M ($500M çok fazlaydı)
+const BOOST_CAP = 25e6, BOOST_MULT = 10; // patron ayarı 26 Ağu: $25M (önce $500M → $50M → $25M)
 // 🌱 YENİ ŞİRKET TAKVİYESİ (patron tasarımı): ilk $50M'a kadar hava koşulları acımasız olmasın —
 // rüzgara +m/s, güneşte bulut etkisine indirim. Kazanç arttıkça DOĞRUSAL azalır, $50M'da biter.
 // (Rakip bunu GİZLİCE yapıyor; biz ŞEFFAF gösteriyoruz — panelde "🌱 takviye" satırı görünür.)
@@ -2160,7 +2160,9 @@ const jitter = ll => [ll[0] + (Math.random() - .5) * CELL * .5, ll[1] + (Math.ra
 //      BİR DAHA ASLA denemiyordu. WebView önbelleği eski kopyayı verirse oyuncu kalıcı kilitleniyordu.
 // ÇÖZÜM: düzenli kontrol + iki deneme hakkı + hâlâ olmuyorsa ELLE DOKUNULABİLİR uyarı şeridi.
 // Sessizce pes etmek YOK: ya günceller ya da oyuncuya "yeni sürüm var, dokun" der.
-let UPD_YENI = null;
+// 🌐 Canlı yayın adresi — gömülü APK buradan güncel sürümü öğrenir ve gerekirse buraya geçer
+const CANLI_ADRES = 'https://oguzhansenyigitclaude.github.io/energy-company-test/';
+let UPD_YENI = null, UPD_UZAK = false;
 function updSeritGoster(v) {
   if ($('updbar')) return;
   const d = document.createElement('div');
@@ -2170,14 +2172,26 @@ function updSeritGoster(v) {
     + 'font-size:13px;text-align:center;box-shadow:0 4px 18px #000a;cursor:pointer;line-height:1.35';
   d.innerHTML = '🔄 <b>Yeni sürüm hazır</b> — güncellemek için dokun<br><span style="font-weight:600;font-size:11px;opacity:.85">İlerlemen kaydedilir, kaybolmaz</span>';
   d.onclick = () => { try { save(); } catch (e) {} sessionStorage.removeItem('ec_upd'); sessionStorage.removeItem('ec_upd_n');
-    location.replace(location.pathname + '?v=' + encodeURIComponent(v || '') + '&r=' + Date.now()); };
+    // Gömülü APK'da yerel dosyayı tazelemek işe yaramaz — canlı adrese geçilir
+    const hedef = UPD_UZAK ? CANLI_ADRES : location.pathname;
+    location.replace(hedef + '?v=' + encodeURIComponent(v || '') + '&r=' + Date.now()); };
   document.body.appendChild(d);
 }
 async function checkUpdate(zorla) {
   if (location.protocol === 'file:') return; // yerel dosyada güncelleme kontrolü yok
   try {
-    const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
-    if (!r.ok) return;
+    // 📦 GÖMÜLÜ APK DESTEĞİ: Capacitor paketinde `version.json` YOKTUR — göreli sorgu 404
+    // döner ve eski kod burada sessizce vazgeçiyordu, yani kurulu APK ASLA güncellenemiyordu.
+    // (Patron: "telefondakiler güncellenmiyor, yeni APK mı yüklemem gerekli?" — sebebi buydu.)
+    // Göreli sorgu başarısız olursa CANLI adrese soruyoruz; yeni sürüm varsa oyuncu
+    // şeride dokunup canlı sürüme geçebilir — APK'yı yeniden kurması gerekmez.
+    let r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).catch(() => null);
+    let uzak = false;
+    if (!r || !r.ok) {
+      r = await fetch(CANLI_ADRES + 'version.json?t=' + Date.now(), { cache: 'no-store' }).catch(() => null);
+      uzak = true;
+    }
+    if (!r || !r.ok) return;
     const v = (await r.json()).build;
     if (!v || v === BUILD_TAG) {                       // güncel — varsa şeridi kaldır
       UPD_YENI = null;
@@ -2185,7 +2199,9 @@ async function checkUpdate(zorla) {
       const el = $('updbar'); if (el) el.remove();
       return;
     }
-    UPD_YENI = v;
+    UPD_YENI = v; UPD_UZAK = uzak;
+    // Gömülü paketten canlıya geçiş BÜYÜK bir adım — oyuncuya sormadan yapma, şeridi göster
+    if (uzak) { updSeritGoster(v); return; }
     const denenen = sessionStorage.getItem('ec_upd');
     const kez = denenen === v ? +(sessionStorage.getItem('ec_upd_n') || 0) : 0;
     // Otomatik tazelemeyi ERTELEMEK gerekebilir — ama artık PES ETMİYORUZ, şeridi gösteriyoruz
