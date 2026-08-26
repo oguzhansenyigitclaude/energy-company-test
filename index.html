@@ -599,7 +599,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 22:13) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 23:44) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -762,7 +762,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 22:13)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 23:44)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -849,6 +849,23 @@ function cellBounds(id) {
   return [[cy * CELL, x * CELL], [(cy + 1) * CELL, (x + k) * CELL]];
 }
 function cellCenter(id) { const b = cellBounds(id); return [(b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2]; }
+// ⚠️ KARE KİMLİĞİ GEÇERLİ mi? gecerliLL'in kare karşılığı — aynı ilke, aynı sebep.
+// Sunucudan/eski kayıttan bozuk anahtar gelebiliyor: 'NaN_NaN', 'undefined_undefined', '0_NaN',
+// ''. cellBounds bunlarda NaN döndürür, Leaflet NaN koordinatta istisna atar ve o istisna
+// açılışta G._started'a VARMADAN her şeyi keser → oyuncu hesabına hiç giremez (canlıda yaşandı).
+// Biçim testi ŞART: Number('') === 0 olduğu için tek başına sayı testi '5_' gibi yarım anahtarı
+// geçirir. Aralık testi de şart: 0.1°'lik ızgarada enlem -900..900, boylam -1800..1800.
+const KARE_RE = /^-?\d{1,4}_-?\d{1,5}$/;
+const gecerliKare = id => {
+  if (typeof id !== 'string' || !KARE_RE.test(id)) return false;
+  const [cy, cx] = id.split('_').map(Number);
+  return cy >= -901 && cy <= 900 && cx >= -1801 && cx <= 1800;
+};
+// 🔴 YAPISAL KORUMA (26 Ağu): Leaflet olay dinleyicilerini SIRAYLA çağırır ve istisnayı
+// YAKALAMAZ — birinden atılan hata sonraki dinleyicileri hiç çalıştırmaz, harita bayat kalır.
+// Aynısı açılış zinciri için de geçerli: startGame içindeki tek bir çizim istisnası
+// G._started'a ulaşmayı engelleyip hesabı kilitliyordu. Her çizim kendi kabuğunda çalışır.
+const guvenli = (ad, fn) => { try { fn(); } catch (e) { console.warn('[harita] ' + ad, e && e.message); } };
 
 // ── 🌊 DENİZ / KARA AYRIMI (patron: "deniz üstüne kömür santrali kurulamaz, mantıklı olalım") ──
 // Kara poligonları zaten yüklediğimiz harita verisinden gelir; nokta-poligon (ışın atma) testiyle
@@ -1309,10 +1326,23 @@ const CITY_DB = {
   CR: [['San José',9.93,-84.09,1400]],
 };
 // Bir ülkenin şehirleri, kalabalıktan seyreğe. Türkiye zaten TR_POP'ta — tekrar yazmıyoruz.
-function citiesOfCountry(iso) {
+// 🌍 sehirler.json'dan gelen EK şehirler (ISO → [[ad,lat,lon,nüfusBİN,(0=gölge)], ...]).
+// AYRI obje — CITY_DB/IL_COORD/STATE_POP'a ASLA karışmaz: sihirbaz listeleri büyümez,
+// "ilk gelen kazanır" ad çakışması tetiklenmez, dosya gelmezse oyun bugünkü 448'le aynı.
+let CITY_EK = {};
+// İKİ KATMAN: Temel = elle derlenmiş çekirdek (sihirbaz/COUNTRIES.states YALNIZ bunu görür —
+// kuruluş listeleri 35.000 şehirle şişmesin, eski kayıtların G.il çözümü değişmesin).
+// citiesOfCountry = temel + sehirler.json eki (talep merkezi rehberi, ülke raporu, ofis kartı).
+function citiesOfCountryTemel(iso) {
   if (iso === 'TR') return Object.entries(TR_POP).filter(([il]) => IL_COORD[il])
     .map(([il, p]) => [il, IL_COORD[il][0], IL_COORD[il][1], p]).sort((a, b) => b[3] - a[3]);
   return (CITY_DB[iso] || []).slice().sort((a, b) => b[3] - a[3]);
+}
+const COC_CACHE = Object.create(null); // her çağrıda slice().sort() yapılmasın (5 çağıran var)
+function citiesOfCountry(iso) {
+  if (COC_CACHE[iso]) return COC_CACHE[iso];
+  const t = citiesOfCountryTemel(iso);
+  return COC_CACHE[iso] = (CITY_EK[iso] ? t.concat(CITY_EK[iso]).sort((a, b) => b[3] - a[3]) : t);
 }
 // ═══ 🔎 BÖLGE ARAŞTIRMASI (patron tasarımı) ═══
 // Ofis ekranından $100.000 karşılığı 30 saniyede ülke araştırılır. Sonuç KALICIDIR ve
@@ -1347,10 +1377,23 @@ function countryReport(iso) {
   adaylar.sort((a, b) => b.puan - a.puan);
   return {
     ts: Date.now(),
+    sv: typeof SEHIR_SV !== 'undefined' && SEHIR_DURUM === 'tamam' ? SEHIR_SV : 0, // hangi şehir setiyle üretildi
     yillik: Math.round(yillikMWh),
     sehirler: cs.slice(0, 6).map(([nm, la, lo, pop]) => ({ nm, ll: [la, lo], pop })),
     oneriler: adaylar.slice(0, 5),
   };
+}
+// 🔄 E5: rapor DONMUŞ veridir ($100.000 ödendi, tekrarı yok) ama şehir seti büyüyünce
+// bayatlar. Silinmez — geniş set yüklüyse BİR KEZ, ÜCRETSİZ yeniden üretilir (ts korunur,
+// oyuncu ödediği tarihi görmeye devam eder).
+function studyTazele(iso) {
+  const r = (G && G.countryStudy || {})[iso];
+  if (!r || SEHIR_DURUM !== 'tamam' || (r.sv || 0) >= SEHIR_SV) return r;
+  const yeni = countryReport(iso);
+  if (!yeni) return r;
+  yeni.ts = r.ts;
+  yeni.tazelendi = Date.now(); // rapor kartında "veri güncellendi" notu için
+  return G.countryStudy[iso] = yeni;
 }
 window.startCountryStudy = (iso, ad) => {
   if (krediKilidi('araştırma başlatma')) return;
@@ -1367,7 +1410,7 @@ window.startCountryStudy = (iso, ad) => {
 // Ofis ekranındaki blok: ya "Bölgeyi Araştır" düğmesi, ya sayaç, ya da RAPOR
 function studyBlockHTML(ct) {
   if (!ct || !ct.iso) return '';
-  const r = studyOf(ct.iso);
+  const r = studyTazele(ct.iso) || studyOf(ct.iso); // geniş set geldiyse bayat raporu bedava yenile
   const a = G.countryStudyActive;
   if (a && a.iso === ct.iso) {
     const kalan = Math.max(0, Math.ceil((a.until - Date.now()) / 1000));
@@ -1390,7 +1433,7 @@ function studyBlockHTML(ct) {
   const yillikTxt = gwh >= 1000 ? (gwh / 1000).toFixed(1) + ' TWh' : gwh >= 1 ? Math.round(gwh) + ' GWh' : Math.round(r.yillik) + ' MWh';
   return `<div style="border:1px solid var(--acc);border-radius:10px;padding:9px 11px;margin:8px 0;background:#0e1c33">
     <div style="font-size:12.5px;font-weight:800;color:var(--acc)">✅ Bölge araştırıldı
-      <span class="sub" style="font-weight:600">· ${new Date(r.ts).toLocaleDateString('tr-TR')}</span></div>
+      <span class="sub" style="font-weight:600">· ${new Date(r.ts).toLocaleDateString('tr-TR')}</span>${r.tazelendi ? ' <span class="sub" style="font-weight:600;color:var(--acc2)">· 🔄 şehir verisi güncellendi, rapor ücretsiz yenilendi</span>' : ''}</div>
     <table class="ledger" style="margin:6px 0 2px">
       <tr><td>⚡ Ülkenin yıllık enerji ihtiyacı</td><td><b>${yillikTxt}</b></td></tr>
       <tr><td>🏙️ Talep merkezi</td><td>${r.sehirler.length} büyük şehir</td></tr>
@@ -1499,7 +1542,7 @@ const COUNTRY_ADD = {
 };
 (() => {
   for (const [iso, [nm, flag, ll, z]] of Object.entries(COUNTRY_ADD)) {
-    const cs = citiesOfCountry(iso);
+    const cs = citiesOfCountryTemel(iso); // ⚠️ TEMEL: sihirbaz listesi sehirler.json ile ŞİŞMEMELİ
     if (!cs.length || COUNTRIES[nm]) continue;
     COUNTRIES[nm] = { flag, note: cs.length + ' şehir', states: cs.map(c => c[0]), iso };
     COUNTRY_VIEW[nm] = [ll, z];
@@ -1514,7 +1557,7 @@ function cityList() {
   if (CITY_LIST) return CITY_LIST;
   const seen = {};
   CITY_LIST = [];
-  const add = (nm, la, lo, p) => { if (seen[nm]) return; seen[nm] = 1; CITY_LIST.push([nm, la, lo, p]); }; // çift sayım = çift talep
+  const add = (nm, la, lo, p, w) => { if (seen[nm]) return; seen[nm] = 1; CITY_LIST.push(w === 0 ? [nm, la, lo, p, 0] : [nm, la, lo, p]); }; // çift sayım = çift talep · w=0: gölge (talebe girmez)
   // 🐞 26 Ağu — SESSİZ DENGE HATASI DÜZELTİLDİ: tekilleştirme doğru (aynı yeri iki kez saymak
   // talebi ikiye katlardı) ama SIRA yanlıştı. Eski sıra WORLD_CITIES'i CITY_DB'den ÖNCE
   // koyuyordu; WORLD_CITIES ise CITY_DB'den ÖNCE yazılmış 22 satırlık ESKİ liste ve şehir
@@ -1534,17 +1577,102 @@ function cityList() {
   for (const arr of Object.values(CITY_DB)) for (const c of arr) add(c[0], c[1], c[2], c[3]);
   for (const [st, p] of Object.entries(STATE_POP)) if (IL_COORD[st]) add(st, IL_COORD[st][0], IL_COORD[st][1], p);
   for (const c of WORLD_CITIES) add(c[0], c[1], c[2], c[3]);
+  // 🌍 GENİŞ ŞEHİR SETİ (sehirler.json): EN SONA eklenir ki mevcut 4 kaynağın öncelik sırası
+  // (yukarıdaki karar bloğu) ZERRE değişmesin. Dosya gelmezse liste 448'de kalır — bugünkü davranış.
+  // 5. eleman 0 = "gölge" kaydı: metropolün içindeki yerleşim, ADIYLA yaşar (etiket, en yakın
+  // şehir, şehir kartı) ama TALEBE KATILMAZ — metropol nüfusu onu zaten içeriyor (çift sayım freni).
+  for (const arr of Object.values(CITY_EK)) for (const c of arr) add(c[0], c[1], c[2], c[3], c[4]);
   return CITY_LIST;
+}
+// ── ⚡ PERFORMANS KATI (35.000 şehir hazırlığı) ──
+// cellDemand/nearestCityName SAF: yalnız cityList + cellCenter okur, G'ye/saate bakmaz →
+// sonuç kalıcı önbelleklenir (CAT_CACHE / COAST_CACHE deseniyle aynı). sehirler.json
+// yüklenince üçü de sıfırlanır (sehirleriYukle).
+const DEMAND_MEMO = Object.create(null);
+const NEAR_MEMO = Object.create(null);
+// Uzamsal kova indeksi: 1,5° × 1,5°. 150 km = 1,351° enlem < 1,5 → enlemde ±1 kova yeter;
+// boylamda kova sayısı enleme göre ÇAĞRI ANINDA hesaplanır (lat 40'ta ±2 gerekir — sabit ±1
+// doğu-batı şehirlerini sessizce düşürürdü).
+let CITY_BUCKETS = null, CITY_TIERS = null;
+const BK = 1.5;
+function cityBuckets() {
+  if (CITY_BUCKETS) return CITY_BUCKETS;
+  CITY_BUCKETS = Object.create(null);
+  for (const c of cityList()) {
+    const k = Math.floor(c[1] / BK) + '|' + Math.floor(c[2] / BK);
+    (CITY_BUCKETS[k] || (CITY_BUCKETS[k] = [])).push(c);
+  }
+  return CITY_BUCKETS;
+}
+// merkez [lat,lon] çevresinde rKm yarıçapını KAPSAYAN kovalardaki şehirler (dizi dizisi döner)
+function citiesNear(ll, rKm) {
+  const B = cityBuckets(), dLat = rKm / 111;
+  const cosf = Math.max(.02, Math.cos(ll[0] * Math.PI / 180)); // kutupta 0'a bölme yok
+  const nLat = Math.ceil(dLat / BK), nLon = Math.min(240, Math.ceil(dLat / cosf / BK));
+  const by = Math.floor(ll[0] / BK), bx = Math.floor(ll[1] / BK), out = [];
+  for (let i = -nLat; i <= nLat; i++)
+    for (let j = -nLon; j <= nLon; j++) {
+      let x = bx + j; while (x < -120) x += 240; while (x >= 120) x -= 240; // 360/1,5 = 240 → boylam sarması
+      const a = B[(by + i) + '|' + x];
+      if (a) out.push(a);
+    }
+  return out;
+}
+// 🔒 TALEP YIĞILMA TAVANI: hiçbir kare, içindeki EN BÜYÜK tek şehir katkısının 4,5 katını
+// aşamaz. 448 şehirle ölçüldü: yığılma medyan 1,00 · p95 2,29 · maks 3,97 (Eindhoven) →
+// bugünkü hiçbir kare etkilenmez (sıfır regresyon); 35.000 şehirde yoğun bölge patlamasını keser.
+// 4'ün ALTINA İNME: mevcut kareler bozulur.
+const DEMAND_STACK_MAX = 4.5;
+// ── 🌍 GENİŞ ŞEHİR SETİ YÜKLEYİCİ (sehirler.json — ~37.000 şehir, GeoNames'ten üretildi) ──
+// Önbellek anahtarı ?v=SEHIR_SV — BUILD_TAG DEĞİL: deploy damgası her yayında değişir ve
+// 1,2 MB'lık DEĞİŞMEMİŞ dosyayı her seferinde yeniden indirtirdi; APK'da ise damga sabit
+// kalıp hiç iş görmezdi. no-store da değil: dosya büyük ve nadiren değişir (world50m ilkesi).
+const SEHIR_SV = 1;   // ⚠️ sehirler.json İÇERİĞİ DEĞİŞTİĞİNDE ELLE ARTIR
+let SEHIR_DURUM = 'yok';   // 'yok' | 'tamam' | 'hata' — B6: dosya gelmezse 448 şehirle DEVAM, bekletme YOK
+async function sehirleriYukle() {
+  const qs = 'sehirler.json?v=' + SEHIR_SV;
+  let r = await fetch(qs).catch(() => null);                                  // gömülü paket / aynı sunucu
+  if (!r || !r.ok) r = await fetch(CANLI_ADRES + qs).catch(() => null);       // yedek: canlı adres
+  if (!r || !r.ok) { SEHIR_DURUM = 'hata'; return false; }
+  let j = null;
+  try { j = await r.json(); } catch (e) {}
+  // birim alanı "bin" değilse dosya REDDEDİLİR — ham kişi sayısı girerse talep ×1000 patlar
+  if (!j || j.birim !== 'bin' || !j.ek) { SEHIR_DURUM = 'hata'; return false; }
+  let n = 0;
+  for (const [iso, arr] of Object.entries(j.ek)) {
+    if (OYUN_DISI[iso]) continue; // hassas bölge (patron kararı) — üretici de eler, bu ÇİFT emniyet
+    if (!Array.isArray(arr)) continue;
+    const temiz = arr.filter(c => Array.isArray(c) && c.length >= 4
+      && typeof c[0] === 'string' && c[0]
+      && Number.isFinite(+c[1]) && Math.abs(+c[1]) <= 90
+      && Number.isFinite(+c[2]) && Math.abs(+c[2]) <= 180
+      && +c[3] > 0 && +c[3] <= 100000);                     // ⚠️ BİRİM SAĞLAMASI: >100.000 bin = ham kişi sızmış
+    if (temiz.length) { CITY_EK[iso] = temiz; n += temiz.length; }
+  }
+  // önbellekleri SIFIRLA — liste büyüdü, eski sonuçlar bayat
+  CITY_LIST = null; CITY_BUCKETS = null; CITY_TIERS = null;
+  for (const k in DEMAND_MEMO) delete DEMAND_MEMO[k];
+  for (const k in NEAR_MEMO) delete NEAR_MEMO[k];
+  for (const k in COC_CACHE) delete COC_CACHE[k];
+  SEHIR_DURUM = n ? 'tamam' : 'hata';
+  return SEHIR_DURUM === 'tamam';
 }
 // Kare talebi (MWh/gün): yakın şehir nüfuslarının mesafeyle sönümlenmiş toplamı. 150 km ötesi katkı vermez.
 function cellDemand(id) {
-  const c = cellCenter(id);
-  let d = 15; // kırsal taban
-  for (const [nm, la, lo, pop] of cityList()) {
-    const dKm = 111 * Math.sqrt((la - c[0]) ** 2 + ((lo - c[1]) * Math.cos(c[0] * Math.PI / 180)) ** 2);
-    if (dKm < 150) d += pop * 2 * Math.pow(1 - dKm / 150, 2);
-  }
-  return Math.round(d);
+  if (id in DEMAND_MEMO) return DEMAND_MEMO[id];
+  const c = cellCenter(id), cf = Math.cos(c[0] * Math.PI / 180);
+  let d = 15, top = 0; // kırsal taban · en büyük tek şehir katkısı
+  const R2 = (150 / 111) ** 2; // sqrt yalnız 150 km içinde kalanlara — derece² ön elemesi
+  for (const grup of citiesNear(c, 150))
+    for (const s of grup) {
+      if (s[4] === 0) continue; // gölge kaydı: metropol nüfusu onu zaten içeriyor
+      const dy = s[1] - c[0], dx = (s[2] - c[1]) * cf, q = dy * dy + dx * dx;
+      if (q >= R2) continue;
+      const k = s[3] * 2 * Math.pow(1 - 111 * Math.sqrt(q) / 150, 2);
+      d += k;
+      if (k > top) top = k;
+    }
+  return DEMAND_MEMO[id] = Math.round(Math.min(d, 15 + top * DEMAND_STACK_MAX));
 }
 // KISA KARE KODU (patron isteği — "408_297" garip duruyordu, rakip tarzı kısa: "KD-42")
 function cellCode(id) {
@@ -1554,13 +1682,15 @@ function cellCode(id) {
 }
 // En yakın şehir/il adı (~80 km): panel başlıklarında "Kocaeli · KD-42" gibi görünür
 function nearestCityName(id) {
-  const c = cellCenter(id);
+  if (id in NEAR_MEMO) return NEAR_MEMO[id]; // null da önbelleklenir → 'in' şart
+  const c = cellCenter(id), cf = Math.cos(c[0] * Math.PI / 180);
   let best = null, bd = 1e9;
-  for (const [nm, la, lo] of cityList()) {
-    const d = 111 * Math.sqrt((la - c[0]) ** 2 + ((lo - c[1]) * Math.cos(c[0] * Math.PI / 180)) ** 2);
-    if (d < bd) { bd = d; best = nm; }
-  }
-  return bd <= 80 ? best : null;
+  for (const grup of citiesNear(c, 80))
+    for (const s of grup) {
+      const d = 111 * Math.sqrt((s[1] - c[0]) ** 2 + ((s[2] - c[1]) * cf) ** 2);
+      if (d < bd) { bd = d; best = s[0]; }
+    }
+  return NEAR_MEMO[id] = (bd <= 80 ? best : null);
 }
 // İNSAN OKUNUR KONUM (patron: "HG-90 oyuncu için hiçbir şey ifade etmez").
 // Sırayla dener: yakın şehir → uzaktaki en yakın şehrin "civarı" → ülke → açık deniz.
@@ -1568,13 +1698,16 @@ function nearestCityName(id) {
 function placeName(id) {
   const yakin = nearestCityName(id);
   if (yakin) return yakin;
-  const c = cellCenter(id);
+  const c = cellCenter(id), cf = Math.cos(c[0] * Math.PI / 180);
   let best = null, bd = 1e9;
-  for (const [nm, la, lo] of cityList()) {
-    const d = 111 * Math.sqrt((la - c[0]) ** 2 + ((lo - c[1]) * Math.cos(c[0] * Math.PI / 180)) ** 2);
-    if (d < bd) { bd = d; best = nm; }
-  }
+  for (const grup of citiesNear(c, 400)) // ikinci tam tarama da kovadan — 400 km "civarı" yarıçapı
+    for (const s of grup) {
+      const d = 111 * Math.sqrt((s[1] - c[0]) ** 2 + ((s[2] - c[1]) * cf) ** 2);
+      if (d < bd) { bd = d; best = s[0]; }
+    }
   if (best && bd <= 400) return best + ' civarı';
+  // ⚠️ MEMOLANMAZ: countryAt LAND_BOX yüklenmeden null döner — kalıcı önbellek her kareyi
+  // ömür boyu 'Açık deniz' olarak dondururdu.
   const ct = countryAt(c);
   return ct ? ct.nm : '🌊 Açık deniz';
 }
@@ -7477,6 +7610,10 @@ const NET = {
       // başarısız olur, ana karne sağlam kalır. (Aynı desen 'katki' düğümünde de kullanıldı.)
       // ⚠️ Gerçek kasa DEĞİL, kaba kademe gönderilir — bkz. nakitKademe().
       this.putSessiz('players/' + this.id + '/cash', nakitKademe()).catch(() => {});
+      // 🌍 şehir veri damgası (cash ile aynı desen — ayrı yazım): yönetim panelinden hangi
+      // oyuncunun geniş şehir setiyle oynadığı görülür. Dosyayı engelleyip düşük talep/minBid
+      // ile oynama girişimi bu damgayla yakalanır (minBid'i veriden ayırmak ayrı iş — E6).
+      this.putSessiz('players/' + this.id + '/cdb', SEHIR_DURUM === 'tamam' ? SEHIR_SV : 0).catch(() => {});
       // 🏛️ haftalık devlet katkısı tablosu — kapanan haftalar DEĞİŞMEZ kalır, ödüller oradan
       // hesaplanır. (Kurallara 'katki' düğümü eklenene dek bu yazım sessizce reddedilir — zararsız.)
       if (G.weekSold >= .5) this.put('katki/' + kHafta(G.week) + '/' + this.id, {
@@ -10577,22 +10714,43 @@ function migrate(s) {
   // ── ENLEM IZGARA DÜZELTMESİ: yüksek enlemdeki (|lat| ≥ 60°) eski kare kimlikleri yeni
   // ızgaraya hizalanır. Birimlerin karesi konumundan yeniden türetilir (en güvenlisi),
   // ruhsat/imtiyaz/muhasebe anahtarları da aynı hizaya taşınır — Kanada ofisi kaybolmasın.
+  // ⚠️ ZEHİR TEMİZLİĞİ — cellSnap'ten ÖNCE gelmeli: cellSnap bozuk anahtarı düzeltmiyor,
+  // ÜRETİYOR ('undefined_undefined'→'NaN_NaN', ''→'0_NaN') ve remap onu kaydın içine geri
+  // yazıyordu; 5 sn'lik save() de buluta pompalayıp hatayı cihazlar arası kalıcılaştırıyordu.
+  // SİLME YASAĞI ile çelişmez: silinen şey bir şehir/il ADI değil, hiçbir kareyi göstermeyen
+  // bozuk anahtar. G.il taşıyan adlara DOKUNULMUYOR.
+  for (const m of ['licenses', 'leases', 'cellEarned', 'cellSpent', 'wonWeek', 'auctions'])
+    if (s[m] && typeof s[m] === 'object') for (const c of Object.keys(s[m])) if (!gecerliKare(c)) delete s[m][c];
+  // 🐞 Firebase seyrek dizi davranışı (unitsInCell'de belgelenmiş) units'in KENDİSİNİ obje
+  // yapabiliyor — aşağıdaki for...of tüm NaN zincirinden önce atar, load() null döner,
+  // "kayıt yok" sanılır. Diziye çevrilemiyorsa boş başlat, kaydı EZDİRME.
+  if (!Array.isArray(s.units)) s.units = Object.values(s.units || {}).filter(u => u && typeof u === 'object');
   const remap = {};
   for (const c of Object.keys(s.licenses || {})) { const n = cellSnap(c); if (n !== c) remap[c] = n; }
   for (const [o, n] of Object.entries(remap)) {
     s.licenses[n] = s.licenses[o]; delete s.licenses[o];
-    for (const m of ['leases', 'cellEarned', 'cellSpent', 'wonWeek'])
+    for (const m of ['leases', 'cellEarned', 'cellSpent', 'wonWeek', 'auctions'])
       if (s[m] && s[m][o] !== undefined) {
         // ⚠️ HATA AVI (orta): iki eski kare aynı yeni kareye düşünce üzerine yazılıyordu.
         // Muhasebe TOPLANMALI, kira/imtiyaz bitişinde ise en UZUN olan kalmalı (parayla alındı).
-        s[m][n] = (m === 'leases' || m === 'wonWeek')
-          ? Math.max(s[m][n] || 0, s[m][o])
-          : (s[m][n] || 0) + s[m][o];
+        // auctions kaydı NESNE — toplanamaz: escrow'u (bloke para) büyük olan kalır.
+        s[m][n] = m === 'auctions'
+          ? ((s[m][n] && (s[m][n].myEscrow || 0) >= (s[m][o].myEscrow || 0)) ? s[m][n] : s[m][o])
+          : (m === 'leases' || m === 'wonWeek')
+            ? Math.max(s[m][n] || 0, s[m][o])
+            : (s[m][n] || 0) + s[m][o];
         delete s[m][o];
       }
   }
-  for (const u of s.units) if (u.ll) u.cell = cellId(u.ll);
-  for (const l of (s.lines || [])) { if (l.from) l.from = cellSnap(l.from); if (l.to) l.to = cellSnap(l.to); }
+  for (const u of s.units) {
+    if (gecerliLL(u.ll)) { u.cell = cellId(u.ll); continue; }
+    // ll bozuk ama kare sağlamsa konumu kareden KURTAR (null atama çökmeyi satış yoluna taşırdı —
+    // cellPriceFactor/officeCovers/siteParts hepsi u.cell.split bekliyor)
+    if (gecerliKare(u.cell)) { u.ll = cellCenter(u.cell); continue; }
+    u._bozuk = 1; // ikisi de bozuk: SİLME, işaretle — çizim süzgeci atlar, hata raporu görür
+  }
+  // l.from SAYI/bozuk gelirse cellSnap('undefined') zehir üretir ya da TypeError atar — sınırda doğrula
+  for (const l of (s.lines || [])) { if (gecerliKare(l.from)) l.from = cellSnap(l.from); if (gecerliKare(l.to)) l.to = cellSnap(l.to); }
   delete s._aucT; // eski kayıtlarda kalan rAF zaman damgası — ihale/araştırma tikini donduruyordu
   if (s.totalEarned >= BOOST_CAP) s.starterClaimed = true; // köklü şirketler eğitim moduna geri düşmesin
   if (!s.demo) { // eski demo-saat kayması bug'ının kirlettiği kayıtları temizle
@@ -10717,12 +10875,7 @@ function initMap(center, zoom) {
   setTimeout(() => map.invalidateSize(), 600);
   try { new ResizeObserver(() => map && map.invalidateSize()).observe($('mapwrap')); } catch (e) {}
   window.addEventListener('resize', () => map && map.invalidateSize());
-  // 🔴 YAPISAL KORUMA (26 Ağu): Leaflet olay dinleyicilerini SIRAYLA çağırır ve istisnayı
-  // YAKALAMAZ — birinden atılan hata, sonraki dinleyicileri (Leaflet'in kendi canvas
-  // katmanlarını yeniden konumlandıran kodu dahil) hiç çalıştırmaz. Bizim çizim
-  // işlevlerimizden biri patlarsa harita bayat kalıyordu: dünya çizilmiyor, ruhsat karoları
-  // tesislerden kayıyordu. Artık her biri kendi kabuğunda — biri düşse de harita yaşar.
-  const guvenli = (ad, fn) => { try { fn(); } catch (e) { console.warn('[harita] ' + ad, e && e.message); } };
+  // (guvenli() artık modül kapsamında — startGame'deki açılış çizimleri de aynı kabuğu kullanıyor)
   map.on('zoomend', () => {
     if (!(G && G._started)) return;
     guvenli('refreshUnitMarkers', () => { G.units.forEach(u => u._lastIcon = null); refreshUnitMarkers(); });
@@ -10950,6 +11103,7 @@ window.openOthersHere = (ll, cell) => {
 };
 function addUnitMarker(u) {
   if (!map) return;
+  if (!gecerliLL(u.ll)) return; // ⚠️ bozuk koordinat: işaretçi çizme, açılışı düşürme (NET.unitsInCell'deki süzgeçle aynı sebep)
   if (unitMarkers[u.id]) unitMarkers[u.id].remove(); // çift işaretçi bug'ı: eski marker haritada donuk kalıyordu
   const m = L.marker(u.ll, { icon: divIcon(unitIconHTML(u), unitIconSize(u)), zIndexOffset: 600 }).addTo(map);
   // uzun basış: aynı noktadaki komşu tesisleri aç (kendi tesisin üstte kaldığı için tek yol bu)
@@ -11274,10 +11428,18 @@ function dolumTxt(kalanMWh, inflowMW) {
 function drawCityLabels() {
   const z = zoomNow(), b = map.getBounds();
   // zoom'a göre nüfus eşiği: uzakta yalnız metropoller, yaklaştıkça küçük şehirler
-  const esik = z <= 3 ? 7000 : z <= 4 ? 3500 : z <= 5 ? 1800 : z <= 6 ? 900 : z <= 7 ? 450 : z <= 8 ? 220 : z <= 9 ? 100 : 0;
-  const list = cityList().filter(c => c[3] >= esik && b.contains([c[1], c[2]])).sort((a, c) => c[3] - a[3]);
+  // ⚡ 35.000 şehir: her yeniden çizimde filter+sort yerine ÖN SIRALI kademe dizileri.
+  // Kademeler bir kez kurulur (sehirleriYukle CITY_TIERS'ı sıfırlar); çizim yalnız
+  // görünür alan testi + çakışma elemesi yapar, 80 etikette erken çıkar.
+  const KADEMELER = [7000, 3500, 1800, 900, 450, 220, 100, 0];
+  const esik = z <= 3 ? 0 : z <= 4 ? 1 : z <= 5 ? 2 : z <= 6 ? 3 : z <= 7 ? 4 : z <= 8 ? 5 : z <= 9 ? 6 : 7;
+  if (!CITY_TIERS) {
+    const sirali = cityList().slice().sort((a, c) => c[3] - a[3]);
+    CITY_TIERS = KADEMELER.map(e => sirali.filter(c => c[3] >= e));
+  }
   const kutular = []; // çakışma önleme: kalabalık şehir öncelikli, üstüne binen elenir
-  for (const [nm, la, lo, pop] of list) {
+  for (const [nm, la, lo, pop] of CITY_TIERS[esik]) {
+    if (!b.contains([la, lo])) continue;
     const p = map.latLngToContainerPoint([la, lo]);
     const w = nm.length * 6.6 + 34;
     if (kutular.some(u => Math.abs(u.x - p.x) < (u.w + w) / 2 && Math.abs(u.y - p.y) < 21)) continue;
@@ -11322,7 +11484,7 @@ window.openCityCard = nm => {
     <p class="sub" style="margin-top:0">${ct ? (COUNTRIES[ct.nm] ? COUNTRIES[ct.nm].flag + ' ' : '') + ct.nm + ' · ' + ct.kita : ''}</p>
     <table class="ledger">
       <tr><td>👥 Nüfus</td><td><b>${popTxt(pop)}</b></td></tr>
-      <tr><td>⚡ Günlük enerji ihtiyacı</td><td><b class="${d >= 2000 ? 'pos' : d < 200 ? 'neg' : ''}">${fmtN(d)} MWh/gün</b>${d < 200 ? ' <span class="sub">— ıssız</span>' : d >= 5000 ? ' <span class="sub">— dev pazar</span>' : ''}</td></tr>
+      <tr><td>⚡ Günlük enerji ihtiyacı</td><td><b class="${d >= 3000 ? 'pos' : d < 200 ? 'neg' : ''}">${fmtN(d)} MWh/gün</b>${d < 200 ? ' <span class="sub">— ıssız</span>' : d >= 7500 ? ' <span class="sub">— dev pazar</span>' : ''}</td></tr><!-- eşikler 37k şehre göre yüzdelik eşlendi (E3): "ıssız" MUTLAK kaldı (satış kapasitesi gerçeği), "dev pazar" göreli olduğu için 5000→7500 -->
       <tr><td>💲 Bölge alım fiyatı</td><td>${fmt(cellPriceNow(cell))}/MWh <span class="sub">(×${cellPriceFactor(cell).toFixed(2)})</span></td></tr>
       <tr><td>📍 En yakın ofisine</td><td>${isFinite(yakin) ? fmtN(Math.round(yakin)) + ' km' : '— ofisin yok'}</td></tr>
       <tr><td>🗺️ Kare</td><td>${cellCode(cell)}</td></tr>
@@ -11367,7 +11529,13 @@ function tileStyle(c) {
 }
 function refreshLicenseTiles() {
   if (!map || !G) return;
-  const kareler = new Set(Object.keys(G.licenses).concat(Object.keys(G.leases || {}).filter(c => G.leases[c] > Date.now())));
+  // ⚠️ HATA AVI (kritik): bozuk anahtar ('NaN_NaN') cellBounds'tan NaN çıkarıp Leaflet'i
+  // patlatıyordu; istisna açılışı G._started'a varmadan kesiyor, hesap AÇILAMAZ hale
+  // geliyordu (canlı test kaydında yaşandı, elle onarıldı). Ayrıca istisna yüzünden alttaki
+  // temizlik döngüsü hiç çalışmayıp licLayer sızıyordu. Bozuk kimlik EN KAYNAKTA elenir.
+  const kareler = new Set(Object.keys(G.licenses || {})
+    .concat(Object.keys(G.leases || {}).filter(c => G.leases[c] > Date.now()))
+    .filter(gecerliKare));
   for (const c of kareler) {
     const st = tileStyle(c);
     if (!licLayer[c]) licLayer[c] = L.rectangle(cellBounds(c), Object.assign({ opacity: .85, interactive: false, renderer: VEC || undefined }, st)).addTo(map);
@@ -13018,7 +13186,7 @@ function wizStep2() {
     const ll2 = IL_COORD[il]; if (!ll2) return;
     const m = L.marker(ll2, { icon: divIcon('<div class="ilmark" style="background:#ff8c42"></div>', [18, 18]) }).addTo(map);
     const pop = (isTR ? TR_POP[il] : STATE_POP[il]) || 0;
-    m.bindPopup(`<b>${il.toUpperCase()}</b><br>${COUNTRIES[G.country].flag} ${G.country}<br>Bölge: ${cellCode(cellId(ll2))}<br>Nüfus: ${fmtN(pop)}K → talep ${fmtN(cellDemand(cellId(ll2)))} MWh/gün`);
+    m.bindPopup(() => `<b>${il.toUpperCase()}</b><br>${COUNTRIES[G.country].flag} ${G.country}<br>Bölge: ${cellCode(cellId(ll2))}<br>Nüfus: ${fmtN(pop)}K → talep ${fmtN(cellDemand(cellId(ll2)))} MWh/gün`); // tembel: talep yalnız popup açılınca hesaplanır
     m.on('click', () => { wizSetIl(il); });
     wizLayer.push(m);
   });
@@ -13096,7 +13264,7 @@ window.wizDone = () => {
   $('wizsheet').classList.remove('show');
   wizLayer.forEach(m => m.remove()); wizLayer = [];
   // başlangıç kiti: merkez karesinin ruhsatı HEDİYE + 1 rüzgar türbini + 1 pil deposu (bağlantıyı örnekle öğret)
-  const hcell = cellId(IL_COORD[G.il]);
+  const hcell = cellId(IL_COORD[G.il] || [39, 35]); // ⚠️ yedek şart: IL_COORD'da olmayan il TypeError atıp kuruluşu çökertiyordu (startGame'deki || [39,35] ile aynı)
   G.licenses[hcell] = true;
   // 🏢 KURULUŞ SAÇILIMI (patron: "yeni oyuncu girdikçe ofisler iç içe geçiyor"): herkes il
   // merkezinin AYNI sabit noktasına kuruluyordu. Artık kare içinde karada, diğer oyuncuların
@@ -13129,12 +13297,26 @@ function startGame(resumed) {
   ensureGridLinks(); // 🗼 kayıtta kalmış kaymış/başka karodaki merkez anahtarlarını yükleme anında onar
   const hc = IL_COORD[G.il] || [39, 35];
   initMap(hc, 11);
-  for (const u of G.units) addUnitMarker(u);
-  drawBots(); refreshUnitMarkers(); refreshLicenseTiles(); drawOthers(); seedMail(); renderHUD(); renderMenu();
+  // ⚠️ SIRA BİLEREK BÖYLE: bayrak çizimlerden ÖNCE kalkar. Eskiden en sonda kalktığı için
+  // tek bir çizim istisnası (bozuk ruhsat anahtarı → Leaflet NaN) oyuncuyu hesabından
+  // tamamen kilitliyordu. Harita hazır olduktan sonra çizim başarısız olsa bile oyuncu
+  // girer, panelleri açar, "Hata Bildir"e ulaşır. Çizimler guvenli() kabuğunda tek tek.
+  G._started = true;
+  guvenli('unitMarkers', () => { for (const u of G.units) addUnitMarker(u); });
+  guvenli('drawBots', drawBots);
+  guvenli('refreshUnitMarkers', refreshUnitMarkers);
+  guvenli('refreshLicenseTiles', refreshLicenseTiles);
+  guvenli('drawOthers', drawOthers);
+  seedMail(); renderHUD(); renderMenu();
   $('demolink').textContent = '⏩ Demo: ' + (G.demo ? 'AÇIK ×60' : 'KAPALI'); // kayıttan dönen durum linke yansısın
   $('mutelink').textContent = G.muted ? '🔇' : '🔊';
   fetchWeather();
-  G._started = true;
+  // 🌍 B6 sessiz kalmasın: şehir seti gelmediyse söyle ve 60 sn sonra bir kez daha dene
+  // (oyun 448 çekirdek şehirle sorunsuz sürer — kilitleme YOK, world50m ilkesi).
+  if (SEHIR_DURUM === 'hata') {
+    toast('🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.', 'warn', null, 0, true);
+    setTimeout(() => { if (SEHIR_DURUM !== 'tamam') sehirleriYukle().then(ok => { if (ok) { toast('🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.', ''); drawOverlay(); } }).catch(() => {}); }, 60000);
+  }
   if (resumed) offlineProgress();
   else {
     setTimeout(askNotifPermission, 9000); // oyunu bir görsün, sonra kibarca soralım
@@ -13183,7 +13365,7 @@ $('gmv_btn').addEventListener('click', () => {
 $('banstrip').addEventListener('click', () => { if (!G || !G._started) return; G._banAdim = 1; save(); hideSheets(); });
 function openMarket() { const open = $('pricesheet').classList.contains('show'); hideSheets(); if (!open) { renderPriceSheet(); showSheet('pricesheet'); } }
 function openTasks() { const open = $('menusheet').classList.contains('show'); hideSheets(); if (!open) { renderMenu(); showSheet('menusheet'); } }
-function goHome() { if (map && G && G.il) { try { map.flyTo(IL_COORD[G.il], 11); } catch (e) { map.setView(IL_COORD[G.il], 11); } } }
+function goHome() { const ll = (G && IL_COORD[G.il]) || [39, 35]; if (map && G) { try { map.flyTo(ll, 11); } catch (e) { map.setView(ll, 11); } } } // ⚠️ IL_COORD'da olmayan il: catch'teki setView de aynı undefined'ı alıyordu, yedek şart
 // Sağ çekmece menü
 $('navhandle').addEventListener('click', () => openNav());
 $('linehandle').addEventListener('click', () => openLinePanel());
@@ -13534,6 +13716,9 @@ const BOOT_AT = Date.now();
 bootGuncelle().then(yenilenecek => {
   if (yenilenecek) return;
   bootStep(52, 'Sunucuya bağlanılıyor…');
+  // 🌍 Şehir setini PARALEL başlat — sahne beklemesi (1,6 sn) ve sunucu el sıkışmasıyla
+  // örtüşür, açılış uzamaz. await aşağıda, 4 sn tavanla (açılış ASLA takılı kalmasın ilkesi).
+  const sehirIlk = sehirleriYukle().catch(() => {});
   NET.init().then(async () => { // online sunucu (net-config.json varsa) — yoksa simülasyon sürer
   bootStep(58, NET.on() ? 'Sunucuya bağlanıldı' : 'Çevrimdışı mod');
   // 🛡️ BAKIM PERDESİ AÇILIŞ EKRANI KALKMADAN HAZIR OLSUN (patron 26 Ağu: "oyun açılır
@@ -13546,6 +13731,8 @@ bootGuncelle().then(yenilenecek => {
   const bekle = Math.max(0, 1600 - (Date.now() - BOOT_AT));
   await new Promise(r => setTimeout(r, bekle));
   if (gmIlk) await Promise.race([gmIlk, new Promise(r => setTimeout(r, 1200))]);
+  bootStep(68, 'Şehir veritabanı yükleniyor…'); // %59-81 aralığı boştu — çubuk burada da aksın
+  await Promise.race([sehirIlk, new Promise(r => setTimeout(r, 4000))]); // 4 sn tavan: gelmezse 448 şehirle devam
   bootStep(82, 'Hesap kontrol ediliyor…');
   if (NET.on() && NET.googleAvailable()) {
     const a = await NET.googleCheckRedirect(); // Google yönlendirmesinden dönüş
