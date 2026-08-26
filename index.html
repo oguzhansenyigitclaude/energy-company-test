@@ -332,8 +332,11 @@
   #bootstep{margin-top:10px;font-size:12px;font-weight:800;color:#fff;letter-spacing:.3px;text-shadow:0 1px 8px #000}
   #boottip{margin-top:7px;font-size:11.5px;color:#c9d4e4;text-align:center;max-width:min(430px,92%);
     line-height:1.55;min-height:34px;text-shadow:0 1px 8px #000}
-  #toasts{position:absolute;top:70px;left:0;right:0;display:flex;flex-direction:column;gap:5px;align-items:center;z-index:1300;pointer-events:none}
-  .toast{background:#000d;border:1px solid var(--acc);color:var(--ink);padding:7px 14px;border-radius:18px;font-size:12px;max-width:92%;animation:pop .25s;backdrop-filter:blur(4px)}
+  /* 🔔 BİLDİRİMLER SOLA YAPIŞIK, ALT ALTA (patron 26 Ağu): "Ortada uzun bir bildirim
+     ekranı kapat düğmesinin üstüne geliyor ve bildirim gidene kadar pencereyi kapatamıyorum."
+     Ortalanmış ve tam genişlikteydi; artık solda ve dar — modalın butonlarını örtmüyor. */
+  #toasts{position:absolute;top:70px;left:8px;right:auto;display:flex;flex-direction:column;gap:5px;align-items:flex-start;z-index:1300;pointer-events:none;max-width:min(76%,320px)}
+  .toast{background:#000d;border:1px solid var(--acc);color:var(--ink);padding:7px 12px;border-radius:14px;font-size:12px;max-width:100%;animation:pop .25s;backdrop-filter:blur(4px);text-align:left;line-height:1.4;overflow-wrap:anywhere}
   .toast.warn{border-color:var(--warn)} .toast.bad{border-color:var(--danger)}
   @keyframes pop{from{transform:scale(.85);opacity:0}}
   #overlay{position:absolute;inset:0;background:#05070cf2;z-index:80;display:none;align-items:center;justify-content:center;padding:14px}
@@ -467,7 +470,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:29) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -589,7 +592,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:22)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:29)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -7659,6 +7662,19 @@ window.krediAl = () => {
 // 🎯 TAVAN (%180) İLE HACİZ EŞİĞİ (72 saat) BİLEREK AYNI ANA DENK GELİR: %2,5 × 72 = %180.
 // Yani faiz tam haczin başladığı saniyede tavana vurur — ikisi birbirine kilitli.
 // Tavan olmasa borç sonsuza büyür ve oyuncu geri dönemez; tavandan sonra ceza haciz olur.
+// 🕰️ BANKA İLK 24 SAAT KREDİ VERMEZ (patron 26 Ağu):
+// "Yeni oyuncu daha oyunu öğrenmeden kredi çekmesin. Banka size ilk 24 saat için kredi
+//  vermez çünkü size güvenmez, daha çok yenisiniz."
+// Gerçek bankacılıkta da yeni kurulan şirkete kredi açılmaz — sicil ister.
+// ⚠️ KURTARMA KREDİSİ BU KURALIN DIŞINDA: o bir büyüme aracı değil, can halatı.
+// Tesisi bozulan yeni oyuncu ilk gün çaresiz kalmamalı.
+// 🎯 YAN FAYDA: eğitimin SON görevi kredi çekmek olduğu için oyuncu ertesi gün geri döner.
+const BANKA_GUVEN_SA = 24;
+const bankaGuvenKalan = () => {
+  if (!G) return 0;
+  const gecen = (Date.now() - (G.founded || Date.now())) / 36e5;
+  return Math.max(0, BANKA_GUVEN_SA - gecen);
+};
 const ACIL_LIMIT = 0.05;        // şirket değerinin en fazla %5'i (patron)
 const ACIL_SAATLIK = 0.025;     // saatlik faiz — basit faiz, bileşik değil
 const ACIL_FAIZ_TAVAN = 1.80;   // biriken faiz anaparanın en fazla %180'i (patron)
@@ -7687,6 +7703,7 @@ const acilBeklemeKalan = () => {
 };
 const acilLimit = () => {
   if (!G || acilVar() || yatVar() || krediVar() || acilBeklemeKalan() > 0) return 0;
+  if (bankaGuvenKalan() > 0) return 0; // 🕰️ banka yeni şirkete ilk 24 saat kredi vermez
   return Math.max(0, Math.floor(myWorth() * ACIL_LIMIT));
 };
 
@@ -7719,6 +7736,7 @@ window.acilAl = () => {
   if (yatVar()) { toast('⚡ Büyüme kredin sürerken acil nakit kredisi alamazsın.', 'warn'); return; }
   if (krediVar()) { toast('⚡ Kurtarma kredin sürerken acil nakit kredisi alamazsın.', 'warn'); return; }
   if (invVar()) { toast('⚡ Açık yatırım pozisyonun varken kredi alamazsın — önce pozisyonunu kapat.', 'warn', null, 6000); return; }
+  if (bankaGuvenKalan() > 0) { toast('🏦 Banka henüz sana kredi açmıyor — şirketin çok yeni. ' + fmtHrs(bankaGuvenKalan()) + ' sonra tekrar gel.', 'warn', null, 7000); return; }
   const bek = acilBeklemeKalan();
   if (bek > 0) { toast('⚡ Yeni acil nakit için ' + bek + ' saat daha beklemelisin.', 'warn', null, 6000); return; }
   const limit = acilLimit();
@@ -7852,6 +7870,7 @@ const yatBeklemeKalan = () => {
 // Limit: şirket değerinin %20'si × kredi notu çarpanı. Açık kredi ya da bekleme varken 0.
 const yatLimit = () => {
   if (!G || yatVar() || acilVar() || krediVar() || yatBeklemeKalan() > 0) return 0;
+  if (bankaGuvenKalan() > 0) return 0; // 🕰️ ilk 24 saat kredi yok
   const k = notKademe();
   if (k.gunluk === null) return 0;
   return Math.max(0, Math.floor(myWorth() * KREDI_LIMIT * k.carpan));
@@ -7921,6 +7940,7 @@ window.yatAl = () => {
   // ⚠️ Ters yön kontrolü: invAl zaten kredi varken yatırımı engelliyordu ama burada invVar()
   // yoktu — oyuncu ÖNCE borsaya yatırıp SONRA kredi çekerek kovenantı deliyordu.
   if (invVar()) { toast('🏗️ Açık yatırım pozisyonun varken kredi alamazsın — önce pozisyonunu kapat.', 'warn', null, 6000); return; }
+  if (bankaGuvenKalan() > 0) { toast('🏦 Banka henüz sana kredi açmıyor — şirketin çok yeni. ' + fmtHrs(bankaGuvenKalan()) + ' sonra tekrar gel.', 'warn', null, 7000); return; }
   const bek = yatBeklemeKalan();
   if (bek > 0) { toast('🏗️ Yeni kredi için ' + bek + ' gün daha beklemelisin (önceki kredinin vadesinden sonra).', 'warn', null, 6000); return; }
   const kd = notKademe();
@@ -8112,6 +8132,15 @@ function acilPanel() {
       + 'Taksitli borçlanmak istiyorsan <b>🏗️ Büyüme</b> kredisine bak.</p>';
     return h + '</div>';
   }
+  // 🕰️ İlk 24 saat kuralı — en üstte, çünkü diğer her şeyi kapatıyor
+  if (bankaGuvenKalan() > 0) return h + '<div style="border:1px solid var(--warn);border-radius:10px;padding:10px 12px;background:var(--panel2)">'
+      + '<div style="font-weight:800;color:var(--warn);margin-bottom:4px">🕰️ Banka henüz size kredi açmıyor</div>'
+      + '<p class="sub" style="margin:0">Şirketiniz çok yeni. Banka, kredi açmadan önce işletmenizin '
+      + '<b>ilk 24 saatini</b> görmek ister — gerçek hayatta da yeni kurulan şirkete sicil oluşmadan '
+      + 'kredi verilmez.<br><br>Kalan süre: <b>' + fmtHrs(bankaGuvenKalan()) + '</b><br><br>'
+      + '<span style="opacity:.8">Bu sürede üretip satmaya devam edin; şirket değeriniz büyüdükçe '
+      + 'açılacak kredi limitiniz de büyür. ⚠️ Kurtarma kredisi bu kuralın dışındadır: tesisiniz '
+      + 'bozulur ve paranız yetmezse ilk gün de yardım alabilirsiniz.</span></p></div>' + '</div>';
   const bek = acilBeklemeKalan();
   if (bek > 0) return h + '<p class="sub">⏳ <b>Yeni acil nakit için ' + bek + ' saat beklemelisin.</b></p>'
     + '<p class="sub">Bekleme, kredinin <b>açılışından</b> ' + ACIL_BEKLE_SA + ' saat olarak sayılır — erken kapatmak onu kısaltmaz.</p></div>';
@@ -8263,6 +8292,14 @@ function yatPanel() {
   }
 
   // ── Açık kredi yok: başvuru ekranı ──
+  if (bankaGuvenKalan() > 0) return h + '<div style="border:1px solid var(--warn);border-radius:10px;padding:10px 12px;background:var(--panel2)">'
+      + '<div style="font-weight:800;color:var(--warn);margin-bottom:4px">🕰️ Banka henüz size kredi açmıyor</div>'
+      + '<p class="sub" style="margin:0">Şirketiniz çok yeni. Banka, kredi açmadan önce işletmenizin '
+      + '<b>ilk 24 saatini</b> görmek ister — gerçek hayatta da yeni kurulan şirkete sicil oluşmadan '
+      + 'kredi verilmez.<br><br>Kalan süre: <b>' + fmtHrs(bankaGuvenKalan()) + '</b><br><br>'
+      + '<span style="opacity:.8">Bu sürede üretip satmaya devam edin; şirket değeriniz büyüdükçe '
+      + 'açılacak kredi limitiniz de büyür. ⚠️ Kurtarma kredisi bu kuralın dışındadır: tesisiniz '
+      + 'bozulur ve paranız yetmezse ilk gün de yardım alabilirsiniz.</span></p></div>' + '</div>';
   const bek = yatBeklemeKalan(), limit = yatLimit();
   if (bek > 0) {
     return h + '<p class="sub">⏳ <b>Yeni kredi için ' + bek + ' gün beklemelisin.</b></p>'
@@ -10539,7 +10576,11 @@ const STARTER_TASKS = [
   // ⚡ Acil nakit = şirket değerinin %5'i, saatlik faiz, tek seferde kapanır — eğitim için
   // en uygun kredi: küçük, hızlı ve aynı oturumda kapatılabilir.
   { id: 'banka', t: '🏦 Acil nakit kredisi çek ve geri öde', ok: () => !!G.tutBanka,
-    hint: '🏦 Sağdaki ⚡ menüyü aç → <b>Banka</b> → <b>⚡ Acil</b> sekmesi → küçük bir tutar çek, sonra <b>Tamamını Kapat</b> ile hemen geri öde (saatlik faiz işler, çabuk kapat)', el: 'drawerbank' },
+    // ⚠️ hint burada FONKSIYON — STARTER_TASKS betik yüklenirken kuruluyor ve o an G henüz YOK.
+    // Düz dize yazsaydık bankaGuvenKalan() bir kez 0 döner ve kalan süre HİÇ görünmezdi.
+    hint: () => bankaGuvenKalan() > 0
+      ? '🏦 <b>Banka henüz sana kredi açmıyor</b> — şirketin çok yeni, banka sicilini görmek istiyor. <b>' + fmtHrs(bankaGuvenKalan()) + '</b> sonra gel; o zamana kadar üretmeye ve satmaya devam et.'
+      : '🏦 Sağdaki ⚡ menüyü aç → <b>Banka</b> → <b>⚡ Acil</b> sekmesi → küçük bir tutar çek, sonra <b>Tamamını Kapat</b> ile hemen geri öde (saatlik faiz işler, çabuk kapat)', el: 'drawerbank' },
 ];
 const STARTER_REWARD = 10e6; // patron ayarı: 25M fazlaydı
 const tutStep = () => { for (let i = 0; i < STARTER_TASKS.length; i++) if (!STARTER_TASKS[i].ok()) return i; return -1; };
@@ -10627,7 +10668,8 @@ function tutTick() {
     if (!allow.includes('coname')) $('coname').style.pointerEvents = 'none'; // çekmece eğitimde AÇIK (🏠 merkez oradan)
   }
   const hint = $('tuthint');
-  hint.innerHTML = `🎓 <b>GÖREV ${i + 1}/${STARTER_TASKS.length}:</b> ${task.hint}`;
+  const ipucu = typeof task.hint === 'function' ? task.hint() : task.hint;
+  hint.innerHTML = `🎓 <b>GÖREV ${i + 1}/${STARTER_TASKS.length}:</b> ${ipucu}`;
   // mod ipucu / yeniden başlat çubuğu / açık panel varken gizle (çakışmasın)
   hint.classList.toggle('show', !$('modehint').classList.contains('show') && $('restartbar').style.display !== 'block' && !document.querySelector('.sheet.show'));
 }
