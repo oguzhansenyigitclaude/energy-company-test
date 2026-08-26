@@ -340,7 +340,9 @@
   #gmveil p{margin:0;max-width:min(440px,94%);font-size:13px;line-height:1.55;color:#c9d4e4}
   #gmveil .why{border:1px solid var(--gold);border-radius:12px;padding:9px 13px;color:var(--gold);font-weight:700;
     font-size:12.5px;max-width:min(440px,94%);line-height:1.5;white-space:pre-wrap}
-  #gmveil .kalan{font-size:12.5px;color:var(--acc2);font-weight:800}
+  /* Sayaç yerine süre-aşımı cümlesi de buraya düşüyor — tek satırlık sayaçtan uzun,
+     bu yüzden genişlik ve satır arası verildi (yoksa ekranı boydan boya kesiyordu). */
+  #gmveil .kalan{font-size:12.5px;color:var(--acc2);font-weight:800;max-width:min(430px,92%);line-height:1.5}
   #gmveil button{padding:12px 30px;border:none;border-radius:11px;background:var(--gold);color:#13213a;
     font-weight:900;font-size:14.5px;cursor:pointer;box-shadow:0 4px 16px #0008}
   /* ⛔ BAN ŞERİDİ: perde HER açılışta gösterilmez (yoksa oyuncu her açılışta duvara toslar) —
@@ -572,7 +574,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 19:56) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 21:00) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -718,7 +720,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 19:56)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 21:00)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -6841,8 +6843,13 @@ function gmSurumEski(min) {
   return a < b;
 }
 function gmKalanTxt(bitis) {
+  if (!bitis) return '';                    // süre verilmediyse sayaç hiç gösterilmez
   const ms = (+bitis || 0) - Date.now();
-  if (!bitis || ms <= 0) return '';
+  // ⏰ SÜRE DOLDU AMA BAKIM SÜRÜYOR (patron 26 Ağu): *"süre doldu, niye açılmadı diye
+  // oyuncular şikayet etmeye başlar."* Bakım KENDİLİĞİNDEN açılmıyor (bilerek — açılışı
+  // patron elle veriyor), o yüzden sayaç sıfırlanınca ekran boş kalıyordu ve sessizlik
+  // en kötü cevaptı. Artık yerine güven veren bir cümle geçiyor.
+  if (ms <= 0) return 'İşler biraz uzadı sanırım — merak etmeyin, bunun telafisi yapılacaktır. Beklemede kalın lütfen.';
   const dk = Math.floor(ms / 60000), sn = Math.floor(ms / 1000) % 60;
   return dk >= 60 ? '⏳ tahmini ' + (Math.round(dk / 6) / 10) + ' saat' : '⏳ tahmini ' + dk + ' dk ' + String(sn).padStart(2, '0') + ' sn';
 }
@@ -7398,11 +7405,15 @@ const NET = {
   putSessiz(p, v) { return this.req(p, 'PUT', v, false, true); },
   push(p, v) { return this.req(p, 'POST', v); },
   async loop() { // 12 sn'de bir: kendi durumunu yaz + dünyayı oku
-    if (!this.on() || !G || !G._started) { setTimeout(() => this.loop(), 5000); return; }
+    if (!this.on()) { setTimeout(() => this.loop(), 5000); return; }
     // 🛡️ YÖNETİM YOKLAMASI EN BAŞTA, KENDİ try'ında: aşağıdaki yazmalardan biri ağ hatasıyla
     // patlarsa bakım/ban okuması ATLANMAMALI — atlansaydı bakım perdesi hiç kalkmazdı.
+    // ⚠️ `G._started` ŞARTININ ÜSTÜNDE olmak zorunda (patron: "bakım ekranı 3-5 sn sonra
+    // geliyor"): eski sıralamada oyun kurulmadan önce yoklama HİÇ çalışmıyor, döngü 5 sn
+    // uyuyordu. Bakımdayken oyun zaten kurulamayabilir → perde ne iner ne de KALKARDI.
     this._tur = (this._tur || 0) + 1;
     try { await gmPoll(this._tur === 1 || this._tur % 5 === 0); } catch (e) {}
+    if (!G || !G._started) { setTimeout(() => this.loop(), 5000); return; }
     try {
       await this.put('players/' + this.id, {
         // ⚠️ Kurallar alan uzunluk/aralıklarını doğruluyor — TEK alan taşsa TÜM kayıt reddediliyor
@@ -13411,9 +13422,16 @@ bootGuncelle().then(yenilenecek => {
   bootStep(52, 'Sunucuya bağlanılıyor…');
   NET.init().then(async () => { // online sunucu (net-config.json varsa) — yoksa simülasyon sürer
   bootStep(58, NET.on() ? 'Sunucuya bağlanıldı' : 'Çevrimdışı mod');
+  // 🛡️ BAKIM PERDESİ AÇILIŞ EKRANI KALKMADAN HAZIR OLSUN (patron 26 Ağu: "oyun açılır
+  // açılmaz oyuncu direkt bunu görse daha hoş olur" — eskiden 3-5 sn oyunu görüp sonra
+  // perdeye tosluyordu). Yoklamayı aşağıdaki sahne beklemesiyle PARALEL başlatıyoruz:
+  // 1,6 sn zaten geçecek, config okuması ona sığıyor, açılış BİR MİLİSANİYE uzamıyor.
+  // ⚠️ Yarışa 1,2 sn tavan kondu — sunucu yanıt vermezse açılış BURADA TAKILMAMALI.
+  const gmIlk = NET.on() ? gmPoll(false).catch(() => {}) : null;
   // Sahne en az 1.6 sn görünsün — yoksa "görsel şölen" göz kırpmasına dönüyor
   const bekle = Math.max(0, 1600 - (Date.now() - BOOT_AT));
   await new Promise(r => setTimeout(r, bekle));
+  if (gmIlk) await Promise.race([gmIlk, new Promise(r => setTimeout(r, 1200))]);
   bootStep(82, 'Hesap kontrol ediliyor…');
   if (NET.on() && NET.googleAvailable()) {
     const a = await NET.googleCheckRedirect(); // Google yönlendirmesinden dönüş
