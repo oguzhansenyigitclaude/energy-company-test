@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 10:55) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:03) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -549,6 +549,10 @@
     <button id="drawerhandle" title="Menü">⚡</button>
     <div id="drawer">
       <button id="drawerclose" title="Menüyü kapat">▶</button>
+      <!-- 🏦 BANKA EN ÜSTTE (patron 26 Ağu): "Bankayı paraya tıklayarak göstermek zor oluyor."
+           Kasa rakamına dokunma girişi KALDI ama artık tek yol değil — yeni oyuncu bankayı
+           buradan bulur. Sekmeler (Kurtarma/Acil/Büyüme/Yatırım) içeride. -->
+      <button data-act="bank" id="drawerbank"><span class="big">🏦</span>Banka</button>
       <button data-act="market"><span class="big">💰</span><span id="drawerprice">Satış</span></button>
       <button data-act="maint"><span class="big">🔧</span><span id="drawermaint">Bakım</span></button>
       <button data-act="company"><span class="big">🏢</span>Şirket</button>
@@ -585,7 +589,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 10:55)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:03)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2090,7 +2094,7 @@ function freshState() {
     inv: null, invNo: 0, invKar: 0, // 💱 yatırım pozisyonu — aynı anda TEK pozisyon (bölüp kaçış yok)
     invPx: {}, // 💾 son bilinen piyasa fiyatları — açılışta "—" yerine gerçek fiyat görünsün diye
     kredi: null, krediNo: 0, krediNot: 70, krediBekle: 0, notGun: 0, // 🏗️ büyüme kredisi + bankacılık sicili
-    acil: null, acilBekle: 0, // ⚡ acil nakit kredisi — saatlik faiz, tek seferde tamamı kapanır
+    acil: null, acilBekle: 0, tutBanka: false, // ⚡ acil nakit kredisi — saatlik faiz, tek seferde tamamı kapanır
     leases: {}, // cellId -> bitiş ts (3 günlük imtiyaz: +%20 satış primi — YEKA tarzı alım garantisi)
     offers: {}, maintDiscount: 1, starterClaimed: false, founded: Date.now(),
     research: { lvl: { coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0 }, active: null },
@@ -7610,6 +7614,7 @@ window.acilOde = () => {
   G.cash -= borc;
   gider('kredi', borc);
   G.acil = null;
+  G.tutBanka = true; // 🎓 eğitimin son görevi: kredi çekildi VE kapatıldı
   toast('⚡ Acil nakit kredin kapandı — ' + fmt(borc) + ' ödendi (faiz ' + fmt(faiz) + ')', '', null, 0, true);
   addMail('🏦 Banka', 'Acil nakit kredin kapandı',
     fmt(A.anapara) + ' anapara + <b>' + fmt(faiz) + '</b> faiz = <b>' + fmt(borc) + '</b> ödendi.<br><br>'
@@ -7639,11 +7644,14 @@ window.acilOde = () => {
 // ⚠️ Oyuncuya günlük oran GÖSTERİLMEZ — hep toplam yazılır ("%15 faiz"). Patron kararı.
 const KREDI_VADELER = [5, 10, 20];
 const KREDI_VADE = 10;          // varsayılan — santralin geri ödeme süresine yakın (ölçüldü: 4-6 gün)
-// 🔒 BEKLEME KREDİNİN BAŞLANGICINDAN SAYILIR VE VADEDEN BAĞIMSIZDIR.
-// Eskiden `vade + 5` idi; o hâliyle 5 gün vade seçen 10 günde bir döngü çeviriyordu ve
-// patronun kapattığımız kredi döngüsü istismarı kısa vadeden geri sızıyordu. Sabit pencere
-// sayesinde vade ne seçilirse seçilsin döngü HEP 15 gün.
-const KREDI_BEKLE_GUN = 15;
+// 🔒 BEKLEME = KREDİNİN BAŞLANGICI + VADE + 1 GÜN.
+// Patron 26 Ağu: "Bekleme 15 gün çok fazla, kredi ödendikten sonraki 24 saat olsun.
+//   Fakat 20 günlüğün tamamını 5 günde kapatırsa bekleme 15+1 gün olacak.
+//   Yani toplam süreye her zaman +1 gün."
+// Bu tek formül ikisini de karşılıyor: vadesinde biten kredide +1 gün beklenir;
+// erken kapatan için de aynı güne denk gelir (20 günlüğü 5. günde kapatan 16 gün bekler).
+// ⚠️ Erken kapatmak beklemeyi KISALTMAZ — kredi döngüsü istismarı bu yüzden kapalı kalır.
+const KREDI_BEKLE_EK = 1;
 const KREDI_LIMIT = 0.20;       // şirket değerinin en fazla %20'si (patron: %50 çok hızlı büyütür)
 const KREDI_CEZA = 0.10;        // ödenmeyen taksite her gecikme gününde binen zam
 const KREDI_TEMERRUT = 3;       // bu kadar gecikmede banka otomatik tahsilata geçer
@@ -7852,9 +7860,8 @@ window.yatErkenKapat = () => {
 function yatKapat(erken) {
   const K = G.kredi;
   // Bekleme VADEDEN sayılır: erken kapatan bekleme süresini kısaltamaz
-  // Bekleme kredinin BAŞLANGICINDAN sayılır ve vadeden bağımsızdır
-  // (kısa vade seçerek döngü hızlandırma kapısı böylece kapalı kalır).
-  G.krediBekle = K.bas + KREDI_BEKLE_GUN;
+  // Bekleme = başlangıç + VADE + 1 gün. Erken kapatmak kısaltmaz.
+  G.krediBekle = K.bas + K.vade + KREDI_BEKLE_EK;
   if (!K.gecikme) G.krediNot = Math.min(100, notu() + KREDI_NOT_ODUL * 2); // sicili temiz bitirene ek ödül
   const bek = Math.max(0, G.krediBekle - trGun(Date.now()));
   G.kredi = null;
@@ -8165,7 +8172,7 @@ function yatPanel() {
     + '• <b>İleriye taksit ödenmez</b> — günde en fazla bir taksit. Kredi seçtiğin vade kadar sürer.<br>'
     + '• <b>Faiz vadeyle büyür:</b> ' + KREDI_VADELER.map(v => v + ' gün → %' + Math.round(krediFaizi(v) * 100)).join(' · ') + '.<br>'
     + '• <b>Erken kapatmak faizi düşürmez</b> ve bekleme süresini kısaltmaz.<br>'
-    + '• Yeni kredi, önceki kredinin <b>başlangıcından ' + KREDI_BEKLE_GUN + ' gün sonra</b> açılır — vade ne seçilirse seçilsin.<br>'
+    + '• Yeni kredi, bu kredinin <b>vadesi bittikten 1 gün sonra</b> açılır. Erken kapatmak bu süreyi kısaltmaz.<br>'
     + '• ' + KREDI_TEMERRUT + ' gecikmede <b>temerrüt</b>: banka satışlarının %' + (KREDI_TAHSIL * 100) + '\'sine el koyar. Tesise el konmaz.<br>'
     + '• <b>Kredi notu:</b> zamanında ödeyen ucuzlar ve limiti büyür; geciken pahalılaşır.<br>'
     + '• Kredi parasıyla <b>borsaya girilemez</b> — o para tesis içindir.'
@@ -10395,6 +10402,13 @@ const STARTER_TASKS = [
   { id: 'depo', t: '🔋 Yeni bölgene 30 MWh Pil İstasyonu kur', ok: () => Object.keys(G.licenses).slice(1).some(c => G.units.some(u => u.kind === 'store' && baseTypeOf(u.t) === 'bat' && u.cell === c)), hint: '🏗️ İnşa\'ya bas → 🔋 ALTIN ÇERÇEVELİ Pil İstasyonu\'nu Satın Al → YANIP SÖNEN yeni bölgene dokun', el: 'buildbtn' },
   { id: 'arastirma', t: '🧪 İlk araştırmanı başlat', ok: () => G.research && (!!G.research.active || Object.values(G.research.lvl).some(v => v > 0)), hint: '🧪 YUKARIDA yanıp sönen şirket adına dokun → Araştırma bölümünden birini başlat', el: 'coname' },
   { id: 'satis2', t: '💰 Toplam 2 MWh satış yap', ok: () => G.totalSold >= 2, hint: '💰 Üretmeye ve satmaya devam — 2 MWh\'e ulaş (1 dakikada dolar)', el: null },
+  // 🏦 PATRON 26 Ağu: "Son bir görev ekle ve oyuncuya günlük banka kredisi çektir yüzde 5'lik
+  // olandan, sonra o krediyi geri kapattır. Son görev olsun ki yeni başlayan oyuncu bile
+  // oyunda banka kredi sisteminin olduğunu bilsin."
+  // ⚡ Acil nakit = şirket değerinin %5'i, saatlik faiz, tek seferde kapanır — eğitim için
+  // en uygun kredi: küçük, hızlı ve aynı oturumda kapatılabilir.
+  { id: 'banka', t: '🏦 Acil nakit kredisi çek ve geri öde', ok: () => !!G.tutBanka,
+    hint: '🏦 Sağdaki ⚡ menüyü aç → <b>Banka</b> → <b>⚡ Acil</b> sekmesi → küçük bir tutar çek, sonra <b>Tamamını Kapat</b> ile hemen geri öde (saatlik faiz işler, çabuk kapat)', el: 'drawerbank' },
 ];
 const STARTER_REWARD = 10e6; // patron ayarı: 25M fazlaydı
 const tutStep = () => { for (let i = 0; i < STARTER_TASKS.length; i++) if (!STARTER_TASKS[i].ok()) return i; return -1; };
@@ -10412,7 +10426,7 @@ function tutTargetUnit(u) { // satış görevlerinde dolu depolar altın parlar
   return (g === 'satis1' || g === 'satis2') && u.kind === 'store' && u.buildDone <= Date.now() && u.stored > .05;
 }
 // her 500 ms: ipucu çubuğu + hedef öğe parlatma + hedef dışı KİLİT + bitiş kontrolü (ödül otomatik)
-const TUT_BAR = ['buildbtn', 'infobtn', 'viewbtn', 'allybtn', 'aucbtn', 'mailbtn'];
+const TUT_BAR = ['buildbtn', 'infobtn', 'viewbtn', 'allybtn', 'aucbtn', 'mailbtn', 'drawerbank', 'drawerhandle'];
 // 📜 Ruhsat görevi: KOMŞU kare haritada yanıp söner (patron isteği — oyuncu nereye tıklayacağını görsün)
 let tutCellRect = null, tutCellIdCur = null;
 function clearTutCell() { if (tutCellRect) { tutCellRect.remove(); tutCellRect = null; tutCellIdCur = null; } }
@@ -11222,7 +11236,8 @@ document.querySelectorAll('#drawer button[data-act]').forEach(b => b.addEventLis
   const act = b.dataset.act;
   $('drawer').classList.remove('open');
   $('drawerhandle').style.display = '';
-  if (act === 'market') openMarket();
+  if (act === 'bank') openBank();
+  else if (act === 'market') openMarket();
   else if (act === 'maint') { hideSheets(); openMaintSheet(); }
   else if (act === 'company') { hideSheets(); openCompanySheet(); }
   else if (act === 'menu') openTasks();
