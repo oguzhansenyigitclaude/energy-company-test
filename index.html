@@ -479,7 +479,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:48) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 12:11) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -601,7 +601,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:48)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 12:11)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2313,7 +2313,12 @@ function toast(msg, cls, key, cd, sticky) {
     G._tcd[key] = performance.now();
   }
   const t = document.createElement('div');
-  t.className = 'toast ' + (cls || ''); t.textContent = msg;
+  // ⚠️ textContent kullanılıyor çünkü bildirimlere şirket adı/sohbet gibi OYUNCU METNİ de
+  // giriyor — innerHTML olsaydı kod enjeksiyonu kapısı açılırdı. Ama kodun birçok yerinde
+  // mesajlara <b>/<br> yazılmış ve bunlar EKRANDA DZ METIN görünüyordu (patron ekranında
+  // "Oyunu kapatma!<br>..." şeklinde çıktı). Çözüm: etiketleri RENDER etmiyoruz, TEMİZLİYORUZ.
+  const duz = String(msg).replace(/<br\s*\/?>/gi, ' · ').replace(/<\/?[a-z][^>]*>/gi, '');
+  t.className = 'toast ' + (cls || ''); t.textContent = duz;
   $('toasts').appendChild(t);
   const life = sticky ? 6500 : 3800;
   setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .4s'; }, life);
@@ -6103,7 +6108,7 @@ const NET = {
     } catch (e) { console.warn('[NET] yetki uyarısı gösterilemedi'); }
     console.warn('[NET] yazma reddedildi:', kod, path, 'saatFark(dk)=', dk);
   },
-  async req(path, method, body, kapanis) {
+  async req(path, method, body, kapanis, sessiz) {
     const o = { method, cache: 'no-store' };
     if (body !== undefined) { o.headers = { 'Content-Type': 'application/json' }; o.body = JSON.stringify(body); }
     // sayfa kapanırken isteğin iptal edilmemesi için keepalive (yalnız 64KB altındaki gövdelerde)
@@ -6137,7 +6142,7 @@ const NET = {
     // ⚠️ HATA AVI (yüksek): başarısız YAZMA da null dönüyordu, yani "başarılı" sayılıyordu.
     // Oyuncu sunucuda var olmayan bir ittifağa katılmış gibi kilitleniyordu. Yazmalarda artık atıyoruz.
     if (!r.ok && method && method !== 'GET') {
-      if (r.status === 401 || r.status === 403) this.yetkiUyar(path, r.status); // 🔴 sessiz kayma yok
+      if ((r.status === 401 || r.status === 403) && !sessiz) this.yetkiUyar(path, r.status); // 🔴 sessiz kayma yok
       throw new Error('HTTP ' + r.status + ' @ ' + path);
     }
     if (r.ok && this._yetkiUyari && method && method !== 'GET') this._yetkiUyari = 0; // düzeldi
@@ -6145,6 +6150,11 @@ const NET = {
   },
   get(p) { return this.req(p, 'GET'); },
   put(p, v, kapanis) { return this.req(p, 'PUT', v, kapanis); },
+  // 🔇 SESSİZ YAZMA: kuralı henüz yayınlanmamış alanlar için. Reddedilirse oyuncuya
+  // "SUNUCUYA YAZILAMIYOR" korkutması GÖSTERİLMEZ — çünkü ana kayıt zaten sağlam.
+  // (26 Ağu: `cash` alanı eklendi, kural konsola yapıştırılana dek 401 dönüyor ve her
+  //  20 saniyede bir kırmızı uyarı çıkıyordu — patron ekranında görüldü.)
+  putSessiz(p, v) { return this.req(p, 'PUT', v, false, true); },
   push(p, v) { return this.req(p, 'POST', v); },
   async loop() { // 12 sn'de bir: kendi durumunu yaz + dünyayı oku
     if (!this.on() || !G || !G._started) { setTimeout(() => this.loop(), 5000); return; }
@@ -6168,7 +6178,7 @@ const NET = {
       // sunucuya düşmez. Ayrı yazınca kural henüz yapıştırılmamışsa yalnız BU yazma
       // başarısız olur, ana karne sağlam kalır. (Aynı desen 'katki' düğümünde de kullanıldı.)
       // ⚠️ Gerçek kasa DEĞİL, kaba kademe gönderilir — bkz. nakitKademe().
-      this.put('players/' + this.id + '/cash', nakitKademe()).catch(() => {});
+      this.putSessiz('players/' + this.id + '/cash', nakitKademe()).catch(() => {});
       // 🏛️ haftalık devlet katkısı tablosu — kapanan haftalar DEĞİŞMEZ kalır, ödüller oradan
       // hesaplanır. (Kurallara 'katki' düğümü eklenene dek bu yazım sessizce reddedilir — zararsız.)
       if (G.weekSold >= .5) this.put('katki/' + kHafta(G.week) + '/' + this.id, {
@@ -7726,6 +7736,12 @@ window.krediAl = () => {
 const BANKA_GUVEN_SA = 24;
 const bankaGuvenKalan = () => {
   if (!G) return 0;
+  // 🎓 EĞİTİM İSTİSNASI (patron 26 Ağu): son görev "kredi çek ve geri öde".
+  // 24 saat kuralı eğitimde de işleseydi oyuncu GÖREV 8/8'de çıkmaza girerdi — patron
+  // ekranında tam olarak bu görüldü ("24.0 saat sonra gel"). Eğitimdeki kredi REHBERLİ
+  // bir tanıtımdır: küçük tutar, aynı saat içinde faizsiz kapatılır.
+  // Eğitim bitince kural normal işler — gerçek kredi için yine 24 saat beklenir.
+  if (!G.starterClaimed) return 0;
   const gecen = (Date.now() - (G.founded || Date.now())) / 36e5;
   return Math.max(0, BANKA_GUVEN_SA - gecen);
 };
@@ -7817,7 +7833,30 @@ window.acilOde = () => {
   G.cash -= borc;
   gider('kredi', borc);
   G.acil = null;
+  const egitimdeydi = !G.tutBanka && tutGuide();
   G.tutBanka = true; // 🎓 eğitimin son görevi: kredi çekildi VE kapatıldı
+  // 📬 BANKA POSTASI (patron: "görevler tamamlanıp banka sekmesi de kapandığında posta
+  // gelsin bankadan, bu yazı o postada yazsın"). Eğitimdeki krediyi kapatan oyuncuya,
+  // artık gerçek kredi için neden beklemesi gerektiğini bankanın ağzından anlatıyoruz.
+  if (egitimdeydi) setTimeout(() => {
+    const kalan = Math.max(0, BANKA_GUVEN_SA - (Date.now() - (G.founded || Date.now())) / 36e5);
+    addMail('🏦 Banka', 'Kredi hesabınız açıldı — hoş geldiniz',
+      'Sayın ' + (G.company || 'Müşterimiz') + ',<br><br>'
+      + (faiz <= 0 ? 'İlk kredinizi <b>aynı saat içinde</b> kapattınız; bu yüzden <b>faiz ödemediniz</b>. '
+         : 'İlk kredinizi hemen kapattığınız için yalnızca <b>' + fmt(faiz) + '</b> faiz ödediniz — neredeyse bedava. ')
+      + 'Acil nakit kredisinde faiz saatlik işler — erken kapatan kazanır.<br><br>'
+      + '⚠️ <b>Bundan sonrası için:</b> bankamız yeni kurulan şirketlere ilk <b>' + BANKA_GUVEN_SA + ' saat</b> '
+      + 'kredi açmaz — henüz sicilinizi görmedik. Gerçek hayatta da yeni şirkete sicil oluşmadan '
+      + 'kredi verilmez.' + (kalan > 0 ? ' Kalan süre: <b>' + fmtHrs(kalan) + '</b>.' : '') + '<br><br>'
+      + '🛟 <b>Kurtarma kredisi bu kuralın dışındadır:</b> tesisiniz bozulur ve paranız yetmezse '
+      + 'ilk gün de yardım alabilirsiniz. O bir büyüme aracı değil, can halatıdır.<br><br>'
+      + '💰 <b>Bankamızda üç kapı var:</b><br>'
+      + '⚡ <b>Acil Nakit</b> — küçük, saatlik faizli, tek seferde kapanır. Az kalan parayı tamamlar.<br>'
+      + '🏗️ <b>Büyüme Kredisi</b> — büyük, taksitli. Taksiti her gün <b>elle</b> ödersiniz.<br>'
+      + '🛟 <b>Kurtarma Kredisi</b> — yalnız bakım ve yakıtı karşılayamadığınızda açılır.<br><br>'
+      + 'Sicilinizi temiz tutun: zamanında ödeyen müşterimizin <b>faizi düşer, limiti büyür</b>.', true);
+    save();
+  }, 900);
   toast('⚡ Acil nakit kredin kapandı — ' + fmt(borc) + ' ödendi (faiz ' + fmt(faiz) + ')', '', null, 0, true);
   addMail('🏦 Banka', 'Acil nakit kredin kapandı',
     fmt(A.anapara) + ' anapara + <b>' + fmt(faiz) + '</b> faiz = <b>' + fmt(borc) + '</b> ödendi.<br><br>'
@@ -8152,7 +8191,8 @@ function acilOnizleHTML() {
       + 've kredi notun ağır darbe alır. Tesislerine el konmaz — ama parana el konur.</p></div>';
   }
   const gecerli = tutar >= 10000 && tutar <= limit;
-  h += '<button class="primary" onclick="acilAl()" ' + (gecerli ? '' : 'disabled') + '>⚡ '
+  // 🟠 Eğitimde tutar seçiliyse ÇEK düğmesi parlar
+  h += '<button class="primary' + (tutBankaAdim() === 'cek' && gecerli ? ' tut' : '') + '" onclick="acilAl()" ' + (gecerli ? '' : 'disabled') + '>⚡ '
     + (tutar > 0 ? fmt(tutar) + ' Acil Nakit Çek' : 'Acil Nakit Çek') + '</button>';
   if (tutar > limit && limit > 0) h += '<p class="sub neg">Limitini aşıyor — en fazla ' + fmt(limit) + '.</p>';
   return h;
@@ -8180,7 +8220,7 @@ function acilPanel() {
     else h += '<p class="sub" style="color:var(--warn)">⏱️ Saatlik <b>' + yz(ACIL_SAATLIK, 1) + '</b> faiz işliyor — her saat '
       + fmt(Math.round(A.anapara * ACIL_SAATLIK)) + ' ekleniyor. Tavana (' + yz(ACIL_FAIZ_TAVAN, 0) + ') '
       + Math.max(0, Math.round((ACIL_FAIZ_TAVAN - oran) / ACIL_SAATLIK)) + ' saat kaldı. <b>Bugün kapat.</b></p>';
-    h += '<button class="primary" onclick="acilOde()" ' + (G.cash >= borc ? '' : 'disabled') + '>💵 Tamamını Kapat — ' + fmt(borc) + '</button>';
+    h += '<button class="primary' + (tutBankaAdim() === 'ode' ? ' tut' : '') + '" onclick="acilOde()" ' + (G.cash >= borc ? '' : 'disabled') + '>💵 Tamamını Kapat — ' + fmt(borc) + '</button>';
     if (G.cash < borc) h += '<p class="sub neg">Kasanda yetmiyor — enerji sat, sonra kapat.</p>';
     h += '<p class="sub">Ödeme <b>tek seferde ve tamamı</b> olarak yapılır — kısmi ödeme yoktur. '
       + 'Taksitli borçlanmak istiyorsan <b>🏗️ Büyüme</b> kredisine bak.</p>';
@@ -8212,7 +8252,7 @@ function acilPanel() {
     + '<input id="acil_amt" type="number" inputmode="numeric" placeholder="Tutar ($)" value="' + (acilAmtBuf || '') + '" oninput="acilAmt(this.value)" '
     + 'style="flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:15px;font-weight:700">'
     + '<button onclick="acilHizli(.5)" style="padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--acc2);cursor:pointer;font-size:12px">%50</button>'
-    + '<button onclick="acilHizli(1)" style="padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--acc2);cursor:pointer;font-size:12px">Tümü</button>'
+    + '<button onclick="acilHizli(1)" class="' + (tutBankaAdim() === 'cek' && !(+acilAmtBuf > 0) ? 'tut' : '') + '" style="padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--acc2);cursor:pointer;font-size:12px">Tümü</button>'
     + '</div>'
     + '<div id="acil_onizle">' + acilOnizleHTML() + '</div>'
     + '<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:8px">'
@@ -8638,10 +8678,12 @@ const bankIcon = (k, px) => BANK_ICON[k]
 function bankTabBar(sekme) {
   // İkon üstte, yazı altta — 4 sekme 360px'e yan yana sığsın ve simge net okunsun diye.
   // Seçili olmayan sekmenin ikonu hafif soluk; seçili olan tam parlak (dikkat oraya gitsin).
-  const t = (k, ad) => '<button onclick="openBank(\'' + k + '\')" style="flex:1;padding:6px 2px 5px;border:0;border-bottom:2px solid '
-    + (sekme === k ? 'var(--gold)' : 'transparent') + ';background:none;color:' + (sekme === k ? 'var(--gold)' : 'var(--dim)')
+  // 🟠 Eğitimde ⚡ Acil sekmesi parlar — patron: "tıklayacağı yerler turuncu yönlendirmeler ile"
+  const parla = (k) => tutBankaAdim() === 'sekme' && k === 'acil';
+  const t = (k, ad) => '<button onclick="openBank(\'' + k + '\')" class="' + (parla(k) ? 'tut' : '') + '" style="flex:1;padding:6px 2px 5px;border:0;border-bottom:2px solid '
+    + (sekme === k || parla(k) ? 'var(--gold)' : 'transparent') + ';background:none;color:' + (sekme === k || parla(k) ? 'var(--gold)' : 'var(--dim)')
     + ';font-weight:800;font-size:10.5px;line-height:1.2;cursor:pointer">'
-    + '<span style="display:block;opacity:' + (sekme === k ? '1' : '.55') + '">' + bankIcon(k, 22) + '</span>'
+    + '<span style="display:block;opacity:' + (sekme === k || parla(k) ? '1' : '.55') + '">' + bankIcon(k, 22) + '</span>'
     + '<span style="display:block;margin-top:3px">' + ad + '</span></button>';
   return '<div style="display:flex;gap:1px;margin:-2px 0 10px;border-bottom:1px solid var(--line)">'
     + t('kredi', 'Kurtarma') + t('acil', 'Acil') + t('yat', 'Büyüme') + t('inv', 'Yatırım') + '</div>';
@@ -10629,12 +10671,13 @@ const STARTER_TASKS = [
   // oyunda banka kredi sisteminin olduğunu bilsin."
   // ⚡ Acil nakit = şirket değerinin %5'i, saatlik faiz, tek seferde kapanır — eğitim için
   // en uygun kredi: küçük, hızlı ve aynı oturumda kapatılabilir.
-  { id: 'banka', t: '🏦 Acil nakit kredisi çek ve geri öde', ok: () => !!G.tutBanka,
+  { id: 'banka', t: '🏦 Bankadan kredi çek ve hemen geri öde', ok: () => !!G.tutBanka,
     // ⚠️ hint burada FONKSIYON — STARTER_TASKS betik yüklenirken kuruluyor ve o an G henüz YOK.
     // Düz dize yazsaydık bankaGuvenKalan() bir kez 0 döner ve kalan süre HİÇ görünmezdi.
-    hint: () => bankaGuvenKalan() > 0
-      ? '🏦 <b>Banka henüz sana kredi açmıyor</b> — şirketin çok yeni, banka sicilini görmek istiyor. <b>' + fmtHrs(bankaGuvenKalan()) + '</b> sonra gel; o zamana kadar üretmeye ve satmaya devam et.'
-      : '🏦 Sağdaki ⚡ menüyü aç → <b>Banka</b> → <b>⚡ Acil</b> sekmesi → küçük bir tutar çek, sonra <b>Tamamını Kapat</b> ile hemen geri öde (saatlik faiz işler, çabuk kapat)', el: 'drawerbank' },
+    // 🧭 İpucu adım adım ilerler: nerede olduğunu anlayıp Sıradaki tıklamayı söyler.
+    hint: () => acilVar()
+      ? '🏦 Kredin hazır! Şimdi <b>💵 Tamamını Kapat</b> düğmesine bas — ilk saat içinde ödediğin için <b>faiz ödemezsin</b>.'
+      : '🏦 Sağdaki ⚡ menüyü aç → turuncu parlayan <b>Banka</b> düğmesine dokun → <b>⚡ Acil</b> sekmesi → <b>Tümü</b> ile tutar seç → <b>Acil Nakit Çek</b>. Sonra hemen geri ödeyeceksin.', el: 'drawerbank' },
 ];
 const STARTER_REWARD = 10e6; // patron ayarı: 25M fazlaydı
 const tutStep = () => { for (let i = 0; i < STARTER_TASKS.length; i++) if (!STARTER_TASKS[i].ok()) return i; return -1; };
@@ -10646,6 +10689,10 @@ const tutId = () => { const i = tutStep(); return i < 0 ? null : STARTER_TASKS[i
 // Kare zaten yanıp sönüyordu ama açılan bilgi sayfasında oyuncu hangi butona basacağını
 // bulamıyordu — yönlendirme kapıda bitiyor, içeride kayboluyordu.
 const tutRuhsat = () => tutGuide() && tutId() === 'ruhsat';
+// 🟠 BANKA GÖREVİ YÖNLENDİRMESİ (patron: "tıklayacağı yerler turuncu yönlendirmeler ile")
+const tutBankaGorev = () => tutGuide() && tutId() === 'banka';
+// Hangi adımdayız: 'sekme' (Acil sekmesine bas) → 'cek' (tutar seçip çek) → 'ode' (kapat)
+const tutBankaAdim = () => !tutBankaGorev() ? null : acilVar() ? 'ode' : (bankTab === 'acil' ? 'cek' : 'sekme');
 function tutTargetUnit(u) { // satış görevlerinde dolu depolar altın parlar
   if (!tutGuide()) return false;
   const g = tutId();
