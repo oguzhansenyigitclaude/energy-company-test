@@ -61,14 +61,27 @@
   /* ── SAĞDAN AÇILAN ÇEKMECE MENÜ (patron isteği — rakipte solda; bizde sağda, kendi tasarımımız) ── */
   #drawerhandle{position:absolute;top:44%;right:0;z-index:1155;width:28px;height:60px;border-radius:12px 0 0 12px;border:1px solid var(--line);border-right:none;background:var(--cream);color:#13213a;font-size:16px;font-weight:800;cursor:pointer;box-shadow:-2px 2px 10px #0006;padding:0}
   #drawerhandle:disabled{opacity:.35}
-  #drawer{position:absolute;top:100px;right:0;z-index:1156;display:flex;flex-direction:column;gap:6px;padding:10px 8px;background:#13213af2;border:1px solid var(--line);border-right:none;border-radius:14px 0 0 14px;transform:translateX(110%);transition:transform .22s;box-shadow:-4px 4px 18px #0009;backdrop-filter:blur(3px)}
+  /* 📏 TAŞMA DÜZELTMESİ (patron 26 Ağu: "sağdaki menü simgeleri yazıları aşağıya taştı, biraz küçült").
+     ÖLÇÜLDÜ, tahmin değil: buton yazısı KENDİ kutusundan taşmıyor (clientHeight 55 = scrollHeight 55) —
+     taşan şey ÇEKMECENİN KENDİSİ. 8 buton × 57px = 520px, oysa #mapwrap 360×640 telefonda 470px;
+     çekmece 150px aşıyordu ve son butonlar alt barın ALTINA kaçıyordu (#mapwrap z-index:1 kendi
+     istifleme bağlamını açtığı için çekmecenin z-index:1156'sı #bottombar'ın 20'sini geçemiyor).
+     ÇÖZÜM İKİ PARÇALI: (1) butonlar küçültüldü → 41px, toplam 374px; (2) çekmece ALTA çapalandı
+     ve max-height ile #mapwrap'e hapsedildi. ⚠️ top:auto ŞART — top+bottom birlikte kalırsa gerilir.
+     ⚠️ max-height olmadan kısa ekranda çekmece YUKARI taşıp Banka butonunu #hdr'ın arkasına sokuyordu
+     (eğitimin hedef butonu odur). Şimdi yer yetmezse butonlar sıkışır, hiçbiri kaybolmaz. */
+  #drawer{position:absolute;top:auto;bottom:10px;right:0;z-index:1156;max-height:calc(100% - 12px);display:flex;flex-direction:column;gap:4px;padding:8px 7px;background:#13213af2;border:1px solid var(--line);border-right:none;border-radius:14px 0 0 14px;transform:translateX(110%);transition:transform .22s;box-shadow:-4px 4px 18px #0009;backdrop-filter:blur(3px)}
+  /* ✏️ Hat çizim çubuğu (#drawbar, z-index:1160) ekranın altını kaplıyor — çekmece alta çapalanınca
+     son iki buton onun ALTINDA kalıp tıklanamaz oluyordu. Çizim sürerken çekmece yukarı kalkar. */
+  #drawbar.show ~ #drawer{bottom:96px;max-height:calc(100% - 106px)}
   #drawer.open{transform:none}
   /* 🖱️ kapalı/animasyonla kayan panel arkada TIKLAMA YEMESİN (bot bulgusu: harita dokunuşu
      arkadaki Müzayede "Teklif Ver" butonunu tetikliyordu) */
   .sheet:not(.show){pointer-events:none}
   #drawer:not(.open), #navpanel:not(.open), #linepanel:not(.open){pointer-events:none}
-  #drawer button{display:flex;flex-direction:column;align-items:center;gap:2px;width:66px;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--cream);font-size:10px;font-weight:700;cursor:pointer}
-  #drawer button .big{font-size:19px}
+  /* buton 57px → 41px; white-space:nowrap yazının iki satıra düşüp yüksekliği geri şişirmesini keser */
+  #drawer button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:62px;padding:5px 3px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--cream);font-size:9px;line-height:1.15;font-weight:700;white-space:nowrap;overflow:hidden;cursor:pointer}
+  #drawer button .big{font-size:16px;line-height:1.1}
   /* çekmecenin SOL kulpu: kapatma (rakip paraleli) */
   /* kapatma kulpu YALNIZ çekmece açıkken (kapalıyken açma kulpuyla üst üste biniyordu — patron bildirimi) */
   #drawer #drawerclose{position:absolute;left:-30px;top:50%;transform:translateY(-50%);display:none;width:30px;height:58px;padding:0;border-radius:12px 0 0 12px;border:1px solid var(--line);border-right:none;background:var(--cream);color:#13213a;font-size:14px;font-weight:800;box-shadow:-2px 2px 10px #0006}
@@ -385,7 +398,34 @@
 <!-- AÇILIŞ EKRANI (patron: "her seferinde farklı bir görsel şölen") — sahne JS ile çizilir -->
 <div id="boot">
   <div id="bootscene"></div>
-  <img id="bootphoto" alt="" src="img/splash.webp" onerror="this.remove()" onload="this.classList.add('on')">
+  <img id="bootphoto" alt="" onload="this.classList.add('on')">
+  <script>
+  /* 🎲 AÇILIŞ FOTOĞRAFI ARTIK RASTGELE (patron 26 Ağu: "standart rüzgar gülü olmasın —
+     7 farklı enerji santralimiz var, açılışta rastgele birini göstersin").
+     NEDEN BURADA: #boot sayfanın en başında, ana <script> ise ~11800. satırda. Seçimi orada
+     yapsaydık fotoğraf saniyeler sonra gelir, açılışın yarısı kaçardı. Ayrıştırıcı bu satıra
+     geldiği an çalışır ve TEK istek atılır (src'yi HTML'de bırakıp sonra değiştirmek WebView'a
+     splash.webp'i boşuna bir kez daha indirtirdi).
+     404 ZİNCİRİ: 7 tür karıştırılır, ilki yoksa sırayla diğerleri denenir, hepsi yoksa eski
+     img/splash.webp'e, o da yoksa <img> silinip arkadaki çizim sahnesine (#bootscene) düşülür —
+     yani bugünkü davranış aynen korunur.
+     ⚠️ HTML'deki onerror="this.remove()" KALDIRILDI: ikisi birden kalsaydı ilk 404'te resim
+     silinir, zincir hiç çalışmazdı. Geri ekleme. */
+  (function () {
+    var t = ['solar', 'wind', 'coal', 'gas', 'hydro', 'geo', 'nuke'];
+    for (var i = t.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), k = t[i]; t[i] = t[j]; t[j] = k; }
+    var sira = t.map(function (x) { return 'img/splash-' + x + '.webp'; }).concat(['img/splash.webp']);
+    var n = 0, el = document.getElementById('bootphoto');
+    window.BOOT_TUR = t[0];                              // gösterilen tür — açılış ipucu seçimi bunu okur
+    el.onerror = function () {
+      n++;
+      if (n >= sira.length) { this.remove(); return; }   // hiçbiri yok → çizim sahnesine düş
+      window.BOOT_TUR = t[n] || '';
+      this.src = sira[n];
+    };
+    el.src = sira[0];
+  })();
+  </script>
   <div id="bootveil"></div>
   <div id="bootwrap">
     <div id="bootbrand">
@@ -479,7 +519,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 12:20) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 14:29) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -601,7 +641,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 12:20)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 14:29)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2121,7 +2161,7 @@ function freshState() {
     kredi: null, krediNo: 0, krediNot: 70, krediBekle: 0, notGun: 0, // 🏗️ büyüme kredisi + bankacılık sicili
     acil: null, acilBekle: 0, tutBanka: false, // ⚡ acil nakit kredisi — saatlik faiz, tek seferde tamamı kapanır
     leases: {}, // cellId -> bitiş ts (3 günlük imtiyaz: +%20 satış primi — YEKA tarzı alım garantisi)
-    offers: {}, maintDiscount: 1, starterClaimed: false, founded: Date.now(),
+    offers: {}, maintDiscount: 1, starterClaimed: false, founded: Date.now(), foundedBanka: Date.now(), saatEn: 0, saatSupheli: false, consLease: null,
     research: { lvl: { coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0 }, active: null },
     capLic: {}, // kapasite lisansları (patron): kategori → kademe (0=başlangıç; gaz/nükleer 0'da kilitli)
     lines: [], // ⚡ enerji nakil hatları
@@ -2872,6 +2912,7 @@ window.adFinishDischarge = id => {
       d.gain += sellChunk(s2, chunk, d.target, d.mult);
       d.left -= chunk; d.sold += chunk;
     }
+    rentFlush(s2);   // 🌍 biriken kıta hattı kirası ev sahibine yazılır (bu bitiş yolu atlanmıştı)
     s2.disch = null;
     plants().forEach(p => { if (p.st === s2.id && p._autoOff) { p.on = true; p._autoOff = false; } });
     toast('🎬💰 Satış reklamla TAMAMLANDI: ' + fmtE(d.sold) + ' MWh = ' + fmt(d.gain) + (d.target ? ' · 🔁 ' + cellCode(d.target) : ''), '', null, 0, true);
@@ -2892,7 +2933,7 @@ const dischSecOf = T => Math.round(30 + 90 * Math.min(1, T.cap / 500));
 function transferAllowed(from, to, st) {
   if (!to || from === to) return true;
   const cn = consortiumFor(from);
-  if (cn && cn.cell === to) return true;                          // 🌍 konsorsiyum hattı (ittifak/hissedar)
+  if (cn && cn.cell === to) return true;                          // 🌍 konsorsiyum hattı (ittifak/hissedar/🌍 kiracı)
   // ⚡ kendi hattın (ÇİFT YÖNLÜ): depo verildiyse YALNIZ o deponun bağlı olduğu hat sayılır
   if (st ? storeLineTo(st, to) : lineBetween(from, to)) return true;
   if (allyLineTo(from, to)) return true;                          // 🤝 ittifak hattı — her üye kullanır
@@ -2904,9 +2945,13 @@ function transferAllowed(from, to, st) {
 function sellChunk(st, mwh, targetCell, mult) {
   if (mwh <= 0) return 0;
   // ⚡ boşaltma başlarken dondurulan birim fiyat: tahmin ile gerçek arasındaki zaman kaymasını kapatır
-  const px = (st.disch && st.disch.px) || 0;
-  // İzinsiz uzak hedef sessizce KENDİ bölgene düşer — arayüz atlansa bile arbitraj açılmaz
-  if (targetCell && targetCell !== st.cell && !transferAllowed(st.cell, targetCell, st)) targetCell = null;
+  let px = (st.disch && st.disch.px) || 0;
+  // İzinsiz uzak hedef sessizce KENDİ bölgene düşer — arayüz atlansa bile arbitraj açılmaz.
+  // ⚠️ DONMUŞ FİYAT İSTİSMARI (kira ile birlikte doğdu): boşaltma ortasında sözleşme biterse
+  //    hedef düşer ama px HEDEF karonun yüksek fiyatında donmuş kalırdı — oyuncu kendi
+  //    karesinde, kayıpsız ve kirasız, karşı kıtanın fiyatından satardı. Hedef düşerse
+  //    fiyat da düşer: px sıfırlanır ve sellRevenue yerel fiyatı yeniden hesaplar.
+  if (targetCell && targetCell !== st.cell && !transferAllowed(st.cell, targetCell, st)) { targetCell = null; px = 0; }
   const cell = targetCell || st.cell;
   let gain;
   const at = G.ally && G.ally.tender;
@@ -2915,6 +2960,16 @@ function sellChunk(st, mwh, targetCell, mult) {
   if (cn && cn.cell === targetCell) {
     const r = sellRevenue(cell, mwh, px);
     gain = r.gain * (mult || 1) * (1 - CONS_LOSS / 100);
+    // 🌍 KİRA GERÇEKTEN KESİLİR (patron: "kiraladığı kişiden para kazanacak").
+    // Emsali oyunda var: Alım Garantisi vergisi de sellRevenue içinde gerçekten kesiliyor.
+    // ⚠️ satisGeliri'nden ÖNCE kesilir — banka payı kiradan SONRAKİ tutar üzerinden hesaplanır,
+    //    yoksa borçlu kiracı gelirinin toplamda %100'ünden fazlasını kaybedebilirdi.
+    if (cn.kiralik && cn.rentRate > 0) {
+      const kira = gain * cn.rentRate;
+      gain -= kira;
+      if (st.disch) { st.disch.rentAcc = (st.disch.rentAcc || 0) + kira; st.disch.rentAid = cn.rentAid; }
+      else allyKasaGelir(Math.round(kira), 'kita hatti kirasi', cn.rentAid);
+    }
     st.stored = Math.max(0, st.stored - mwh);
     noteSold(cell, mwh);
     satisGeliri(gain); // 🏦 borç varsa bankanın payı burada kesilir
@@ -2923,10 +2978,12 @@ function sellChunk(st, mwh, targetCell, mult) {
     // kWh payı hattı İŞLETEN ittifakın kasasına; hissedar olarak kullanıyorsan kasan yoksa pay yanmaz, sende kalır
     // ⚠️ HATA AVI (kritik): kasa yalnız YERELDE artıyordu; 12 sn sonra allySync kasayı
     // defterden yeniden hesaplayıp bu geliri SİLİYORDU. Artık deftere de yazılıyor.
-    if (!cn.asShareholder && G.ally) {
-      const pay = mwh * cn.route.kwhFee * 1000;
-      G.ally.treasury = (G.ally.treasury || 0) + pay;
-      if (allyOnline()) NET.allyLedger(G.allyId, pay, 'konsorsiyum hat payı').catch(() => {});
+    consTasi(cn, mwh);   // 🌍 konsorsiyum hattının ömrü de tükenir
+    if (!cn.asShareholder && !cn.kiralik && G.ally) {
+      // 💰 Kasaya giren gelirin TEK kapısı: ittifak kredisi açıksa payı burada kesilir.
+      // ⚠️ Eskiden NET.allyLedger ile `nm` yazılıyordu → bu pay, satışı yapan üyenin BAĞIŞI
+      //    sayılıp ona konsorsiyum hissesi kazandırıyordu. Anonim yazma o kaçağı kapatır.
+      allyKasaGelir(mwh * cn.route.kwhFee * 1000, 'konsorsiyum hat payi');
     }
     return gain;
   }
@@ -2941,9 +2998,8 @@ function sellChunk(st, mwh, targetCell, mult) {
     satisGeliri(gain); // 🏦 borç varsa bankanın payı burada kesilir
     G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain;
     G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
-    const bakim = mwh * ALLY_LINE_FEE;
-    G.ally.treasury = (G.ally.treasury || 0) + bakim;
-    if (allyOnline()) NET.allyLedger(G.allyId, bakim, 'ittifak hattı bakım payı').catch(() => {});
+    lineTasi(aline, mwh, true);   // ⚡ İTTİFAK HATTININ ÖMRÜ de tükenir (yoksa herkes ittifak hattına kaçardı)
+    allyKasaGelir(mwh * ALLY_LINE_FEE, 'ittifak hatti bakim payi');
     return gain;
   }
   const line = targetCell && targetCell !== st.cell ? storeLineTo(st, targetCell) : null;
@@ -2951,6 +3007,7 @@ function sellChunk(st, mwh, targetCell, mult) {
     // ⚡ NAKİL HATTI: hedef bölgenin fiyatı, mesafe kaybı düşülür (aktarım bedeli YOK — hattı zaten sen kurdun)
     const r = sellRevenue(cell, mwh, px);
     gain = r.gain * (mult || 1) * (1 - lineLoss(line) / 100);
+    lineTasi(line, mwh);   // ⚡ kişisel hattın ömrü tükenir
     st.stored = Math.max(0, st.stored - mwh);
     noteSold(cell, mwh);
     satisGeliri(gain); // 🏦 borç varsa bankanın payı burada kesilir
@@ -3040,6 +3097,7 @@ function dischargeTick(dtSec) {
       d.left -= chunk; d.sold += chunk;
     }
     if (d.left <= .005 || st.stored <= .001) {
+      rentFlush(st);   // 🌍 biriken kirayı ev sahibi ittifakın defterine TEK kayıtla yaz
       st.disch = null;
       plants().forEach(p => { if (p.st === st.id && p._autoOff) { p.on = true; p._autoOff = false; } }); // oyunun kapattıkları geri açılır
       toast('💰 Satış tamam: ' + fmtE(d.sold) + ' MWh = ' + fmt(d.gain) + (d.mult > 1 ? ' (🎬 +%15 dahil)' : '') + (d.target ? ' · 🔁 ' + cellCode(d.target) : ''), '');
@@ -3415,11 +3473,13 @@ window.doBuild = (kind, t, disc) => { // katalog onayı: ürünü eline al, yerl
   setMode('build'); // "🏗️ <ürün> — kurmak istediğin yere dokun"
 };
 function placeAt(c, ll) {
-  if (krediKilidi('yeni tesis kurma')) return;
   // 🐞 [BOT-FIX] PENDING boşken (gerçek oyuncu akışında ulaşılamaz — yalnız botların kendi
   // test/debug çağrılarında görüldü) çökme yerine sessizce çık.
+  // ⚠️ SIRA DEĞİŞTİ: kilit artık PENDING'den SONRA — temerrütte yakıt deposu muafiyeti için
+  // hangi türün kurulduğunu bilmemiz gerekiyor (bkz. temerrutKilidi / TEMERRUT_SERBEST).
   if (!PENDING) { setMode(null); return; }
   const { kind, t } = PENDING;
+  if (krediKilidi('yeni tesis kurma', t)) return;
   const T = TYPE_OF(kind, t);
   if (!G.licenses[c]) {
     openCellSheet(c, ll, 'build'); // ruhsat / ofis CTA — alınca yerleştirmeye devam (PENDING korunur)
@@ -3772,6 +3832,89 @@ function startMinigame() {
 // Maliyet: kablo (km) + iki uç trafo + geçilen bölgelerin izin bedeli + işçilik. Hat yıpranır, bakım ister.
 const LINE = { cableKm: 80000, transformer: 15e6, permitPerHub: 4e6, laborRate: .2, hub: 25e6, wearPer10d: 5 };
 
+// ═══ ⚡ HAT ÖMRÜ — "bir kere çek, sonsuza kadar kazan" biter (patron 26 Ağu) ═══
+// PATRON: "1 kere hat çekip sonsuza kadar kullanmak mantıklı gelmiyor. Bu hatları belli bi enerji
+// geçecek gibi ayarlayalım, sonrasında hat onarılamayacak şekilde hasar alsın. Bireysel hatlar
+// için de yapalım çünki aksi halde hattı 1 kere çekip sonra dehşet para kazanacaklar.
+// Oyunda zenginleşmek olsun fakat oynadıkça zenginleşsin."
+//
+// ÖLÇÜ: hatın üzerinden geçen TOPLAM MWh. Süre değil — çünkü asıl kuşku "kurdum, artık sadece
+// para kazanıyorum"du; çok pompalayan hattını çabuk yakar, az kullanan uzun süre kullanır.
+// ⚠️ ZAMANA BAĞLI YIPRANMA (lineWear) KALDIRILMADI — o onarılabilir bakımdır; ÖMÜR ONARILAMAZ.
+// İkisi ayrı eksendir: bakım yapmazsan kayıp artar, ömrünü doldurursan hat ÖLÜR.
+//
+// FORMUL: ömür = liste maliyetinin her `bolen` dolarına 1 MWh. Maliyete bağlamanın sebebi:
+// km / merkez sayısı / uzatma ne olursa olsun AMORTİ ORANI SABİT kalır, ayrı denge tablosu gerekmez.
+// ⚠️ MARKAYA BÖLÜNMEZ (denetimde yakalandı): dayanıklılık çarpanına bölseydik Demirkör hem +%15
+// kapasite hem -%15 yakıt hem de 2 KAT hat ömrü alırdı — hafızadaki "ceza sadakatle küçülmez"
+// denge ilkesiyle çelişirdi. Marka zaten ZAMAN yipranmasini etkiliyor, o yeter.
+//
+// DENGE (dosyadaki gerçek sayılarla doğrulanmış):
+//  · 500 km / 2 merkez hat = 163.200.000 $ → ömür 74.182 MWh
+//  · tipik akşam net getirisi ~43.000-48.000 $/MWh → ömür boyu ciro ~3,2-3,6 milyar
+//  → maliyetin ~20 KATI. "Kat kat amorti" şartı tutuyor, hat hiçbir zaman zarar değil.
+//  · Kaç gün dayanır: yeni oyuncu (~1.200 MWh/gün) 62 gün · orta oyun (5.000) 15 gün ·
+//    balina (20.000) 3,7 gün. Patronun istediği eğri tam bu.
+const LINE_OMUR = {
+  bolen: 2200,      // liste maliyetinin her 2.200 doları = 1 MWh ömür
+  uyari: .70,       // %70'te sarı uyarı + posta
+  bozulmaBas: .90,  // %90'dan sonra kayıp tırmanmaya başlar
+  sonKayip: 45,     // %100'e giderken eklenen azami kayıp puanı
+  hurda: .05,       // ölmüş hattın söküm iadesi (taban)
+  // ⚠️ TABAN NEDEN .15 DEĞİL .05 (denetimde ölçüldü): .15 ile taban ömrün YARISINDA doluyordu,
+  // yani %50 ile %100 arası iade AYNI kalıyordu ve rasyonel oyuncu hattı hep erken yeniliyordu —
+  // "ölü hat" hiç görülmezdi. .05 ile taban ancak %83'te dolar; erken yenilemenin getirisi yok.
+};
+const lineOmurMax = (km, hubs) => Math.max(1, Math.round(lineCost(km, hubs) / LINE_OMUR.bolen));
+// Eski kayıtlarda `omur` yok → kaydin kendi km/hubs değerinden türetilir.
+// ⚠️ `l` null gelirse patlamasın: önce nesne kontrolü.
+function lineOmur(l) {
+  if (!l) return 1;
+  return l.omur > 0 ? l.omur : lineOmurMax(l.km, l.hubs);
+}
+const lineTasinan = l => (l && l.tasinan) || 0;
+const lineOmurFrac = l => Math.min(1, lineTasinan(l) / lineOmur(l));
+const lineOlu = l => lineOmurFrac(l) >= 1;
+// Ömür tükenirken artan ONARILAMAZ kayıp. %90'a kadar 0, sonra doğrusal olarak sonKayip'a tırmanır.
+function lineOmurKayip(l) {
+  const f = lineOmurFrac(l);
+  if (f < LINE_OMUR.bozulmaBas) return 0;
+  if (f >= 1) return 100;
+  return LINE_OMUR.sonKayip * (f - LINE_OMUR.bozulmaBas) / (1 - LINE_OMUR.bozulmaBas);
+}
+// ⚡ SAYACI İŞLET — sellChunk'ın ÜÇ dalı da (kişisel / ittifak / konsorsiyum) buradan geçer.
+// İttifak hattında ek bir sorun var: allyApply() 12 saniyede bir G.ally.lines'ı sunucudan KOMPLE
+// üzerine yazıyor. Yerel sayacı hemen göndermezsek ittifak hattının ömrü hiç tükenmez ve
+// oyuncular ittifak hattına kaçardı. İki önlem: (1) yazma kısıcısı 4 sn (senkrondan KISA),
+// (2) HAT_PEND tamponu — allyApply sunucudan geleni yerel tamponla karşılaştırıp BÜYÜK olanı alır.
+const HAT_PEND = {};
+let _hatWT = 0;
+function lineTasi(l, mwh, ally) {
+  if (!l || !(mwh > 0)) return;
+  const once = lineOmurFrac(l);
+  l.tasinan = lineTasinan(l) + mwh;
+  const simdi = lineOmurFrac(l);
+  if (ally) {
+    HAT_PEND[l.id] = Math.max(HAT_PEND[l.id] || 0, l.tasinan);
+    // ⚠️ Sunucu anahtarı bilinmiyorsa YAZMA: yedek anahtar (NET.id + '_' + id) BAŞKASININ
+    // hattı için kullanılırsa aynı hattın İKİNCİ bir kopyası doğar (denetimde bulundu).
+    // Anahtar allyApply'da veya hattı kuran istemcide öğrenilir; o zamana kadar sayaç
+    // HAT_PEND tamponunda birikir ve kayıp olmaz.
+    if (allyOnline() && ALLY_LINE_KEYS[l.id] && Date.now() - _hatWT > 4000) { _hatWT = Date.now(); allyLineWrite(l); }
+  }
+  if (once < LINE_OMUR.uyari && simdi >= LINE_OMUR.uyari)
+    toast('⚠️ ' + lineRota(l) + ' hattı ömrünün yüzde ' + Math.round(LINE_OMUR.uyari * 100) + ' kadarını doldurdu', 'warn', 'omur' + l.id, 20000);
+  if (once < LINE_OMUR.bozulmaBas && simdi >= LINE_OMUR.bozulmaBas)
+    toast('🔴 ' + lineRota(l) + ' hattı yıpranma sınırını geçti — kaybı artıyor, ölümden önce yenile', 'bad', 'omur' + l.id, 30000);
+  if (once < 1 && simdi >= 1) {
+    toast('⚰️ ' + lineRota(l) + ' hattı ÖMRÜNÜ DOLDURDU — onarılamaz, söküp yeniden çekilmeli', 'bad', null, 0, true);
+    addMail('⚡ Şebeke İşletmecisi', 'Hat ömrünü doldurdu',
+      lineRota(l) + ' hattı, tasarım ömrü olan <b>' + fmtE(lineOmur(l)) + ' MWh</b> enerjiyi taşıdı ve iletkenleri onarılamaz biçimde yoruldu. '
+      + 'Hat artık enerji taşıyamıyor.<br><br>Bakım bu hasarı <b>düzeltmez</b> — yipranma ayrı bir eksendir, ömür onarılamaz. '
+      + 'Yapılacak: hattı <b>söküp yeniden çekmek</b>. Hat panelinden “♻️ Hattı Yenile” ile tek dokunuşta aynı rota kurulur.', true);
+  }
+}
+
 // ═══ ⚙️ TRAFO MARKALARI + İLİŞKİ SİSTEMİ (patron tasarımı) ═══
 // Aynı trafoyu farklı markalardan alabilirsin. Sadık kaldıkça İLİŞKİ artar (max 100) →
 // %25'e varan iskonto. Başka markadan alınca o markayla ilişki düşer: hepsiyle 100 olamazsın.
@@ -3869,7 +4012,9 @@ const lineBuildSec = km => Math.min(86400, Math.round(60 + km * 6)); // en fazla
 const lineBrand = l => BRANDS[brandKey(l && l.brand)] || BRANDS.ortac;
 const lineWear = l => Math.max(0, 100 - (Date.now() - l.built) / 864e6 * LINE.wearPer10d * 10 * lineBrand(l).wear); // marka dayanıklılığı
 const lineReady = l => l.done <= Date.now();
-const lineLoss = l => Math.max(5, Math.min(100, lineBaseLoss(l) + lineBrand(l).loss + (100 - lineWear(l)) * .5)); // marka + yıpranma
+// ⚡ ÜÇ EKSEN: taban kayıp (mesafe) + marka + ZAMAN yıpranması (onarılabilir) + ÖMÜR (ONARILAMAZ).
+// Ömür dolunca 100 döner → lineUsable false olur, hat şebekeden düşer.
+const lineLoss = l => Math.max(5, Math.min(100, lineBaseLoss(l) + lineBrand(l).loss + (100 - lineWear(l)) * .5 + lineOmurKayip(l)));
 const linesOf = cell => (G.lines || []).filter(l => l.from === cell && lineReady(l) && lineLoss(l) < 100);
 // ⚡ ŞEBEKE DÜĞÜMLERİ (patron 24 Ağu): "transfer merkezi hattın uç noktalarında ve ek noktalarında
 // görünür ve depoya bağlanabilir olmalı — 100 milyon harcadım, depolar yine bağlanmıyor."
@@ -3977,7 +4122,12 @@ function lineTargets(cell) {
 // Erişim konsorsiyum modelinin aynısı: hattın çıkış ucuna ya da transfer merkezlerinden birine
 // ALLY_ACCESS_KM içinde deposu olan her üye hattı ÜCRETSİZ kullanır.
 const ALLY_ACCESS_KM = 150;
-const ALLY_LINE_FEE = 700; // taşınan MWh başına ittifak KASASINA giden bakım payı (~%1,7) — fiyat 1/3'e inince ölçeklendi
+// 🔴 DENGE DÜZELTMESİ (20. tur, denetimde ölçüldü): pay 700 idi, oysa hat ömrünün MWh başına
+// maliyeti ~2.090 $ (LINE_OMUR.bolen 2200 eksi hurda iadesi). Yani her ittifak hattı kasayı
+// BOŞALTIYORDU ve ittifak kredisi matematiksel olarak asla kapanamazdı. Pay, ömür maliyetini
+// karşılayıp üstüne kasaya kâr bırakacak seviyeye çekildi (~%6, tipik 40.000 $/MWh fiyatta).
+// ⚠️ Bu bir DENGE sabiti — patron gözden geçirmeli.
+const ALLY_LINE_FEE = 2500; // taşınan MWh başına ittifak KASASINA giden pay
 const allyLines = () => (G.ally && G.ally.lines) || [];
 // 🔴 TEK YÖNLÜLÜK TUZAĞI — kişisel hatlarda 24 Ağu'da çözülmüştü, ittifak hattında DURUYORDU
 // (patron 25 Ağu: "çıkış yapmadan önce ittifak/konsorsiyum düzgün çalıştığından emin olmalıyız").
@@ -4166,7 +4316,8 @@ window.buildLine = (toCell, km, hubs, brand) => {
   }
   brandBuy(brand); // sadakat/ilişki güncellenir
   const secs = lineBuildSec(km) * BRANDS[brand].build;
-  const rec = { id: G.nextId++, from: LINE_SRC, to: toCell, km, hubs, brand, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1) };
+  const rec = { id: G.nextId++, from: LINE_SRC, to: toCell, km, hubs, brand, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1),
+    omur: lineOmurMax(km, hubs), tasinan: 0 };   // ⚡ hat ömrü — liste maliyetinden türetilir
   if (viaAlly) {
     // İttifak hattı ORTAK MALDIR: kişisel G.lines'a değil ittifağın defterine yazılır.
     // Böylece hattı kuran başkan ayrılsa/atılsa bile hat ittifakta kalır, üyeler kullanmaya devam eder.
@@ -4174,8 +4325,24 @@ window.buildLine = (toCell, km, hubs, brand) => {
     G.ally.lines = G.ally.lines || [];
     G.ally.lines.push(rec);
     if (allyOnline()) { // ortak kayda yaz → hat BÜTÜN üyelerin oyununda belirir
-      NET.allyLineAdd(G.allyId, rec).catch(() => {});
-      NET.allyLedger(G.allyId, -cost, 'hat: ' + (placeName(toCell))).catch(() => {});
+      // 🛡️ KURAL GECİKMESİ KALKANI + 🔙 GERİ ALMA (denetimde bulundu):
+      // `rec` ham gönderilseydi `omur`/`tasinan` yüzünden yazma 401 alır, KASADAN PARA ÇIKMIŞ
+      // ama hat hiçbir üyede belirmezdi. Artık: (1) uyumlu biçimde gönderilir, (2) reddedilirse
+      // eski biçimle bir kez daha denenir, (3) o da olmazsa hat GERİ ALINIR ve kasa iade edilir.
+      // ⚠️ Kasa hareketi (allyLedger) yalnız yazma BAŞARILI olursa işlenir — sıra önemli.
+      const _k = NET.id + '_' + rec.id;
+      NET.allyLineSet(G.allyId, _k, allyLineRecUyumlu(rec))
+        .catch(() => { eskiBicimAc(); return NET.allyLineSet(G.allyId, _k, allyLineRecUyumlu(rec)); })
+        .then(() => {
+          ALLY_LINE_KEYS[rec.id] = _k;   // gerçek sunucu anahtarı: sonraki yazmalar KOPYA açmaz
+          NET.allyLedger(G.allyId, -cost, 'hat: ' + (placeName(toCell))).catch(() => {});
+        })
+        .catch(() => {
+          G.ally.lines = (G.ally.lines || []).filter(x => x.id !== rec.id);
+          G.ally.treasury = (G.ally.treasury || 0) + cost;
+          toast('⚠️ İttifak hattı sunucuya yazılamadı — kasadan para düşülmedi, tekrar dene', 'bad', null, 0, true);
+          save(); refreshAllyUI(); drawOverlay();
+        });
     }
     addMail('🤝 ' + G.ally.name, 'İttifak hattı başlatıldı', `${G.company}, kasadan ${fmt(cost)} harcayarak ${placeName(LINE_SRC)} → ${placeName(toCell)} arasında ${fmtN(km)} km'lik ittifak hattı başlattı. Hat devreye girince ${ALLY_ACCESS_KM} km çevresinde deposu olan TÜM üyeler kullanabilecek.`, true);
   } else {
@@ -4205,6 +4372,9 @@ window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça a
     if (G.cash < c) { toast('Transfer merkezi için ' + fmt(c) + ' gerekli', 'warn'); return; }
     G.cash -= c; gider('altyapi', c);
   }
+  // ⚡ YENİ MERKEZ ÖMRÜ DE UZATIR: merkezin liste bedeli kadar taşıma kapasitesi eklenir (yarı değerle).
+  // ⚠️ `l.km` aşağıda değişiyor — ömür tabanını ONDAN ÖNCE, ESKİ değerlerle sabitliyoruz.
+  l.omur = lineOmur(l) + Math.round((LINE.hub + LINE.permitPerHub) * (1 + LINE.laborRate) / LINE_OMUR.bolen / 2);
   l.hubs++; brandBuy(l.brand || 'voltas');
   if (ally) { allyLineWrite(l); addMail('🤝 ' + G.ally.name, 'Hatta yeni transfer merkezi', `${G.company}, ${placeName(l.from)} → ${placeName(l.to)} ittifak hattına kasadan ${fmt(c)} ödeyerek bir transfer merkezi daha ekledi. Hat kaybı düştü, yeni merkez tüm üyelere açık.`, true); }
   if (l.path && l.path.length >= 2) { // 🗼 en uzun bölümün ORTASINA yeni transfer merkezi
@@ -4223,6 +4393,9 @@ window.repairLine = id => {
   if (!l) { l = allyLines().find(x => x.id === id); ally = !!l; } // 🤝 ittifak hattı da onarılabilir
   if (!l) return;
   if (ally && !canAllyLine()) { toast('🤝 İttifak hattının bakımı başkan/yardımcı yetkisidir', 'warn'); return; }
+  // ⚰️ ÖMRÜNÜ DOLDURAN HATTA BAKIM SATILMAZ (patron: "onarılamayacak şekilde hasar alsın").
+  // Yıpranma (zaman) onarılır, ÖMÜR onarılmaz — eskiden bakım butonu parayı alıp hiçbir şey yapmıyordu.
+  if (lineOlu(l)) { toast('⚰️ Bu hat ömrünü doldurdu — bakım onarmaz. Sökülüp yeniden çekilmeli.', 'bad', null, 0, true); return; }
   const c = Math.round((100 - lineWear(l)) * l.km * 900);
   if (c < 1) return;
   if (ally) {
@@ -4238,13 +4411,92 @@ window.repairLine = id => {
   toast('🔧 Hat bakımı yapıldı — ' + fmt(c) + (ally ? ' (kasadan)' : ''), '');
   save(); renderLinePanel();
 };
+// ♻️ SÖKÜM İADESİ ÖMÜRLE SÜREKLİ AZALIR — eşikli olsaydı sistem tamamen delinirdi:
+// eşikli tasarımda %89'da söküp yeniden çekmek, ölümüne kadar kullanmaktan HEM ucuz HEM cezasız
+// olurdu (denetimde yakalandı) — hiçbir akıllı oyuncu hattını asla öldürmezdi.
+// Taze hat %30, ömür tükendikçe doğrusal olarak %15'e iner.
+const lineHurdaOran = l => Math.max(LINE_OMUR.hurda, .30 * (1 - lineOmurFrac(l)));
 window.demolishLine = id => {
   const i = (G.lines || []).findIndex(x => x.id === id);
-  if (i < 0) return;
+  // 🤝 İTTİFAK HATTI SÖKÜMÜ (denetimde bulundu): eskiden yalnız G.lines aranıyordu —
+  // ömrünü dolduran bir ittifak hattını sökecek HİÇBİR yol yoktu, haritada ölü kalıyordu.
+  if (i < 0) { if (allyLines().some(x => x.id === id)) demolishAllyLine(id); return; }
   if (aucListed('line', id)) { toast('🔨 Bu hat açık artırmada — önce ilanı bekle', 'warn', null, 6000); return; }
-  G.cash += Math.round(lineCost(G.lines[i].km, G.lines[i].hubs) * .3);
+  const l0 = G.lines[i];
+  const oran = lineHurdaOran(l0);
+  // 🏗️ Hurda bedeli VARLIK GELİRİ kapısından geçer — borçluyken haczin payı burada da kesilir.
+  const hurda = Math.round(lineCost(l0.km, l0.hubs) * oran);
+  const hKes = varlikKesinti(hurda);
+  varlikGeliri(hurda);
   G.lines.splice(i, 1);
-  toast('🗑️ Hat söküldü — %30 hurda değeri iade', 'warn');
+  ensureGridLinks();   // ⚠️ hat gitti → depo/hat düğüm anahtarları tazelenmeli
+  toast('🗑️ Hat söküldü — %' + Math.round(oran * 100) + ' hurda değeri: ' + fmt(hurda) + (hKes > 0 ? ' (🏦 bankaya ' + fmt(hKes) + ', eline ' + fmt(hurda - hKes) + ')' : ' iade'), 'warn');
+  save(); renderLinePanel(); drawOverlay();
+};
+// 🤝 İttifak hattını sök: iade KASAYA girer (hat ittifağın malıydı), yetki başkan/yardımcı.
+window.demolishAllyLine = id => {
+  const l = allyLines().find(x => x.id === id);
+  if (!l || !G.ally) return;
+  if (!canAllyLine()) { toast('🤝 İttifak hattını yalnız başkan veya yardımcısı sökebilir', 'warn'); return; }
+  const oran = lineHurdaOran(l);
+  const hurda = Math.round(lineCost(l.km, l.hubs) * oran);
+  G.ally.lines = allyLines().filter(x => x.id !== id);
+  G.ally.treasury = (G.ally.treasury || 0) + hurda;
+  delete HAT_PEND[id];
+  if (allyOnline()) {
+    // ⚠️ Buluttan da SİLİNMELİ: allyApply 12 saniyede bir sunucudan komple okuyor,
+    // yalnız yerelde silseydik hat 12 saniye sonra ZOMBİ olarak geri gelirdi.
+    if (ALLY_LINE_KEYS[id]) NET.allyLineDel(G.allyId, ALLY_LINE_KEYS[id]).catch(() => {});
+    // ⚠️ ANONİM: NET.allyLedger `nm` yazar ve `nm`li her POZİTİF satır BAĞIŞ sayılıp
+    // konsorsiyum HİSSESİ doğurur — hattı söken üye bedavaya hissedar olurdu.
+    allyLedgerAnon(G.allyId, hurda, 'hat sokum hurdasi').catch(() => {});
+  }
+  ensureGridLinks();
+  addMail('🤝 ' + G.ally.name, 'İttifak hattı söküldü',
+    G.company + ', ' + lineRota(l) + ' ittifak hattını söktü. Hurda değeri <b>' + fmt(hurda) + '</b> kasaya yazıldı.', true);
+  toast('🗑️ İttifak hattı söküldü — ' + fmt(hurda) + ' kasaya girdi', 'warn', null, 0, true);
+  save(); renderLinePanel(); drawOverlay();
+};
+// ♻️ HATTI YENİLE: aynı rotayı tek dokunuşta sök + yeniden çek. Oyuncunun rotayı haritadan
+// tekrar çizmesini beklemek gereksiz bir cezadır; döngünün kendisi zaten maliyet.
+window.rebuildLine = id => {
+  const l = (G.lines || []).find(x => x.id === id);
+  if (!l) return;
+  const brand = brandKey(l.brand);
+  const maliyet = brandPrice(brand, lineCost(l.km, l.hubs));
+  const iade = Math.round(lineCost(l.km, l.hubs) * lineHurdaOran(l));
+  const net = Math.max(0, maliyet - iade);
+  $('modal').innerHTML = '<h2>♻️ Hattı Yenile</h2>'
+    + '<p><b>' + lineRota(l) + '</b><br>' + fmtN(l.km) + ' km · 🗼 ' + hubTotal(l.hubs) + ' merkez · ' + BRANDS[brand].ico + ' ' + BRANDS[brand].nm + '</p>'
+    + '<p class="sub">Aynı rota sökülüp yeniden kurulur. Ömür sayacı sıfırlanır, kurulum süresi baştan işler.</p>'
+    + '<table class="ledger">'
+    + '<tr><td>🛠️ Yeni hat maliyeti</td><td>' + fmt(maliyet) + '</td></tr>'
+    + '<tr><td>♻️ Eski hattan hurda (%' + Math.round(lineHurdaOran(l) * 100) + ')</td><td class="pos">-' + fmt(iade) + '</td></tr>'
+    + '<tr><td><b>Ödeyeceğin</b></td><td><b>' + fmt(net) + '</b></td></tr></table>'
+    + '<button class="primary" onclick="closeModal();rebuildLineDo(' + id + ')" ' + (G.cash >= net ? '' : 'disabled') + '>♻️ Yenile — ' + fmt(net) + '</button>'
+    + (G.cash < net ? '<p class="sub neg">Kasanda yetmiyor.</p>' : '')
+    + '<button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>';
+  $('overlay').classList.add('show');
+};
+window.rebuildLineDo = id => {
+  const l = (G.lines || []).find(x => x.id === id);
+  if (!l) return;
+  if (aucListed('line', id)) { toast('🔨 Bu hat açık artırmada — önce ilanı bekle', 'warn'); return; }
+  const brand = brandKey(l.brand);
+  const maliyet = brandPrice(brand, lineCost(l.km, l.hubs));
+  const iade = Math.round(lineCost(l.km, l.hubs) * lineHurdaOran(l));
+  const net = Math.max(0, maliyet - iade);
+  if (G.cash < net) { toast('Kasanda yetmiyor', 'warn'); return; }
+  G.cash -= net; gider('altyapi', net);
+  brandBuy(brand);
+  const secs = lineBuildSec(l.km) * BRANDS[brand].build;
+  l.built = Date.now();
+  l.done = Date.now() + secs * 1000 / (G.demo ? 60 : 1);
+  l.omur = lineOmurMax(l.km, l.hubs);
+  l.tasinan = 0;
+  ensureGridLinks();
+  toast('♻️ Hat yenilendi — ' + fmtHrs(secs / 3600) + ' sonra devrede', '', null, 0, true);
+  beep(520, .13);
   save(); renderLinePanel(); drawOverlay();
 };
 // ═══════════ 📏 MEVCUT HATTI UZAT (patron 26 Ağu) ═══════════
@@ -4371,11 +4623,17 @@ window.lineExtendOnay = () => {
   G.cellSpent = G.cellSpent || {};
   G.cellSpent[LEXT.hedef] = (G.cellSpent[LEXT.hedef] || 0) + LEXT.maliyet;
   brandBuy(l.brand || 'voltas');
+  // ⚡ UZATMA ÖMRÜ DE UZATIR — uzatmanın LİSTE bedeli kadar (LEXT.maliyet marka iskontoludur;
+  // ömür her zaman liste üzerinden hesaplanır ki marka iki kat avantaj almasın).
+  // ⚠️ l.km ve l.hubs AŞAĞIDA değişiyor — tabanı ÖNCE sabitliyoruz, yoksa eski kayıtta
+  //    lineOmur(l) fallback'i yeni (büyük) km üzerinden hesaplanıp ömrü bedava şişirirdi.
+  const omurTaban = lineOmur(l);
   const eski = l.path ? l.path.slice() : [l.from, l.to];
   l.path = LEXT.bas ? LEXT.ek.slice().reverse().concat(eski) : eski.concat(LEXT.ek);
   l.from = l.path[0]; l.to = l.path[l.path.length - 1];
   l.km = Math.round(pathKm(l.path));
   l.hubs = l.path.length - 2;
+  l.omur = omurTaban + Math.round(lineExtendCost(LEXT.ekKm, LEXT.araHub) / LINE_OMUR.bolen);
   // ⚠️ ZORUNLU: path değişti → depo/hat düğüm anahtarları tazelenmeli, yoksa depolar
   // yeni uçtaki pazarları göremez. addHub da tam olarak bu yüzden bunu çağırıyor.
   ensureGridLinks();
@@ -4528,7 +4786,8 @@ window.lineDrawBuild = brand => {
   brandBuy(b); G._lastBrand = b;
   const secs = lineBuildSec(km) * BRANDS[b].build;
   G.lines = G.lines || [];
-  G.lines.push({ id: G.nextId++, from: cells[0], to: cells[cells.length - 1], path: cells, km, hubs, brand: b, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1) });
+  G.lines.push({ id: G.nextId++, from: cells[0], to: cells[cells.length - 1], path: cells, km, hubs, brand: b, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1),
+    omur: lineOmurMax(km, hubs), tasinan: 0 });   // ⚡ hat ömrü
   LDRAW = null; ldrawClear(); $('drawbar').classList.remove('show'); setMode(null);
   toast('⚡ ' + BRANDS[b].ico + ' ' + secilen.map(c => placeName(c)).join(' → ') + ' — ' + fmtN(km) + ' km · 🗼 ' + hubTotal(hubs) + ' merkez · ' + fmtHrs(secs / 3600) + ' sonra devrede', '', null, 0, true);
   beep(500, .12);
@@ -4670,19 +4929,39 @@ window.gridUnlink = id => {
   toast('🔌 Nakil hattı bağlantısı kesildi', 'warn');
   save(); drawOverlay(); openUnitSheet(id);
 };
+// ⚡ ÖMÜR ÇUBUĞU — oyuncu hattının ne kadar kaldığını BİR BAKIŞTA görsün.
+// Renk: yeşil → sarı (%70) → kırmızı (%90) → gri (ölü). Kalan MWh ve tahmini gün de yazar.
+function lineOmurHTML(l) {
+  const f = lineOmurFrac(l), pct = Math.round(f * 100);
+  const kalan = Math.max(0, lineOmur(l) - lineTasinan(l));
+  const renk = f >= 1 ? '#8b95a8' : f >= LINE_OMUR.bozulmaBas ? 'var(--danger)' : f >= LINE_OMUR.uyari ? 'var(--warn)' : 'var(--acc)';
+  // tahmini gün: hattın kendi ortalama hızından (kurulumdan bu yana taşınan / geçen gün)
+  const gun = Math.max(.25, (Date.now() - (l.built || Date.now())) / 864e5);
+  const hiz = lineTasinan(l) / gun;
+  const eta = (hiz > .5 && f < 1) ? ' · bu hızla ~' + Math.max(1, Math.round(kalan / hiz)) + ' gün' : '';
+  return `<div class="sub" style="margin-top:3px">⚡ Hat ömrü: <b style="color:${renk}">%${pct}</b> tükendi
+      <span class="sub">· kalan ${fmtE(kalan)} / ${fmtE(lineOmur(l))} MWh${eta}</span></div>
+    <div class="rsbar" style="height:7px;margin:3px 0"><i style="width:${Math.min(100, pct)}%;background:${renk}"></i></div>
+    ${f >= 1 ? '<div class="sub" style="color:var(--danger)">⚰️ <b>ÖMRÜNÜ DOLDURDU</b> — onarılamaz. Bakım bu hasarı düzeltmez; hat sökülüp yeniden çekilmeli.</div>'
+      : f >= LINE_OMUR.bozulmaBas ? '<div class="sub" style="color:var(--danger)">🔴 Son kısım — iletkenler yoruldu, kayıp her MWh ile artıyor.</div>'
+      : f >= LINE_OMUR.uyari ? '<div class="sub" style="color:var(--warn)">⚠️ Ömrünün son üçte birinde — yenileme planla.</div>' : ''}`;
+}
 function gridPanelHTML() {
   const ls = G.lines || [];
   let h = `<div style="font-size:12px;margin:12px 0 4px">⚡ <b>NAKİL HATLARIN</b> <span class="sub">${ls.length} hat</span></div>`;
   if (!ls.length) h += '<p class="sub">Henüz hattın yok. Uzaktaki pahalı pazarlara satmak için depolu bir bölgenden hat çek.</p>';
   h += ls.map(l => {
     const rdy = lineReady(l), loss = Math.round(lineLoss(l)), wear = Math.round(100 - lineWear(l));
-    return `<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0">
-      <div style="font-size:12.5px;font-weight:700">${lineRota(l)} <span class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</span></div>
+    const olu = lineOlu(l);
+    return `<div style="border:1px solid ${olu ? 'var(--danger)' : 'var(--line)'};border-radius:10px;padding:8px 10px;margin:6px 0">
+      <div style="font-size:12.5px;font-weight:700">${olu ? '⚰️ ' : ''}${lineRota(l)} <span class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</span></div>
       ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · 🗼 ${hubTotal(l.hubs)} transfer merkezi · yıpranma %${wear}</div>
-      ${lineErisimHTML(l)}
-      <button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))}</button>
-      ${wear > 5 ? `<button class="bigsell half" onclick="repairLine(${l.id})">🔧 Hat Bakımı — ${fmt(Math.round(wear * l.km * 900))}</button>` : ''}
-      <button class="bigsell half" onclick="startLineExtend(${l.id})">📏 Bu Hattı Uzat — yeni bölge ekle</button>
+      ${lineOmurHTML(l)}
+      ${olu ? '' : lineErisimHTML(l)}
+      ${olu ? '' : `<button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))}</button>`}
+      ${!olu && wear > 5 ? `<button class="bigsell half" onclick="repairLine(${l.id})">🔧 Hat Bakımı — ${fmt(Math.round(wear * l.km * 900))}</button>` : ''}
+      ${olu ? '' : `<button class="bigsell half" onclick="startLineExtend(${l.id})">📏 Bu Hattı Uzat — yeni bölge ekle</button>`}
+      <button class="bigsell half" style="${olu ? 'background:var(--acc);color:#08110c' : ''}" onclick="rebuildLine(${l.id})">♻️ Hattı Yenile — ömrü sıfırla</button>
       <button class="bigsell half" style="color:var(--danger)" onclick="demolishLine(${l.id})">🗑️ Hattı Sök</button>`
       : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
     </div>`;
@@ -4705,10 +4984,12 @@ function gridPanelHTML() {
         ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · 🗼 ${hubTotal(l.hubs)} transfer merkezi · yıpranma %${100 - wear}</div>
           <div class="sub">🎯 Açtığı pazarlar: ${ad.join(', ')} <span class="sub">— her üye iki yönde de satabilir</span></div>
           <div class="sub ${yakin ? 'pos' : 'neg'}">${yakin ? '✅ Deponun bu hatta erişimi var — satış ekranında görünür' : '⚠️ Deponun uzak: hattın ucuna ya da bir transfer merkezine ' + ALLY_ACCESS_KM + ' km içinde depo kur'}</div>
+          ${lineOmurHTML(l)}
           ${yetki ? `<div style="display:flex;gap:5px;margin-top:6px">
-            <button class="bigsell half" style="margin:0" onclick="addHub(${l.id})">🗼 Merkez Ekle <span class="sub">${fmt(hubC)} kasadan</span></button>
-            ${bakimC > 0 ? `<button class="bigsell half" style="margin:0" onclick="repairLine(${l.id})">🔧 Bakım <span class="sub">${fmt(bakimC)} kasadan</span></button>` : ''}
-          </div>` : '<div class="sub">🔒 Merkez ekleme ve bakım başkan/yardımcı yetkisidir.</div>'}`
+            ${lineOlu(l) ? '' : `<button class="bigsell half" style="margin:0" onclick="addHub(${l.id})">🗼 Merkez Ekle <span class="sub">${fmt(hubC)} kasadan</span></button>`}
+            ${!lineOlu(l) && bakimC > 0 ? `<button class="bigsell half" style="margin:0" onclick="repairLine(${l.id})">🔧 Bakım <span class="sub">${fmt(bakimC)} kasadan</span></button>` : ''}
+            <button class="bigsell half" style="margin:0;color:var(--danger)" onclick="demolishAllyLine(${l.id})">🗑️ Sök <span class="sub">hurda kasaya</span></button>
+          </div>` : '<div class="sub">🔒 Merkez ekleme, bakım ve söküm başkan/yardımcı yetkisidir.</div>'}`
         : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
       </div>`;
     }).join('');
@@ -4806,11 +5087,45 @@ const ALLY_INV_TAG = '[[ITT-DAVET]]';
 let ALLY_LINE_KEYS = {}; // hat no → sunucu anahtarı (KAYDEDİLMEZ, her senkronda tazelenir)
 // ⚠️ Kurallar yalnız bu alanlara izin verir (docs/firebase-guvenlik-kurallari.json → allies/$aid/lines/$lid).
 // `path` DAHİL DEĞİL — ittifak hattına çizim yolu eklersen ÖNCE kuralı güncelle, yoksa yazma 401 alır.
+// ⚠️ `lines/$lid` kuralında `$other: validate false` var: TANIMSIZ tek alan TÜM yazmayı 401'e
+// düşürür. `omur` ve `tasinan` docs/firebase-guvenlik-kurallari.json'a EKLENDİ — kural
+// yayınlanmadan bu alanlar sunucuya gitmez ve ittifak hattı senkronu sessizce durur.
 const allyLineRec = l => ({ id: l.id, from: l.from, to: l.to, km: l.km, hubs: l.hubs,
-  brand: l.brand, built: l.built, done: l.done, ally: l.ally, by: l.by });
+  brand: l.brand, built: l.built, done: l.done, ally: l.ally, by: l.by,
+  omur: Math.round(lineOmur(l)), tasinan: Math.round(lineTasinan(l)) });
+// 🛡️ KURAL GECİKMESİ KALKANI (20. tur): `omur` ve `tasinan` alanları güvenlik kurallarına
+// eklendi ama kuralları konsola YAPIŞTIRMAK elle yapılan bir iş. Kural yayınlanmadan önce
+// `$other: validate false` yüzünden bu iki alan TÜM yazmayı 401'e düşürürdü ve ittifak hattı
+// senkronu sessizce dururdu. Bu yüzden ilk ret alındığında alanlar bir kez düşürülüp yeniden
+// denenir; sonraki yazmalar da eski biçimde gider. Kural yayınlanınca oyuncu sayfayı
+// yenilediğinde bayrak sıfırlanır ve yeni alanlar kendiliğinden akmaya başlar.
+// ⚠️ BAYRAK GEÇİCİDİR, KALICI DEĞİL (denetimde bulundu): `.catch()` yalnız 401'i değil HER
+// hatayı yakalar — anlık ağ kesintisi, sekmenin uykuya dalması, timeout. Kalıcı olsaydı tek bir
+// ağ blibi ittifak hattının ömrünü SONSUZA dek senkron dışı bırakırdı (hat ölümsüzleşirdi).
+// Şimdi 5 dakika sonra kendini onarır ve BAŞARILI bir yazmada anında sıfırlanır.
+let _eskiBicimTs = 0;
+const ESKI_BICIM_MS = 5 * 60000;
+const eskiBicimMi = () => _eskiBicimTs > 0 && Date.now() - _eskiBicimTs < ESKI_BICIM_MS;
+const eskiBicimAc = () => { _eskiBicimTs = Date.now(); };
+const eskiBicimKapat = () => { _eskiBicimTs = 0; };
+// Geriye dönük uyumluluk için ad korunuyor (kod başka yerlerde bu adı kullanıyor).
+Object.defineProperty(window, 'ALLY_ESKI_BICIM', { get: eskiBicimMi, set: v => { v ? eskiBicimAc() : eskiBicimKapat(); }, configurable: true });
+const allyLineRecUyumlu = l => {
+  const r = allyLineRec(l);
+  if (eskiBicimMi()) { delete r.omur; delete r.tasinan; }
+  return r;
+};
 const allyLineWrite = l => { // hattı ORİJİNAL anahtarına yaz (kopya kayıt açma)
   if (!allyOnline()) return;
-  NET.allyLineSet(G.allyId, ALLY_LINE_KEYS[l.id] || (NET.id + '_' + l.id), allyLineRec(l)).catch(() => {});
+  const key = ALLY_LINE_KEYS[l.id] || (NET.id + '_' + l.id);
+  const yeniAlanVar = !eskiBicimMi();
+  NET.allyLineSet(G.allyId, key, allyLineRecUyumlu(l))
+    .then(() => { if (yeniAlanVar) eskiBicimKapat(); })   // yeni alanlar geçti → kural yayında
+    .catch(() => {
+      if (eskiBicimMi()) return;
+      eskiBicimAc();   // kural henüz eski (ya da geçici hata) → yeni alanları bırak, bir kez daha dene
+      NET.allyLineSet(G.allyId, key, allyLineRecUyumlu(l)).catch(() => {});
+    });
 };
 function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
   if (!rec || !rec.meta) return;
@@ -4837,7 +5152,13 @@ function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
   a.foes = rec.meta.foes || [];
   a.election = rec.meta.election || null;
   // kasa = defterin toplamı (tek yazılan sayı değil → eşzamanlı bağışlar birbirini silmez)
-  a.treasury = Math.max(0, led.reduce((s, e) => s + (e.amt || 0), 0));
+  // 🏦 İTTİFAK KREDİSİ: durum hiçbir yere YAZILMAZ, defterden TÜRETİLİR (meta yazma yarışı yok).
+  const _l = allyLoanFromLedger(led);
+  a.loan = (_l && !_l.kapandi) ? _l : null;
+  if (_l) a.loanNo = _l.no;   // kapanmış olsa da numara korunur (defter ayracı)
+  // Kasa = defter toplamı − krediye giden tahsilat. Tahsilatın AYRI bir defter satırı YOKTUR
+  // (bkz. allyLoanFromLedger); burada düşülür ki her üye aynı kasayı görsün.
+  a.treasury = Math.max(0, led.reduce((s, e) => s + (e.amt || 0), 0) - ((_l && _l.odenen) || 0));
   a.donations = {};
   a.donPid = {};   // 🔑 aynı bağışlar OYUNCU KİMLİĞİNE göre — hisse anahtarı şirket adı OLAMAZ
   a.pidName = {};  // kimlik → şirket adı (hisse listesini okunur göstermek için)
@@ -4851,13 +5172,35 @@ function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
   // üyeler ne hattı görüyor ne de bağış yaptıkları hâlde hisse alabiliyorlardı. Artık ittifak
   // kaydının parçası: kim okursa aynısını görür. ⚠️ meta/consortium güvenlik kurallarında
   // TANIMLI OLMALI, yoksa yazma 401 alır ve özellik "çalışıyor" görünüp senkron olmaz.
+  // ⚡ ÖMÜR SAYACI KALKANI (hat kayıtlarındaki HAT_PEND'in kardeşi): bu satır konsorsiyum
+  // kaydını 12 saniyede bir sunucudan KOMPLE eziyor. Yerel `tasinan` henüz buluta gitmediyse
+  // siliniyordu — kıta hattının ömrü PRATİKTE hiç tükenmezdi. Monoton birleştirme:
+  // sunucudaki ile yerel tamponun BÜYÜĞÜ alınır.
+  const _cOnce = a.consortium;
   a.consortium = rec.meta.consortium || null;
+  if (a.consortium) {
+    const yerel = Math.max(CONS_PEND[a.consortium.route] || 0, (_cOnce && _cOnce.route === a.consortium.route) ? (_cOnce.tasinan || 0) : 0);
+    if (yerel > (a.consortium.tasinan || 0)) a.consortium.tasinan = yerel;
+    CONS_PEND[a.consortium.route] = Math.max(CONS_PEND[a.consortium.route] || 0, a.consortium.tasinan || 0);
+  }
   if (a.consortium && a.consortium.shares) consRightsSync(a.consortium);
   // ⚠️ Sunucu anahtarı (kuran oyuncunun kimliği + hat no) KAYITTA TUTULAMAZ: kurallarda
   // allies/$aid/lines/$lid altında `$other: validate false` var, fazladan alan yazarsan
   // yazma sessizce 401 alır. Bu yüzden anahtarları AYRI ve KAYDEDİLMEYEN bir haritada tutuyoruz —
   // yardımcı başkan hatta merkez eklerken kendi kimliğiyle KOPYA kayıt açmasın diye.
-  a.lines = Object.entries(rec.lines || {}).map(([k, l]) => { if (l && l.id != null) ALLY_LINE_KEYS[l.id] = k; return l; });
+  // ⚡ ÖMÜR SAYACI KALKANI (20. tur): bu satır G.ally.lines'ı 12 saniyede bir sunucudan KOMPLE
+  // üzerine yazıyor. Yerel olarak işlenen `tasinan` henüz buluta gitmediyse sessizce siliniyordu —
+  // sonuç: ittifak hattının ömrü hiç tükenmez, herkes ittifak hattına kaçardı.
+  // HAT_PEND yerel tampon: sunucudan geleni tamponla kıyasla, BÜYÜĞÜNÜ al (sayacı monoton tut).
+  // Aynı kalkan iki üyenin aynı anda satmasındaki "son yazan kazanır" yarışını da yumuşatır.
+  a.lines = Object.entries(rec.lines || {}).map(([k, l]) => {
+    if (l && l.id != null) {
+      ALLY_LINE_KEYS[l.id] = k;
+      if (HAT_PEND[l.id] > (l.tasinan || 0)) l.tasinan = HAT_PEND[l.id];
+      else if ((l.tasinan || 0) > (HAT_PEND[l.id] || 0)) HAT_PEND[l.id] = l.tasinan;
+    }
+    return l;
+  });
   a.pts = a.pts || 0;
 }
 async function allySync() {
@@ -5028,6 +5371,9 @@ window.donateAlly = amt => {
   G.ally.donations[G.company] = d;
   // Sunucudaki ORTAK deftere yaz: kasa = defter toplamı olduğu için eşzamanlı
   // bağışlar birbirinin üstüne binmez (tek sayı yazsaydık para kaybolurdu).
+  // ⚠️ Bağış BİLEREK `nm` ile yazılır — konsorsiyum hissesi yalnız GERÇEK bağıştan doğar.
+  // (Kredi, kira ve hat payları anonim yazılır ki hisse doğurmasınlar.)
+  // Kredi tahsilatı defterden türetilirken bu gelir de %60 payıyla borca sayılır.
   if (allyOnline()) NET.allyLedger(G.allyId, amt, 'bağış').catch(() => {});
   toast('💚 Bağışın kasaya geçti: ' + fmt(amt), '');
   beep(700, .1);
@@ -5121,18 +5467,27 @@ window.fundConsortium = () => {
   // Hisse anahtarı OYUNCU KİMLİĞİ olmalı: şirket adı değişebilir, aynı ada iki oyuncu düşebilir
   // ve Firebase anahtarında yasak karakter içerebilir. Çevrimdışı oynanan kayıtta kimlik yoksa
   // eski davranışa (şirket adı) düşülür — o durumda zaten tek oyuncu vardır.
+  // 🔒 HİSSE YALNIZ GERÇEK BAĞIŞTAN DOĞAR (denetimde bulundu — patronun "para oyuncuya
+  // aktarılamaz" kuralını deliyordu): başkan krediyi anonim çeker, kasayı doldurur, sonra
+  // 1 TL bağışlayıp hissenin %100'ünü kendine yazar, ittifaktan çıkıp hattı şahsi malı gibi
+  // kullanır — hatta müzayededen satıp NAKDE çevirirdi.
+  // Yeni kural: dağıtılan toplam hisse = bağışların maliyete oranı kadar. Gerisi İTTİFAKIN
+  // kalır ve yalnız ÜYELİKLE kullanılır (kimseye taşınmaz mülk olarak yazılmaz).
   const pidDon = (allyOnline() && G.ally.donPid && Object.keys(G.ally.donPid).length) ? G.ally.donPid : null;
+  const donTop = pidDon ? Object.values(pidDon).reduce((x, y) => x + y, 0)
+    : Object.values(G.ally.donations || {}).reduce((x, d) => x + (d.total || 0), 0);
+  const hisseOran = Math.max(0, Math.min(1, donTop / Math.max(1, share)));
   c.shares = {}; c.names = {};
   if (pidDon) {
     const total = Object.values(pidDon).reduce((s, v) => s + v, 0) || 1;
     for (const [pid, v] of Object.entries(pidDon)) {
-      c.shares[pid] = +(v / total * 100).toFixed(2);
+      c.shares[pid] = +(v / total * 100 * hisseOran).toFixed(2);
       c.names[pid] = (G.ally.pidName || {})[pid] || '';
     }
   } else {
     const dons = G.ally.donations || {};
     const total = Object.values(dons).reduce((s, d) => s + d.total, 0) || 1;
-    for (const [nm, d] of Object.entries(dons)) { c.shares[nm] = +(d.total / total * 100).toFixed(2); c.names[nm] = nm; }
+    for (const [nm, d] of Object.entries(dons)) { c.shares[nm] = +(d.total / total * 100 * hisseOran).toFixed(2); c.names[nm] = nm; }
   }
   c.status = 'building';
   c.done = Date.now() + 3 * 864e5 / (G.demo ? 60 : 1); // kıtalararası: 3 gün (patron)
@@ -5153,7 +5508,249 @@ function consortiumTick() {
   addMail('🌍 ' + c.partner, 'Hat devrede', `${r.nm} hattı devrede! Taşınan her MWh için kasanıza pay yazılıyor. Hayırlı olsun.`);
   save(); refreshAllyUI();
 }
-const consortiumLive = () => G.ally && G.ally.consortium && G.ally.consortium.status === 'live';
+// ═══════════ 🏦 İTTİFAK KREDİSİ + 💰 KASA GELİR KAPISI (patron 26 Ağu, 20. tur) ═══════════
+// PATRON: "İttifaklarda kredi alabilsin. Bu para ittifak kasasına girer, oyuncuya AKTARILAMAZ.
+// Toplam ittifak üyelerinin toplam şirket değerlerinin %50'si kadar olacak. Bu krediyi ittifak
+// BAŞKANI çekebilecek ve butonu ittifak ekranında başkana aktif görünecek.
+// Amaç kıtalar arası hat çekildiğinde buna para sağlamak."
+//
+// 🔴 ÜÇ TUZAK VE ÇÖZÜMLERİ (denetimde çıktı — geri alma):
+//  (1) KASA TEK SAYI DEĞİL, DEFTER TOPLAMIDIR. allyApply kasayı her 12 saniyede defterden
+//      YENİDEN hesaplar; `G.ally.treasury += tutar` yazarsan para 12 saniyede buhar olur.
+//      → Para MUTLAKA deftere yazılır.
+//  (2) Defterdeki `nm` alanı olan her POZİTİF satır BAĞIŞ sayılıyor ve konsorsiyum HİSSESİ
+//      doğuruyor. Krediyi normal allyLedger ile yazsaydık başkan milyarlarca "bağış" yapmış
+//      görünür, hissenin neredeyse tamamını alır, ittifaktan çıkar, hattı kişisel malı gibi
+//      kullanırdı — borç ittifakta kalırdı. → `nm` YAZILMAYAN anonim defter kullanılıyor.
+//      (Kural `nm`'i zorunlu tutmuyor: hasChildren(['pid','amt','ts']).)
+//  (3) META YAZMA YARIŞI. Kredi durumunu meta/loan'a yazsaydık NET.loop 12 saniyede bir
+//      sunucudan okuyup üzerine yazar, aynı taksit iki kez çekilirdi. → Kredi durumu HİÇBİR
+//      yere yazılmaz; DEFTERDEN TÜRETİLİR. Yarış da, ek Firebase kuralı da yok.
+//      Not biçimi: '#K<n>+' çekim · '#K<n>-' geri ödeme. En büyük n = güncel kredi.
+//
+// 🔁 GERİ ÖDEME: kasaya giren HER gelirin %60'ı otomatik bankaya gider. Neden taksit değil:
+// kasanın gerçek geliri hat payları ve bağıştır; sabit günlük taksit koysaydık aritmetik olarak
+// HER ittifak 3. günde temerrüde düşerdi (denetimde hesaplandı, 40-100 kat açık). Gelire oranlı
+// kesinti kurtarma kredisinin oyunda zaten onaylanmış kalıbıdır ve asla ölü döngü üretmez.
+// 🔑 Kıta hattı kirası (aşağıda) bu kredinin ASIL geri ödeme kaynağıdır: kira %10-60,
+// ittifak hattı payı ise yalnız %1,7 — patronun iki isteği birbirini tamamlıyor.
+const ALLYK_ORAN = 0.50;        // limit: üyelerin toplam şirket değerinin %50'si (PATRON KARARI)
+const ALLYK_FAIZ = 1.35;        // borç = çekilen × 1,35 (düz faiz, vade yok, temerrüt yok)
+const ALLYK_KESINTI = 0.60;     // kasaya giren her gelirin bankaya giden payı
+const ALLYK_UYE_TAVAN = 0.40;   // tek üye tabanın en fazla %40'ı olabilir (balina freni)
+const ALLYK_KIDEM_GUN = 3;      // 3 günden yeni üye tabana sayılmaz (sahte hesap freni)
+const ALLYK_AKTIF_GUN = 7;      // 7 gündür girmeyen üye tabana sayılmaz
+const ALLYK_MIN = 5e7;          // altında kredi açılmaz
+
+// 📒 ANONİM DEFTER KAYDI — `nm` YAZMAZ, dolayısıyla BAĞIŞ sayılmaz ve hisse doğurmaz.
+// ⚠️ Kredi, kira ve hat payları bunu kullanır; yalnız gerçek bağış (donateAlly) `nm` yazar.
+const allyLedgerAnon = (aid, amt, note) => NET.push('allies/' + aid + '/ledger',
+  { pid: NET.id, amt: Math.round(amt), note: (note || '').slice(0, 40), ts: Date.now() });
+
+// Defterden kredi durumu (tek kaynak). Çevrimdışıyken G.ally.loan yerel olarak tutulur.
+// 🏦 KREDİ DURUMU TAMAMEN DEFTERDEN TÜRETİLİR — hiçbir yere yazılmaz.
+// Geri ödeme = kredi çekildikten SONRA deftere giren her POZİTİF gelirin ALLYK_KESINTI kadarı.
+// ⚠️ Neden ayrı bir '#K-' satırı YAZILMIYOR (denetimde çıktı): o satırı yalnız geliri işleyen
+// istemci yazabiliyordu. Kıta hattı KİRASI yabancı ittifakın defterine gittiği için ev sahibinin
+// kredisi hiç ödenmiyordu — oysa kira bu kredinin ASIL geri ödeme kaynağı. Türetme ile kim
+// yazarsa yazsın sayılır: yazma yarışı yok, ek satır yok, kare başına yazma yok.
+function allyLoanFromLedger(led) {
+  let no = 0, cekTs = 0;
+  for (const e of led) {
+    const m = /^#K(\d+)\+/.exec(e.note || '');
+    if (m && +m[1] >= no) { no = +m[1]; cekTs = Math.max(cekTs, e.ts || 0); }
+  }
+  if (!no) return null;
+  let al = 0, gelir = 0;
+  for (const e of led) {
+    const amt = e.amt || 0;
+    if ((e.note || '').indexOf('#K' + no + '+') === 0) { al += amt; continue; }
+    if (amt > 0 && (e.ts || 0) >= cekTs) gelir += amt;   // çekimden SONRAKİ her gelir tahsilata girer
+  }
+  if (al <= 0) return null;
+  const toplam = Math.round(al * ALLYK_FAIZ);
+  const odenen = Math.min(toplam, Math.round(gelir * ALLYK_KESINTI));
+  const borc = Math.max(0, toplam - odenen);
+  // Borç kapandıysa `loan` NULL sayılır (aksi halde "Kredi Çek" butonu bir daha görünmezdi);
+  // numara yine döner ki sonraki kredi defterde eskisiyle aynı numarayı almasın.
+  return { no, al, odenen, borc, kapandi: borc <= 0 };
+}
+const allyKrediVar = () => !!(G && G.ally && G.ally.loan && G.ally.loan.borc > 0);
+const allyKrediBorc = () => allyKrediVar() ? G.ally.loan.borc : 0;
+
+// Bir üyenin şirket değeri. Çevrimiçi: sunucudaki players/<pid>/worth. Kendi satırın: myWorth().
+// Çevrimdışı bot üyeler: kendi değerinden türetilen DETERMİNİSTİK ve İHTİYATLI bir sayı —
+// hayali üyelerle bedava para basılmasın diye bilerek düşük tutuldu.
+function allyUyeDeger(m) {
+  if (!m) return 0;
+  if (m.me || m.nm === G.company) return Math.max(0, myWorth());
+  if (allyOnline() && m.pid) {
+    const p = NET.players && NET.players[m.pid];
+    if (p && p.worth > 0) return Math.max(0, Math.min(1e15, p.worth));
+    return 0;   // sunucuda değeri yoksa TABANA SAYILMAZ (şişirme kapısı kapalı)
+  }
+  return Math.max(0, myWorth()) * (.25 + hash01(String(m.nm || '').length, 7, 41) * .35);
+}
+// Kredi tabanı: uygun üyelerin toplam değeri, BALİNA KIRPMASIYLA.
+// ⚠️ Kırpma yönü kritik: "min(ham, enBüyük / 0.40)" YANLIŞ olurdu — balinayı hiç frenlemez,
+// dürüst kalabalık ittifağı ise cezalandırırdı. Doğrusu balinayı KIRPMAK:
+// diğerlerinin toplamı, tabanın en az %60'ı olmalı → taban ≤ diğerler / 0,60.
+function allyKrediTaban() {
+  if (!G || !G.ally) return 0;
+  const simdi = Date.now();
+  const uygun = allyRoster().filter(m => !m.invited
+    && (simdi - (m.since || 0)) >= ALLYK_KIDEM_GUN * 864e5
+    && (m.me || (simdi - (m.seen || m.since || 0)) <= ALLYK_AKTIF_GUN * 864e5));
+  if (!uygun.length) return 0;
+  const degerler = uygun.map(allyUyeDeger).filter(v => v > 0);
+  if (!degerler.length) return 0;
+  const ham = degerler.reduce((a, b) => a + b, 0);
+  const enBuyuk = Math.max.apply(null, degerler);
+  const digerler = ham - enBuyuk;
+  return Math.max(0, Math.floor(Math.min(ham, digerler / (1 - ALLYK_UYE_TAVAN))));
+}
+const allyKrediLimit = () => {
+  if (!G || !G.ally || allyKrediVar()) return 0;
+  return Math.max(0, Math.floor(allyKrediTaban() * ALLYK_ORAN));
+};
+
+// 💰 KASAYA GİREN HER GELİRİN TEK KAPISI. Kredi açıksa payı burada kesilir.
+// ⚠️ HEM yerel kasayı HEM defteri günceller — biri eksik kalırsa 12 saniye sonra senkron siler.
+// ⚠️ Anonim yazar: yoksa hat payları ve kira, o an satan üyenin "bağışı" sayılıp ona
+//    konsorsiyum hissesi kazandırırdı (bugün canlıda çalışan bir kaçak — burada kapatılıyor).
+// 🔴 KOTA BOMBASI ÖNLEMİ (denetimde yakalandı): sellChunk her ANİMASYON KARESİNDE çalışıyor.
+// Buradan doğrudan RTDB'ye yazsaydık tek satışta binlerce defter satırı doğar, üstelik kredi
+// açıkken KARE BAŞINA İKİ satır olurdu — ve kasa ile kredi artık bu defterden türetildiği için
+// senkron da çöplenirdi. Kira için yazılan `rentFlush` deseninin aynısı: biriktir, sonra akıt.
+const KASA_BEK = {};   // hedefAid -> { gelir, kesinti, no }
+let _kasaWT = 0;
+function kasaAkit(zorla) {
+  if (!allyOnline()) return;
+  if (!zorla && Date.now() - _kasaWT < 6000) return;
+  _kasaWT = Date.now();
+  for (const [aid, b] of Object.entries(KASA_BEK)) {
+    // Yalnız GELİR yazılır; krediye giden pay defterden türetilir (ayrı satır yok).
+    if (b.gelir >= 1) allyLedgerAnon(aid, Math.round(b.gelir), b.note || 'gelir').catch(() => {});
+    delete KASA_BEK[aid];
+  }
+}
+function allyKasaGelir(amt, note, aid) {
+  amt = Math.round(amt);
+  if (!(amt > 0)) return 0;
+  const hedef = aid || G.allyId;
+  const kendi = !aid || aid === G.allyId;
+  let kes = 0;
+  if (kendi && allyKrediVar()) {
+    kes = Math.min(G.ally.loan.borc, Math.round(amt * ALLYK_KESINTI));
+    G.ally.loan.borc -= kes;
+    G.ally.loan.odenen += kes;
+  }
+  if (kendi && G.ally) G.ally.treasury = Math.max(0, (G.ally.treasury || 0) + amt - kes);
+  if (allyOnline() && hedef) {
+    const b = KASA_BEK[hedef] = KASA_BEK[hedef] || { gelir: 0, note: note };
+    b.gelir += amt;
+    kasaAkit();
+  }
+  if (kendi && kes > 0 && G.ally.loan.borc <= 0) {
+    G.ally.loan = null;
+    toast('🏦 İttifak kredisi KAPANDI — kasa gelirinin tamamı yeniden ittifakın', '', null, 0, true);
+    addMail('🏦 Banka', 'İttifak kredisi kapandı',
+      'İttifakınızın kredi borcu tamamen ödendi. Kasaya giren gelirlerden artık kesinti yapılmayacak ve yeni bir ittifak kredisi çekilebilir.', true);
+  }
+  return amt - kes;
+}
+
+// 🏦 Krediyi çek — YALNIZ BAŞKAN. Para KASAYA girer, kimsenin cebine geçmez.
+window.allyKrediAsk = () => {
+  if (!G.ally) { toast('🤝 Önce bir ittifaka katıl', 'warn'); return; }
+  if (!isAllyBoss()) { toast('👑 İttifak kredisini yalnız BAŞKAN çekebilir', 'warn'); return; }
+  if (allyKrediVar()) { toast('🏦 Açık bir ittifak krediniz var — kapanmadan yenisi çekilmez', 'warn'); return; }
+  const taban = allyKrediTaban(), limit = allyKrediLimit();
+  if (limit < ALLYK_MIN) {
+    $('modal').innerHTML = '<h2>🏦 İttifak Kredisi</h2>'
+      + '<p class="sub">Kredi tabanınız <b>' + fmt(taban) + '</b>, bu da <b>' + fmt(limit) + '</b> limit demek — en az ' + fmt(ALLYK_MIN) + ' gerekiyor.</p>'
+      + '<p class="sub">Taban, ittifak üyelerinin <b>şirket değerlerinin toplamıdır</b>. Sayılmak için üyenin '
+      + ALLYK_KIDEM_GUN + ' günden eski ve son ' + ALLYK_AKTIF_GUN + ' günde oyuna girmiş olması gerekir; '
+      + 'tek üye tabanın en fazla %' + (ALLYK_UYE_TAVAN * 100) + '\u0027ı sayılır. Üye toplayın ve büyüyün.</p>'
+      + '<button class="primary ghostbtn" onclick="closeModal()">Kapat</button>';
+    $('overlay').classList.add('show');
+    return;
+  }
+  const borc = Math.round(limit * ALLYK_FAIZ);
+  $('modal').innerHTML = '<h2>🏦 İttifak Kredisi</h2>'
+    + '<p class="sub" style="margin-top:0">Kıtalar arası hat gibi büyük ortak yatırımları finanse etmek için. '
+    + 'Para doğrudan <b>ittifak kasasına</b> girer — <b>hiçbir üyenin cebine geçmez</b>.</p>'
+    + '<table class="ledger">'
+    + '<tr><td>Kredi tabanı <span class="sub">(üyelerin toplam şirket değeri)</span></td><td>' + fmt(taban) + '</td></tr>'
+    + '<tr><td>Limit <span class="sub">(tabanın %' + (ALLYK_ORAN * 100) + '\u0027si)</span></td><td><b>' + fmt(limit) + '</b></td></tr>'
+    + '<tr><td>Ödenecek toplam <span class="sub">(×' + ALLYK_FAIZ + ')</span></td><td><b class="neg">' + fmt(borc) + '</b></td></tr>'
+    + '<tr><td>Geri ödeme</td><td>kasaya giren gelirin <b>%' + (ALLYK_KESINTI * 100) + '</b>\u0027ı</td></tr></table>'
+    + '<p class="sub">Vade ve taksit YOK, temerrüt YOK. Borç, kasanın kendi geliriyle kapanır: hat payları, '
+    + '🌍 <b>kıta hattı kirası</b> ve bağışlar. Borç bitene kadar yeni ittifak kredisi çekilemez.</p>'
+    + '<p class="sub" style="color:var(--warn)">⚠️ Bu para ittifakın ortak malıdır. Kasadan yalnız ortak projeler ödenir '
+    + '(hat, transfer merkezi, konsorsiyum payı) — bireysel çekim oyunda hiç yoktur.</p>'
+    + '<button class="primary" onclick="closeModal();allyKrediAl()">🏦 ' + fmt(limit) + ' Çek — kasaya girsin</button>'
+    + '<button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>';
+  $('overlay').classList.add('show');
+};
+window.allyKrediAl = () => {
+  if (!G.ally || !isAllyBoss() || allyKrediVar()) return;
+  const tutar = allyKrediLimit();
+  if (tutar < ALLYK_MIN) return;
+  // Kredi NUMARASI defterin tek ayracıdır: eski kredinin '#K1' satırları yenisiyle
+  // toplanmasın diye her yeni kredi bir sonraki numarayı alır (allyLoanFromLedger en büyüğü okur).
+  const no = (G.ally.loanNo || 0) + 1;
+  G.ally.loanNo = no;
+  G.ally.loan = { no, al: tutar, odenen: 0, borc: Math.round(tutar * ALLYK_FAIZ) };
+  G.ally.treasury = (G.ally.treasury || 0) + tutar;
+  if (allyOnline()) allyLedgerAnon(G.allyId, tutar, '#K' + no + '+ ittifak kredisi').catch(() => {});
+  addMail('🏦 Banka', 'İttifak kredisi kullandırıldı',
+    '<b>' + G.ally.name + '</b> ittifakına <b>' + fmt(tutar) + '</b> tutarında ittifak kredisi kullandırıldı ve tutar '
+    + 'doğrudan <b>ittifak kasasına</b> geçti.<br><br>Toplam geri ödeme: <b class="neg">' + fmt(Math.round(tutar * ALLYK_FAIZ)) + '</b><br>'
+    + 'Tahsilat biçimi: kasaya giren her gelirin <b>%' + (ALLYK_KESINTI * 100) + '</b>\u0027ı.<br><br>'
+    + 'Bu para üyelere dağıtılamaz; yalnız ortak projelerde kullanılır. Borç kapanana kadar yeni ittifak kredisi açılmaz.', true);
+  toast('🏦 İttifak kredisi çekildi — ' + fmt(tutar) + ' kasaya girdi', '', null, 0, true);
+  save(); refreshAllyUI(); renderLinePanel();
+};
+
+const consortiumLive = () => G.ally && G.ally.consortium && G.ally.consortium.status === 'live' && !consOlu(G.ally.consortium);
+// 🌍 KONSORSİYUM HATTININ ÖMRÜ — kıtalar arası hat da sonsuz değildir (patron 26 Ağu).
+// Ölçü aynı: taşınan toplam MWh / (payınızın maliyeti / bolen). Rota maliyeti devasa olduğu için
+// ömür de devasa çıkar — ama SONSUZ değil, ve ittifak bunu ekranda görür.
+// ⚠️ SIRADAN ÜYE de sayaca yazar: sadece başkan yazsaydı 30 kişilik ittifakta ömür hiç azalmazdı.
+//   Başkan/yardımcı ayrıca ORTAK kayda işler; üyenin sayacı yerelde tutulur ve bir sonraki
+//   başkan yazmasında tabana katılır (allyApply Math.max ile monoton birleştirir).
+// ⚠️ `consortium` düğümünde Firebase kuralı BEYAZ LİSTE ($other: validate false) —
+//   `tasinan` alanı docs/firebase-guvenlik-kurallari.json'a EKLENDİ. Kural yayınlanmadan
+//   bu alan sunucuya gitmez (yazma 401 alır), oyun yine de yerelde doğru çalışır.
+const consOmurMax = c => Math.max(1, Math.round((CONSORTIUM_ROUTES[c.route] ? CONSORTIUM_ROUTES[c.route].cost / 2 : 0) / LINE_OMUR.bolen));
+const consOmurFrac = c => c ? Math.min(1, (c.tasinan || 0) / consOmurMax(c)) : 0;
+// ⚰️ Ömrünü dolduran kıta hattı: ayrı bir `status` yazmadan türetilir (kural beyaz listesi dar).
+const consOlu = c => !!c && consOmurFrac(c) >= 1;
+let _consWT = 0;
+// Yerel sayaç tamponu (rota no -> taşınan). allyApply sunucudan geleni bununla karşılaştırır.
+const CONS_PEND = {};
+function consTasi(cn, mwh) {
+  const c = G.ally && G.ally.consortium;
+  // ⚠️ Yalnız KENDİ ittifakımızın rotası bizim sayacımıza yazılır — ama hissedar/kiracı
+  // trafiği de o rotanın ömrünü tüketmelidir; hattı işleten ittifakın istemcisi bunu
+  // kendi satışlarında zaten sayar. Kiralık kullanımda (cn.kiralik) hat BİZİM değil,
+  // dolayısıyla bizim sayacımıza yazmayız; ama BİZİM rotamızsa kim kullanırsa kullansın sayılır.
+  if (!c || !(mwh > 0) || cn.routeIdx !== c.route) return;
+  const once = consOmurFrac(c);
+  c.tasinan = (c.tasinan || 0) + mwh;
+  CONS_PEND[c.route] = Math.max(CONS_PEND[c.route] || 0, c.tasinan);
+  // ⚠️ Yazma kısıcısı senkrondan (12 sn) KISA olmalı, yoksa tampon her turda geri alınır.
+  if (canAllyLine() && Date.now() - _consWT > 5000) { _consWT = Date.now(); consortiumPush(); }
+  if (once < 1 && consOmurFrac(c) >= 1) {
+    // ⚠️ `status = 'bitti'` YAZMA: Firebase kuralı status'ü pending|accepted|building|live ile
+    // sınırlıyor; tanımsız değer TÜM meta yazmasını 401'e düşürür ve kural-gecikmesi kalkanını
+    // KALICI kilitlerdi. Ölüm zaten `tasinan >= omur` üzerinden türetiliyor (consOlu).
+    toast('⚰️ Kıtalar arası hat ÖMRÜNÜ DOLDURDU — yeniden finanse edilmeli', 'bad', null, 0, true);
+    addMail('🌍 Konsorsiyum', 'Kıtalar arası hat ömrünü doldurdu',
+      'Ortak hattınız tasarım ömrünü tamamladı ve devre dışı kaldı. Yeni bir konsorsiyum kurulup finanse edilmeden bu koridor kullanılamaz.', true);
+  }
+}
 // 🌍 Konsorsiyum durumunu ORTAK kayda yaz (yalnız başkan/yardımcı çağırır)
 const consortiumPush = () => {
   const c = G.ally && G.ally.consortium;
@@ -5161,13 +5758,26 @@ const consortiumPush = () => {
   // ⚠️ Firebase anahtarında `. # $ [ ] /` YASAK. Çevrimdışı kayıtta hisseler şirket ADINA
   // yazılmış olabilir; bozuk tek anahtar TÜM yazmayı 401'e düşürür — süzüp gönderiyoruz.
   const temiz = { route: c.route, status: c.status };
+  if (c.tasinan > 0) temiz.tasinan = Math.round(c.tasinan);   // ⚡ hat ömrü sayacı (kural: consortium/tasinan)
+  // 🌍 Kira ilanı ORTAK kayda gider: yabancı oyuncu `allies` düğümünü okuyabildiği için
+  // (kural: allies .read true) ilan ayrı bir dizin düğümü gerektirmez.
+  if (c.rent) temiz.rent = { rate: Math.min(RENT_MAX, Math.max(RENT_MIN, c.rent.rate || .25)), open: !!c.rent.open };
   if (c.partner) temiz.partner = String(c.partner).slice(0, 40);
   if (c.since) temiz.since = c.since;
   if (c.done) temiz.done = c.done;
   const ok = k => k && !/[.#$\[\]\/]/.test(k);
   if (c.shares) { temiz.shares = {}; for (const [k, v] of Object.entries(c.shares)) if (ok(k)) temiz.shares[k] = v; }
   if (c.names) { temiz.names = {}; for (const [k, v] of Object.entries(c.names)) if (ok(k)) temiz.names[k] = String(v).slice(0, 28); }
-  NET.allyMetaSet(G.allyId, 'consortium', temiz).catch(() => {});
+  const yeniVar = !eskiBicimMi();
+  if (!yeniVar) { delete temiz.tasinan; delete temiz.rent; }
+  NET.allyMetaSet(G.allyId, 'consortium', temiz)
+    .then(() => { if (yeniVar) eskiBicimKapat(); })
+    .catch(() => {
+      if (eskiBicimMi()) return;
+      eskiBicimAc();   // 🛡️ kural gecikmesi kalkanı — yukarıdaki açıklamaya bak
+      const t2 = Object.assign({}, temiz); delete t2.tasinan; delete t2.rent;
+      NET.allyMetaSet(G.allyId, 'consortium', t2).catch(() => {});
+    });
 };
 // ⚖️ HİSSE TESLİMİ: ortak kayıttaki hisse listesinde kendi kimliğini görürsen hakkı KENDİ
 // defterine yazarsın. Patronun kuralı buydu: "başkan parayı toplayıp üyeleri atarsa, bir dünya
@@ -5186,9 +5796,129 @@ function consRightsSync(c) {
 // ⚖️ HİSSEDAR HAKKI: ittifaktan ayrılsan/atılsan bile finanse ettiğin hattı kullanmaya devam edersin.
 // (Patron: "başkan parayı toplayıp üyeleri atarsa bir dünya para verdikleri hattı kullanamazlar" — bu kapıyı kapatır.)
 const myRightRoutes = () => (G.consRights || []).map(r => r.route);
+// ═══════════ 🌍 KITALAR ARASI HAT KİRASI (patron 26 Ağu, 20. tur) ═══════════
+// PATRON: "Kıtalar arası hatlar ittifaklar tarafından kiraya verilebilecek. İttifak başkanı hat
+// sekmesinde kira bedeli kWh satışının %10'undan %60'ına kadar vergi olarak kiraladığı kişiden
+// para kazanacak. Bu para ittifak kasasına girecek."
+//
+// ⚠️ KİRALAMA ÖNCE BİR ERİŞİM HAKKIDIR: bugün YABANCI oyuncu konsorsiyum hattını HİÇ kullanamıyor
+// (transferAllowed yalnız kendi ittifakının rotasına ve hissedarlığa izin veriyor). Kira, bu
+// sınıfa kapıyı AÇAN ve karşılığında pay alan yeni bir gelir kalemidir — kimsenin mevcut hakkı
+// elinden alınmıyor.
+//
+// KİM ÖDER (karar ve gerekçe — GERİ ALMA):
+//  · Kendi üyesi ÖDEMEZ — hattın parasını zaten ORTAK KASADAN verdi; kira almak aynı paradan
+//    iki kez almak olurdu.
+//  · ⚖️ Hissedar ÖDEMEZ — "hak KİŞİYE aittir, atılsan bile kullanırsın" sözü koda yazılı;
+//    kira alsaydık "parayı topla sonra at" oyunu arka kapıdan geri gelirdi.
+//  · YABANCI oyuncu/ittifak ÖDER. Patronun kastettiği "kiralayan" tam olarak budur.
+//
+// DENGE (1000 MWh, priceNow 40.000, ev karosu ×0,85 / hedef ×1,25, kayıp %12, kaçak %3):
+//  evde sat 32,98M · kirasız hat 42,68M · %20 kira 34,14M · BAŞABAŞ %23 · %60 kira 17,07M.
+//  → Açık ev pazarı varken %30 üstü kira kimseyi çekmez; AMA ev pazarı DOYDUĞUNDA fazla enerji
+//    DUMP_RATE (%15) ile 4,95M eder — orada %60 kira bile evdekinin 3,4 KATI (başabaş %88).
+//  Yani %10-30 "hacim", %40-60 "doymuş balinayı sağma" stratejisidir; aralık sağlam, tavan kırılmıyor.
+const RENT_MIN = .10, RENT_MAX = .60;   // patronun verdiği aralık
+const RENT_GUN = 7;                     // sözleşme süresi — oran imzada DONAR
+const RENT_ADIM = [.10, .20, .30, .40, .50, .60];
+// Ev sahibi ittifakın ilan ayarı: G.ally.consortium.rent = { rate, open }
+const consRent = () => (G.ally && G.ally.consortium && G.ally.consortium.rent) || null;
+// Kiracının kendi kaydındaki sözleşmesi (hisse gibi KİŞİYE ait, kendi save'inde durur)
+const rentLeaseOk = () => !!(G && G.consLease && G.consLease.until > Date.now());
+const rentLeaseRoute = () => rentLeaseOk() ? G.consLease.route : -1;
+window.setRentRate = r => {
+  if (!G.ally || !G.ally.consortium) return;
+  if (!canAllyLine()) { toast('👑 Kira oranını yalnız başkan veya yardımcısı belirler', 'warn'); return; }
+  const c = G.ally.consortium;
+  if (c.status !== 'live') { toast('🌍 Hat henüz devrede değil', 'warn'); return; }
+  c.rent = c.rent || { rate: .25, open: false };
+  c.rent.rate = Math.min(RENT_MAX, Math.max(RENT_MIN, r));
+  consortiumPush();
+  toast('🌍 Kira oranı %' + Math.round(c.rent.rate * 100) + ' olarak ayarlandı', '', null, 0, true);
+  save(); refreshAllyUI(); renderLinePanel();
+};
+window.setRentOpen = v => {
+  if (!G.ally || !G.ally.consortium) return;
+  if (!canAllyLine()) { toast('👑 Bu ayarı yalnız başkan veya yardımcısı değiştirir', 'warn'); return; }
+  const c = G.ally.consortium;
+  c.rent = c.rent || { rate: .25, open: false };
+  c.rent.open = !!v;
+  consortiumPush();
+  // ⚠️ Yürüyen sözleşmeler KAPATMADAN ETKİLENMEZ: kiracı süresini doldurur. Aksi halde ev sahibi
+  // kiracının boşaltması ortasında ilanı kapatıp onu donmuş fiyatla kirasız satışa düşürebilirdi.
+  toast(v ? '🌍 Hat KİRAYA AÇILDI — yabancı şirketler sözleşme imzalayabilir' : '🌍 Yeni kiralamalar kapatıldı (mevcut sözleşmeler sürer)', '', null, 0, true);
+  save(); refreshAllyUI();
+};
+// 🌍 Kiralık hat ilanları: `allies` düğümü herkese OKUNUR (kural: allies .read true),
+// yani ek bir dizin düğümü açmaya gerek yok — en iyi 20 ittifağın meta'sı taranır.
+let RENTDIR = null;
+async function loadRentDir() {
+  RENTDIR = [];
+  if (!allyOnline()) return RENTDIR;
+  try {
+    if (!ALLYDIR) await loadAllyDir();
+    for (const d of (ALLYDIR || []).slice(0, 20)) {
+      if (!d.aid || d.aid === G.allyId) continue;
+      const meta = await NET.get('allies/' + d.aid + '/meta').catch(() => null);
+      const c = meta && meta.consortium;
+      if (!c || c.status !== 'live' || !c.rent || !c.rent.open) continue;
+      RENTDIR.push({ aid: d.aid, nm: d.name, route: c.route, rate: c.rent.rate });
+    }
+  } catch (e) {}
+  return RENTDIR;
+}
+window.rentDirRefresh = () => { RENTDIR = null; ALLYDIR = null; loadRentDir().then(() => refreshAllyUI()); };
+window.rentSign = (aid, nm, route, rate) => {
+  if (rentLeaseOk()) { toast('🌍 Zaten yürüyen bir kira sözleşmen var', 'warn'); return; }
+  const r = CONSORTIUM_ROUTES[route];
+  if (!r) return;
+  $('modal').innerHTML = '<h2>🌍 Kıta Hattı Kiralama</h2>'
+    + '<p><b>' + r.nm + '</b><br><span class="sub">İşletmeci: ' + nm + '</span></p>'
+    + '<table class="ledger">'
+    + '<tr><td>Kira oranı <span class="sub">(satıştan kesilir)</span></td><td><b class="neg">%' + Math.round(rate * 100) + '</b></td></tr>'
+    + '<tr><td>Süre</td><td>' + RENT_GUN + ' gün</td></tr>'
+    + '<tr><td>Peşin bedel</td><td>YOK</td></tr>'
+    + '<tr><td>Hat kaybı</td><td>%' + CONS_LOSS + '</td></tr></table>'
+    + '<p class="sub">Bu hattın uçlarına ya da ' + CONS_HUBS + ' transfer merkezinden birine <b>' + CONS_ACCESS_KM + ' km</b> '
+    + 'içinde deposu olan tesislerin, karşı kıtadaki pazara satış yapabilir. Her satıştan <b>%' + Math.round(rate * 100) + '</b> '
+    + 'doğrudan <b>' + nm + '</b> ittifakının kasasına gider.</p>'
+    + '<p class="sub" style="color:var(--warn)">⚠️ Oran sözleşme boyunca DONAR — ev sahibi sonradan yükseltemez.</p>'
+    + '<button class="primary" onclick="closeModal();rentSignDo(\'' + aid + '\',\'' + String(nm).replace(/[^\wÇĞİÖŞÜçğıöşü .-]/g, '') + '\',' + route + ',' + rate + ')">🌍 Sözleşmeyi İmzala — ' + RENT_GUN + ' gün</button>'
+    + '<button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>';
+  $('overlay').classList.add('show');
+};
+window.rentSignDo = (aid, nm, route, rate) => {
+  if (rentLeaseOk()) { toast('🌍 Zaten yürüyen bir kira sözleşmen var', 'warn'); return; }
+  // 🔒 İlan hâlâ geçerli mi: rota var mı, oran aralıkta mı, ev sahibi kendi ittifakımız mı?
+  if (!CONSORTIUM_ROUTES[route]) return;
+  if (!(rate >= RENT_MIN && rate <= RENT_MAX)) { toast('🌍 Geçersiz kira oranı', 'warn'); return; }
+  if (aid && aid === G.allyId) { toast('🌍 Kendi ittifakının hattını kiralayamazsın — zaten ücretsiz kullanıyorsun', 'warn'); return; }
+  G.consLease = { aid, nm, route, rate: Math.min(RENT_MAX, Math.max(RENT_MIN, rate)), until: Date.now() + RENT_GUN * 864e5 };
+  addMail('🌍 ' + nm, 'Kıta hattı kira sözleşmesi',
+    'Kıtalar arası hattımızı <b>' + RENT_GUN + ' gün</b> süreyle kullanma hakkını aldınız. Kira oranı <b>%' + Math.round(rate * 100) + '</b> '
+    + 've sözleşme boyunca sabittir.<br><br>Her satışınızın bu oranı doğrudan ittifak kasamıza geçer; kalan tutar sizindir. '
+    + 'Hat kaybı %' + CONS_LOSS + '. Süre bitince erişim kapanır, yeniden imzalayabilirsiniz.', true);
+  toast('🌍 Kira sözleşmesi imzalandı — ' + RENT_GUN + ' gün, %' + Math.round(rate * 100) + ' kira', '', null, 0, true);
+  save(); refreshAllyUI(); renderNav();
+};
+// 💸 Kirayı EV SAHİBİ ittifakın kasasına yaz. Kiracının KENDİ kasasına ASLA dokunulmaz.
+// ⚠️ Boşaltma başına TEK kayıt: sellChunk her karede çalışıyor, her çağrıda RTDB'ye yazsaydık
+//    tek satışta binlerce defter satırı doğar ve allySync bunları 12 saniyede bir indirirdi
+//    (Blaze kota bombası). Bu yüzden st.disch.rentAcc'ta biriktirilip bitişte akıtılıyor.
+function rentFlush(st) {
+  const d = st && st.disch;
+  if (!d || !(d.rentAcc > 0) || !d.rentAid) return;
+  // 💰 Ev sahibi ittifakın KASA kapısından geçer: kredisi varsa tahsilat defterden türetilirken
+  // bu gelir de sayılır (kira, ittifak kredisinin ASIL geri ödeme kaynağıdır).
+  allyKasaGelir(Math.round(d.rentAcc), 'kita hatti kirasi', d.rentAid);
+  kasaAkit(true);   // boşaltma bitti — beklet me, hemen akıt
+  d.rentAcc = 0;
+}
+
 function activeRouteIdx() { // kullanabildiğin rotalar: ittifakınınki + hissedarı olduklarımız
   const out = new Set(myRightRoutes());
   if (consortiumLive()) out.add(G.ally.consortium.route);
+  if (rentLeaseOk()) out.add(G.consLease.route);   // 🌍 kiralanan rota
   return [...out];
 }
 // ── 🌍 KONSORSİYUM HATTI ORTAK KULLANIMI (patron kuralı) ──
@@ -5214,15 +5944,23 @@ function consortiumFor(cell) {
   const routes = activeRouteIdx();
   if (!routes.length) return null;
   const c = cellCenter(cell);
-  let best = null;
-  for (const idx of routes) {
-    consortiumNodes(idx).forEach((n, i) => { const d = kmDist(n.ll, c); if (!best || d < best.d) best = { d, i, idx }; });
-  }
-  if (!best || best.d > CONS_ACCESS_KM) return null;
+  // 🌍 ÜCRETSİZ ROTA HER ZAMAN ÖNCELİKLİ: kiralanan rota da listeye girdiği için, sırf daha
+  // yakın diye oyuncu KENDİ bedava hattından koparılıp kirali hatta düşürülemez. Önce ücretsiz
+  // rotalar taranır; hiçbiri menzilde değilse kiralı rotaya bakılır.
+  const kira = rentLeaseRoute();
+  const tara = list => {
+    let b = null;
+    for (const idx of list) consortiumNodes(idx).forEach((n, i) => { const d = kmDist(n.ll, c); if (!b || d < b.d) b = { d, i, idx }; });
+    return (b && b.d <= CONS_ACCESS_KM) ? b : null;
+  };
+  const best = tara(routes.filter(i => i !== kira)) || tara(routes.filter(i => i === kira));
+  if (!best) return null;
   const r = CONSORTIUM_ROUTES[best.idx];
   const target = best.i <= (CONS_HUBS + 1) / 2 ? r.to : r.from; // yakın olduğun ucun KARŞISI hedeftir
-  const asShareholder = !(consortiumLive() && G.ally.consortium.route === best.idx);
-  return { cell: cellId(target), km: Math.round(r.km), dist: Math.round(best.d), route: r, hubIdx: best.i, routeIdx: best.idx, asShareholder };
+  const kiralik = best.idx === kira && !(consortiumLive() && G.ally.consortium.route === best.idx) && myRightRoutes().indexOf(best.idx) < 0;
+  const asShareholder = !kiralik && !(consortiumLive() && G.ally.consortium.route === best.idx);
+  return { cell: cellId(target), km: Math.round(r.km), dist: Math.round(best.d), route: r, hubIdx: best.i, routeIdx: best.idx,
+    asShareholder, kiralik, rentRate: kiralik ? G.consLease.rate : 0, rentAid: kiralik ? G.consLease.aid : null, rentNm: kiralik ? G.consLease.nm : '' };
 }
 
 window.leaveAllyAsk = () => {
@@ -5582,6 +6320,7 @@ function allyOthersHTML() {
       <button class="${ALLYTAB === 'dost' ? 'on' : ''}" onclick="allyTab('dost')">🤝 Dost</button>
       <button class="${ALLYTAB === 'dusman' ? 'on' : ''}" onclick="allyTab('dusman')">⚔️ Düşman</button>
       <button class="${ALLYTAB === 'kons' ? 'on' : ''}" onclick="allyTab('kons')">⚖️ Konsorsiyum</button>
+      <button class="${ALLYTAB === 'kira' ? 'on' : ''}" onclick="allyTab('kira')">🌍 Kiralık Hat</button>
     </div>`;
   const liste = (key, arr, ico, bos) => arr.length
     ? arr.map(nm => `<div class="mrow"><span class="mid"><div>${ico} ${nm}</div></span>
@@ -5603,6 +6342,37 @@ function allyOthersHTML() {
       <p class="sub">İhalede karşınıza çıkan, bölge kapan ittifaklar. Aynı ittifak hem dost hem düşman olamaz.</p>
       ${arama('foes', 'İttifak adı ara…', '➕ Ekle')}
       ${liste('foes', dus, '⚔️', 'Henüz düşman ittifak eklenmedi.')}`;
+  } else if (ALLYTAB === 'kira') {
+    // 🌍 KİRALIK KITA HATLARI — bireysel oyuncu kıtalar arası hat çekemez (3 ittifaklı konsorsiyum
+    // şart); kiralamak, o koridora erişmenin TEK gerçekçi yoludur.
+    const L = G.consLease;
+    h += `<div style="font-size:12px;margin:10px 0 2px">🌍 <b>KİRALIK KITA HATLARI</b>
+      <span class="lnk" style="float:right;cursor:pointer;text-decoration:underline;color:var(--acc2)" onclick="rentDirRefresh()">↻ Yenile</span></div>`;
+    if (rentLeaseOk()) {
+      const r2 = CONSORTIUM_ROUTES[L.route];
+      h += `<div style="border:1px solid var(--gold);border-radius:10px;padding:9px 11px;margin:6px 0">
+        <div style="font-size:12.5px;font-weight:800;color:var(--gold)">📜 YÜRÜYEN SÖZLEŞMEN</div>
+        <div class="sub"><b>${r2 ? r2.nm : 'Kıta hattı'}</b> · işletmeci: ${L.nm}</div>
+        <div class="qline" style="font-size:11.5px"><span>Kira: <b class="neg">%${Math.round(L.rate * 100)}</b></span>
+          <span>Kalan: <b>${fmtHrs((L.until - Date.now()) / 36e5)}</b></span></div>
+        <p class="sub">Her satışının %${Math.round(L.rate * 100)} kadarı ${L.nm} kasasına gidiyor; oran sözleşme boyunca sabit.
+        Süre bitince erişim kapanır, yeniden imzalayabilirsin.</p>
+      </div>`;
+    } else {
+      h += `<p class="sub">Kıtalar arası hattı bireysel çekemezsin (${CONS_MIN_ALLIES} ittifaklı konsorsiyum şart).
+      Kiralamak o koridora ulaşmanın tek yoludur: peşin bedel yok, yalnız satışından kesilen kira var.
+      Deponun hattın ucuna ya da bir transfer merkezine ${CONS_ACCESS_KM} km içinde olması gerekir.</p>`;
+    }
+    if (!RENTDIR) { loadRentDir().then(() => refreshAllyUI()); h += '<p class="sub">İlanlar taranıyor…</p>'; }
+    else if (!RENTDIR.length) h += '<p class="sub">Şu an kiraya açık kıta hattı ilanı yok. İttifaklar hatlarını devreye aldıkça burada görünür.</p>';
+    else h += RENTDIR.map(d => {
+      const r2 = CONSORTIUM_ROUTES[d.route];
+      return `<div class="mrow"><span class="mid">
+        <div>🌍 ${r2 ? r2.nm : 'Kıta hattı'}</div>
+        <div class="d">${d.nm} · kira <b>%${Math.round(d.rate * 100)}</b> · ${RENT_GUN} gün</div></span>
+        ${rentLeaseOk() ? '' : `<button onclick="rentSign('${d.aid}','${String(d.nm).replace(/'/g, '')}',${d.route},${d.rate})" style="padding:7px 10px;border-radius:8px;border:none;background:var(--acc2);color:#071018;font-weight:800;font-size:11px;cursor:pointer">Kirala</button>`}
+      </div>`;
+    }).join('');
   } else {
     h += `<div style="font-size:12px;margin:10px 0 2px">⚖️ <b>KONSORSİYUM OLUŞTUR</b> <span class="sub">kıtalar arası hat için 3 ittifak şart</span></div>
       <p class="sub">Tek ittifak kıtalar arası hattı kaldıramaz. Aşağıdan bir ittifak adı yazıp istek gönder — kabul ederlerse ortak yapıya geçersiniz.</p>
@@ -5688,6 +6458,31 @@ function allyHTML() {
         </div>
       </div>`;
     } else h += `<button class="bigsell half" onclick="startCall()">📣 Bağış Çağrısı Aç (24 saat)</button>`;
+    // ── 🏦 İTTİFAK KREDİSİ (patron 26 Ağu): buton BAŞKANA aktif görünür, üyeler durumu görür ──
+    {
+      const K = G.ally.loan, lim = allyKrediLimit(), tab = allyKrediTaban();
+      h += `<div style="border:1px solid ${K ? 'var(--gold)' : 'var(--line)'};border-radius:10px;padding:9px 11px;margin:8px 0">
+        <div style="font-size:12.5px;font-weight:800;color:var(--gold)">🏦 İTTİFAK KREDİSİ
+          <span class="sub">kasaya girer · üyeye aktarılamaz</span></div>`;
+      if (K) {
+        const p2 = Math.min(100, 100 * K.odenen / Math.max(1, Math.round(K.al * ALLYK_FAIZ)));
+        h += `<div class="rsbar" style="height:10px;margin:6px 0"><i style="width:${p2}%;background:var(--gold)"></i></div>
+          <div class="qline" style="font-size:11.5px"><span>Çekilen: <b>${fmt(K.al)}</b></span><span>Kalan borç: <b class="neg">${fmt(K.borc)}</b></span></div>
+          <p class="sub">Kasaya giren her gelirin <b>%${ALLYK_KESINTI * 100}</b> kadarı otomatik olarak borca gidiyor.
+          Vade ve taksit yok — borç kasanın kendi geliriyle kapanır. 🌍 Kıta hattı kirası en hızlı kaynaktır.</p>`;
+      } else if (!consortiumLive() && !allyLines().length && lim < ALLYK_MIN) {
+        h += `<p class="sub">Kredi tabanı üyelerin toplam şirket değeridir; şu an <b>${fmt(tab)}</b> → limit <b>${fmt(lim)}</b>.
+          Üye topladıkça ve üyeler büyüdükçe limit yükselir.</p>`;
+      } else {
+        h += `<p class="sub">Taban <b>${fmt(tab)}</b> <span class="sub">(üyelerin toplam şirket değeri)</span> → limit
+          <b class="pos">${fmt(lim)}</b> <span class="sub">(tabanın %${ALLYK_ORAN * 100} kadarı)</span></p>`;
+        h += isAllyBoss()
+          ? `<button class="bigsell half" style="background:var(--gold);color:#131313;margin:4px 0 0" onclick="allyKrediAsk()">🏦 İttifak Kredisi Çek — ${fmt(lim)}</button>
+             <p class="sub">Kıtalar arası hat gibi büyük ortak yatırımların finansmanı için. Para doğrudan kasaya girer.</p>`
+          : `<p class="sub">👑 Krediyi yalnız <b>başkan</b> çekebilir. Rütben: ${ALLY_ROLES[myAllyRole() || 'uye'].ico} ${ALLY_ROLES[myAllyRole() || 'uye'].nm}</p>`;
+      }
+      h += `</div>`;
+    }
     // üye bağış listesi (patron: "herkesin haftalık ve toplam bağışı isminin yanında")
     // ── 👥 ÜYE LİSTESİ + RÜTBELER (patron isteği) ──
     const ros = allyRoster().slice().sort((a, b) => ALLY_ROLES[b.role].r - ALLY_ROLES[a.role].r || a.nm.localeCompare(b.nm, 'tr'));
@@ -5737,6 +6532,26 @@ function allyHTML() {
         <div class="sub">Ortak: ${cs.partner} · durum: <b>${cs.status === 'pending' ? '⏳ yanıt bekleniyor' : cs.status === 'accepted' ? '✅ kabul edildi — finansman bekliyor' : cs.status === 'building' ? '🏗️ inşa: ' + fmtHrs(Math.max(0, cs.done - Date.now()) / 36e5) : '🌍 DEVREDE'}</b></div>
         ${cs.status === 'accepted' ? `<button class="bigsell" onclick="fundConsortium()" ${(G.ally.treasury || 0) < r.cost / 2 ? 'disabled' : ''}>💰 Kasadan Payı Öde — ${fmt(r.cost / 2)}${(G.ally.treasury || 0) < r.cost / 2 ? ' (kasa yetersiz)' : ''}</button>` : ''}
         ${cs.status === 'live' ? `<div class="sub pos">Taşınan her MWh için kasaya ${fmt(r.kwhFee * 1000)} geliyor.</div>
+        ${lineOmurHTML({ km: r.km, hubs: CONS_HUBS, omur: consOmurMax(cs), tasinan: cs.tasinan || 0, built: cs.since || Date.now() })}
+        ${(() => { // 🌍 KİRAYA VERME (patron: "ittifak başkanı hat sekmesinde kira bedeli %10-%60")
+          const rt = cs.rent || { rate: .25, open: false };
+          const yetki = canAllyLine();
+          return `<div style="border-top:1px dashed var(--line);margin-top:8px;padding-top:7px">
+            <div style="font-size:11.5px;font-weight:800;color:var(--acc2)">🌍 HATTI KİRAYA VER
+              <span class="sub">yabancı şirketlerden vergi al — gelir kasaya</span></div>
+            <p class="sub">Kendi üyeleriniz ve ⚖️ hissedarlar kira ÖDEMEZ — hattın parasını zaten onlar verdi.
+            Kira yalnız <b>ittifak dışından</b> gelen şirketlerden alınır ve o şirketin her satışından kesilir.</p>
+            <div class="qline" style="font-size:11.5px"><span>Durum: <b class="${rt.open ? 'pos' : 'neg'}">${rt.open ? '🟢 KİRAYA AÇIK' : '🔴 kapalı'}</b></span>
+              <span>Oran: <b>%${Math.round(rt.rate * 100)}</b></span></div>
+            ${yetki ? `<div class="catrow" style="margin:6px 0">${RENT_ADIM.map(v => `<button class="${Math.abs(rt.rate - v) < .001 ? 'on' : ''}" onclick="setRentRate(${v})">%${Math.round(v * 100)}</button>`).join('')}</div>
+              <p class="sub">${rt.rate <= .30
+                ? '📊 <b>Hacim stratejisi:</b> bu oran ev pazarı açık olan şirketleri de çeker — çok kiracı, düşük pay.'
+                : '📊 <b>Sağma stratejisi:</b> yalnız ev pazarı doymuş büyük şirketler kiralar (onlar için yine de kârlı) — az kiracı, yüksek pay.'}</p>
+              <button class="bigsell half" style="${rt.open ? '' : 'background:var(--acc);color:#08110c'}" onclick="setRentOpen(${rt.open ? 'false' : 'true'})">${rt.open ? '🔴 Yeni Kiralamaları Kapat' : '🟢 Hattı Kiraya Aç'}</button>
+              ${rt.open ? '<p class="sub">Kapatmak yürüyen sözleşmeleri BOZMAZ — kiracılar sürelerini doldurur.</p>' : ''}`
+              : `<p class="sub">👑 Kira oranını ve ilanı yalnız başkan veya yardımcısı belirler.</p>`}
+          </div>`;
+        })()}
         <div class="sub" style="margin-top:4px">🏗️ <b>ORTAK KULLANIM:</b> Hat iki ittifakın ortak malı. Üyeler hattın uçlarına ya da ${CONS_HUBS} transfer merkezinden birine <b>${CONS_ACCESS_KM} km</b> mesafede tesis kurarsa hattı <b>ücretsiz</b> kullanır (kayıp %${CONS_LOSS}); merkezler kendi binanız gibidir.</div>
         ${(() => { // ⚖️ HİSSE DEFTERİ — kimin ne kadar payı var (atılsa bile geçerli)
           const sh = Object.entries(cs.shares || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
@@ -6126,7 +6941,7 @@ const NET = {
     // başlığı gerçek saati veriyor — farkı saklayıp uyarıda oyuncuya söylüyoruz.
     try {
       const d = r.headers.get('date');
-      if (d) { const fark = Date.parse(d) - Date.now(); if (isFinite(fark)) this._saatFark = fark; }
+      if (d) { const fark = Date.parse(d) - Date.now(); if (isFinite(fark)) { this._saatFark = fark; this._saatPerf = performance.now(); } } // _saatPerf: bankaZaman() tazelik ölçüsü (cihaz saatinden bagimsiz)
     } catch (e) {}
     // 🔐 401/403: jeton eskimiş olabilir — ZORLA tazeleyip BİR KEZ tekrar dene (bot bulgusu 23 Ağu)
     if ((r.status === 401 || r.status === 403) && !this._retrying) {
@@ -6287,6 +7102,9 @@ const NET = {
   // Ek fayda: anahtar sayısal olmaktan çıkınca Firebase düğümü diziye çevirmiyor (null delik yok).
   allyLineAdd(aid, l) { return this.put('allies/' + aid + '/lines/' + this.id + '_' + l.id, l); },
   allyLineSet(aid, key, l) { return this.put('allies/' + aid + '/lines/' + key, l); }, // mevcut hattı GÜNCELLE
+  // 🗑️ Hattı ORTAK kayıttan SİL — ömrünü dolduran ittifak hattını sökmenin tek yolu.
+  // Yalnız yerelde silmek yetmez: allyApply 12 saniyede bir sunucudan komple okuyup hattı geri getirir.
+  allyLineDel(aid, key) { return this.req('allies/' + aid + '/lines/' + key, 'DELETE'); },
   sendMail(toId, subj, body) { return this.push('mail/' + toId, { from: G.company, subj, body, ts: Date.now() }); },
   // ⚠️ HATA AVI (yüksek): oda anahtarı kapsamsızdı — DÜNYADAKİ TÜM ittifaklar aynı 'ally'
   // düğümünü, tüm ülkeler aynı 'country' düğümünü paylaşıyordu. Anahtarı kapsamla üretiyoruz.
@@ -6510,9 +7328,14 @@ function aucAssets() { // satılabilir varlıkların listesi
     out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, loc: placeName(u.cell) + ' · ' + cellCode(u.cell), cell: u.cell, ll: u.ll, note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? T.mw + ' MW' : '' });
   }
   for (const l of (G.lines || [])) if (lineReady(l) && !aucListed('line', l.id))
-    out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs) * .5), loc: placeName(l.from) + ' → ' + placeName(l.to), note: fmtN(l.km) + ' km' });
+    out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs) * .5 * (1 - lineOmurFrac(l)) + lineCost(l.km, l.hubs) * .05), loc: placeName(l.from) + ' → ' + placeName(l.to), note: fmtN(l.km) + ' km' });
   (G.consRights || []).forEach((r, i) => { if (aucListed('share', i)) return;
-    out.push({ kind: 'share', id: i, nm: CONSORTIUM_ROUTES[r.route].nm + ' — %' + r.share + ' hisse', ico: '⚖️', base: Math.round(CONSORTIUM_ROUTES[r.route].cost * r.share / 100 * .6), note: 'kıtalararası hat hissesi' }); });
+    void r; });   // ⚖️ HİSSE MÜZAYEDEDE SATILMAZ — iki sebeple (denetimde bulundu):
+  // (1) aucGrantAsset hisseyi ALICIYA hiç yazmıyordu (`assetKind !== 'unit'` erken dönüyor),
+  //     yani satış parayı yakıyordu — alıcı boş, satıcı zengin.
+  // (2) İttifak kredisiyle dolan kasadan alınan hisse böylece ŞAHSİ NAKDE dönüyordu; bu,
+  //     patronun "bu para oyuncuya aktarılamaz" kuralını doğrudan deliyordu.
+  // Hisse, ittifaktan ayrılsan bile KULLANIM hakkıdır; devredilebilir bir mal değildir.
   return out;
 }
 window.openAucSheet = () => {
@@ -6564,7 +7387,7 @@ function aucCard(a) {
            ${ek.ofisLimitDolu ? `<div class="sub" style="color:var(--warn)">⚠️ Ofis limitin dolu — devralırsan tesis, bölge bir ofisin menziline girene dek 🚫 DEVRE DIŞI kalır (🧪 Ofis Ağı araştırması limit açar)</div>` : ''}`
         : `<div class="sub">📍 Devralınca <b>senin merkez ofisinin bölgesine</b> kurulur (eski ilan — konum bilgisi yok).</div>`) : ''}
     <div class="qline" style="font-size:11.5px"><span>Açılış: <b>${fmt(a.start)}</b></span><span>En yüksek: <b class="${a.top ? 'pos' : ''}">${a.top ? fmt(a.top) + ' — ' + a.topBy : 'teklif yok'}</b></span></div>
-    ${a.mine ? `<div class="sub">Satılırsa eline geçecek: <b>${fmt(Math.round((a.top || 0) * (1 - term.tax)))}</b></div>
+    ${a.mine ? `<div class="sub">Satılırsa eline geçecek: <b>${fmt(Math.round((a.top || 0) * (1 - term.tax)) - varlikKesinti(Math.round((a.top || 0) * (1 - term.tax))))}</b>${varlikKesinti(Math.round((a.top || 0) * (1 - term.tax))) > 0 ? " <span style='color:var(--warn)'>(🏦 banka payı " + fmt(varlikKesinti(Math.round((a.top || 0) * (1 - term.tax)))) + " düşülmüş)</span>" : ""}</div>
       ${a.top
         ? `<p class="sub">⛔ Teklif geldi — ilan artık geri çekilemez. Teklif verene karşı söz verilmiş sayılır.</p>`
         : `<button class="bigsell half" style="background:#2a3346;color:var(--cream)" onclick="aucCancelAsk(${a.id})" ${G.cash < aucCancelFee(a) ? 'disabled' : ''}>✖️ İlanı Geri Çek — cayma ${fmt(aucCancelFee(a))}</button>`}`
@@ -6589,7 +7412,7 @@ window.aucPickTerm = i => {
     <h2>⏳ Süre Seç — ${x.nm}</h2>
     <p class="sub">Uzun süre daha çok teklif çeker ama vergisi yüksektir.</p>
     ${AUC_TERMS.map(t => `<button class="bigsell half" style="text-align:left" onclick="aucPickPrice(${i},${t.h})">
-      <b>${t.nm}</b> — vergi %${t.tax * 100}<div class="sub">${t.d} · net tahmini: ${fmt(Math.round(x.base * (1 - t.tax)))}</div></button>`).join('')}
+      <b>${t.nm}</b> — vergi %${t.tax * 100}<div class="sub">${t.d} · net tahmini: ${fmt(Math.round(x.base * (1 - t.tax)) - varlikKesinti(Math.round(x.base * (1 - t.tax))))}</div></button>`).join('')}
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
@@ -6760,8 +7583,11 @@ function aucResolve(a) {
       return;
     }
     const net = Math.round(a.top * (1 - term.tax));
-    G.cash += net;
-    toast('🔨 SATILDI! ' + a.nm + ' → ' + a.topBy + ' · ' + fmt(a.top) + ' (vergi %' + term.tax * 100 + ' → eline ' + fmt(net) + ')', '', null, 0, true);
+    // 🏗️ Müzayede de bir VARLIK SATIŞIDIR (tesis · hat · konsorsiyum hissesi) — banka payı burada
+    // kesilmezse temerrütteki oyuncu şirketini müzayededen satıp haczi tamamen atlatırdı.
+    const aKes = varlikKesinti(net);
+    varlikGeliri(net);
+    toast('🔨 SATILDI! ' + a.nm + ' → ' + a.topBy + ' · ' + fmt(a.top) + ' (vergi %' + term.tax * 100 + (aKes > 0 ? ' · 🏦 banka payı ' + fmt(aKes) : '') + ' → eline ' + fmt(net - aKes) + ')', '', null, 0, true);
     addMail(a.topBy, 'Müzayede: ' + a.nm, `${a.nm} ilanını ${fmt(a.top)} ile kazandım, devir tamamlandı. İyi ticaretler.`);
   } else if (a.topBy === G.company) {
     aucGrantAsset(a);
@@ -7467,10 +8293,23 @@ const giderToplam = () => Object.values((G && G.spend) || {}).reduce((a, b) => a
 // NEDEN SAĞLAM: bu bir BÜYÜME KALDIRACI DEĞİL, kurtarma halatı. Para zorla tamire ve
 // ikmale gider; oyuncu onunla öne geçemez, yani "kestirme yok" ilkesi delinmez.
 // Rakip yorumlarında "banka/kredi sistemi" 14 beğeniyle istenen özellikler listesindeydi.
-const LOAN_CUT = 0.70;          // her satışın bankaya giden payı
+const LOAN_CUT = 0.70;          // her ENERJİ satışının bankaya giden payı
+const VARLIK_CUT = 0.40;        // kurtarma kredisinde VARLIK (tesis/hat/müzayede) satışından kesilen pay
 const LOAN_RATE = [2, 2.5, 3];  // 1./2./3.+ kredide borç çarpanı — tekrar batan pahalı öder
 
 // Yakıt ikmali için gereken PARA (depo alımı + nükleer yakıt çubuğu)
+// 🛢️ BOS DEPO TONU (denetim acigi #3): bir yakit turu icin depolara SIGABILECEK ton.
+// ⚠️ Depo BASINA floor() — krediUygula da depo basina floor'luyor. Toplayip sonra floor'lasaydik
+// 3 depo x 33,4 ton bosluk = 100 ton kredilendirilir ama kod 99 ton alir, aradaki 1 ton buharlasirdi.
+function bosDepoTonu(f) {
+  return G.units.filter(u => u.kind === 'fueldepot' && DEPOT_TYPES[u.t] && DEPOT_TYPES[u.t].fuel === f)
+    .reduce((a, u) => a + Math.max(0, Math.floor(depotCap(u) - (u.fuel || 0))), 0);
+}
+// 🛢️ YAKIT IHTIYACI — DEPO TAVANIYLA SINIRLI (denetim acigi #3).
+// ESKI HALI eksik tonun TAMAMINI paraya ceviriyordu; oysa krediUygula ancak depoya SIGANI satin
+// alabiliyor, artan `kalan` hicbir yere yazilmadan buharlasiyordu. Sonuc: 100 tonluk depoya
+// 400 tonluk kredi verilip 300 tonun parasi yok oluyor, ama borc (x2) tamami uzerinden yaziliyordu.
+// Olcum: USK-42 komur santrali 12 saatte 88,2 ton yakiyor — TEK santral 100 tonluk depoyu dolduruyor.
 function yakitIhtiyaciTL() {
   let nakit = 0;
   const gerek = { coal: 0, gas: 0 };
@@ -7484,8 +8323,9 @@ function yakitIhtiyaciTL() {
     gerek[f] += tonsFor(u, missH);
   }
   for (const f of ['coal', 'gas']) {
-    const eksik = Math.max(0, gerek[f] - fuelStock(f));
-    if (eksik > .5) nakit += Math.ceil(eksik) * FUEL_TYPES[f].price;
+    // depoya sigmayan ton icin para VERILMEZ — nasil olsa satin alinamaz
+    const eksik = Math.min(Math.max(0, gerek[f] - fuelStock(f)), bosDepoTonu(f));
+    if (eksik > .5) nakit += Math.floor(eksik) * FUEL_TYPES[f].price;
   }
   return Math.round(nakit);
 }
@@ -7507,7 +8347,27 @@ function krediUygun() {
 // 🔒 KOVENANT: borçluyken YENİ YATIRIM YASAK. Yalnız yakıt, bakım ve tamir serbest.
 // Bu madde olmadan oyuncu kendine kalan payı yeni santrale yatırır ve aynı çukura düşer;
 // ayrıca kredi bir büyüme aracına dönüşürdü. Cezanın ikinci yarısı da budur.
-function krediKilidi(ne) {
+// 🔴 TEMERRÜT KİLİDİ — DENETİM AÇIĞI #5 (20. tur).
+// Kovenant yalnız KURTARMA kredisinde çalışıyordu; büyüme kredisi temerrüdündeki ve acil nakit
+// haczindeki oyuncu tam hızla büyümeye devam ediyordu. Üstelik oyuna kendi metni yalan söylüyordu:
+// temerrüt postası "yeni kredi alamayacaksın… ödeyince kısıt kalkar" diyor ama kodda kısıt YOKTU.
+const temerrutVar = () => !!(G && ((yatVar() && G.kredi.temerrut) || (acilVar() && G.acil.temerrut)));
+// ⚠️ YAKIT DEPOSU MUAFİYETİ ZORUNLUDUR, isteğe bağlı değil. Temerrütte borç YALNIZ satış geliriyle
+// kapanır: satış için üretim, üretim için yakıt, yakıt için DEPO gerekir. Depoyu da yasaklasaydık
+// deposu olmayan temerrütteki oyuncu kalıcı kilitlenirdi — banka da alacağını hiç alamazdı.
+// Kurtarma kredisinde depo yasağı DURUYOR: orada krediUygula yakıtı zaten oyuncu adına satın alıyor.
+const TEMERRUT_SERBEST = { coaldepot: 1, lngdepot: 1 };
+function temerrutKilidi(ne, tip) {
+  if (!temerrutVar()) return false;
+  if (tip && TEMERRUT_SERBEST[tip]) return false;
+  const acil = acilVar() && G.acil.temerrut;
+  toast('🔴 Temerrüttesin — borcun kapanana kadar ' + (ne || 'yeni yatırım') + ' yapamazsın. '
+    + (acil ? 'Acil nakit borcun: ' + fmt(acilBorc()) : 'Kalan kredi borcun: ' + fmt(G.kredi.borc)),
+    'bad', 'temerrutkilit', 6000);
+  return true;
+}
+function krediKilidi(ne, tip) {
+  if (temerrutKilidi(ne, tip)) return true;
   if (!krediVar()) return false;
   toast('🏦 Kredi sözleşmen sürüyor — borcun bitene kadar ' + (ne || 'yeni yatırım') +
     ' yapamazsın. Kalan borç: ' + fmt(krediKalan()), 'warn', 'kredikilit', 6000);
@@ -7534,15 +8394,24 @@ const maintCostAktif = () => maintList().filter(u => u.on).reduce((s, u) => s + 
 // Bu satıştan bankaya kesilebilecek kısım (bakım açığı düşülmüş)
 const kesilebilirGelir = (gain) => Math.max(0, gain - Math.max(0, maintCostAktif() - G.cash));
 
-function satisGeliri(gain) {
+// 🏗️ İKİNCİ PARAMETRE `varlik` — DENETİM AÇIĞI #1 (20. tur, geri alma):
+// Tesis/hat/müzayede satışı da bu kapıdan geçer, ama EMNİYET VALFİ orada ÇALIŞMAZ.
+// Valfin tek gerekçesi "ışıklar sönmesin, tesis ayağa kalksın ki banka da alacağını alsın"dı.
+// Tesisi SATMAK bakım yükünü ortadan kaldırır — gerekçe tersine döner. Valf açık bırakılsaydı
+// açık kapanmaz, yalnız kılık değiştirirdi: maintCostAktif() sadece u.on'a baktığı için oyuncu
+// bozuk santralleri AÇIK tutup bakım açığını şişirir, şirketi parça parça ve her satışı tam
+// muafiyetli biçimde nakde çevirip haczi yine sıfırlardı. Tasfiye, gerçek hayatta da
+// alacaklının İLK el koyduğu şeydir.
+function satisGeliri(gain, varlik) {
   if (!(gain > 0)) return 0;
+  const kesBaz = varlik ? gain : kesilebilirGelir(gain);
   if (!krediVar()) {
     // 🔴 BÜYÜME KREDİSİ TEMERRÜDÜ: taksitler ödenmediği için banka otomatik tahsilata geçti.
     // Aynı emniyet valfi burada da geçerli — bekleyen bakım kasanı aşıyorsa pay alınmaz,
     // yoksa oyuncu tesislerini ayağa kaldıramaz ve banka da alacağını hiç alamaz.
     if (yatVar() && G.kredi.temerrut) {
       const K = G.kredi;
-      const kes = Math.min(K.borc, Math.round(kesilebilirGelir(gain) * KREDI_TAHSIL));
+      const kes = Math.min(K.borc, Math.round(kesBaz * KREDI_TAHSIL));
       K.borc -= kes; K.odenen += kes;
       K.odenenAdet = Math.min(K.vade, Math.ceil(K.odenen / K.taksit)); // tahsilat taksit yerine geçer
       gider('kredi', kes);
@@ -7555,7 +8424,7 @@ function satisGeliri(gain) {
     // haciz o satışa dokunmaz — yoksa tesisler ayağa kalkmaz, banka da alacağını alamaz.
     if (acilVar() && G.acil.temerrut) {
       const borc = acilBorc();
-      const kes = Math.min(borc, Math.round(kesilebilirGelir(gain) * ACIL_HACIZ));
+      const kes = Math.min(borc, Math.round(kesBaz * ACIL_HACIZ));
       gider('kredi', kes);
       G.cash += gain - kes;
       if (kes >= borc) {
@@ -7576,7 +8445,11 @@ function satisGeliri(gain) {
     }
     G.cash += gain; return gain;
   }
-  const pay = Math.min(krediKalan(), Math.round(kesilebilirGelir(gain) * LOAN_CUT));
+  // ⚖️ Kurtarma kredisi bir TEMERRÜT hâli değil, "ayağa kaldırma" sözleşmesidir; krediKilidi zaten
+  // yeni yatırımı yasaklıyor. Tesisini %25 hurdaya satıp kalanın da %70'ini kaptıran oyuncu ilk
+  // bedelin ~%7,5'ine düşerdi — bu, kredinin amacıyla çelişir. Varlık satışında oran yumuşatıldı.
+  // Büyüme temerrüdü (%50) ve acil haciz (%30) bilerek AYNI kaldı: onlar gerçek temerrüt.
+  const pay = Math.min(krediKalan(), Math.round(kesBaz * (varlik ? VARLIK_CUT : LOAN_CUT)));
   G.loan.odenen += pay;
   gider('kredi', pay);
   G.cash += gain - pay;
@@ -7587,6 +8460,30 @@ function satisGeliri(gain) {
     addMail('🏦 Banka', 'Kredi borcun kapandı', fmt(al) + ' tutarındaki kurtarma kredin tamamen ödendi. Sözleşme kısıtları kalktı; yeniden santral, ruhsat ve hat alabilirsin.', true);
   }
   return gain - pay;
+}
+
+// 🏗️ VARLIK GELİRİ KAPISI — DENETİM AÇIĞI #1 (20. tur). Tesis, depo, ofis, hat ve müzayede
+// satışlarının TEK kapısı. Eskiden bu üç yer doğrudan `G.cash +=` yazıyordu; temerrütteki oyuncu
+// tesislerini tek tek satarak haczi TAMAMEN atlatıyordu — hatta en kârlı hamle enerji satmak
+// değil şirketi likide etmekti.
+// ⚠️ Neden ayrı bir MUHASEBE kapısı DEĞİL de ince bir sarmalayıcı: satisGeliri() içinde enerji
+// muhasebesi (G.totalSold / G.totalEarned / G.weekSold / noteSold) YOKTUR — o sayaçlar çağıran
+// tarafta işlenir. Varlık satışını buradan geçirmek MWh istatistiklerini bozmaz.
+// ⚠️ const arrow DEĞİL, function declaration: demolishLine ve aucResolve bu satırdan ÖNCE
+// tanımlanıyor; hoisting garantisi burada.
+function varlikGeliri(tutar) { return satisGeliri(tutar, true); }
+// Önizleme ile kasanın ayrışmaması için oran/tavan TEK yerden okunur ("gördüğün = aldığın").
+// ⚠️ SIRA satisGeliri()'nin kendi sırasıdır: fonksiyon `if (!krediVar())` ile başlar, yani
+// kurtarma kredisi varsa diğer iki dala HİÇ girilmez. Bu sırayı değiştirme.
+function varlikKesinti(tutar) {
+  if (!G || !(tutar > 0)) return 0;
+  const oran = krediVar() ? VARLIK_CUT
+    : (yatVar() && G.kredi.temerrut) ? KREDI_TAHSIL
+    : (acilVar() && G.acil.temerrut) ? ACIL_HACIZ : 0;
+  if (!oran) return 0;
+  const tavan = krediVar() ? krediKalan()
+    : (yatVar() && G.kredi.temerrut) ? G.kredi.borc : acilBorc();
+  return Math.min(tavan, Math.round(tutar * oran));
 }
 
 // 💸 KREDİ PARASI ELİN DEĞMEDEN İŞE GİDER: önce bakım, sonra yakıt deposu, sonra ikmal.
@@ -7603,12 +8500,26 @@ function krediUygula(tutar) {
     u.cond = 100;
   }
   gider('bakim', rapor.bakim);
+  // 🛢️ YAKIT BAZINDA IHTIYAC TAVANI (denetim acigi #3, ikinci ve daha agir kanama):
+  // eski dongu G.units sirasiyla HER depoyu tavana kadar dolduruyordu, hangi yakitin gerektigine
+  // BAKMADAN. Yalniz gaz santrali olan oyuncunun kredisi, sirada once gelen komur deposuna
+  // gidiyor, gaz deposu bos kaliyor ve santraller olu kalirken borc iki katina yaziliyordu.
+  const ihtiyacTon = { coal: 0, gas: 0 };
+  for (const u of plants()) {
+    const T2 = PLANT_TYPES[u.t]; if (!T2 || !T2.fuel) continue;
+    const mh = FUEL_HOURS - (u.fuelH || 0);
+    if (mh < .2) continue;
+    const f2 = fuelOf(u);
+    if (f2) ihtiyacTon[f2] += tonsFor(u, mh);
+  }
+  for (const f2 of ['coal', 'gas']) ihtiyacTon[f2] = Math.max(0, ihtiyacTon[f2] - fuelStock(f2));
   for (const u of G.units.filter(x => x.kind === 'fueldepot')) {
     const T = DEPOT_TYPES[u.t]; if (!T) continue;
     const F = FUEL_TYPES[T.fuel];
     const space = depotCap(u) - (u.fuel || 0);
-    const n = Math.floor(Math.min(space, kalan / F.price));
+    const n = Math.floor(Math.min(space, kalan / F.price, ihtiyacTon[T.fuel] || 0));
     if (n < 1) continue;
+    ihtiyacTon[T.fuel] -= n;
     const c = n * F.price;
     kalan -= c; rapor.yakit += c;
     u.fuel = (u.fuel || 0) + n;
@@ -7670,7 +8581,14 @@ window.openBank = (tab) => {
         : '<p class="sub">🛡 Bakım borcun kasanı aşarsa banka o satışlardan pay almaz — ışıkların hiçbir zaman sönmez.</p>')
       + '<p class="sub neg">🔒 Borcun bitene kadar yeni santral, depo, ruhsat, ofis ve hat alamaz; ihaleye ve müzayedeye giremez, araştırma başlatamazsın. Yakıt, bakım ve tamir serbesttir.</p>';
   } else if (!ihtiyac) {
+    // 🛢️ DEPOSUZ ÇIKMAZ UYARISI (denetim açığı #3): kurtarma kredisi yalnız DEPOYA SIĞAN yakıtı
+    // satın alabilir. Deposu olmayan oyuncuda yakıt ihtiyacı 0 hesaplanır ve banka "kredi
+    // gerekmiyor" der — oysa santralleri yakıtsız duruyordur. Sessizce çıkmaza sokmak yerine
+    // sebebi söylüyoruz ve ⚡ Acil Nakit yoluna yönlendiriyoruz (o para KASAYA girer, depo kurulur).
+    const deposuz = plants().some(u => { const T = PLANT_TYPES[u.t]; const f = fuelOf(u);
+      return T && T.fuel && f && (u.fuelH || 0) < FUEL_HOURS - .2 && bosDepoTonu(f) < 1 && fuelStock(f) < .5; });
     h += '<p class="sub" style="margin-top:0">Tesislerinin bakımı tam ve yakıtı yerinde — <b>kredi gerekmiyor.</b></p>'
+      + (deposuz ? '<p class="sub" style="color:var(--warn)">🛢️ <b>Ama yakıt deposu sorunun var.</b> Yakıtsız duran santralin var ve o yakıtı koyacak <b>boş depon yok</b>. Kurtarma kredisi yalnız <b>depoya sığan</b> yakıtı satın alabilir — bu yüzden bu masraf krediye girmiyor.<br>Yapman gereken: önce bir <b>yakıt deposu kur</b>. Nakdin yetmiyorsa ⚡ <b>Acil Nakit</b> sekmesini kullan; o para kasana girer ve depoyu kurabilirsin.</p>' : '')
       + '<p class="sub">Kurtarma kredisi yalnız <b>gerçekten sıkıştığında</b> açılır: bakım ya da yakıt masrafını karşılayamadığın anda. Parası doğrudan tamire ve ikmale gider, eline geçmez.</p>';
   } else if (!krediUygun()) {
     h += '<p class="sub" style="margin-top:0">Bekleyen masrafın <b>' + fmt(ihtiyac) + '</b>, kasanda <b>' + fmt(G.cash) + '</b> var — <b>kendi paranla ödeyebilirsin.</b></p>'
@@ -7705,7 +8623,7 @@ window.krediAl = () => {
   const kat = LOAN_RATE[Math.min(G.loanNo || 0, LOAN_RATE.length - 1)];
   const borc = Math.round(tutar * kat);
   G.loanNo = (G.loanNo || 0) + 1;
-  G.loan = { al: tutar, borc, odenen: 0, kat, ts: Date.now(), no: G.loanNo };
+  G.loan = { al: tutar, borc, odenen: 0, kat, ts: bankaZaman(), no: G.loanNo };
   const r = krediUygula(tutar);
   toast('🏦 Kredi onaylandı — ' + r.tamir + ' tesis onarıldı, ' + r.ikmal + ' santral ikmal edildi. Borç: ' + fmt(borc), '', null, 0, true);
   addMail('🏦 Banka', 'Kurtarma kredisi sözleşmesi', fmt(tutar) + ' tutarında kurtarma kredin onaylandı; tamamı doğrudan tamire (' + fmt(r.bakim) + ') ve yakıt ikmaline (' + fmt(r.yakit) + ') aktarıldı.<br><br>Toplam borcun <b>' + fmt(borc) + '</b>. Borca giden pay: her satışın %' + (LOAN_CUT * 100) + '. Bekleyen bakım borcun kasanı aşarsa o satışlardan pay alınmaz.<br><br>Borcun bitene kadar yeni yatırım yapamazsın; yakıt, bakım ve tamir serbesttir.', true);
@@ -7733,6 +8651,60 @@ window.krediAl = () => {
 // ⚠️ KURTARMA KREDİSİ BU KURALIN DIŞINDA: o bir büyüme aracı değil, can halatı.
 // Tesisi bozulan yeni oyuncu ilk gün çaresiz kalmamalı.
 // 🎯 YAN FAYDA: eğitimin SON görevi kredi çekmek olduğu için oyuncu ertesi gün geri döner.
+// ═══════════ ⏰ BANKA SAATİ — DENETİM AÇIĞI #2 (20. tur) ═══════════
+// SORUN: offlineProgress'te cihaz saati koruması VARDI (geri alınmış damgayı düzeltir, telafiyi
+// 24 saatle sınırlar) ama BANKADA YOKTU. Saati geri alan oyuncunun faizi, gecikmesi ve temerrüdü
+// siliniyordu; ileri alan oyuncu 24 saatlik güven süresini ve bekleme sürelerini atlıyordu.
+// ÜÇ KATMANLI ÇÖZÜM:
+//  1) SUNUCU ESAS — her HTTP yanıtındaki Date başlığından ölçülen NET._saatFark TAZEYSE gerçek
+//     saat odur; G.saatEn ona eşitlenir ve GERİ DE GİDEBİLİR (yanlış ileri sıçrama onarılsın).
+//     ⚠️ Onarımı "oturumda BİR KEZ"e bağlama: bir kez düzeltilip sonra saati ileri alan çevrimiçi
+//     oyuncuda monotonluk sıçramayı KALICI hale getirirdi — mevcut durumdan da kötü olurdu.
+//  2) ÇEVRİMDIŞI MONOTONLUK — doğrulama yoksa saat asla geri gitmez (G.saatEn çentiği).
+//  3) AKIL SINIRI — 400 günden büyük sıçrama yok sayılır. RTC'si ölmüş bir cihaz 2099 okursa
+//     G.saatEn kalıcı bozulur ve yatIsle'deki gün döngüsü milyonlarca tur döner.
+// Tazelik ölçüsü performance.now(): sayfa açılışından beri monoton, cihaz saatinden BAĞIMSIZ.
+// Date.now() ile ölçseydik saati geri alan oyuncu ölçümü "hep taze" gösterip katmanı delerdi.
+const SAAT_TAZE_MS = 10 * 60000;    // sunucu ölçümü bu kadar süre geçerli sayılır
+const SAAT_AKIL_MS = 400 * 864e5;   // bundan büyük sıçrama kabul edilmez
+const saatDogru = () => {
+  if (typeof NET === 'undefined' || !isFinite(NET._saatFark) || !(NET._saatPerf > 0)) return false;
+  return performance.now() - NET._saatPerf < SAAT_TAZE_MS;
+};
+// Sayfa açılış anı ve o andaki banka saati — oturumda gerçekten geçen süreyi ölçer.
+const _oturumPerf = (typeof performance !== 'undefined' && performance.now) ? performance.now() : 0;
+let _saatEnBas = 0;
+function bankaZaman() {
+  const ham = Date.now() + ((typeof NET !== 'undefined' && isFinite(NET._saatFark)) ? NET._saatFark : 0);
+  if (!G) return ham;
+  if (saatDogru()) { G.saatEn = ham; G.saatSupheli = false; _saatEnBas = 0; return ham; }  // sunucu esas
+  if (!(G.saatEn > 0)) { G.saatEn = ham; _saatEnBas = ham; return G.saatEn; }
+  // 🔴 DONDURMA KALKANI (denetimde bulundu — monotonluğun ters yüzü): cihaz saatini GERİ alan
+  // çevrimdışı oyuncuda `ham` hep küçük kalıyor, fonksiyon sabit değer döndürüyor ve acil nakit
+  // faizi, büyüme kredisi taksiti, gecikme zammı, temerrüt — HEPSİ sonsuza dek donuyordu.
+  // Banka saati artık OYNANAN GERÇEK SÜRE kadar da ilerler: performance.now() sayfa açılışından
+  // beri monotondur ve cihaz saatinden bağımsızdır, oyuncu onu geri alamaz.
+  if (!_saatEnBas) _saatEnBas = G.saatEn;
+  const oynanan = Math.max(0, ((typeof performance !== 'undefined' && performance.now) ? performance.now() : 0) - _oturumPerf);
+  if (_saatEnBas + oynanan > G.saatEn) G.saatEn = _saatEnBas + oynanan;
+  if (ham > G.saatEn) {
+    const atlama = ham - G.saatEn;
+    if (atlama > SAAT_AKIL_MS) return G.saatEn;                            // akıl dışı: yok say
+    // 🛑 ÇEVRİMDIŞI ŞÜPHE İŞARETİ KALDIRILDI (denetimde ölçüldü, geri ekleme):
+    // Herhangi bir ileri sıçrama "hile" sayılamıyor çünkü **normal bir gece molası da aynı
+    // sıçramadır** — sayfa yeniden yüklendiğinde performance.now() sıfırlandığı için "9 saat uzaktaydım"
+    // ile "saati 9 saat ileri aldım" ayirt EDİLEMİYOR. İşaretlemek dürüst oyuncunun kredi notu
+    // toparlanmasını KALICI olarak yakıyordu (test: 9 saatlik ara → supheli=true).
+    // Zaten kazanç tavanlı: notTazele NOT_TOPARLA_TAVAN (50) üzerine puan yazmaz ve 'C'de durur,
+    // yani 30 günlük bir sıçrama bile en fazla o tavana kadar kazandırır. Gerçek koruma budur.
+    // Çevrimiçi oyuncuda sunucu saati zaten esastır (yukarıdaki saatDogru dalı).
+    G.saatEn = ham;
+  }
+  return G.saatEn;
+}
+// Banka takvim günü — trGun saf dönüştürücü kaldı (yatGereken/yatIsle döngüsü onu gün numarasıyla çağırıyor).
+const bankaGun = () => trGun(bankaZaman());
+
 const BANKA_GUVEN_SA = 24;
 const bankaGuvenKalan = () => {
   if (!G) return 0;
@@ -7742,7 +8714,11 @@ const bankaGuvenKalan = () => {
   // bir tanıtımdır: küçük tutar, aynı saat içinde faizsiz kapatılır.
   // Eğitim bitince kural normal işler — gerçek kredi için yine 24 saat beklenir.
   if (!G.starterClaimed) return 0;
-  const gecen = (Date.now() - (G.founded || Date.now())) / 36e5;
+  const simdi = bankaZaman();
+  // Banka penceresi KENDİ saat tabanını kullanır (bkz. wizDone). Eski kayıtlarda foundedBanka
+  // yoktur → ham `founded`e düşülür; ileri damga bugüne kırpılır.
+  const bas = Math.min(G.foundedBanka || G.founded || simdi, simdi);
+  const gecen = (simdi - bas) / 36e5;
   return Math.max(0, BANKA_GUVEN_SA - gecen);
 };
 const ACIL_LIMIT = 0.05;        // şirket değerinin en fazla %5'i (patron)
@@ -7761,7 +8737,9 @@ const acilVar = () => !!(G && G.acil && G.acil.anapara > 0);
 function acilFaizOran() {
   if (!acilVar()) return 0;
   const A = G.acil;
-  const bitis = A.donduTs || Date.now();
+  // 🛡️ Geri alınmış damga kalkanı: A.ts gelecekteyse faiz negatif çıkar ve borç anaparanın altına düşerdi.
+  if (A.ts > bankaZaman()) A.ts = bankaZaman();
+  const bitis = A.donduTs || bankaZaman();
   const saat = Math.max(0, (bitis - A.ts - (A.donukMs || 0)) / 36e5);
   return Math.min(ACIL_FAIZ_TAVAN, saat * ACIL_SAATLIK);
 }
@@ -7769,7 +8747,7 @@ const acilBorc = () => acilVar() ? Math.round(G.acil.anapara * (1 + acilFaizOran
 // Açılıştan 48 saat — erken kapatmak beklemeyi kısaltmaz (büyüme kredisiyle aynı ilke)
 const acilBeklemeKalan = () => {
   if (!G || !G.acilBekle) return 0;
-  return Math.max(0, Math.ceil((G.acilBekle - Date.now()) / 36e5));
+  return Math.max(0, Math.ceil((G.acilBekle - bankaZaman()) / 36e5));
 };
 const acilLimit = () => {
   if (!G || acilVar() || yatVar() || krediVar() || acilBeklemeKalan() > 0) return 0;
@@ -7778,14 +8756,17 @@ const acilLimit = () => {
 };
 
 // Kredinin açık kaldığı NET süre (donuk geçen zaman düşülmüş)
-const acilSaat = () => acilVar() ? Math.max(0, ((G.acil.donduTs || Date.now()) - G.acil.ts - (G.acil.donukMs || 0)) / 36e5) : 0;
+const acilSaat = () => acilVar() ? Math.max(0, ((G.acil.donduTs || bankaZaman()) - G.acil.ts - (G.acil.donukMs || 0)) / 36e5) : 0;
 
 // 🧊 Moratoryum saatini işle + 🔴 3 GÜN SONRA HACİZ (patron kararı)
 function acilIsle() {
   if (!acilVar()) return;
   const A = G.acil;
-  if (krediVar()) { if (!A.donduTs) A.donduTs = Date.now(); }
-  else if (A.donduTs) { A.donukMs = (A.donukMs || 0) + (Date.now() - A.donduTs); A.donduTs = null; }
+  if (A.ts > bankaZaman()) A.ts = bankaZaman();   // 🛡️ geri alinmis damga kalkani
+  if (krediVar()) { if (!A.donduTs) A.donduTs = bankaZaman(); }
+  // ⚠️ Math.max(0,...): bankaZaman() sunucu onariminda GERI gidebilir; negatif artis
+  // donukMs'i kucultur, acilSaat() buyur ve oyuncu haksiz yere fazla faiz oderdi.
+  else if (A.donduTs) { A.donukMs = (A.donukMs || 0) + Math.max(0, bankaZaman() - A.donduTs); A.donduTs = null; }
   // Temerrüt yalnız DONUK OLMAYAN sürede işler — kurtarma kredisi sırasında haciz başlamaz
   if (!A.temerrut && !A.donduTs && acilSaat() >= ACIL_TEMERRUT_SA) {
     A.temerrut = true;
@@ -7813,8 +8794,8 @@ window.acilAl = () => {
   const tutar = Math.floor(+acilAmtBuf || 0);
   if (!(tutar >= 10000)) { toast('⚡ En az $10.000 çekilir', 'warn'); return; }
   if (tutar > limit) { toast('⚡ Limitini aşıyor — en fazla ' + fmt(limit), 'warn'); return; }
-  G.acil = { anapara: tutar, ts: Date.now(), donukMs: 0, donduTs: null };
-  G.acilBekle = Date.now() + ACIL_BEKLE_SA * 36e5;   // açılıştan sayılır
+  G.acil = { anapara: tutar, ts: bankaZaman(), donukMs: 0, donduTs: null };
+  G.acilBekle = bankaZaman() + ACIL_BEKLE_SA * 36e5;   // açılıştan sayılır
   G.cash += tutar;
   acilAmtBuf = '';
   toast('⚡ ' + fmt(tutar) + ' acil nakit kasana girdi — saatlik ' + yz(ACIL_SAATLIK, 1) + ' faiz işliyor. Aynı gün kapat!', '', null, 0, true);
@@ -7839,7 +8820,7 @@ window.acilOde = () => {
   // gelsin bankadan, bu yazı o postada yazsın"). Eğitimdeki krediyi kapatan oyuncuya,
   // artık gerçek kredi için neden beklemesi gerektiğini bankanın ağzından anlatıyoruz.
   if (egitimdeydi) setTimeout(() => {
-    const kalan = Math.max(0, BANKA_GUVEN_SA - (Date.now() - (G.founded || Date.now())) / 36e5);
+    const kalan = bankaGuvenKalan();
     addMail('🏦 Banka', 'Kredi hesabınız açıldı — hoş geldiniz',
       'Sayın ' + (G.company || 'Müşterimiz') + ',<br><br>'
       + (faiz <= 0 ? 'İlk kredinizi <b>aynı saat içinde</b> kapattınız; bu yüzden <b>faiz ödemediniz</b>. '
@@ -7860,7 +8841,7 @@ window.acilOde = () => {
   toast('⚡ Acil nakit kredin kapandı — ' + fmt(borc) + ' ödendi (faiz ' + fmt(faiz) + ')', '', null, 0, true);
   addMail('🏦 Banka', 'Acil nakit kredin kapandı',
     fmt(A.anapara) + ' anapara + <b>' + fmt(faiz) + '</b> faiz = <b>' + fmt(borc) + '</b> ödendi.<br><br>'
-    + 'Kredi ' + fmtHrs((Date.now() - A.ts - (A.donukMs || 0)) / 36e5) + ' açık kaldı.<br><br>'
+    + 'Kredi ' + fmtHrs(Math.max(0, bankaZaman() - A.ts - (A.donukMs || 0)) / 36e5) + ' açık kaldı.<br><br>'
     + 'Yeni acil nakit için <b>' + acilBeklemeKalan() + ' saat</b> beklemelisin — bekleme, '
     + 'kapanıştan değil kredinin <b>açılışından</b> sayılır.', true);
   beep(880, .15);
@@ -7935,7 +8916,11 @@ const KREDI_NOT_ODUL = 2, KREDI_NOT_CEZA = 15, KREDI_NOT_TEMERRUT = 40;
 const NOT_TOPARLA_TAVAN = 50, NOT_TOPARLA_GUN = 3;
 function notTazele() {
   if (!G) return;
-  const bugun = trGun(Date.now());
+  // 🛡️ SAAT SUPHESI GUARD'I ZORUNLU (denetim acigi #2): kredi notu KALICI KAZANC saglayan
+  // TEK kalemdir — G.notGun ve G.krediNot kayda yazilir, saat duzelince geri alinamaz. Diger
+  // banka kapilari (guven suresi, bekleme sureleri) damgadan yeniden hesaplandigi icin kendiliginden
+  // duzelir. Supheli sicramada gun ilerletilir ama PUAN YAZILMAZ.
+  const bugun = bankaGun();
   if (G.notGun === undefined || G.notGun > bugun) { G.notGun = bugun; return; }
   // ⚠️ notGun BORÇLUYKEN DE İLERLETİLİR. Eskiden erken return notGun'u bayat bırakıyordu;
   // borç kapanınca geçen bütün günler GERİYE DÖNÜK toplu puan olarak yazılıyordu.
@@ -7943,6 +8928,7 @@ function notTazele() {
   if (yatVar() || krediVar() || acilVar()) { G.notGun = bugun; return; } // sicil açık borçta düzelmez
   if (gecen <= 0) return;
   G.notGun = bugun;
+  if (G.saatSupheli) return;   // 🛡️ supheli sicrama: gun ilerledi ama PUAN yazilmaz
   if (notu() < NOT_TOPARLA_TAVAN) {
     G.krediNot = Math.min(NOT_TOPARLA_TAVAN, notu() + gecen * NOT_TOPARLA_GUN);
     save();
@@ -7958,7 +8944,7 @@ const yatVar = () => !!(G && G.kredi && G.kredi.borc > 0);
 // 🔒 Bekleme süresi VADEDEN sayılır (kapanıştan değil) — erken kapatan avantaj kazanmasın.
 const yatBeklemeKalan = () => {
   if (!G || !G.krediBekle) return 0;
-  return Math.max(0, G.krediBekle - trGun(Date.now()));
+  return Math.max(0, G.krediBekle - bankaGun());
 };
 // Limit: şirket değerinin %20'si × kredi notu çarpanı. Açık kredi ya da bekleme varken 0.
 const yatLimit = () => {
@@ -7976,7 +8962,7 @@ const yatOdenebilir = () => {
 };
 // Ödenmesi GEREKEN taksit adedi. İlk tam gün ödemesiz (gerçek kredilerdeki ödemesiz dönem):
 // krediyi gece 23:00'te alan oyuncu 1 saat sonra temerrüde düşmesin.
-const yatGereken = (K, gun) => Math.max(0, Math.min(K.vade, (gun === undefined ? trGun(Date.now()) : gun) - K.bas - 1));
+const yatGereken = (K, gun) => Math.max(0, Math.min(K.vade, (gun === undefined ? bankaGun() : gun) - K.bas - 1));
 const yatGeciken = () => { const K = G.kredi; return K ? Math.max(0, yatGereken(K) - K.odenenAdet) : 0; };
 
 // ⏰ GÜN DÖNÜMÜ İŞLEME — çevrimdışıyken geçen günler de burada işlenir.
@@ -7984,8 +8970,15 @@ const yatGeciken = () => { const K = G.kredi; return K ? Math.max(0, yatGereken(
 // "girmediğim için birikmedi" diye kaçırılamasın.
 function yatIsle() {
   if (!yatVar()) return;
-  const K = G.kredi, bugun = trGun(Date.now());
+  const K = G.kredi, bugun = bankaGun();
   if (K.sonIslem === undefined) K.sonIslem = K.bas;
+  // 🛡️ GERI ALINMIS DAMGA KALKANI — en pahali banka istismari buydu (denetim acigi #2):
+  // saati +30 gun ILERI alip krediyi ceken, sonra saati geri getiren oyuncuda bas/sonIslem
+  // GELECEKTE kaliyordu. Sonuc: yatGereken() 0 dondugu icin 30 gun HIC taksit dogmuyor,
+  // yatIsle bastaki `sonIslem >= bugun` ile geri donuyor, gecikme zammi ve temerrut hic islemiyor
+  // — yani 30 gun faizsiz, taksitsiz, cezasiz kredi. offlineProgress'teki kalkanin aynisi.
+  if (K.bas > bugun) K.bas = bugun;
+  if (K.sonIslem > bugun) K.sonIslem = bugun;
   if (K.sonIslem >= bugun) return;
   // 🧊 MORATORYUM: kurtarma kredisi açıkken büyüme kredisi DONDURULUR. Oyuncu zaten
   // batmış durumda; üstüne gecikme zammı bindirmek onu oyundan atardı. Gerçek bankalar
@@ -8045,10 +9038,10 @@ window.yatAl = () => {
   const vade = KREDI_VADELER.includes(+yatVadeBuf) ? +yatVadeBuf : KREDI_VADE;
   const faiz = krediFaizi(vade);
   const borc = Math.round(tutar * (1 + faiz));
-  const bugun = trGun(Date.now());
+  const bugun = bankaGun();
   G.kredi = { anapara: tutar, borc, taksit: Math.round(borc / vade), vade,
     odenen: 0, odenenAdet: 0, gecikme: 0, temerrut: false, faiz,
-    bas: bugun, sonIslem: bugun, ts: Date.now(), no: (G.krediNo || 0) + 1 };
+    bas: bugun, sonIslem: bugun, ts: bankaZaman(), no: (G.krediNo || 0) + 1 };
   G.krediNo = G.kredi.no;
   G.cash += tutar;
   yatAmtBuf = '';
@@ -8107,7 +9100,7 @@ function yatKapat(erken) {
   // Bekleme = başlangıç + VADE + 1 gün. Erken kapatmak kısaltmaz.
   G.krediBekle = K.bas + K.vade + KREDI_BEKLE_EK;
   if (!K.gecikme) G.krediNot = Math.min(100, notu() + KREDI_NOT_ODUL * 2); // sicili temiz bitirene ek ödül
-  const bek = Math.max(0, G.krediBekle - trGun(Date.now()));
+  const bek = Math.max(0, G.krediBekle - bankaGun());
   G.kredi = null;
   toast('🏗️ KREDİN BİTTİ! ' + (erken ? 'Erken kapattın. ' : '') + 'Kredi notun: ' + notKademe().ad, '', null, 0, true);
   addMail('🏦 Banka', 'Büyüme kredin kapandı',
@@ -8203,7 +9196,7 @@ function acilPanel() {
   let h = '<div id="acil_wrap">';
   if (acilVar()) {
     const A = G.acil, borc = acilBorc(), faiz = borc - A.anapara, oran = acilFaizOran();
-    const sure = (Date.now() - A.ts - (A.donukMs || 0)) / 36e5;
+    const sure = Math.max(0, bankaZaman() - A.ts - (A.donukMs || 0)) / 36e5;
     h += '<div style="border:1px solid var(--gold);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--panel2)">'
       + '<div style="font-weight:800;color:var(--gold);margin-bottom:4px">⚡ ACİL NAKİT KREDİSİ</div>'
       + '<table class="ledger">'
@@ -8869,6 +9862,7 @@ function offlineProgress() {
     if (!st.disch) continue;
     const d = st.disch;
     dischGain += sellChunk(st, Math.min(d.left, st.stored), d.target, d.mult); // kalan kısım satılır
+    rentFlush(st);   // 🌍 biriken kıta hattı kirası ev sahibi ittifakın defterine yazılır
     st.disch = null; dischN++;
     plants().forEach(p => { if (p.st === st.id && p._autoOff) { p.on = true; p._autoOff = false; } });
   }
@@ -8983,14 +9977,28 @@ function load() {
 function migrate(s) {
   const d = freshState();
   for (const k of Object.keys(d)) if (s[k] === undefined) s[k] = d[k];
+  // ⏰ BANKA SAATİ (denetim açığı #2): eski kayıtlarda saatEn yok — 0 gelir ve ilk bankaZaman()
+  // çağrısında o anki saate çakılır. `founded` gelecekte olamaz (saat ileri alınmış kayıtlar).
+  if (!(s.saatEn > 0)) s.saatEn = 0;
+  if (s.saatSupheli === undefined) s.saatSupheli = false;
+  if (s.founded > Date.now()) s.founded = Date.now();
+  if (!(s.foundedBanka > 0)) s.foundedBanka = s.founded || Date.now();
   s.research = s.research || { lvl: {}, active: null };
   s.research.lvl = Object.assign({ coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0 }, s.research.lvl); // 📜 liccap Tur 11'de geri geldi
   s.capLic = s.capLic || {};
   s.lines = s.lines || []; s.mail = s.mail || []; s.friends = s.friends || []; s.friendReqs = s.friendReqs || [];
+  // ⚡ HAT ÖMRÜ (20. tur): eski kayıtlarda omur/tasinan yok. Sayaç SIFIRDAN başlar — mevcut
+  // oyunculara geçmişte taşıdıkları enerji yazılmaz (hat başına geçmiş veri zaten tutulmuyor;
+  // G.totalSold şirket toplamıdır, hangi hattan geçtiği bilinmiyor). Bilerek verilen bir hediye.
+  for (const l of s.lines) { if (!(l.omur > 0)) l.omur = lineOmurMax(l.km, l.hubs); if (!(l.tasinan >= 0)) l.tasinan = 0; }
+  if (s.ally && Array.isArray(s.ally.lines))
+    for (const l of s.ally.lines) { if (l && !(l.omur > 0)) l.omur = lineOmurMax(l.km, l.hubs); if (l && !(l.tasinan >= 0)) l.tasinan = 0; }
   s.chat = s.chat || {}; s.boughtOthers = s.boughtOthers || {}; s.auctionsMkt = s.auctionsMkt || [];
   s.countryStudy = s.countryStudy || {}; // 🔎 bölge araştırması sonradan geldi — eski kayıtlar boş başlar
   if (s.countryStudyActive === undefined) s.countryStudyActive = null;
   if (s.showOthers === undefined) s.showOthers = true;
+  // 🌍 Kıta hattı kira sözleşmesi (20. tur): süresi geçmiş sözleşme yüklemede temizlenir.
+  if (s.consLease && !(s.consLease.until > Date.now())) s.consLease = null;
   if (s.hideLines === undefined) s.hideLines = false;
   // kapasite lisansı sonradan geldi: eski kayıtların mevcut kurulu gücü hangi kademeyi gerektiriyorsa BEDAVA verilir
   for (const cat2 of Object.keys(CAP_TIERS)) {
@@ -10339,7 +11347,7 @@ function openUnitSheet(id) {
         if (!cn) return '';
         const net = cellPriceNow(cn.cell) * (1 - CONS_LOSS / 100);
         return `<button class="bigsell" style="background:#7a5cff;color:#fff" onclick="startDischarge(${u.id},1,null,'${cn.cell}')" ${satMwh < .005 ? 'disabled' : ''}>
-          🌍 KONSORSİYUM HATTI ile SAT — ${fmt(net)}/MWh <span style="font-size:10px">(${cn.asShareholder ? '⚖️ HİSSEDAR hakkın' : 'ittifak hattı'} · ÜCRETSİZ · kayıp %${CONS_LOSS} · merkeze ${cn.dist} km)</span></button>`;
+          🌍 KONSORSİYUM HATTI ile SAT — ${fmt(net * (1 - (cn.rentRate || 0)))}/MWh <span style="font-size:10px">(${cn.kiralik ? '🌍 KİRALIK · %' + Math.round(cn.rentRate * 100) + ' kira ' + cn.rentNm + ' kasasına' : cn.asShareholder ? '⚖️ HİSSEDAR hakkın · ÜCRETSİZ' : 'ittifak hattı · ÜCRETSİZ'} · kayıp %${CONS_LOSS} · merkeze ${cn.dist} km)</span></button>`;
       })()}
       ${adAvail() > 0 ? (satMwh >= satCap * .9
         ? `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="sellUnitAd(${u.id})">🎬 Reklam İzle & SAT — ${fmt(rAll.gain * AD_BONUS)} (+%15) · hak ${adAvail()}/${AD_MAX}</button>`
@@ -10591,11 +11599,15 @@ window.demolishUnit = id => { // SATIŞ ONAYI (patron isteği — telefon testi)
   if (u.kind === 'store' && isLinked(u)) { toast('🔗 Bu depo bir depo grubuna bağlı — satmadan önce 🔌 bağlantısını kes', 'warn', null, 0, true); return; }
   const r = resaleValue(u);
   const loss = 100 - r.pct;
+  // 🏦 "GÖRDÜĞÜN = ALDIĞIN": borçluyken bankanın payı satıştan kesilir, onay ekranı bunu ÖNCEDEN söyler.
+  const bKes = varlikKesinti(r.value);
   $('modal').innerHTML = `
     <h2>🗑️ Satış onayı — Emin misin?</h2>
     <p><b>${unitName(u)}</b> satılacak.<br>İade: <b style="color:var(--acc)">${fmt(r.value)}</b> (%${loss} zarar${loss >= 75 ? ' — HURDA fiyatı!' : ''})</p>
+    ${bKes > 0 ? `<p style="color:var(--warn)">🏦 <b>Borcun var:</b> bu satıştan <b>${fmt(bKes)}</b> doğrudan bankaya gider — eline geçecek: <b>${fmt(r.value - bKes)}</b>.<br>
+      <span class="sub">Tesis satarak borçtan kaçılamaz; tasfiye de alacaklının hakkıdır.</span></p>` : ''}
     ${u.kind === 'store' && u.stored > .5 ? `<p style="color:var(--warn)">⚠️ İçindeki <b>${fmtE(u.stored)} MWh</b> enerji SİLİNİR — önce satmayı düşün!</p>` : ''}
-    <button class="primary" style="background:var(--danger);color:#fff" onclick="closeModal();demolishDo(${id})">✅ Evet, Sat — ${fmt(r.value)}</button>
+    <button class="primary" style="background:var(--danger);color:#fff" onclick="closeModal();demolishDo(${id})">✅ Evet, Sat — ${fmt(r.value - bKes)}</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
@@ -10608,13 +11620,19 @@ window.demolishDo = id => {
   // konsoldan doğrudan çağrılabildiği için aynı koruma burada da olmalı (bypass deliği).
   if (u.kind === 'store' && isLinked(u)) return;
   const r = resaleValue(u);
-  G.cash += r.value;
-  G.cellEarned[u.cell] = (G.cellEarned[u.cell] || 0) + r.value;
+  // ⚠️ SIRA ÖNEMLİ: birim ÖNCE portföyden düşülür, para SONRA kapıdan geçer. Böylece satılan
+  // tesis artık ne bakım listesinde ne şirket değerinde sayılır (save() tutarlılığı).
   if (unitMarkers[id]) { unitMarkers[id].remove(); delete unitMarkers[id]; }
   G.units.splice(i, 1);
   if (u.kind === 'store') { plants().forEach(p => { if (p.st === id) p.st = null; }); ensureConnections(); }
+  // 🏗️ VARLIK GELİRİ KAPISI (denetim açığı #1): eskiden burada doğrudan `G.cash += r.value` vardı
+  // ve temerrütteki oyuncu tesislerini satarak haczi TAMAMEN atlatıyordu.
+  const kes = varlikKesinti(r.value);
+  varlikGeliri(r.value);
+  G.cellEarned[u.cell] = (G.cellEarned[u.cell] || 0) + r.value;
   hideSheets();
-  toast('💰 Satıldı — ' + fmt(r.value) + ' (%' + r.pct + ' geri' + (r.pct < 25 ? ', hurda fiyatı' : '') + ')', r.pct < 25 ? 'warn' : '');
+  toast('💰 Satıldı — ' + fmt(r.value - kes) + (kes > 0 ? ' (🏦 bankaya ' + fmt(kes) + ')' : '')
+    + ' (%' + r.pct + ' geri' + (r.pct < 25 ? ', hurda fiyatı' : '') + ')', r.pct < 25 ? 'warn' : '');
   save(); refreshUnitMarkers();
 };
 
@@ -11135,7 +12153,9 @@ function renderHUD() {
   $('hudprice').innerHTML = '💰 ' + fmt(priceNow()) + '/MWh' + (full ? ' · <b style="color:var(--gold)">DEPO DOLU!</b>' : '');
   const mc = maintCost(); // sadece bakım — yakıt artık santral içinden, depodan (patron tasarımı)
   if ($('drawerprice')) $('drawerprice').textContent = full ? 'SAT!' : 'Satış';
-  if ($('drawermaint')) $('drawermaint').textContent = mc >= 1 ? fmt(mc) : 'Bakım';
+  // 🔧 Çekmece daraldı (62px): bakım tutarı kısa biçimde — "$47.664" yerine "$48K". Milyon üstünü fmt zaten kısaltır.
+  // Tam tutar butona basınca açılan bakım penceresinde yazıyor, bilgi kaybı yok.
+  if ($('drawermaint')) $('drawermaint').textContent = mc >= 1 ? (mc >= 1e6 || mc < 1000 ? fmt(mc) : '$' + Math.round(mc / 1000) + 'K') : 'Bakım';
   $('allybtn').style.color = (G.ally && G.ally.tender) ? 'var(--danger)' : (allyBuffOn() ? 'var(--gold)' : '');
   const um = unreadMail();
   $('mailbtn').classList.toggle('unread', um > 0);
@@ -11435,7 +12455,15 @@ function wizNameModal(il) {
   $('overlay').classList.add('show');
 }
 window.wizDone = () => {
-  G.founded = Date.now(); // eğitim penceresi ŞİRKET kurulunca başlar (sihirbazda oyalanan süre yanmasın)
+  // ⚠️ İKİ AYRI SAAT TABANI — BİRLEŞTİRME (denetimde yakalandı, eğitimi tamamen öldürüyordu):
+  // `G.founded` EĞİTİM penceresidir ve `tutActive()` onu HAM `Date.now()` ile karşılaştırır
+  // (`dt >= 0` şartı var). bankaZaman() sunucu farkı kadar İLERİ olabildiği için dt negatif
+  // çıkıyor ve 8 görevlik eğitim hiç açılmıyordu. Eğitim ham saatte kalır — geriye alma
+  // istismarını `dt >= 0` zaten kesiyor.
+  G.founded = Date.now();
+  // `G.foundedBanka` BANKANIN 24 saatlik güven penceresidir; o monoton saatte durur ki
+  // saati geri alıp "şirketim eski" numarası yapılamasın.
+  G.foundedBanka = bankaZaman();
   G.company = (document.getElementById('nameinput').value || '').replace(/[<>&"]/g, '').trim() || 'Enerji A.Ş.';
   closeModal();
   $('wizsheet').classList.remove('show');
@@ -11838,7 +12866,20 @@ function bootDone() {
 }
 (() => {
   $('bootscene').innerHTML = bootScene();
-  $('boottip').textContent = '💡 ' + BOOT_TIPS[Math.floor(Math.random() * BOOT_TIPS.length)];
+  // 🎯 Ekrandaki fotoğraf hangi santral türüyse, ipucu YARI ihtimalle o türe ait olsun.
+  // window.BOOT_TUR'u açılış <img> betiği (sayfanın en başı) yazar; burası çok sonra çalıştığı için hazırdır.
+  // BOOT_TUR tanımsızsa eski davranışa düşer — kırılma yok.
+  const TUR_IPUCU = {
+    solar: 'Güneş yalnız gündüz üretir — akşam satışı için deponu gündüzden doldur.',
+    wind: 'Küçük türbin 3 m/s\'de döner, dev offshore 7 m/s ister — kareyi rüzgârına göre seç.',
+    coal: 'Kömür ucuz baz yüktür ama emisyonu yükseltip yeşil teşvikini yakar.',
+    gas: 'Gaz santrali LNG tankından beslenir — Gaz Üretim Lisansı olmadan çalışmaz.',
+    hydro: 'HES yakıtsız ve istikrarlıdır; karenin su gücü ne kadar yüksekse o kadar üretir.',
+    geo: 'Jeotermal yalnız ♨️ işaretli karelere kurulur — gece gündüz sabit üretir.',
+    nuke: 'Nükleer devasa üretir, yakıtı minik; lisansı oyun parasıyla alınır — premium yok.',
+  };
+  const turIp = TUR_IPUCU[window.BOOT_TUR];
+  $('boottip').textContent = '💡 ' + ((turIp && Math.random() < .5) ? turIp : BOOT_TIPS[Math.floor(Math.random() * BOOT_TIPS.length)]);
   bootStep(18, 'Motor hazırlanıyor…');
 })();
 
