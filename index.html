@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 00:40) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 10:55) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -585,7 +585,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 00:40)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 10:55)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2088,6 +2088,7 @@ function freshState() {
     licenses: {}, // cellId -> true (oyuncu başına ruhsat — kimse kimseyi engellemez)
     loan: null, loanNo: 0, // 🏦 kurtarma kredisi — eski kayıtlarda undefined, kod && ile korunur
     inv: null, invNo: 0, invKar: 0, // 💱 yatırım pozisyonu — aynı anda TEK pozisyon (bölüp kaçış yok)
+    invPx: {}, // 💾 son bilinen piyasa fiyatları — açılışta "—" yerine gerçek fiyat görünsün diye
     kredi: null, krediNo: 0, krediNot: 70, krediBekle: 0, notGun: 0, // 🏗️ büyüme kredisi + bankacılık sicili
     acil: null, acilBekle: 0, // ⚡ acil nakit kredisi — saatlik faiz, tek seferde tamamı kapanır
     leases: {}, // cellId -> bitiş ts (3 günlük imtiyaz: +%20 satış primi — YEKA tarzı alım garantisi)
@@ -4099,6 +4100,145 @@ window.demolishLine = id => {
   toast('🗑️ Hat söküldü — %30 hurda değeri iade', 'warn');
   save(); renderLinePanel(); drawOverlay();
 };
+// ═══════════ 📏 MEVCUT HATTI UZAT (patron 26 Ağu) ═══════════
+// PATRONUN BULDUĞU HATA: "İzmir→…→Kocaeli hattım vardı, sonra Kocaeli→İstanbul çektim.
+// Amacım hazır hatta İstanbul'u EKLEMEKTİ ama sistem bunu AYRI BİR HAT gördü. Menüde iki
+// hat görünüyor ve satarken transfer merkezi hangi hatta bağlıysa ona göre satıyor. Bu yanlış."
+//
+// KÖK NEDEN: `G.lines` bir ÇİZİM KAYDI listesi, ŞEBEKE değil. İki kayıt aynı karede fiziksel
+// olarak birleşse bile ayrı kalıyor; depo yalnız bağlı olduğu kaydın pazarlarını görüyor.
+// Yeni hat çekmek aynı zamanda ikinci bir UÇ TRAFOSU parası da ödetiyordu (boşuna).
+//
+// ÇÖZÜM (patron tarifi): hattı sökmek yerine UZAT. Önce uzatılacak transfer merkezine,
+// sonra hattın varacağı bölgeye dokunulur; maliyet ekranı çıkar, onaylanınca hat uzar.
+// Tek kayıt kaldığı için depo tüm zincirin pazarlarını görür.
+//
+// ⚠️ Hat yalnız UÇLARINDAN uzatılır: `l.path` doğrusal bir dizi, ortadan dallanma bu modeli
+// kırar. Ortadaki bir merkeze dokunulursa oyuncuya hangi uçları kullanabileceği söylenir.
+let LEXT = null; // { lineId, uc, bas } — bas=true ise path'in BAŞINA eklenecek
+
+// Uzatma maliyeti: yeni kablo + YALNIZ 1 yeni uç trafosu (mevcut uçtaki zaten duruyor) + ara merkezler.
+// Yeni hat çekseydi 2 uç trafosu ödeyecekti — doğru hamleyi yapan oyuncu bir trafo parası kazanır.
+function lineExtendCost(km, araHub) {
+  const cable = km * LINE.cableKm;
+  const merkez = LINE.transformer + (araHub || 0) * LINE.hub;
+  const permit = (1 + (araHub || 0)) * LINE.permitPerHub;
+  return Math.round((cable + merkez + permit) * (1 + LINE.laborRate));
+}
+function lextClear() { ldrawClear(); }
+function lextRender(hedef) {
+  ldrawClear();
+  if (!LEXT || !LEXT.uc || !map) return;
+  const pts = [cellCenter(LEXT.uc)].concat(hedef ? [cellCenter(hedef)] : []);
+  if (pts.length >= 2) ldrawLayer.push(L.polyline(pts, { color: '#3ddc97', weight: 5, opacity: .95, dashArray: '9 7', interactive: false }).addTo(map));
+  pts.forEach((p, i) => ldrawLayer.push(L.marker(p, {
+    icon: divIcon('<div style="font-size:22px;filter:drop-shadow(0 0 4px #3ddc97)">' + (i === 0 ? '🗼' : '🎯') + '</div>', [24, 24]),
+    interactive: false, zIndexOffset: 900
+  }).addTo(map)));
+}
+
+window.startLineExtend = (id) => {
+  const l = (G.lines || []).find(x => x.id === id);
+  if (!l) { toast('📏 Bu hat bulunamadı', 'warn'); return; }
+  if (!lineReady(l)) { toast('📏 Hat hâlâ inşa ediliyor — bitince uzatabilirsin', 'warn'); return; }
+  if (aucListed('line', id)) { toast('🔨 Bu hat açık artırmada — önce ilanı bekle', 'warn', null, 6000); return; }
+  if (krediKilidi('hat uzatma')) return;
+  const n = lineNodeCells(l);
+  closeLinePanel();
+  LEXT = { lineId: id, uc: null, bas: false };
+  setMode('lext');
+  toast('📏 Hangi uçtan uzatacaksın? <b>' + placeName(n[0]) + '</b> ya da <b>' + placeName(n[n.length - 1])
+    + '</b> transfer merkezine dokun.', '', null, 0, true);
+};
+window.lineExtendCancel = () => {
+  LEXT = null; lextClear();
+  if (MODE === 'lext') setMode(null);
+  toast('📏 Hat uzatma iptal edildi', 'warn');
+};
+
+function lineExtendTap(cell) {
+  if (!LEXT) return;
+  const l = (G.lines || []).find(x => x.id === LEXT.lineId);
+  if (!l) { LEXT = null; lextClear(); setMode(null); return; }
+  const n = lineNodeCells(l);
+
+  // 1. DOKUNUŞ — uzatılacak uç merkezi
+  if (!LEXT.uc) {
+    const i = n.indexOf(cell);
+    if (i < 0) { toast('📏 Bu kare bu hatta ait değil — hattın <b>transfer merkezine</b> dokun', 'warn'); return; }
+    if (i !== 0 && i !== n.length - 1) {
+      toast('📏 <b>' + placeName(cell) + '</b> hattın ORTASINDA. Hat yalnız uçlarından uzatılır — <b>'
+        + placeName(n[0]) + '</b> ya da <b>' + placeName(n[n.length - 1]) + '</b> merkezine dokun.', 'warn', null, 8000);
+      return;
+    }
+    LEXT.uc = cell; LEXT.bas = (i === 0);
+    lextRender();
+    toast('📏 <b>' + placeName(cell) + '</b> seçildi — şimdi hattın <b>uzayacağı bölgeye</b> dokun', '', null, 0, true);
+    return;
+  }
+
+  // 2. DOKUNUŞ — hedef bölge. Kurallar yeni hat çizimiyle AYNI olmalı ki uzatma bir kaçış yolu olmasın.
+  if (n.indexOf(cell) >= 0) { toast('📏 Burası zaten hattın üstünde — başka bir bölgeye dokun', 'warn'); return; }
+  const C = countryOfCell(cell), C0 = countryOfCell(l.path ? l.path[0] : l.from);
+  if (LAND_BOX && !C) { toast('🌊 Hat yalnız KARADAN geçer — karaya dokun', 'warn'); return; }
+  if (LAND_BOX && C0 && C && C0.iso !== C.iso) { toast('🌍 Bireysel hat yalnız ÜLKE İÇİNDE kalır — sınır aşan hat 🤝 ittifak işidir', 'warn', null, 0, true); return; }
+  const seg = kmDist(cellCenter(LEXT.uc), cellCenter(cell));
+  if (seg < 20) { toast('📏 Çok yakın (' + Math.round(seg) + ' km) — en az 20 km uzağa dokun', 'warn'); return; }
+  lextRender(cell);
+
+  const yeni = expandPath([LEXT.uc, cell]);   // 300 km üstü bölümlere zorunlu merkez ekler
+  const ek = yeni.slice(1);                   // ilk düğüm zaten hatta var
+  const araHub = ek.length - 1;               // sondaki hedef uç, kalanlar ara merkez
+  const ekKm = Math.round(pathKm(yeni));
+  const b = l.brand || 'voltas';
+  const maliyet = brandPrice(b, lineExtendCost(ekKm, araHub));
+  const yeniYol = LEXT.bas ? ek.slice().reverse().concat(l.path || [l.from, l.to]) : (l.path || [l.from, l.to]).concat(ek);
+  const yeniKm = Math.round(pathKm(yeniYol));
+  const yeniKayip = Math.round(lineBaseLoss({ path: yeniYol, km: yeniKm, hubs: yeniYol.length - 2 }));
+  LEXT.hedef = cell; LEXT.ek = ek; LEXT.maliyet = maliyet; LEXT.ekKm = ekKm; LEXT.araHub = araHub;
+
+  // 💰 MALİYET EKRANI (patron: "maliyet ekranı ve onay sonrası o hat uzasın")
+  $('modal').innerHTML = '<h2>📏 Hattı Uzat</h2>'
+    + '<p class="sub" style="margin-top:0">' + lineRota(l) + '<br><b style="color:var(--gold)">→ ' + placeName(cell) + '</b></p>'
+    + '<table class="ledger">'
+    + '<tr><td>Eklenecek mesafe</td><td><b>' + fmtN(ekKm) + ' km</b></td></tr>'
+    + '<tr><td>Yeni transfer merkezi</td><td>' + (araHub > 0 ? araHub + ' ara + 1 uç' : '1 uç') + '</td></tr>'
+    + '<tr><td>Hattın yeni uzunluğu</td><td>' + fmtN(l.km) + ' → <b>' + fmtN(yeniKm) + ' km</b></td></tr>'
+    + '<tr><td>Hat kaybı</td><td>%' + Math.round(lineBaseLoss(l)) + ' → <b class="' + (yeniKayip > lineBaseLoss(l) ? 'neg' : 'pos') + '">%' + yeniKayip + '</b></td></tr>'
+    + '<tr><td><b>Maliyet</b></td><td><b class="neg">' + fmt(maliyet) + '</b></td></tr>'
+    + '</table>'
+    + '<p class="sub">💡 Yeni hat çekseydin <b>ikinci bir uç trafosu</b> daha öderdin. Uzatma tek trafo ister — '
+    + 've en önemlisi <b>tek hat</b> olarak kalır: depoların bu zincirin <b>bütün pazarlarını</b> görür.</p>'
+    + '<button class="primary" onclick="lineExtendOnay()" ' + (G.cash >= maliyet ? '' : 'disabled') + '>📏 Onayla — ' + fmt(maliyet) + '</button>'
+    + (G.cash < maliyet ? '<p class="sub neg">Kasanda yetmiyor.</p>' : '')
+    + '<button class="primary ghostbtn" onclick="closeModal();lineExtendCancel()">Vazgeç</button>';
+  $('overlay').classList.add('show');
+}
+
+window.lineExtendOnay = () => {
+  if (!LEXT || !LEXT.ek) return;
+  const l = (G.lines || []).find(x => x.id === LEXT.lineId);
+  if (!l) { closeModal(); LEXT = null; return; }
+  if (G.cash < LEXT.maliyet) { toast('Kasanda yetmiyor', 'warn'); return; }
+  G.cash -= LEXT.maliyet; gider('altyapi', LEXT.maliyet);
+  G.cellSpent = G.cellSpent || {};
+  G.cellSpent[LEXT.hedef] = (G.cellSpent[LEXT.hedef] || 0) + LEXT.maliyet;
+  brandBuy(l.brand || 'voltas');
+  const eski = l.path ? l.path.slice() : [l.from, l.to];
+  l.path = LEXT.bas ? LEXT.ek.slice().reverse().concat(eski) : eski.concat(LEXT.ek);
+  l.from = l.path[0]; l.to = l.path[l.path.length - 1];
+  l.km = Math.round(pathKm(l.path));
+  l.hubs = l.path.length - 2;
+  // ⚠️ ZORUNLU: path değişti → depo/hat düğüm anahtarları tazelenmeli, yoksa depolar
+  // yeni uçtaki pazarları göremez. addHub da tam olarak bu yüzden bunu çağırıyor.
+  ensureGridLinks();
+  const hedef = LEXT.hedef;
+  LEXT = null; lextClear(); closeModal(); setMode(null);
+  toast('📏 Hat uzatıldı — ' + placeName(hedef) + ' artık aynı hatta. Kayıp %' + Math.round(lineBaseLoss(l)), '', null, 0, true);
+  beep(560, .14);
+  save(); drawOverlay(); openLinePanel();
+};
+
 // ═══════════ ✏️ ÇOK NOKTALI HAT ÇİZİMİ (patron 23 Ağu) ═══════════
 // "Soldan açılan pencereye basınca oyuncu ekranda çizgi çekebilsin — önce Kocaeli, sonra İzmir,
 // sonra Urfa. Önce YEŞİL ön izleme, altta maliyet ve iptal. Onaylayınca kablo KIRMIZI olsun ve
@@ -4395,6 +4535,7 @@ function gridPanelHTML() {
       ${lineErisimHTML(l)}
       <button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))}</button>
       ${wear > 5 ? `<button class="bigsell half" onclick="repairLine(${l.id})">🔧 Hat Bakımı — ${fmt(Math.round(wear * l.km * 900))}</button>` : ''}
+      <button class="bigsell half" onclick="startLineExtend(${l.id})">📏 Bu Hattı Uzat — yeni bölge ekle</button>
       <button class="bigsell half" style="color:var(--danger)" onclick="demolishLine(${l.id})">🗑️ Hattı Sök</button>`
       : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
     </div>`;
@@ -8020,7 +8161,7 @@ function yatPanel() {
     + '<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:8px">'
     + '<div style="font-size:11px;color:var(--acc2);font-weight:800;margin-bottom:4px">📋 KURALLAR — hepsi baştan yazılı</div>'
     + '<p class="sub" style="margin:0">'
-    + '• <b>Taksiti her gün ELLE ödersin.</b> Gece <b>00:00</b>\'a kadar ödenmeyen taksit %' + (KREDI_CEZA * 100) + ' zam yer.<br>'
+    + '• <b>Taksiti her gün ELLE ödersin.</b> Gece <b>00:00</b>\'a kadar ödenmeyen taksit %' + (KREDI_CEZA * 100) + ' zam uygulanır.<br>'
     + '• <b>İleriye taksit ödenmez</b> — günde en fazla bir taksit. Kredi seçtiğin vade kadar sürer.<br>'
     + '• <b>Faiz vadeyle büyür:</b> ' + KREDI_VADELER.map(v => v + ' gün → %' + Math.round(krediFaizi(v) * 100)).join(' · ') + '.<br>'
     + '• <b>Erken kapatmak faizi düşürmez</b> ve bekleme süresini kısaltmaz.<br>'
@@ -8035,7 +8176,16 @@ function yatPanel() {
 
 
 const invPx = k => INV_PX[k] ? INV_PX[k].px * INV_SCALE : 0;   // oyun fiyatı
-const invLive = () => Object.keys(INV_TYPES).every(k => INV_PX[k] && Date.now() - INV_PX[k].ts < 15 * 60000);
+// ⏱️ TAZELİK ENSTRÜMAN BAŞINA ÖLÇÜLÜR.
+// ⚠️ ESKİ HÂLİ HATALIYDI: `every(...)` idi, yani ÜÇ enstrümanın da taze olmasını şart koşuyordu.
+// Tek bir kaynak takılınca (ör. bazı operatörler Binance'i engelliyor) BÜTÜN borsa kapanıyordu —
+// patron telefonda "Piyasa kapalı" gördü ve üç fiyat da "—" çıktı. Artık altın gelmezse yalnız
+// altın kapanır, Bitcoin işlem görmeye devam eder.
+const INV_TAZE_MS = 15 * 60000;
+const invTaze = k => !!(INV_PX[k] && Date.now() - INV_PX[k].ts < INV_TAZE_MS);
+const invLive = k => k ? invTaze(k) : Object.keys(INV_TYPES).some(invTaze); // parametresiz: EN AZ BİRİ taze mi
+// Fiyatın kaç dakikadır beklediği — "kapalı bile olsa fiyat yazsın" (patron) için
+const invYas = k => INV_PX[k] ? Math.floor((Date.now() - INV_PX[k].ts) / 60000) : null;
 
 // 📡 FİYAT ÇEKME — anahtarsız + CORS açık kaynaklar. Binance üçünü TEK istekte verir.
 // ⚠️ SİMÜLASYON YEDEĞİ BİLEREK YOK: hava simülasyonu kimseye para kazandırmaz ama fiyat
@@ -8045,7 +8195,14 @@ const invLive = () => Object.keys(INV_TYPES).every(k => INV_PX[k] && Date.now() 
 async function invFetch(zorla) {
   if (invFetching || (!zorla && Date.now() - invLastTry < 50000)) return;
   invFetching = true; invLastTry = Date.now();
-  const yaz = (k, px, chg) => { if (px > 0) INV_PX[k] = { px, chg: chg || 0, ts: Date.now() }; };
+  // 💾 Son fiyat KAYDA yazılır: oyuncu ekranı açar açmaz "—" değil GERÇEK son fiyatı görsün
+  // (patron: "kapalı bile olsa orda fiyat yazıyor"). Kaydedilen fiyatla İŞLEM YAPILMAZ —
+  // yalnız gösterilir; alım/satım için fiyatın TAZE olması şart (invTaze).
+  const yaz = (k, px, chg, kaynak) => {
+    if (!(px > 0)) return;
+    INV_PX[k] = { px, chg: chg || 0, ts: Date.now(), kaynak: kaynak || '?' };
+    if (G) { G.invPx = G.invPx || {}; G.invPx[k] = INV_PX[k]; }
+  };
   try {
     const syms = Object.values(INV_TYPES).map(t => '"' + t.sym + '"').join(',');
     const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=%5B' + encodeURIComponent(syms) + '%5D');
@@ -8053,13 +8210,24 @@ async function invFetch(zorla) {
     const arr = await r.json();
     for (const k of Object.keys(INV_TYPES)) {
       const row = arr.find(x => x.symbol === INV_TYPES[k].sym);
-      if (row) yaz(k, +row.lastPrice, +row.priceChangePercent);
+      if (row) yaz(k, +row.lastPrice, +row.priceChangePercent, 'Binance');
     }
   } catch (e) { /* aşağıdaki yedeklere düş */ }
+  // 🛡️ YEDEK KAYNAKLAR — hepsi ayrı şirket, ayrı alan adı. Binance bazı operatörlerde
+  // engellenebiliyor (patron 5G'de "Piyasa kapalı" gördü, aynı anda ev wifi'sinde çalışıyordu),
+  // o yüzden her enstrümanın KENDİ yedeği var ve biri düşünce ötekiler etkilenmez.
   const bayat = k => !INV_PX[k] || Date.now() - INV_PX[k].ts > 60000;
-  try { if (bayat('gold')) { const j = await (await fetch('https://api.gold-api.com/price/XAU')).json(); yaz('gold', +j.price, (INV_PX.gold || {}).chg); } } catch (e) {}
-  try { if (bayat('eur')) { const j = await (await fetch('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD')).json(); yaz('eur', +j.rates.USD, (INV_PX.eur || {}).chg); } } catch (e) {}
-  try { if (bayat('btc')) { const j = await (await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true')).json(); yaz('btc', +j.bitcoin.usd, +j.bitcoin.usd_24h_change); } } catch (e) {}
+  const dene = async (k, url, al, ad) => {
+    if (!bayat(k)) return;
+    try { const j = await (await fetch(url)).json(); const v = al(j); if (v && v.px > 0) yaz(k, v.px, v.chg, ad); } catch (e) {}
+  };
+  await dene('gold', 'https://api.gold-api.com/price/XAU', j => ({ px: +j.price, chg: (INV_PX.gold || {}).chg }), 'gold-api');
+  await dene('eur', 'https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD', j => ({ px: +j.rates.USD, chg: (INV_PX.eur || {}).chg }), 'Frankfurter');
+  await dene('btc', 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true', j => ({ px: +j.bitcoin.usd, chg: +j.bitcoin.usd_24h_change }), 'CoinGecko');
+  // 🔁 İKİNCİ TUR YEDEK — birincisi de düşerse. Ayrı sağlayıcılar, ayrı altyapı.
+  await dene('btc', 'https://api.coinbase.com/v2/prices/BTC-USD/spot', j => ({ px: +j.data.amount, chg: (INV_PX.btc || {}).chg }), 'Coinbase');
+  await dene('eur', 'https://api.coinbase.com/v2/prices/EUR-USD/spot', j => ({ px: +j.data.amount, chg: (INV_PX.eur || {}).chg }), 'Coinbase');
+  await dene('gold', 'https://api.coinbase.com/v2/prices/PAXG-USD/spot', j => ({ px: +j.data.amount, chg: (INV_PX.gold || {}).chg }), 'Coinbase');
   invFetching = false;
   if ($('overlay').classList.contains('show') && $('inv_wrap')) openBank('inv');
 }
@@ -8108,7 +8276,7 @@ window.invAl = (k) => {
   if (yatVar()) { toast('🏗️ Büyüme kredin sürerken yatırım yapamazsın — o para tesis içindi.', 'warn', null, 6000); return; }
   if (acilVar()) { toast('⚡ Acil nakit borcun varken yatırım yapamazsın — önce borcunu kapat.', 'warn', null, 6000); return; }
   if (invVar()) { toast('💱 Zaten açık bir pozisyonun var — önce onu kapat.', 'warn'); return; }
-  if (!invLive()) { toast('💱 Piyasa kapalı — canlı fiyat alınamıyor. Alım yapılamaz.', 'warn'); return; }
+  if (!invTaze(k)) { toast('💱 ' + INV_TYPES[k].nm + ' fiyatı şu an alınamıyor — bu enstrümanda işlem kapalı. Öteki enstrümanlar açık olabilir.', 'warn', null, 6000); return; }
   // ⚠️ Tutarın TEK KAYNAĞI invAmtBuf. DOM input'undan okumak, önizleme tablosuyla
   // gerçek alımın ayrışmasına yol açıyordu (oyuncu yazar, önizleme güncellenmez).
   const tutar = Math.floor(+invAmtBuf || 0);
@@ -8130,7 +8298,7 @@ window.invAl = (k) => {
 
 window.invSat = () => {
   if (!invVar()) return;
-  if (!invLive()) { toast('💱 Piyasa kapalı — canlı fiyat alınamıyor. Satış yapılamaz.', 'warn'); return; }
+  if (!invTaze(G.inv.k)) { toast('💱 ' + INV_TYPES[G.inv.k].nm + ' fiyatı şu an alınamıyor — fiyat gelince kapatabilirsin. Pozisyonun duruyor.', 'warn', null, 7000); return; }
   const h = invHesap(), P = G.inv, T = INV_TYPES[P.k];
   G.cash += h.net;
   gider('borsa', h.satisBedel + h.vergi);
@@ -8273,7 +8441,7 @@ function invOnizleHTML() {
       + '<tr><td class="sub">Başa baş için gereken hareket</td><td class="sub">' + (px > 0 ? '+' + yz(1 / ((1 - o) * (1 - o)) - 1) : '—') + '</td></tr>'
       + '</table>';
   }
-  const gecerli = tutar >= 1000 && tutar <= sinir && canli;
+  const gecerli = tutar >= 1000 && tutar <= sinir && invTaze(secili);
   h += '<button class="primary" onclick="invAl(\'' + secili + '\')" ' + (gecerli ? '' : 'disabled') + '>'
     + T.ico + ' ' + (tutar > 0 ? fmt(tutar) + ' ile ' + T.nm + ' Al' : T.nm + ' Al') + '</button>';
   if (tutar > sinir && sinir > 0) h += '<p class="sub neg">Tavanı aşıyor — en fazla ' + fmt(sinir) + '.</p>';
@@ -8291,8 +8459,14 @@ function invPanel() {
   }
   const canli = invLive();
   let h = '<div id="inv_wrap">';
-  if (!canli) h += '<p class="sub" style="margin-top:0;color:var(--warn)">⚠️ <b>Piyasa kapalı</b> — canlı fiyat alınamıyor. '
-    + 'Alım ve satım durduruldu. Fiyatı uydurmuyoruz: veri yoksa işlem de yok.</p>';
+  // ⚠️ Artık "hepsi kapalı" demiyoruz — hangi enstrümanın fiyatı gelmiyorsa YALNIZ o söylenir.
+  const kapali = Object.keys(INV_TYPES).filter(k => !invTaze(k));
+  if (kapali.length) h += '<p class="sub" style="margin-top:0;color:var(--warn)">⚠️ <b>'
+    + kapali.map(k => INV_TYPES[k].nm).join(', ') + '</b> fiyatı şu an alınamıyor — '
+    + (kapali.length === Object.keys(INV_TYPES).length
+      ? 'internet bağlantını kontrol et. Aşağıda <b>son bilinen fiyatlar</b> yazılı ama onlarla işlem yapılmaz: fiyatı uydurmuyoruz.'
+      : 'bu enstrümanda işlem kapalı. <b>Ötekiler açık.</b>')
+    + '</p>';
 
   if (invVar()) {
     const P = G.inv, T = INV_TYPES[P.k], c = invHesap();
@@ -8318,7 +8492,8 @@ function invPanel() {
     // ℹ️ SÜRE BEDELİ YOK (patron kararı) — bekleme cezasını kazanılmayan santral geliri zaten veriyor.
     h += '<p class="sub">Pozisyonu istediğin kadar açık tutabilirsin — süre sınırı ve süre bedeli yok. '
       + 'Riski piyasanın kendisi taşır: fiyat düşerse zararın büyür.</p>'
-      + '<button class="primary" onclick="invSat()" ' + (canli ? '' : 'disabled') + '>💱 Pozisyonu Kapat — ' + fmt(c.net) + ' al</button>'
+      + '<button class="primary" onclick="invSat()" ' + (invTaze(P.k) ? '' : 'disabled') + '>💱 Pozisyonu Kapat — ' + fmt(c.net) + ' al</button>'
+      + (invTaze(P.k) ? '' : '<p class="sub neg">' + T.nm + ' fiyatı gelmiyor — fiyat dönünce kapatabilirsin. Pozisyonun güvende, bir şey kaybetmiyorsun.</p>')
       + '<p class="sub">Aynı anda tek pozisyon tutulur. Kapatmadan yenisi açılmaz — bu, işlemi bölerek düşük işlem bedeli kademesinde kalmayı engeller.</p>';
     return h + '</div>';
   }
@@ -8335,6 +8510,9 @@ function invPanel() {
       + '<div style="font-size:19px">' + t.ico + '</div>'
       + '<div style="font-size:11px;font-weight:700">' + t.nm + '</div>'
       + '<div style="font-size:10px" class="' + (chg >= 0 ? 'pos' : 'neg') + '">' + (px ? (chg >= 0 ? '+' : '−') + yz(Math.abs(chg) / 100) : '—') + '</div>'
+      // 💰 Fiyat KARTTA da yazılır — patron: "kapalı bile olsa orda fiyat yazıyor"
+      + '<div style="font-size:9.5px;color:var(--dim)' + (invTaze(k) ? '' : ';opacity:.6') + '">'
+      + (px ? invFiyatYaz(k) : '—') + (px && !invTaze(k) ? ' ⏸' : '') + '</div>'
       + '</button>';
   }
   h += '</div>'
@@ -8343,7 +8521,11 @@ function invPanel() {
     + '<div class="sub" style="margin-bottom:6px">' + T.not + '</div>'
     + sparkSVG((INV_SPARK[secili] || {}).d)
     + '<table class="ledger"><tr><td>Oyun fiyatı <span class="sub">(1 ' + T.birim + ')</span></td><td><b>' + (INV_PX[secili] ? invFiyatYaz(secili) : '—') + '</b></td></tr>'
-    + (INV_PX[secili] ? '<tr><td class="sub">↳ gerçek piyasa</td><td class="sub">$' + INV_PX[secili].px.toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + '</td></tr>' : '')
+    + (INV_PX[secili] ? '<tr><td class="sub">↳ gerçek piyasa</td><td class="sub">$' + INV_PX[secili].px.toLocaleString('tr-TR', { maximumFractionDigits: 2 })
+        + ' · ' + (INV_PX[secili].kaynak || '?') + '</td></tr>'
+      + '<tr><td class="sub">↳ fiyatın yaşı</td><td class="sub ' + (invTaze(secili) ? 'pos' : 'neg') + '">'
+        + (invYas(secili) <= 0 ? 'şu an canlı ✓' : invYas(secili) + ' dakika önce' + (invTaze(secili) ? ' ✓' : ' — işlem kapalı'))
+        + '</td></tr>' : '<tr><td colspan="2" class="sub neg">Bu enstrüman için henüz hiç fiyat alınmadı.</td></tr>')
     + '<tr><td>Yatırabileceğin en fazla</td><td><b>' + fmt(Math.min(G.cash, invTavan())) + '</b> <span class="sub">(şirket değerinin ' + yz(INV_CAP, 0) + '\'ı)</span></td></tr>'
     + '</table></div>'
     + '<div style="display:flex;gap:6px;align-items:center;margin:10px 0 4px">'
@@ -8377,6 +8559,9 @@ function invPanel() {
 setInterval(() => { if (invVar()) invFetch(); }, 5 * 60000);
 // 🏗️ Gün dönümünü yakala: gece 00:00 geçtiyse ödenmeyen taksit zam yesin. Oyuncu
 // açıkken de kapalıyken de işler — çevrimdışı geçen günler dönüşte tek tek işlenir.
+// 💾 Kayıttaki son fiyatları belleğe al — ekran açılır açılmaz fiyat görünsün,
+// canlı veri gelene kadar "—" beklenmesin. Bu fiyatla İŞLEM YAPILMAZ (invTaze bakar).
+setTimeout(() => { if (G && G.invPx) for (const k of Object.keys(INV_TYPES)) if (G.invPx[k] && !INV_PX[k]) INV_PX[k] = G.invPx[k]; }, 2000);
 setTimeout(() => { yatIsle(); notTazele(); acilIsle(); }, 9000);
 setInterval(() => { yatIsle(); notTazele(); acilIsle(); }, 60000);
 
@@ -8591,10 +8776,12 @@ function setMode(m) {
   // ✏️ hat çizim modunun KENDİ alt çubuğu var (#drawbar) — mod ipucu barı gösterilmez
   $('modehint').classList.toggle('show', !!m && m !== 'draw');
   if (m !== 'draw' && typeof LDRAW !== 'undefined' && LDRAW) { LDRAW = null; ldrawClear(); $('drawbar').classList.remove('show'); }
+  if (m !== 'lext' && typeof LEXT !== 'undefined' && LEXT) { LEXT = null; ldrawClear(); } // 📏 uzatma modundan çıkıldı
   if (m) {
     hideSheets();
     $('modehinttxt').textContent = m === 'build'
       ? '🏗️ ' + (PENDING ? TYPE_OF(PENDING.kind, PENDING.t).nm + ' — kurmak istediğin yere dokun' : 'Kurmak istediğin yere dokun')
+      : m === 'lext' ? '📏 Önce hattın UCUNDAKİ transfer merkezine, sonra uzayacağı bölgeye dokun'
       : m === 'line' ? '⚡ Hattın varacağı uzak noktaya dokun'
       : m === 'link' ? '🔗 Bağlanacak DEPOYA haritadan dokun'
       : m === 'plink' ? '🔗 Santralı bağlayacağın İSTASYONA dokun'
@@ -8712,6 +8899,7 @@ function mapTapAt(ll) {
   SEL.cell = cellId(ll);
   SEL.ll = ll;
   if (MODE === 'draw') { lineDrawAdd(SEL.cell); return; } // ✏️ çok noktalı hat: mod SÜRER
+  if (MODE === 'lext') { lineExtendTap(SEL.cell); return; } // 📏 mevcut hattı uzatma: mod SÜRER
   if (MODE === 'line') { const src = LINE_SRC; setMode(null); if (src) lineConfirm(SEL.cell); return; }
   if (MODE === 'build') { // YERLEŞTİRME: satın alınan ürün bu konuma kurulur
     if (PENDING) placeAt(SEL.cell, SEL.ll);
@@ -8926,6 +9114,7 @@ function addUnitMarker(u) {
   m.on('click', () => {
     if (lpFired) { lpFired = false; return; } // uzun basış zaten komşu listesini açtı
     if (MODE === 'draw') { lineDrawAdd(u.cell); return; } // ✏️ hat çizimi: işaretçi de nokta seçer
+    if (MODE === 'lext') { lineExtendTap(u.cell); return; } // 📏 uzatma: işaretçiye dokunmak da sayılır
     // 🔗 bağlama modundaysak işaretçiye dokunmak HEDEF SEÇER, birim sayfasını açmaz
     if (MODE === 'link' && LINK_SRC != null) {
       const src = LINK_SRC;
@@ -9619,7 +9808,7 @@ function openCellSheet(c, ll, mode) {
       ${bl ? `<br><span class="neg">💸 Bu karedeki satış gelirinin %${LEASE_PRIM * 100}'si vergi olarak ${bl} şirketine gider — ihaleyi kazanırsan hem +%20 prim alır hem vergiyi sen toplarsın.</span>` : ''}</p>
       ${!licensed ? (officeCovers(c)
         ? `<p class="sub">📜 Ruhsatların: ${Object.keys(G.licenses).length}/${licCap()}</p>
-           <button class="bigsell" onclick="buyLicense()" ${G.cash < licenseFee(c) || Object.keys(G.licenses).length >= licCap() ? 'disabled' : ''}>📜 Ruhsat Al — ${fmt(licenseFee(c))}${Object.keys(G.licenses).length >= licCap() ? ' (LİMİT DOLU)' : ''}</button>`
+           <button class="bigsell${tutRuhsat() ? ' tut' : ''}" onclick="buyLicense()" ${G.cash < licenseFee(c) || Object.keys(G.licenses).length >= licCap() ? 'disabled' : ''}>📜 Ruhsat Al — ${fmt(licenseFee(c))}${Object.keys(G.licenses).length >= licCap() ? ' (LİMİT DOLU)' : ''}</button>`
         : `<p class="sub">🏢 Bu bölgede ofisin yok — ruhsat için önce ofis aç (${offices().length}/${maxOffices()}).</p>
            <button class="bigsell" onclick="buildOfficeAsk()" ${G.cash < OFFICE.cost || offices().length >= maxOffices() ? 'disabled' : ''}>🏢 Buraya Ofis Aç — ${fmt(OFFICE.cost)}</button>`)
         : `<p style="font-size:11.5px;color:var(--dim)">Kurmak için: <b>🏗️ İnşa</b>'dan ürün satın al, sonra bu konuma dokun.</p>`}`
@@ -9642,7 +9831,7 @@ function openCellSheet(c, ll, mode) {
     } else {
       html = `<p style="font-size:12px;color:var(--dim);margin:4px 0">Bu karede kurulum için Devlet'ten ruhsat al. <b>Sabit şeffaf ücret</b> — ihale belirsizliği yok, herkes alabilir.</p>
       <p class="sub">📜 Ruhsatların: ${Object.keys(G.licenses).length}/${licCap()} <span style="opacity:.7">(toplam limit sabit)</span></p>
-      <button class="bigsell" onclick="buyLicense()" ${G.cash < licenseFee(c) || Object.keys(G.licenses).length >= licCap() ? 'disabled' : ''}>📜 Ruhsat Al — ${fmt(licenseFee(c))}${Object.keys(G.licenses).length >= licCap() ? ' (LİMİT DOLU)' : ''}</button>`;
+      <button class="bigsell${tutRuhsat() ? ' tut' : ''}" onclick="buyLicense()" ${G.cash < licenseFee(c) || Object.keys(G.licenses).length >= licCap() ? 'disabled' : ''}>📜 Ruhsat Al — ${fmt(licenseFee(c))}${Object.keys(G.licenses).length >= licCap() ? ' (LİMİT DOLU)' : ''}</button>`;
     }
   } else {
     // ruhsatlı kare + yerleştirme modu: katalog artık AYRI ekranda (patron akışı) — buradan yönlendir
@@ -9662,12 +9851,13 @@ function openBuildSheet() {
   // Artık parlatma + yönlendirme eğitim bitene kadar; KİLİT (kategori/diğer kartlar) yalnız ilk 60 dk —
   // parası biten oyuncu sonsuza dek tek ürüne kilitlenip soft-lock olmasın diye.
   const tutStepNow = tutGuide() ? tutStep() : -1;
-  const tutGuideOn = tutStepNow === 0 || tutStepNow === 3;
+  const tutG = tutGuide() ? tutId() : null;
+  const tutGuideOn = tutG === 'turbin' || tutG === 'depo';
   const tutLock = tutGuideOn && tutActive();
   // eğitim hedefi MARKALI sürüm: katalogda artık yalnız markalı ürünler var. Ortaç en ucuz olan.
-  const tutPickT = tutStepNow === 0 ? 'wind_1__ortac' : 'bat__ortac';   // patron: ilk santral RÜZGAR TÜRBİNİ
-  const tutCatNm = tutStepNow === 0 ? 'Rüzgar' : 'Depo';
-  const tutPickT_ = tutStepNow === 0 ? PLANT_TYPES.wind_1__ortac : STORE_TYPES.bat__ortac;
+  const tutPickT = tutG === 'turbin' ? 'wind_1__ortac' : 'bat__ortac';   // patron: ilk santral RÜZGAR TÜRBİNİ
+  const tutCatNm = tutG === 'turbin' ? 'Rüzgar' : 'Depo';
+  const tutPickT_ = tutG === 'turbin' ? PLANT_TYPES.wind_1__ortac : STORE_TYPES.bat__ortac;
   const cat = tutLock ? tutCatNm : (SEL.cat || (tutGuideOn ? tutCatNm : 'Tümü'));
   $('cs_title').textContent = '🏗️ İnşa — ürün seç';
   $('cs_quality').innerHTML = '';
@@ -9679,7 +9869,7 @@ function openBuildSheet() {
     <button class="${!SEL.brand ? 'on' : ''}" onclick="setBrandFilter('')">🏭 Tüm markalar</button>
     ${Object.keys(BRAND_ARCH).map(b => `<button class="${SEL.brand === b ? 'on' : ''}" onclick="setBrandFilter('${b}')">${brandLogoHTML(b, 15)} ${brandKisa(b)}</button>`).join('')}
   </div>`;
-  if (tutGuideOn) html += `<p style="color:var(--gold);font-size:12.5px;font-weight:700;margin:4px 0">🎓 ${tutStepNow === 0 ? 'İlk santralin' : 'Yeni bölgene'}: ${tutPickT_.ico} ${tutPickT_.nm} — 👇 <b>ALTIN ÇERÇEVELİ</b> karta dokun, Satın Al'dan sonra haritada YANIP SÖNEN kareye dokunacaksın.</p>`;
+  if (tutGuideOn) html += `<p style="color:var(--gold);font-size:12.5px;font-weight:700;margin:4px 0">🎓 ${tutG === 'turbin' ? 'İlk santralin' : 'Yeni bölgene'}: ${tutPickT_.ico} ${tutPickT_.nm} — 👇 <b>ALTIN ÇERÇEVELİ</b> karta dokun, Satın Al'dan sonra haritada YANIP SÖNEN kareye dokunacaksın.</p>`;
   // ⚡ KAPASİTE LİSANS BANDI: santral kategorisi seçiliyken kurulu güç / limit / sonraki lisans
   if (!tutLock && CAP_TIERS[cat]) {
     const used = catUsedMW(cat), cap = capMWOf(cat), nt = nextCapTier(cat);
@@ -10189,21 +10379,37 @@ function fmtHrs(h) { return h < 1 ? Math.round(h * 60) + ' dk' : h.toFixed(1) + 
 // ── BAŞLARKEN = YÖNLENDİRMELİ TUTORIAL (patron tasarımı, telefon testi): hedef öğe yanıp söner,
 // "şuraya dokun" ipucu çubuğu gösterilir, ~10 dakikada biter, bitince $25M OTOMATİK verilir.
 // Tutorial boyunca: kurulumlar ~anında + üretim ekstra ×10 (zamandan muaf) — bitince oyuncu serbest.
+// ⚠️ GÖREVLERE KESINLIKLE `id` VER VE KODDA İNDİS DEĞİL KİMLİK KULLAN.
+// Aralara görev eklenince bütün indisler kayar; eskiden kodun 8 yerinde `tutStep() === 2`
+// gibi sabit indisler vardı ve yeni görev eklemek onları SESSİZCE bozuyordu.
 const STARTER_TASKS = [
+  // 🗺️ PATRON 26 Ağu: "İlk oynayanın kalabalık karenin içine tıklaması zor. İlk görev
+  // Görünüm tuşuna basıp diğer santral görünürlüğünü kapatmak olsun ki tutorial'da
+  // yerleşim yaparken yanlışlıkla başkasının santraline tıklamasınlar."
+  { id: 'gorunum', t: '🙈 Diğer oyuncuların tesislerini gizle', ok: () => G.showOthers === false,
+    hint: '🗺️ <b>Görünüm</b>\'e bas → 👥 <b>Diğer oyuncuların tesisleri</b> satırına dokun ve KAPAT — böylece haritada yanlışlıkla başkasının santraline dokunmazsın', el: 'viewbtn' },
   // patron: ilk santral GÜNEŞ değil RÜZGAR — türbin gece de üretir, "ilk satış" görevi karanlıkta takılmaz
-  { t: '🌬️ Bir rüzgar türbini kur', ok: () => G.units.some(u => u.kind === 'plant' && PLANT_TYPES[u.t].kind === 'wind'), hint: '🏗️ İnşa\'ya bas → 🌬️ ALTIN ÇERÇEVELİ türbini Satın Al → sonra YANIP SÖNEN karene dokun', el: 'buildbtn' },
-  { t: '💰 İlk enerji satışını yap', ok: () => G.totalSold >= .01, hint: '🔋 Haritada ALTIN PARLAYAN depona dokun → 💰 SAT butonuna bas', el: null },
-  { t: '📜 Yeni bir kare ruhsatı al', ok: () => Object.keys(G.licenses).length >= 2, hint: 'ℹ️ Bilgi\'ye bas → YANIP SÖNEN kareye dokun — yeni bölgeye ruhsat almak için dokun (📜 ' + fmt(licenseFee('')) + ')', el: 'infobtn' },
-  { t: '🔋 Yeni bölgene 30 MWh Pil İstasyonu kur', ok: () => Object.keys(G.licenses).slice(1).some(c => G.units.some(u => u.kind === 'store' && baseTypeOf(u.t) === 'bat' && u.cell === c)), hint: '🏗️ İnşa\'ya bas → 🔋 ALTIN ÇERÇEVELİ Pil İstasyonu\'nu Satın Al → YANIP SÖNEN yeni bölgene dokun', el: 'buildbtn' },
-  { t: '🧪 İlk araştırmanı başlat', ok: () => G.research && (!!G.research.active || Object.values(G.research.lvl).some(v => v > 0)), hint: '🧪 YUKARIDA yanıp sönen şirket adına dokun → Araştırma bölümünden birini başlat', el: 'coname' },
-  { t: '💰 Toplam 2 MWh satış yap', ok: () => G.totalSold >= 2, hint: '💰 Üretmeye ve satmaya devam — 2 MWh\'e ulaş (1 dakikada dolar)', el: null },
+  { id: 'turbin', t: '🌬️ Bir rüzgar türbini kur', ok: () => G.units.some(u => u.kind === 'plant' && PLANT_TYPES[u.t].kind === 'wind'), hint: '🏗️ İnşa\'ya bas → 🌬️ ALTIN ÇERÇEVELİ türbini Satın Al → sonra YANIP SÖNEN karene dokun', el: 'buildbtn' },
+  { id: 'satis1', t: '💰 İlk enerji satışını yap', ok: () => G.totalSold >= .01, hint: '🔋 Haritada ALTIN PARLAYAN depona dokun → 💰 SAT butonuna bas', el: null },
+  { id: 'ruhsat', t: '📜 Yeni bir kare ruhsatı al', ok: () => Object.keys(G.licenses).length >= 2, hint: 'ℹ️ Bilgi\'ye bas → YANIP SÖNEN kareye dokun — yeni bölgeye ruhsat almak için dokun (📜 ' + fmt(licenseFee('')) + ')', el: 'infobtn' },
+  { id: 'depo', t: '🔋 Yeni bölgene 30 MWh Pil İstasyonu kur', ok: () => Object.keys(G.licenses).slice(1).some(c => G.units.some(u => u.kind === 'store' && baseTypeOf(u.t) === 'bat' && u.cell === c)), hint: '🏗️ İnşa\'ya bas → 🔋 ALTIN ÇERÇEVELİ Pil İstasyonu\'nu Satın Al → YANIP SÖNEN yeni bölgene dokun', el: 'buildbtn' },
+  { id: 'arastirma', t: '🧪 İlk araştırmanı başlat', ok: () => G.research && (!!G.research.active || Object.values(G.research.lvl).some(v => v > 0)), hint: '🧪 YUKARIDA yanıp sönen şirket adına dokun → Araştırma bölümünden birini başlat', el: 'coname' },
+  { id: 'satis2', t: '💰 Toplam 2 MWh satış yap', ok: () => G.totalSold >= 2, hint: '💰 Üretmeye ve satmaya devam — 2 MWh\'e ulaş (1 dakikada dolar)', el: null },
 ];
 const STARTER_REWARD = 10e6; // patron ayarı: 25M fazlaydı
 const tutStep = () => { for (let i = 0; i < STARTER_TASKS.length; i++) if (!STARTER_TASKS[i].ok()) return i; return -1; };
+// 🔑 Görevi İNDİSLE değil KİMLİKLE sor — araya görev eklenince kod bozulmasın.
+const tutId = () => { const i = tutStep(); return i < 0 ? null : STARTER_TASKS[i].id; };
+// 📜 RUHSAT GÖREVİNDE "Ruhsat Al" BUTONU PARLAR (patron 26 Ağu):
+// "Bilgi butonu sonrası kareye tıklayıp ruhsat alma görevinde Ruhsat Al düğmesi parlayıp
+//  sönsün, o menüde oyuncu anlayamaz aksi halde."
+// Kare zaten yanıp sönüyordu ama açılan bilgi sayfasında oyuncu hangi butona basacağını
+// bulamıyordu — yönlendirme kapıda bitiyor, içeride kayboluyordu.
+const tutRuhsat = () => tutGuide() && tutId() === 'ruhsat';
 function tutTargetUnit(u) { // satış görevlerinde dolu depolar altın parlar
   if (!tutGuide()) return false;
-  const i = tutStep();
-  return (i === 1 || i === 5) && u.kind === 'store' && u.buildDone <= Date.now() && u.stored > .05;
+  const g = tutId();
+  return (g === 'satis1' || g === 'satis2') && u.kind === 'store' && u.buildDone <= Date.now() && u.stored > .05;
 }
 // her 500 ms: ipucu çubuğu + hedef öğe parlatma + hedef dışı KİLİT + bitiş kontrolü (ödül otomatik)
 const TUT_BAR = ['buildbtn', 'infobtn', 'viewbtn', 'allybtn', 'aucbtn', 'mailbtn'];
@@ -10260,7 +10466,8 @@ function tutTick() {
   TUT_BAR.forEach(id => setTutCls(id, 'tut', id === wantTut));
   setTutCls('coname', 'attn', task.el === 'coname');
   // görev 1 (yerleştirme): merkez kare · görev 3 (ruhsat): komşu kare · görev 4: yeni bölge — altın yanıp söner
-  const wantCell = map ? (i === 0 ? Object.keys(G.licenses)[0] : i === 2 ? tutCellTarget() : i === 3 ? tutCellTarget4() : null) : null;
+  const g = task.id;
+  const wantCell = map ? (g === 'turbin' ? Object.keys(G.licenses)[0] : g === 'ruhsat' ? tutCellTarget() : g === 'depo' ? tutCellTarget4() : null) : null;
   if (wantCell) {
     if (tutCellIdCur !== wantCell) {
       clearTutCell();
@@ -10339,6 +10546,13 @@ function openCompanySheet() {
   };
   $('comp_body').innerHTML = `
     <div class="sub" style="margin-bottom:6px">${COUNTRIES[G.country].flag} ${G.il}, ${G.country} · ${new Date(G.founded || Date.now()).toLocaleDateString('tr-TR')}'den beri</div>
+    <!-- 🧪 ARAŞTIRMA EN ÜSTTE (patron 26 Ağu): eğitimin 5. görevi "ilk araśtırmanı başlat".
+         Araştırma en altta kalınca oyuncu sayfayı kaydırmadan bulamıyordu. Mali durum ve
+         bina dökümü ARTIK ALTTA — sırayı geri çevirme. -->
+    <div style="font-size:12px;margin:2px 0 2px">🧪 <b>ARAŞTIRMA</b> <span class="sub">tek seferde 1 araştırma yürür</span></div>
+    <p class="sub" style="margin:2px 0 4px">Puanların: <b>🌞 ${G.resPts.daily} günlük</b> · <b>📅 ${G.resPts.weekly} haftalık</b><br>Sv1-10: 1 günlük puan (günün İLK satışında +1) · Sv11+: 1 haftalık puan (📅 haftalık görev ödülüyle +1)</p>
+    ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}${resRow('liccap')}
+    <div style="height:1px;background:var(--line);margin:12px 0 2px"></div>
     <div style="font-size:12px;margin:8px 0 2px">💰 <b>MALİ DURUM</b></div>
     <table class="ledger">
       <tr><td>Kasa</td><td class="pos">${fmt(G.cash)}</td></tr>
@@ -10402,9 +10616,6 @@ function openCompanySheet() {
       <tr><td>📜 Ruhsat</td><td>${Object.keys(G.licenses).length} / ${licCap()} <span class="sub">(toplam limit)</span></td></tr>
       <tr><td>Ömür üretimi</td><td>${fmtN(lifeProd)} MWh · 🌫️ ${co2Avg()} g/kWh</td></tr>
     </table>
-    <div style="font-size:12px;margin:10px 0 2px">🧪 <b>ARAŞTIRMA</b> <span class="sub">tek seferde 1 araştırma yürür</span></div>
-    <p class="sub" style="margin:2px 0 4px">Puanların: <b>🌞 ${G.resPts.daily} günlük</b> · <b>📅 ${G.resPts.weekly} haftalık</b><br>Sv1-10: 1 günlük puan (günün İLK satışında +1) · Sv11+: 1 haftalık puan (📅 haftalık görev ödülüyle +1)</p>
-    ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}${resRow('liccap')}
     ${brandPanelHTML()}
     ${accountRowHTML()}
     <button class="bigsell half" onclick="resetAccountAsk()" style="color:var(--danger);margin-top:8px">⚠️ Hesabı Sıfırla</button>`;
