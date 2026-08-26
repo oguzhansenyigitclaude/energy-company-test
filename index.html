@@ -479,7 +479,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 12:11) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 12:20) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -601,7 +601,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 12:11)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 12:20)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -10677,7 +10677,13 @@ const STARTER_TASKS = [
     // 🧭 İpucu adım adım ilerler: nerede olduğunu anlayıp Sıradaki tıklamayı söyler.
     hint: () => acilVar()
       ? '🏦 Kredin hazır! Şimdi <b>💵 Tamamını Kapat</b> düğmesine bas — ilk saat içinde ödediğin için <b>faiz ödemezsin</b>.'
-      : '🏦 Sağdaki ⚡ menüyü aç → turuncu parlayan <b>Banka</b> düğmesine dokun → <b>⚡ Acil</b> sekmesi → <b>Tümü</b> ile tutar seç → <b>Acil Nakit Çek</b>. Sonra hemen geri ödeyeceksin.', el: 'drawerbank' },
+      : (!$('drawer') || !$('drawer').classList.contains('open'))
+        ? '🏦 Sağda turuncu yanıp sönen <b>⚡ tutamağa</b> dokun — menü açılacak.'
+        : bankTab !== 'acil'
+          ? '🏦 Şimdi turuncu parlayan <b>🏦 Banka</b> düğmesine dokun, sonra <b>⚡ Acil</b> sekmesine geç.'
+          : '🏦 <b>Tümü</b> ile tutarı seç → <b>⚡ Acil Nakit Çek</b>. Hemen ardından geri ödeyeceksin.',
+    // 🔗 Zincir: çekmece kapalıyken TUTAMAK parlar, açılınca içindeki BANKA butonu parlar
+    el: () => $('drawer') && $('drawer').classList.contains('open') ? 'drawerbank' : 'drawerhandle' },
 ];
 const STARTER_REWARD = 10e6; // patron ayarı: 25M fazlaydı
 const tutStep = () => { for (let i = 0; i < STARTER_TASKS.length; i++) if (!STARTER_TASKS[i].ok()) return i; return -1; };
@@ -10749,9 +10755,13 @@ function tutTick() {
     return;
   }
   const task = STARTER_TASKS[i];
-  const wantTut = task.el && task.el !== 'coname' ? task.el : null;
+  // 🔗 ZİNCİRLEME HEDEF (patron 26 Ağu): "önce o çekmece turuncu yanıp sönecek,
+  // sonra çekmece açılınca içindeki banka butonu yanıp sönecek, böyle devam edecek."
+  // Bu yüzden `el` artık FONKSİYON olabiliyor — o anki duruma göre hedef değişir.
+  const hedefEl = typeof task.el === 'function' ? task.el() : task.el;
+  const wantTut = hedefEl && hedefEl !== 'coname' ? hedefEl : null;
   TUT_BAR.forEach(id => setTutCls(id, 'tut', id === wantTut));
-  setTutCls('coname', 'attn', task.el === 'coname');
+  setTutCls('coname', 'attn', hedefEl === 'coname');
   // görev 1 (yerleştirme): merkez kare · görev 3 (ruhsat): komşu kare · görev 4: yeni bölge — altın yanıp söner
   const g = task.id;
   const wantCell = map ? (g === 'turbin' ? Object.keys(G.licenses)[0] : g === 'ruhsat' ? tutCellTarget() : g === 'depo' ? tutCellTarget4() : null) : null;
@@ -10764,7 +10774,11 @@ function tutTick() {
   } else clearTutCell();
   if (tutActive()) { // patron isteği: eğitimde hedef seçenek dışındaki butonlar KİLİTLİ
     // İnşa her zaman açık kalır (soft-lock önleme: deposunu satan oyuncu kilitli kalmasın)
-    const allow = ['buildbtn'].concat(task.el ? [task.el] : []); // İnşa hep açık; 🏠 çekmecede (çekmece eğitimde kilitli değil)
+    // ⚠️ ÇEKMECE TUTAMAĞI ASLA KİLİTLENMEZ: banka görevinin hedefi çekmecenin İÇİNDE.
+    // (Patron: "Sağdaki çekmece simgesi erişime kapalı ve banka butonu onun içinde.")
+    // Tutamak kilitliyken oyuncu hedefe ulaşamayıp görevde çıkmaza giriyordu.
+    const allow = ['buildbtn', 'drawerhandle'].concat(hedefEl ? [hedefEl] : []);
+    if (task.id === 'banka') allow.push('drawerbank');
     TUT_BAR.forEach(id => { if (!allow.includes(id)) $(id).disabled = true; });
     if (!allow.includes('coname')) $('coname').style.pointerEvents = 'none'; // çekmece eğitimde AÇIK (🏠 merkez oradan)
   }
