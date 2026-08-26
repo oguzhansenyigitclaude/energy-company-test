@@ -572,7 +572,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 19:45) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 19:56) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -718,7 +718,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 19:45)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 19:56)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -931,17 +931,45 @@ const ISO_FIX = { 'France': 'FR', 'Norway': 'NO', 'Kosovo': 'XK', 'Somaliland': 
   'Siachen Glacier': 'XG' };
 const KITA_TR = { 'Europe': 'Avrupa', 'Asia': 'Asya', 'Africa': 'Afrika', 'North America': 'Kuzey Amerika',
   'South America': 'Güney Amerika', 'Oceania': 'Okyanusya', 'Antarctica': 'Antarktika', 'Seven seas (open ocean)': 'Açık deniz' };
+// 🔁 Türkçe ad → ISO ters dizini (yalnız YEDEK harita için — bir kez kurulur).
+// ⚠️ Tembel kurulum ŞART: COUNTRY_ADD bu satırdan ~440 satır SONRA tanımlı bir `const`.
+// Modül yüklenirken okumaya kalksaydık TDZ hatası verirdi; landIndex ise ancak harita
+// indirildikten sonra, yani her şey hazırken çalışıyor.
+let _isoAd = null;
+function isoAddan(en) {
+  if (!_isoAd) {
+    // ⚠️ Elle yazılı 6 TEMEL ülke COUNTRY_ADD'de YOK (COUNTRIES'te doğrudan tanımlılar ve
+    // orada `iso` alanı taşımıyorlar) — tohum olarak burada duruyorlar, yoksa yedek modda
+    // Türkiye/Almanya/ABD dahil en büyük 6 pazar ISO'suz kalıyordu (ölçüldü).
+    _isoAd = { 'Türkiye': 'TR', 'Almanya': 'DE', 'ABD': 'US', 'İspanya': 'ES', 'Japonya': 'JP', 'Brezilya': 'BR' };
+    try { for (const [iso, v] of Object.entries(COUNTRY_ADD)) if (!_isoAd[v[0]]) _isoAd[v[0]] = iso; } catch (e) {}
+  }
+  const tr = CNAME_TR[en] || CNAME_TR_TAM[en] || en;
+  return _isoAd[tr] || '';
+}
 function landIndex(gj) { // kaba sınır kutuları: her dokunuşta bütün dünyayı taramayalım
   const out = [];
   for (const f of (gj.features || [])) {
     const g = f.geometry; if (!g) continue;
     const pr = f.properties || {};
-    const en = pr.ADMIN || pr.NAME || '?';
+    // 🐞 26 Ağu — SESSİZ HATA DÜZELTİLDİ: `pr.name` (küçük harf) aranmıyordu.
+    // Ana harta world50m.json `ADMIN` kullanıyor; ama o dosya 4 MB ve indirilemezse
+    // (APK/çevrimdışı/yavaş bağlantı) kod yedek `world.geo.json`a düşüyor — ONUN
+    // properties'i SADECE {"name":"France"}. JS büyük/küçük harfe duyarlı olduğu için
+    // `pr.NAME` eşleşmiyor, HER ÜLKE '?' oluyordu: ülke araştırması çalışmıyor, ofis
+    // şehir rehberi boşalıyor, kıtalar arası hat tespiti bozuluyordu. Deniz/kara testi
+    // (poligonlar duruyor) çalışmaya devam ettiği için hata EKRANDA HİÇ GÖRÜNMÜYORDU.
+    const en = pr.ADMIN || pr.NAME || pr.name || '?';
     // Ülke künyesi haritanın KENDİ verisinden gelir — 241 ülke hazır: ayrı ülke listesi tutmaya gerek yok.
     // DİKKAT: Natural Earth bazı ülkelere ISO_A2 yerine "-99" yazar (Fransa, Norveç...). Bu
     // değeri temizlemezsek hepsi TEK bir "-99" ülkesinde birleşir; Norveç'in şehirleri ve
     // potansiyel skoru kaybolur. Eksik kodları addan tamamlıyoruz.
-    let iso = pr.ISO_A2 && pr.ISO_A2 !== '-99' ? pr.ISO_A2 : (ISO_FIX[en] || '');
+    // 🔁 Yedek haritada ISO_A2 alanı HİÇ YOK (properties yalnız {name}). ISO olmadan
+    // citiesOfCountry(iso) boş döner → ülke raporu ve ofis şehir rehberi çalışmaz.
+    // Elimizdeki iki tabloyu ters çevirip addan ISO türetiyoruz: İngilizce ad → Türkçe ad
+    // (CNAME_TR / CNAME_TR_TAM) → ISO (COUNTRY_ADD). Yedek moda düşen oyuncu 7 ülke yerine
+    // ~50 ülkede doğru künye görür. Ana yolda (world50m) bu dal HİÇ çalışmaz.
+    let iso = pr.ISO_A2 && pr.ISO_A2 !== '-99' ? pr.ISO_A2 : (ISO_FIX[en] || isoAddan(en));
     const m = { en, nm: CNAME_TR[en] || en, iso, kita: KITA_TR[pr.CONTINENT] || pr.CONTINENT || '', kitaEn: pr.CONTINENT || '' };
     const polys = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : [];
     for (const p of polys) {
@@ -1387,6 +1415,43 @@ const COUNTRY_ADD = {
   RO: ['Romanya', '🇷🇴', [45.9, 25], 6],       BG: ['Bulgaristan', '🇧🇬', [42.7, 25.3], 6],
   RS: ['Sırbistan', '🇷🇸', [44.2, 20.9], 7],   HU: ['Macaristan', '🇭🇺', [47.1, 19.5], 6],
   CZ: ['Çekya', '🇨🇿', [49.8, 15.5], 6],       NZ: ['Yeni Zelanda', '🇳🇿', [-41, 173], 5],
+
+  // ═══ +61 ÜLKE (26 Ağu, 22. tur) ═══ CITY_DB'de şehirleri ZATEN VARDI ama kuruluş
+  // ekranında seçilemiyorlardı — tek eksik bu satırlardı. Koordinat ve yakınlaştırma
+  // world50m.json'daki EN BÜYÜK poligonun sınır kutusundan hesaplandı (elle yazılmadı):
+  // Fransa/Hollanda gibi denizaşırı toprağı olan ülkelerde kamera okyanusa bakmasın diye.
+  // ⚠️ Adlar CNAME_TR/CNAME_TR_TAM ile BİREBİR aynı — eşleşmezse harita bayrağı bulamaz.
+  AO: ['Angola', '🇦🇴', [-11.9, 17.9], 5],    AL: ['Arnavutluk', '🇦🇱', [41.2, 20.2], 7],
+  AZ: ['Azerbaycan', '🇦🇿', [40.1, 47.7], 6], BD: ['Bangladeş', '🇧🇩', [23.7, 90.3], 6],
+  BY: ['Belarus', '🇧🇾', [53.7, 27.9], 6],    BT: ['Bhutan', '🇧🇹', [27.5, 90.4], 7],
+  AE: ['Birleşik Arap Emirlikleri', '🇦🇪', [24.3, 54], 6], BO: ['Bolivya', '🇧🇴', [-16.3, -63.6], 5],
+  BA: ['Bosna-Hersek', '🇧🇦', [43.9, 17.7], 7], DO: ['Dominik Cumhuriyeti', '🇩🇴', [18.8, -70.2], 7],
+  AM: ['Ermenistan', '🇦🇲', [40.1, 45], 7],   EE: ['Estonya', '🇪🇪', [58.6, 25.8], 6],
+  ET: ['Etiyopya', '🇪🇹', [9.2, 40.5], 5],    CI: ['Fildişi Sahili', '🇨🇮', [7.5, -5.6], 6],
+  PH: ['Filipinler', '🇵🇭', [15.6, 122], 6],  GH: ['Gana', '🇬🇭', [8, -1], 6],
+  GL: ['Grönland', '🇬🇱', [71.7, -42.1], 3],  GT: ['Guatemala', '🇬🇹', [15.8, -90.2], 6],
+  GY: ['Guyana', '🇬🇾', [4.9, -58.9], 6],     GE: ['Gürcistan', '🇬🇪', [42.3, 43.3], 6],
+  HR: ['Hırvatistan', '🇭🇷', [44.7, 16.5], 6], IS: ['İzlanda', '🇮🇸', [65, -19], 5],
+  KH: ['Kamboçya', '🇰🇭', [12.6, 105], 6],    CM: ['Kamerun', '🇨🇲', [7.4, 12.4], 5],
+  QA: ['Katar', '🇶🇦', [25.4, 51.2], 7],      KE: ['Kenya', '🇰🇪', [0.4, 37.9], 5],
+  CR: ['Kosta Rika', '🇨🇷', [9.6, -84.2], 7], KW: ['Kuveyt', '🇰🇼', [29.3, 47.5], 7],
+  MK: ['Kuzey Makedonya', '🇲🇰', [41.6, 21.7], 7], CU: ['Küba', '🇨🇺', [21.5, -79.5], 5],
+  LV: ['Letonya', '🇱🇻', [56.9, 24.6], 6],    LY: ['Libya', '🇱🇾', [26.3, 17.2], 5],
+  LT: ['Litvanya', '🇱🇹', [55.2, 23.9], 6],   LB: ['Lübnan', '🇱🇧', [33.9, 35.8], 7],
+  MG: ['Madagaskar', '🇲🇬', [-18.8, 46.9], 5], MY: ['Malezya', '🇲🇾', [3.9, 114.4], 6],
+  MN: ['Moğolistan', '🇲🇳', [46.9, 103.8], 4], MZ: ['Mozambik', '🇲🇿', [-18.7, 35.5], 5],
+  MM: ['Myanmar', '🇲🇲', [19.3, 96.7], 5],    NP: ['Nepal', '🇳🇵', [28.4, 84.1], 6],
+  UZ: ['Özbekistan', '🇺🇿', [41.4, 64.6], 5], PA: ['Panama', '🇵🇦', [8.4, -80.1], 6],
+  PG: ['Papua Yeni Gine', '🇵🇬', [-6.6, 145.9], 6], PY: ['Paraguay', '🇵🇾', [-23.4, -58.4], 6],
+  SN: ['Senegal', '🇸🇳', [14.5, -14.5], 6],   SG: ['Singapur', '🇸🇬', [1.4, 103.8], 7],
+  SK: ['Slovakya', '🇸🇰', [48.7, 19.7], 6],   SI: ['Slovenya', '🇸🇮', [46.1, 14.9], 7],
+  LK: ['Sri Lanka', '🇱🇰', [7.9, 80.8], 7],   SD: ['Sudan', '🇸🇩', [15.4, 30.2], 5],
+  SR: ['Surinam', '🇸🇷', [3.9, -56], 6],      TZ: ['Tanzanya', '🇹🇿', [-6.4, 34.9], 5],
+  TW: ['Tayvan', '🇹🇼', [23.6, 121], 7],      TN: ['Tunus', '🇹🇳', [33.8, 9.5], 6],
+  UG: ['Uganda', '🇺🇬', [1.4, 32.3], 6],      OM: ['Umman', '🇴🇲', [20.8, 55.9], 6],
+  UY: ['Uruguay', '🇺🇾', [-32.5, -55.8], 6],  JO: ['Ürdün', '🇯🇴', [31.3, 37.1], 6],
+  VE: ['Venezuela', '🇻🇪', [6.4, -66.6], 5],  ZM: ['Zambiya', '🇿🇲', [-13.1, 27.8], 5],
+  ZW: ['Zimbabve', '🇿🇼', [-19, 29.1], 6],
 };
 (() => {
   for (const [iso, [nm, flag, ll, z]] of Object.entries(COUNTRY_ADD)) {
@@ -1406,10 +1471,25 @@ function cityList() {
   const seen = {};
   CITY_LIST = [];
   const add = (nm, la, lo, p) => { if (seen[nm]) return; seen[nm] = 1; CITY_LIST.push([nm, la, lo, p]); }; // çift sayım = çift talep
+  // 🐞 26 Ağu — SESSİZ DENGE HATASI DÜZELTİLDİ: tekilleştirme doğru (aynı yeri iki kez saymak
+  // talebi ikiye katlardı) ama SIRA yanlıştı. Eski sıra WORLD_CITIES'i CITY_DB'den ÖNCE
+  // koyuyordu; WORLD_CITIES ise CITY_DB'den ÖNCE yazılmış 22 satırlık ESKİ liste ve şehir
+  // merkezi nüfusu tutuyor, CITY_DB ise metropol nüfusu. 22 şehrin 21'i çakışıyordu:
+  //   Paris 11.000 yerine 2.100 (%19!) · Buenos Aires 15.400 → 3.100 · Mexico City 22.000 → 9.200
+  //   Kahire 22.200 → 10.100 · Delhi 32.900 → 19.000 · Mumbai 21.300 → 12.400
+  // Aynı şey STATE_POP'ta 8 yerde: New York 18.800 → 8.500 · Tokyo 37.000 → 13.900 ·
+  //   São Paulo 22.400 → 12.300 · Madrid 6.700 → 3.300 · Washington 6.300 → 750 ...
+  // cellDemand nüfusla doğru orantılı olduğu için bu şehirlerin karo talebi YILLARDIR eksikti.
+  // ⚠️ YENİ SIRA — bozma: TR_POP (81 il, elle derlendi, patronun gururu ve HİÇ çakışması yok)
+  //    → CITY_DB (ana veritabanı, 348 şehir, tutarlı metropol nüfusu)
+  //    → STATE_POP (yalnız CITY_DB'de olmayan eyalet/bölge adları için: Bavyera, Teksas...)
+  //    → WORLD_CITIES (tarihî kalıntı; artık yalnız hiçbirinde olmayan ad için devreye girer)
+  // ⚠️ "Daha büyüğü al" gibi bir kural KOYMADIK: bugün her çakışmada CITY_DB zaten büyük,
+  //    ama yarın bir EYALET nüfusu küçük bir şehri şişirebilirdi. Sıra açık ve belirlenimci.
   for (const [il, p] of Object.entries(TR_POP)) if (IL_COORD[il]) add(il, IL_COORD[il][0], IL_COORD[il][1], p);
+  for (const arr of Object.values(CITY_DB)) for (const c of arr) add(c[0], c[1], c[2], c[3]);
   for (const [st, p] of Object.entries(STATE_POP)) if (IL_COORD[st]) add(st, IL_COORD[st][0], IL_COORD[st][1], p);
   for (const c of WORLD_CITIES) add(c[0], c[1], c[2], c[3]);
-  for (const arr of Object.values(CITY_DB)) for (const c of arr) add(c[0], c[1], c[2], c[3]);
   return CITY_LIST;
 }
 // Kare talebi (MWh/gün): yakın şehir nüfuslarının mesafeyle sönümlenmiş toplamı. 150 km ötesi katkı vermez.
