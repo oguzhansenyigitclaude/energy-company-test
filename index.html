@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:12) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -589,7 +589,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:12)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:22)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -859,6 +859,19 @@ function isLand(ll) {
   return !!countryAt(ll, 0.06);
 }
 const hash01 = (a, b, s) => { const x = Math.sin(a * 127.1 + b * 311.7 + s * 74.7) * 43758.5453; return x - Math.floor(x); };
+// 💵 NAKİT HACMİ TAHMİNİ (patron 26 Ağu: "100M parası varsa → Nakit Hacmi tahmini: 70-130M")
+// AMAÇ: "hiçbir şeyi yok ama parası var" görünen oyuncu hile sanılmasın; parayı nakitte
+// tuttuğu anlaşılsın. RİSK: rakibin tam teklif gücünü bilmek müzayedeyi avlanabilir kılar.
+// ÇÖZÜM: gerçek kasa sunucuya ASLA yazılmaz. Önce KABA KADEMEYE yuvarlanır (2 anlamlı
+// basamak), kart onu ±%30 bandı olarak gösterir. 103,7M → kademe 100M → "70M – 130M".
+// ⚠️ Yuvarlama ŞART: bandın ORTASI kademeyi verir; yuvarlamasak ortası tam kasayı ele verirdi.
+const NAKIT_BANT = .30;
+function nakitKademe() {
+  const c = Math.max(0, (G && G.cash) || 0);
+  if (c < 1000) return 0;
+  const bas = Math.pow(10, Math.floor(Math.log10(c)) - 1); // 2 anlamlı basamak
+  return Math.min(1e15, Math.round(c / bas) * bas);
+}
 const GEO_SPOTS = [[37.77,29.09],[37.85,27.85],[38.61,27.43],[38.42,27.14],[38.76,30.54],[38.62,34.71],[64.1,-21.6],[33.59,130.40],[36.7,-119.7],[38.9,82.2]];
 function cellQuality(id) {
   const [cy, cx] = id.split('_').map(Number);
@@ -2135,26 +2148,59 @@ const jitter = ll => [ll[0] + (Math.random() - .5) * CELL * .5, ll[1] + (Math.ra
 
 // ── 🔄 OTOMATİK GÜNCELLEME (test sürümü): sunucudaki version.json ile karşılaştır, eskiyse tazele.
 // WebView/tarayıcı index.html'i önbelleğe aldığı için sürüm sorgusuyla ZORLA yeni kopya çekilir.
-async function checkUpdate() {
+// 🔴 PATRON 26 Ağu: "1. görev direkt atladı, 2'yi yaptırıyor" + "6 yazıyor" (oysa 8 görev var).
+// KÖK NEDEN: oyuncu ESKİ SÜRÜMDE KİLİTLİ KALIYORDU ve haberi olmuyordu. Eski checkUpdate
+// üç ayrı yerde SESSİZCE pes ediyordu:
+//   1) yalnız açılışta + uygulama öne gelince çalışıyordu — düzenli aralık YOKTU
+//   2) ekranda herhangi bir panel/modal açıksa hiç denemiyordu (eğitimdeki oyuncuda sürekli açık)
+//   3) EN KÖTÜSÜ: bir kez deneyip başarısız olunca `sessionStorage` kilidi yüzünden o oturumda
+//      BİR DAHA ASLA denemiyordu. WebView önbelleği eski kopyayı verirse oyuncu kalıcı kilitleniyordu.
+// ÇÖZÜM: düzenli kontrol + iki deneme hakkı + hâlâ olmuyorsa ELLE DOKUNULABİLİR uyarı şeridi.
+// Sessizce pes etmek YOK: ya günceller ya da oyuncuya "yeni sürüm var, dokun" der.
+let UPD_YENI = null;
+function updSeritGoster(v) {
+  if ($('updbar')) return;
+  const d = document.createElement('div');
+  d.id = 'updbar';
+  d.style.cssText = 'position:fixed;left:8px;right:8px;bottom:64px;z-index:9999;padding:11px 14px;'
+    + 'border-radius:12px;background:linear-gradient(90deg,#ffc24a,#e0491a);color:#1a1206;font-weight:800;'
+    + 'font-size:13px;text-align:center;box-shadow:0 4px 18px #000a;cursor:pointer;line-height:1.35';
+  d.innerHTML = '🔄 <b>Yeni sürüm hazır</b> — güncellemek için dokun<br><span style="font-weight:600;font-size:11px;opacity:.85">İlerlemen kaydedilir, kaybolmaz</span>';
+  d.onclick = () => { try { save(); } catch (e) {} sessionStorage.removeItem('ec_upd'); sessionStorage.removeItem('ec_upd_n');
+    location.replace(location.pathname + '?v=' + encodeURIComponent(v || '') + '&r=' + Date.now()); };
+  document.body.appendChild(d);
+}
+async function checkUpdate(zorla) {
   if (location.protocol === 'file:') return; // yerel dosyada güncelleme kontrolü yok
-  if (document.querySelector('.sheet.show') || $('overlay').classList.contains('show')) return; // panel/modal açıkken ekranı elinden alma
-  if (window.G && G.units && stores().some(s => s.disch)) return; // satış sürerken kesme
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
     const v = (await r.json()).build;
-    if (v && v !== BUILD_TAG) {
-      const seen = sessionStorage.getItem('ec_upd');
-      if (seen === v) return; // bu oturumda zaten denendi — sonsuz döngü koruması
-      sessionStorage.setItem('ec_upd', v);
-      try { save(); } catch (e) {}
-      location.replace(location.pathname + '?v=' + encodeURIComponent(v));
+    if (!v || v === BUILD_TAG) {                       // güncel — varsa şeridi kaldır
+      UPD_YENI = null;
+      sessionStorage.removeItem('ec_upd'); sessionStorage.removeItem('ec_upd_n');
+      const el = $('updbar'); if (el) el.remove();
+      return;
     }
+    UPD_YENI = v;
+    const denenen = sessionStorage.getItem('ec_upd');
+    const kez = denenen === v ? +(sessionStorage.getItem('ec_upd_n') || 0) : 0;
+    // Otomatik tazelemeyi ERTELEMEK gerekebilir — ama artık PES ETMİYORUZ, şeridi gösteriyoruz
+    const mesgul = document.querySelector('.sheet.show') || $('overlay').classList.contains('show')
+      || (window.G && G.units && stores().some(s => s.disch));
+    if (!zorla && (mesgul || kez >= 2)) { updSeritGoster(v); return; }
+    sessionStorage.setItem('ec_upd', v);
+    sessionStorage.setItem('ec_upd_n', String(kez + 1));
+    try { save(); } catch (e) {}
+    // ⚠️ `&r=` zaman damgası ŞART: yalnız `?v=` ile bazı WebView'lar aynı önbellek kaydını veriyor
+    location.replace(location.pathname + '?v=' + encodeURIComponent(v) + '&r=' + Date.now());
   } catch (e) {}
 }
 checkUpdate();
 // APK'da uygulama simgeden geri açılınca sayfa YENİDEN YÜKLENMEZ — o yüzden öne gelince tekrar bak
 document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(checkUpdate, 1200); });
+// ⏱️ DÜZENLİ KONTROL: oyuncu saatlerce oyunu açık bıraksa da yeni sürümü yakalasın
+setInterval(checkUpdate, 3 * 60000);
 
 // ── 🐞 TEST SÜRÜMÜ HATA YAKALAMA: son 3 hata kaydedilir, "Hata Bildir" raporuna eklenir ──
 const ERRLOG = [];
@@ -6060,6 +6106,12 @@ const NET = {
         off: offices().length, lic: Object.keys(G.licenses).length,
         pl: plants().length, st: stores().length, since: G.founded || null,
       });
+      // 💵 NAKİT KADEMESİ AYRI YAZILIR — bilerek. Kurallarda `$other: validate false` var:
+      // ana kayda tanımsız TEK alan eklersen TÜM kayıt reddedilir ve oyuncunun adı bile
+      // sunucuya düşmez. Ayrı yazınca kural henüz yapıştırılmamışsa yalnız BU yazma
+      // başarısız olur, ana karne sağlam kalır. (Aynı desen 'katki' düğümünde de kullanıldı.)
+      // ⚠️ Gerçek kasa DEĞİL, kaba kademe gönderilir — bkz. nakitKademe().
+      this.put('players/' + this.id + '/cash', nakitKademe()).catch(() => {});
       // 🏛️ haftalık devlet katkısı tablosu — kapanan haftalar DEĞİŞMEZ kalır, ödüller oradan
       // hesaplanır. (Kurallara 'katki' düğümü eklenene dek bu yazım sessizce reddedilir — zararsız.)
       if (G.weekSold >= .5) this.put('katki/' + kHafta(G.week) + '/' + this.id, {
@@ -6962,7 +7014,7 @@ window.openPlayerCard = (nm, geriSekme) => {
   const net = NET.on() ? NET.list().find(x => x.nm === nm) : null;
   const wi = WORLD_PLAYERS.indexOf(nm);
   const c = net
-    ? { nm, w: net.worth || 0, em: net.em || 0, off: net.off, lic: net.lic, pl: net.pl, st: net.st,
+    ? { nm, w: net.worth || 0, em: net.em || 0, off: net.off, lic: net.lic, pl: net.pl, st: net.st, cash: net.cash,
         il: net.il, country: net.country, ally: net.ally, online: net.online, since: net.since, ts: net.ts }
     : wi >= 0 ? botCard(wi) : { nm, unknown: true };
   const row = (l, v) => v === undefined || v === null ? '' : `<tr><td>${l}</td><td><b>${v}</b></td></tr>`;
@@ -6983,6 +7035,11 @@ window.openPlayerCard = (nm, geriSekme) => {
       ${row('⚡ Santral', c.pl)}
       ${row('🔋 Enerji deposu', c.st)}
       ${c.ally ? row('🤝 İttifak', c.ally) : ''}
+      ${c.cash !== undefined && c.cash !== null
+        ? row('💵 Nakit hacmi <span class="sub">(tahmini)</span>',
+            c.cash > 0 ? fmt(Math.round(c.cash * (1 - NAKIT_BANT))) + ' – ' + fmt(Math.round(c.cash * (1 + NAKIT_BANT)))
+                       : '<span class="sub">nakdi yok denecek kadar az</span>')
+        : ''}
     </table>
     ${/* 🚩 "HİLE Mİ?" ALGISINI ÖNLE (patron 26 Ağu: "Hiçbir şeyi yok parası var, bu durumda
          çok şikayet alırız.") Şirket değeri = nakit + tesis + yatırım − borç. Tesisini SATAN
@@ -6992,8 +7049,10 @@ window.openPlayerCard = (nm, geriSekme) => {
     ${(c.pl === 0 && c.w > 5e7) ? `<p class="sub" style="margin-top:6px;border-left:3px solid var(--warn);padding-left:8px">
       ⚠️ <b>Bu şirketin kurulu santrali yok — üretim yapmıyor.</b> Şirket değeri
       <b>nakit + tesis + yatırım − borç</b> toplamıdır; tesislerini satan ya da yeni kurulan bir
-      şirketin değeri yüksek görünüp üretimi sıfır olabilir. <b>Hile değildir.</b></p>` : ''}
-    <p class="sub" style="margin-top:6px">Kasa, ciro ve stok bilgileri gizlidir — herkes için.</p>`}
+      şirketin değeri yüksek görünüp üretimi sıfır olabilir. <b>Hile değildir</b> —
+      aşağıdaki nakit bandı parayı nerede tuttuğunu gösterir.</p>` : ''}
+    <p class="sub" style="margin-top:6px">Ciro, stok ve araştırma bilgileri gizlidir — herkes için.
+      Nakit yalnız <b>kaba bir tahmin bandı</b> olarak paylaşılır; kesin tutar kimseye görünmez.</p>`}
     ${blok ? '<p class="sub neg" style="margin-top:6px">🚫 Bu şirketi engelledin — sohbet mesajları ve postaları sana görünmüyor.</p>'
       : `<button class="bigsell half" onclick="closeModal();openDM('${nm.replace(/'/g, '')}')">✉️ Mesaj Gönder</button>
     ${friend ? '' : `<button class="bigsell half" onclick="sendFriendReq('${nm.replace(/'/g, '')}');closeModal()">👥 Arkadaş Ekle</button>`}`}
