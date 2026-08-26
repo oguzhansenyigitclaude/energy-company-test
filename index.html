@@ -490,7 +490,16 @@
     window.BOOT_TUR = t[0];                              // gösterilen tür — açılış ipucu seçimi bunu okur
     el.onerror = function () {
       n++;
-      if (n >= sira.length) { this.remove(); return; }   // hiçbiri yok → çizim sahnesine düş
+      if (n >= sira.length) {                            // hiçbiri yok → çizim sahnesine düş
+        this.remove();
+        // 🐞 27 Ağu (patron): "yeni fotoğraflar gelmeden 1 saniye önce eski gerçekçi olmayan
+        // çizimler görünüyor." Sebep: ana betik çizim sahnesini KOŞULSUZ çiziyordu; fotoğraf
+        // ağdan gelene ve 0,5 sn'lik yumuşak geçişi bitene kadar altta çizim duruyordu.
+        // Artık sahne YALNIZ buradan, yani fotoğrafların hepsi başarısız olursa çiziliyor.
+        window.BOOT_FOTO_YOK = true;
+        if (window.__bootSahneCiz) window.__bootSahneCiz();   // ana betik hazırsa hemen çiz
+        return;
+      }
       window.BOOT_TUR = t[n] || '';
       this.src = sira[n];
     };
@@ -590,7 +599,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 21:17) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 21:45) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -753,7 +762,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 21:17)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 21:45)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -12450,12 +12459,27 @@ function openCompanySheet() {
   };
   $('comp_body').innerHTML = `
     <div class="sub" style="margin-bottom:6px">${COUNTRIES[G.country].flag} ${G.il}, ${G.country} · ${new Date(G.founded || Date.now()).toLocaleDateString('tr-TR')}'den beri</div>
-    <!-- 🧪 ARAŞTIRMA EN ÜSTTE (patron 26 Ağu): eğitimin 5. görevi "ilk araśtırmanı başlat".
+    <!-- 📬 POSTA + 💡 ÖNERİ/İSTEK — patron 27 Ağu: "buton konumlarını Araştırma satırının
+         hemen üstüne al." Sayfanın en altındaydı; banlı oyuncu (ve Play'in aradığı hesap
+         yolu) için ikisi de kaydırmadan görünmek zorunda. -->
+    <div style="display:flex;gap:6px;margin:2px 0 10px">
+      <button id="comp_mailbtn" class="bigsell half" style="margin:0" onclick="openMailSheet()">📬 Posta${unreadMail() ? ' (' + unreadMail() + ')' : ''}</button>
+      <button id="comp_sugbtn" class="bigsell half" style="margin:0" onclick="suggestAsk()">💡 Öneri / İstek</button>
+    </div>
+    <!-- 🧪 ARAŞTIRMA (patron 26 Ağu): eğitimin 5. görevi "ilk araştırmanı başlat".
          Araştırma en altta kalınca oyuncu sayfayı kaydırmadan bulamıyordu. Mali durum ve
-         bina dökümü ARTIK ALTTA — sırayı geri çevirme. -->
+         bina dökümü ARTIK ALTTA — sırayı geri çevirme.
+         ⛔ BANLIYKEN KOMPLE GİZLİ (patron 27 Ağu: "ban attığım oyuncuda araştırma sekmeleri
+         açık ve araştırma başlatıyor"). Varlığına el konmuş şirket ilerleme kaydedemez.
+         Ek kilit startResearch() içinde — burası yalnız görsel, tek başına yeterli değil. -->
+    ${$('app').classList.contains('banli') ? `
+    <div style="border:1px solid var(--danger);border-radius:10px;padding:9px 11px;margin:2px 0 10px;font-size:12px;color:#ff9b9b">
+      ⚖️ <b>Varlıklarına el konulmuş durumda.</b> Araştırma, yatırım ve inşa askıya alındı.<br>
+      <span class="sub">Bir yanlışlık olduğunu düşünüyorsan 💡 Öneri/İstek'ten ulaş; haklı bulunursan her şey aynen iade edilir.</span>
+    </div>` : `
     <div style="font-size:12px;margin:2px 0 2px">🧪 <b>ARAŞTIRMA</b> <span class="sub">tek seferde 1 araştırma yürür</span></div>
     <p class="sub" style="margin:2px 0 4px">Puanların: <b>🌞 ${G.resPts.daily} günlük</b> · <b>📅 ${G.resPts.weekly} haftalık</b><br>Sv1-10: 1 günlük puan (günün İLK satışında +1) · Sv11+: 1 haftalık puan (📅 haftalık görev ödülüyle +1)</p>
-    ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}${resRow('liccap')}
+    ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}${resRow('liccap')}`}
     <div style="height:1px;background:var(--line);margin:12px 0 2px"></div>
     <div style="font-size:12px;margin:8px 0 2px">💰 <b>MALİ DURUM</b></div>
     <table class="ledger">
@@ -12527,17 +12551,9 @@ function openCompanySheet() {
          yükleniyor ekranı ile oyunu güncellemek." Haklı — güncelleme oyuncunun işi değil.
          Artık AÇILIŞTA, sunucuya bağlanmadan ÖNCE yapılıyor (bkz. bootGuncelle).
          Buraya düğme geri EKLEME. */ ''}
-    <!-- 📬 POSTA + 💡 ÖNERİ/İSTEK PROFİLE TAŞINDI — iki sebeple:
-         1) ⚖️ Google Play, hesap işlemlerinin (sıfırlama/silme) uygulama içinden BULUNABİLİR
-            olmasını şart koşuyor; üçünü profilin altında toplamak bu şartı karşılıyor.
-         2) ⛔ Ban perdesinde TEK aktif giriş profildir (patron: "belirttiğim butonlar haricinde
-            TÜM butonlar pasife düşecek"). Posta ve itiraz kanalı buradan ulaşılabilir olmasaydı
-            banlı oyuncu gerekçeyi hiç okuyamaz, itiraz da edemezdi.
-         Normal oyunda alt bardaki 📬 Posta düğmesi YERİNDE KALIR — bu ikinci bir yol. -->
-    <div style="display:flex;gap:6px;margin-top:14px">
-      <button id="comp_mailbtn" class="bigsell half" style="margin:0" onclick="openMailSheet()">📬 Posta${unreadMail() ? ' (' + unreadMail() + ')' : ''}</button>
-      <button id="comp_sugbtn" class="bigsell half" style="margin:0" onclick="suggestAsk()">💡 Öneri / İstek</button>
-    </div>
+    ${/* 📬 Posta ve 💡 Öneri/İstek düğmeleri buradan ARAŞTIRMANIN ÜSTÜNE taşındı
+          (patron 27 Ağu). Buraya geri koyma — banlı oyuncu ve Play'in aradığı hesap yolu
+          için ikisinin de kaydırmadan görünmesi gerekiyor. */ ''}
     <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">
       <div style="font-size:11px;color:var(--dim)">Sürüm: <b>${BUILD_TAG}</b></div>
     </div>
@@ -12634,6 +12650,12 @@ window.linkKeepCloud = async () => {
   else linkAccountResult({ moved: 'empty' });
 };
 window.startResearch = key => {
+  // ⛔ BANLIYKEN ARAŞTIRMA YOK (patron 27 Ağu: "ban attığım oyuncuda araştırma sekmeleri
+  // açık ve araştırma başlatıyor"). Düğmeler zaten gizleniyor ama bu ikinci kilit ŞART:
+  // `#app.banli #companysheet *{pointer-events:auto}` kuralı Şirket ekranının İÇİNİ komple
+  // açıyor (posta ve itiraz oradan ulaşılabilsin diye) — yani görsel gizleme tek başına
+  // güvenli değil. Varlığına el konmuş bir şirket ilerleme kaydedemez.
+  if ($('app').classList.contains('banli')) { toast('⚖️ Varlıklarına el konulmuşken araştırma yapılamaz', 'warn'); return; }
   const R = G.research, D = RESEARCH[key];
   if (R.active) { toast('🧪 Zaten bir araştırma sürüyor — bitmesini bekle', 'warn'); return; }
   const lvl = R.lvl[key] || 0;
@@ -13482,7 +13504,13 @@ function bootDone() {
   setTimeout(() => { $('boot').classList.add('gone'); setTimeout(() => { const b = $('boot'); if (b) b.remove(); }, 600); }, 260);
 }
 (() => {
-  $('bootscene').innerHTML = bootScene();
+  // 🖼️ ÇİZİM SAHNESİ ARTIK KOŞULSUZ ÇİZİLMİYOR — YALNIZ FOTOĞRAF HİÇ GELMEZSE.
+  // Eskiden burada koşulsuz çiziliyordu ve fotoğraf ağdan inene + 0,5 sn'lik geçişi
+  // tamamlayana kadar altta duruyordu; patron ekranında "gerçekçi olmayan çizimler
+  // yarım saniye görünüp kayboluyor" diye göründü. Fotoğraf yüklenirken artık düz
+  // koyu zemin + marka duruyor — temiz ve kasıtlı görünüyor.
+  window.__bootSahneCiz = () => { const s = $('bootscene'); if (s && !s.innerHTML) s.innerHTML = bootScene(); };
+  if (window.BOOT_FOTO_YOK) window.__bootSahneCiz();   // <img> zinciri bu betikten ÖNCE tükenmişse
   // 🎯 Ekrandaki fotoğraf hangi santral türüyse, ipucu YARI ihtimalle o türe ait olsun.
   // window.BOOT_TUR'u açılış <img> betiği (sayfanın en başı) yazar; burası çok sonra çalıştığı için hazırdır.
   // BOOT_TUR tanımsızsa eski davranışa düşer — kırılma yok.
