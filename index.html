@@ -467,7 +467,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:03) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:12) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -589,7 +589,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:03)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:12)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2658,12 +2658,18 @@ const adFinishBtnHTML = u => `<button class="bigsell" style="background:#8a6cff;
 // Kazanma: 🏛️ Devlet Katkı Programı sıralaması + ölçek terfileri + haftalık görev.
 // Harcama: hızlandırma, 24 saatlik takviyeler, kalıcı anlaşmalar, VIP. Gerçek parayla satın
 // alma Play sürümünde (Play Billing) açılacak — düğmeler o güne dek "yakında" modunda.
-// 💰 FİYAT KALİBRASYONU (patron, 19 Ağu akşam): "Ömür Boyu VIP oyunun EN PAHALI eşyası —
-// gerçek parada ~500 TL; sıralamada 3 ay üst üste #1 olan ancak alabilsin." Hesap: #1 haftalık
-// 50💠 + haftalık görev 5💠 → 13 hafta ≈ 715💠 → Ömür Boyu = 700💠. Diğer kalemler orantılı,
-// paketlerde 700💠'ye en ucuz yol ₺499 paketi (500 TL sözü paket kombinasyonlarıyla da tutar).
-// İkinci ölçü (patron): ilk-10 oyuncu ~1 aylık birikimle 1 aylık VIP alabilsin — devamlılık
-// döngüsü. Hesap: ilk-10 haftalık 10💠 + görev 5💠 → 4 hafta = 60💠 → VIP Ay = 60💠.
+// 💰 FİYAT KALİBRASYONU — ÇAPA (patron 26 Ağu): "Sınırsız reklam 1000 İmtiyaz Puanı.
+// Satış fiyatı da 1000 imtiyaz puanı 500 TL. Fiyatları buna göre oranla."
+// → 1 💠 = 0,50 ₺ · Ömür Boyu VIP = 1000💠 = 500₺ (oyunun EN PAHALI eşyası)
+//
+// KAZANMA SÜRESİ KONTROLÜ (çapa tutuyor mu): 👑 Holding liginde #1 haftalık 100💠 +
+// haftalık görev 5💠 = 105💠/hafta → 1000💠 için ~9,5 hafta zirvede kalmak gerekir.
+// Eski tasarım "3 ay üst üste #1" diyordu (13 hafta × 55 = 715 → 700💠); yeni çapa aynı
+// felsefeyi koruyor, sadece ölçek büyüdü. İki çapa da aynı yere bakıyor.
+//
+// Eski fiyatlar × (1000/700) = ×1,43 ile orantılandı ve yuvarlandı:
+//   inşaat 10→15 · araştırma 12→17 · takviye 20→30 · bakım 120→170 · VIP ay 60→85 · VIP ömür 700→1000
+// ⚠️ Bu çapalara göre hesap vermeden zam/indirim YAPMA (hafıza: imtiyaz-puani-ilkeleri).
 const ipBakiye = () => Math.max(0, Math.floor((G && G.ip) || 0));
 const ipProdBoost = () => G && G.ipBoost && G.ipBoost.t === 'prod' && Date.now() < G.ipBoost.until ? 1.15 : 1;
 const ipSatBoost = () => G && G.ipBoost && G.ipBoost.t === 'sat' && Date.now() < G.ipBoost.until ? 1.10 : 1;
@@ -2687,18 +2693,18 @@ window.openImtiyazShop = () => {
     <p class="sub" style="margin-top:0">Bakiyen: <b style="color:#cfc2ff">💠 ${ipBakiye()} İmtiyaz Puanı</b> · kazanç yolları: 🏛️ Devlet Katkı sıralaması, ölçek terfileri, haftalık görev · 👑 Enerji Holdingi ligindekiler holding kaldıkça zaten REKLAMSIZ oynar</p>
     ${boost ? `<p class="sub" style="color:var(--acc)">Aktif takviye: ${boost.t === 'prod' ? '🚀 Üretim +%15' : '💰 Satış +%10'} — kalan ${fmtHrs((boost.until - Date.now()) / 36e5)}</p>` : ''}
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">⚡ HIZLANDIRMA</div>
-    ${urun('insaat', '🏗️', 'Tüm İnşaatları Anında Bitir', 10, insaSay ? insaSay + ' inşaat tamamlanır' : 'süren inşaat yok', !insaSay, 'inşaat yok')}
-    ${urun('arastirma', '🧪', 'Araştırmayı Anında Bitir', 12, G.research.active ? 'süren araştırma tamamlanır' : 'süren araştırma yok', !G.research.active, 'araştırma yok')}
+    ${urun('insaat', '🏗️', 'Tüm İnşaatları Anında Bitir', 15, insaSay ? insaSay + ' inşaat tamamlanır' : 'süren inşaat yok', !insaSay, 'inşaat yok')}
+    ${urun('arastirma', '🧪', 'Araştırmayı Anında Bitir', 17, G.research.active ? 'süren araştırma tamamlanır' : 'süren araştırma yok', !G.research.active, 'araştırma yok')}
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">📈 24 SAATLİK TAKVİYELER <span class="sub">aynı anda tek takviye</span></div>
-    ${urun('prod', '🚀', 'Üretim Takviyesi +%15', 20, 'tüm santraller 24 saat +%15 üretir', !!boost, 'takviye aktif')}
-    ${urun('sat', '💰', 'Satış Primi +%10', 20, 'tüm satışlar 24 saat +%10 kazandırır', !!boost, 'takviye aktif')}
+    ${urun('prod', '🚀', 'Üretim Takviyesi +%15', 30, 'tüm santraller 24 saat +%15 üretir', !!boost, 'takviye aktif')}
+    ${urun('sat', '💰', 'Satış Primi +%10', 30, 'tüm satışlar 24 saat +%10 kazandırır', !!boost, 'takviye aktif')}
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">📜 KALICI</div>
-    ${urun('bakim', '🔧', 'Bakım Anlaşması (KALICI)', 120, 'tüm bakım giderleri kalıcı -%20', !!G.bakimAnlasma, 'zaten var')}
-    ${urun('vipAy', '🎬', 'VIP Reklamsız — 1 Ay', 60, 'reklam butonları ödülü reklamsız verir', adFreeActive() && G.adFreeLife, 'ömür boyu var')}
-    ${urun('vipLife', '♾️', 'VIP Reklamsız — Ömür Boyu', 700, 'oyunun en pahalı eşyası — kalıcı reklamsız ödüller', !!G.adFreeLife, 'zaten var')}
+    ${urun('bakim', '🔧', 'Bakım Anlaşması (KALICI)', 170, 'tüm bakım giderleri kalıcı -%20', !!G.bakimAnlasma, 'zaten var')}
+    ${urun('vipAy', '🎬', 'VIP Reklamsız — 1 Ay', 85, 'reklam butonları ödülü reklamsız verir', adFreeActive() && G.adFreeLife, 'ömür boyu var')}
+    ${urun('vipLife', '♾️', 'VIP Reklamsız — Ömür Boyu', 1000, 'oyunun en pahalı eşyası — kalıcı reklamsız ödüller', !!G.adFreeLife, 'zaten var')}
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">💳 İMTİYAZ PUANI SATIN AL</div>
     <p class="sub">Gerçek parayla satın alma <b>Google Play sürümünde</b> açılacak — test döneminde puan yalnız oyun içinden kazanılır.</p>
-    <div style="display:flex;gap:6px">${[['💠 50', '₺49'], ['💠 150', '₺129'], ['💠 380', '₺299'], ['💠 700', '₺499']].map(([a, b]) => `<button disabled style="flex:1;padding:9px 4px;border-radius:8px;border:1px dashed var(--line);background:transparent;color:var(--dim);font-weight:800;font-size:11px">${a}<br>${b} · yakında</button>`).join('')}</div>
+    <div style="display:flex;gap:6px">${[['💠 85', '₺49'], ['💠 235', '₺129'], ['💠 570', '₺299'], ['💠 1000', '₺499']].map(([a, b]) => `<button disabled style="flex:1;padding:9px 4px;border-radius:8px;border:1px dashed var(--line);background:transparent;color:var(--dim);font-weight:800;font-size:11px">${a}<br>${b} · yakında</button>`).join('')}</div>
     <button class="primary ghostbtn" onclick="closeModal()" style="margin-top:8px">Kapat</button>`;
   $('overlay').classList.add('show');
 };
@@ -3399,6 +3405,23 @@ const weekTarget = () => 150 + installedMW() * 25;
 // #1 / #2 / #3 / ilk10 üçte bire indi (eski 30/20/12/5 M$), KATILIM yalnız yarıya (eski 2 M$)
 // çünkü o, geride kalan küçük oyuncunun can simidi. Ekrandaki liste de bu diziden okunur.
 const KATKI_ODUL = [1e7, 7e6, 4e6, 17e5, 1e6];
+// 🏆 SIRALAMA ÖDÜLÜ ÖLÇEĞE GÖRE AYRIŞIR (patron 26 Ağu):
+// "Küçük ve orta işletmeye PARA ödülü ver, bunun üstünde İMTİYAZ PUANI ödülü ayarla."
+// Gerekçesi sağlam: alt liglerde para kıt ve büyümeyi hızlandırır; üst liglerde para bol,
+// kıt olan İmtiyaz Puanıdır. Ödül her ligde o ligin ihtiyacı olan şeyi verir.
+// Mikro(0) · Küçük(1) · Orta(2) → PARA   |   Büyük(3) · Holding(4) → PUAN
+const KATKI_PARA_LIG = 2;   // bu ve altı para alır, üstü puan
+// 💠 Puan merdivenleri — patron: Holding liginde 1./2./3. = 100/90/80, 4-20 arası 50.
+// Büyük Ölçekli lig bunun yaklaşık yarısını alır ki Holding'e çıkmak anlamlı kalsın.
+const KATKI_IP = {
+  4: { bir: 100, iki: 90, uc: 80, yirmi: 50, kalan: 10 }, // 👑 Enerji Holdingi
+  3: { bir: 60,  iki: 50, uc: 45, yirmi: 25, kalan: 5 }   // 🏭 Büyük Ölçekli
+};
+// Sıraya göre puan: 1./2./3. sabit, 4-20 arası tek kademe, sonrası küçük katılım ödülü
+const katkiIpFor = (olcek, sira) => {
+  const t = KATKI_IP[olcek]; if (!t) return 0;
+  return sira === 0 ? t.bir : sira === 1 ? t.iki : sira === 2 ? t.uc : sira < 20 ? t.yirmi : t.kalan;
+};
 // 📈 Ölçek terfi teşviki de aynı sebeple üçte bire indi (eşik × 20.000 → × 7.000):
 // Holding terfisi $400M ödüyordu — tek ödemeyle end-game'e atlatıyordu.
 const OLCEK_TESVIK = 7000;
@@ -3426,11 +3449,17 @@ function katkiHaftaKapat(eskiHafta, katki) {
   if (eski < OLCEK.length - 1 && katki >= OLCEK[eski + 1].esik) {
     // ⬆️ TERFİ: geçen haftaki katkı üst ölçeğin eşiğini aştı — resmî sınıf değişir, teşvik yatar
     G.olcek = eski + 1;
-    const y = OLCEK[G.olcek], odul = y.esik * OLCEK_TESVIK, ipOdul = G.olcek * 10;
+    // 📈 TERFİ ÖDÜLÜ de ölçeğe göre (patron 26 Ağu): "Ölçek terfisinde küçük-ortada
+    // PARA ödülü, üstüne çıkıldığında önce 50 sonra 100 İmtiyaz Puanı ödülü."
+    // Büyük Ölçekli'ye terfi → 50 puan · Enerji Holdingi'ne terfi → 100 puan (para yok).
+    const y = OLCEK[G.olcek];
+    const terfiPara = G.olcek <= KATKI_PARA_LIG;
+    const odul = terfiPara ? y.esik * OLCEK_TESVIK : 0;
+    const ipOdul = terfiPara ? 0 : (G.olcek === OLCEK.length - 1 ? 100 : 50);
     G.cash += odul;
     G.ip = (G.ip || 0) + ipOdul; // 💠 terfi ödülü
-    addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta şebekeye ${fmtN(katki)} MWh katkı sağladınız. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki: ${fmt(odul)} + 💠 ${ipOdul} İmtiyaz Puanı. Tebrikler!`, true);
-    toast(y.ico + ' Şirketin artık ' + y.nm + '! Teşvik: +' + fmt(odul) + ' ve 💠 +' + ipOdul, '', null, 0, true);
+    addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta şebekeye ${fmtN(katki)} MWh katkı sağladınız. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki: <b>${terfiPara ? fmt(odul) : '💠 ' + ipOdul + ' İmtiyaz Puanı'}</b>. Tebrikler!`, true);
+    toast(y.ico + ' Şirketin artık ' + y.nm + '! Teşvik: ' + (terfiPara ? '+' + fmt(odul) : '💠 +' + ipOdul), '', null, 0, true);
     // 👑 EN ÜST LİG AYRICALIĞI duyurusu — reklamsızlık adFreeActive() içinde ölçekten okunur,
     // burada gün eklenmez: holding'likten düşen ayrıcalığı da kaybeder (patron tasarımı).
     if (G.olcek === OLCEK.length - 1) {
@@ -3453,12 +3482,18 @@ function katkiHaftaKapat(eskiHafta, katki) {
       const sira = Object.entries(t).map(([uid, v]) => ({ uid, mwh: (v && v.mwh) || 0 })).sort((a, b) => b.mwh - a.mwh);
       const ben = sira.findIndex(x => x.uid === NET.id);
       if (ben < 0 || sira[ben].mwh < 1) return;
-      const odul = ben === 0 ? KATKI_ODUL[0] : ben === 1 ? KATKI_ODUL[1] : ben === 2 ? KATKI_ODUL[2] : ben < 10 ? KATKI_ODUL[3] : KATKI_ODUL[4];
-      const ipOdul = ben === 0 ? 50 : ben === 1 ? 30 : ben === 2 ? 20 : ben < 10 ? 10 : 2; // 💠 sıralama ödülü
+      // 🏆 ÖDÜL TÜRÜ ÖLÇEĞE BAĞLI: alt ligler PARA, üst ligler PUAN alır (patron kararı).
+      const lig = G.olcek || 0;
+      const paraLigi = lig <= KATKI_PARA_LIG;
+      const odul = paraLigi
+        ? (ben === 0 ? KATKI_ODUL[0] : ben === 1 ? KATKI_ODUL[1] : ben === 2 ? KATKI_ODUL[2] : ben < 10 ? KATKI_ODUL[3] : KATKI_ODUL[4])
+        : 0;
+      const ipOdul = paraLigi ? 0 : katkiIpFor(lig, ben);
       G.cash += odul;
       G.ip = (G.ip || 0) + ipOdul;
-      addMail('🏛️ Enerji Bakanlığı', 'Haftalık katkı ödülü — #' + (ben + 1), `Geçen haftanın devlet katkı sıralamasında ${sira.length} şirket arasında #${ben + 1} oldunuz (${fmtN(sira[ben].mwh)} MWh). Ödülünüz: ${fmt(odul)} + 💠 ${ipOdul} İmtiyaz Puanı.`, true);
-      toast('🏛️ Haftalık katkı sıralaması #' + (ben + 1) + ' — +' + fmt(odul) + ' ve 💠 +' + ipOdul, '', null, 0, true);
+      const odulYazi = paraLigi ? fmt(odul) : '💠 ' + ipOdul + ' İmtiyaz Puanı';
+      addMail('🏛️ Enerji Bakanlığı', 'Haftalık katkı ödülü — #' + (ben + 1), `Geçen haftanın devlet katkı sıralamasında ${sira.length} şirket arasında #${ben + 1} oldunuz (${fmtN(sira[ben].mwh)} MWh).<br><br>Ödülünüz: <b>${odulYazi}</b><br><br><span style="opacity:.8">${paraLigi ? olcekOf(lig).ico + ' ' + olcekOf(lig).nm + ' liginde ödüller NAKİT ödenir — büyümen için sermaye. Büyük Ölçekli lige çıkınca ödüller İmtiyaz Puanına döner.' : olcekOf(lig).ico + ' ' + olcekOf(lig).nm + ' liginde ödüller İMTİYAZ PUANI olarak ödenir — bu ligde para bol, kıt olan puandır.'}</span>`, true);
+      toast('🏛️ Haftalık katkı sıralaması #' + (ben + 1) + ' — ' + (paraLigi ? '+' + fmt(odul) : '💠 +' + ipOdul), '', null, 0, true);
       save();
     }).catch(() => {});
   }
@@ -5944,10 +5979,26 @@ const NET = {
   yetkiUyar(path, kod) {
     if (this._yetkiUyari && Date.now() - this._yetkiUyari < 60000) return;
     this._yetkiUyari = Date.now();
+    // 🔎 TEŞHİS: 401 tek başına "bir şey bozuk" demek; oyuncuya NE YAPACAĞINI söylemeli.
+    // Üç ayrı sebebi ayırt ediyoruz: (a) cihaz saati kaymış, (b) jeton hiç alınamıyor
+    // (eski WebView / oturum düşmüş), (c) kural reddi.
+    const dk = Math.round((this._saatFark || 0) / 60000);
+    let neden, cozum;
+    if (Math.abs(dk) >= 3) {
+      neden = '⏰ Telefonunun saati <b>' + Math.abs(dk) + ' dakika ' + (dk > 0 ? 'GERİ' : 'İLERİ') + '</b>.';
+      cozum = 'Ayarlar → Tarih ve saat → <b>Otomatik saat</b>ı aç ve oyunu yeniden başlat. Giriş jetonu saate göre doğrulanıyor, saat kaydıkça sunucu jetonu kabul etmiyor.';
+    } else if (!this.auth || this.auth.local) {
+      neden = '🔑 Oturum jetonu alınamıyor.';
+      cozum = '🏢 Şirket ekranından hesabını yeniden bağla. Telefonun çok eskiyse <b>Android System WebView</b> ve <b>Chrome</b> güncellemesi de bu hatayı çözer.';
+    } else {
+      neden = '🚫 Sunucu yazmayı reddetti (' + kod + ').';
+      cozum = 'Sayfayı yenile; geçmezse 🏢 Şirket ekranından hesabını yeniden bağla.';
+    }
+    this._sonTeshis = { kod, path, dk, neden, cozum, ts: Date.now() };
     try {
-      toast('🔴 SUNUCUYA YAZILAMIYOR (' + kod + ') — ilerlemen şu an BULUTA KAYDEDİLMİYOR. Oyunu kapatma; sayfayı yenile ya da 🏢 Şirket ekranından hesabını yeniden bağla.', 'warn', 'authfail', 0, true);
+      toast('🔴 SUNUCUYA YAZILAMIYOR — ilerlemen BULUTA KAYDEDİLMİYOR. Oyunu kapatma!<br>' + neden + '<br>' + cozum, 'warn', 'authfail', 0, true);
     } catch (e) { console.warn('[NET] yetki uyarısı gösterilemedi'); }
-    console.warn('[NET] yazma reddedildi:', kod, path);
+    console.warn('[NET] yazma reddedildi:', kod, path, 'saatFark(dk)=', dk);
   },
   async req(path, method, body, kapanis) {
     const o = { method, cache: 'no-store' };
@@ -5961,6 +6012,14 @@ const NET = {
     const tok = await this.token();
     const url = t2 => this.db + '/' + path + '.json' + (t2 ? '?auth=' + encodeURIComponent(t2) : '');
     let r = await fetch(url(tok), o);
+    // ⏰ SAAT KAYMASI ÖLÇÜMÜ: 401'in eski cihazlardaki en yaygın sebebi budur.
+    // Jetonun süresi CIHAZ saatiyle hesaplanıyor; saat geride kalırsa oyun "jeton hâlâ taze"
+    // sanıp süresi dolmuş jetonla istek atıyor ve sunucu 401 dönüyor. Yanıttaki Date
+    // başlığı gerçek saati veriyor — farkı saklayıp uyarıda oyuncuya söylüyoruz.
+    try {
+      const d = r.headers.get('date');
+      if (d) { const fark = Date.parse(d) - Date.now(); if (isFinite(fark)) this._saatFark = fark; }
+    } catch (e) {}
     // 🔐 401/403: jeton eskimiş olabilir — ZORLA tazeleyip BİR KEZ tekrar dene (bot bulgusu 23 Ağu)
     if ((r.status === 401 || r.status === 403) && !this._retrying) {
       this._retrying = true;
@@ -6886,7 +6945,11 @@ window.openLeaderboard = (tab) => {
       rows.forEach(r => r.deger = fmtN(r.mwh) + ' MWh');
       const ben = rows.findIndex(r => r.me) + 1;
       el.innerHTML = `<table class="ledger">${rows.slice(0, 20).map(satir).join('')}${ben > 20 ? satir(rows[ben - 1], ben - 1) : ''}</table>
-        <p class="sub">🎁 Hafta kapanış ödülleri: #1 ${fmt(KATKI_ODUL[0])} · #2 ${fmt(KATKI_ODUL[1])} · #3 ${fmt(KATKI_ODUL[2])} · ilk 10 ${fmt(KATKI_ODUL[3])} · katkısı olan herkese ${fmt(KATKI_ODUL[4])}</p>`;
+        <p class="sub">🎁 <b>Hafta kapanış ödülleri ölçeğine göre ödenir:</b><br>
+        · 🏠🏢🏬 <b>Mikro · Küçük · Orta</b> — NAKİT: #1 ${fmt(KATKI_ODUL[0])} · #2 ${fmt(KATKI_ODUL[1])} · #3 ${fmt(KATKI_ODUL[2])} · ilk 10 ${fmt(KATKI_ODUL[3])} · katkısı olan herkese ${fmt(KATKI_ODUL[4])}<br>
+        · 🏭 <b>Büyük Ölçekli</b> — 💠 İMTİYAZ PUANI: #1 ${KATKI_IP[3].bir} · #2 ${KATKI_IP[3].iki} · #3 ${KATKI_IP[3].uc} · 4-20 arası ${KATKI_IP[3].yirmi}<br>
+        · 👑 <b>Enerji Holdingi</b> — 💠 İMTİYAZ PUANI: #1 ${KATKI_IP[4].bir} · #2 ${KATKI_IP[4].iki} · #3 ${KATKI_IP[4].uc} · 4-20 arası ${KATKI_IP[4].yirmi}<br>
+        <span style="opacity:.75">Alt liglerde para kıttır ve büyümeyi hızlandırır; üst liglerde para bol, kıt olan İmtiyaz Puanıdır. Ödül her ligde o ligin ihtiyacı olanı verir.</span></p>`;
     }).catch(() => { const el = $('lbicerik'); if (el) el.innerHTML = '<p class="sub">Tablo okunamadı — bağlantını kontrol et.</p>'; });
   }
 };
@@ -6921,6 +6984,15 @@ window.openPlayerCard = (nm, geriSekme) => {
       ${row('🔋 Enerji deposu', c.st)}
       ${c.ally ? row('🤝 İttifak', c.ally) : ''}
     </table>
+    ${/* 🚩 "HİLE Mİ?" ALGISINI ÖNLE (patron 26 Ağu: "Hiçbir şeyi yok parası var, bu durumda
+         çok şikayet alırız.") Şirket değeri = nakit + tesis + yatırım − borç. Tesisini SATAN
+         oyuncunun değeri yüksek kalır, tesis sayısı sıfırlanır — meşru ama dışarıdan hileye
+         benziyor. Kart bunu açıklamıyordu; artık açıklıyor. Kasa tutarı YİNE gizli:
+         yalnız "üretimi yok" olgusunu ve değerin neden yüksek kalabileceğini söylüyoruz. */ ''}
+    ${(c.pl === 0 && c.w > 5e7) ? `<p class="sub" style="margin-top:6px;border-left:3px solid var(--warn);padding-left:8px">
+      ⚠️ <b>Bu şirketin kurulu santrali yok — üretim yapmıyor.</b> Şirket değeri
+      <b>nakit + tesis + yatırım − borç</b> toplamıdır; tesislerini satan ya da yeni kurulan bir
+      şirketin değeri yüksek görünüp üretimi sıfır olabilir. <b>Hile değildir.</b></p>` : ''}
     <p class="sub" style="margin-top:6px">Kasa, ciro ve stok bilgileri gizlidir — herkes için.</p>`}
     ${blok ? '<p class="sub neg" style="margin-top:6px">🚫 Bu şirketi engelledin — sohbet mesajları ve postaları sana görünmüyor.</p>'
       : `<button class="bigsell half" onclick="closeModal();openDM('${nm.replace(/'/g, '')}')">✉️ Mesaj Gönder</button>
