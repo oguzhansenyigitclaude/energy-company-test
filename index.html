@@ -599,7 +599,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 23:44) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 23:55) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -762,7 +762,129 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 23:44)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 23:55)'; // deploy.js yayında tarih damgası ekler
+
+// ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
+// KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
+// · Sözlük index.html İÇİNDE kalır — ayrı dil dosyası WebView önbelleğinde BAYAT kalıyor
+//   (BUILD_TAG yalnız index'e damgalanır) ve #boot yarışını kaybediyor. ~1,5 MB aşılırsa taşınır.
+// · Anahtar = TÜRKÇE KAYNAK METİN (gettext usulü): TR için sözlük gerekmez, çevrilmemiş
+//   metin İngilizce ekranda Türkçe görünür ve gözle hemen yakalanır — sessiz boşluk olmaz.
+// · Dil cihaz seviyesinde (localStorage), kayda YAZILMAZ: giriş/karşılama ekranı kayıt
+//   yüklenmeden önce de doğru dilde açılmalı.
+const LANG = (() => { try { return localStorage.getItem('ec_lang') || 'tr'; } catch (e) { return 'tr'; } })();
+const DILLER = { tr: { ad: 'Türkçe', bayrak: '🇹🇷', locale: 'tr-TR' }, en: { ad: 'English', bayrak: '🇬🇧', locale: 'en-US' } };
+const LOCALE = (DILLER[LANG] || DILLER.tr).locale;
+document.documentElement.lang = LANG;
+// Çeviri: CEV('Türkçe metin') → aktif dildeki karşılık; yoksa Türkçesi. {0} {1} yer tutucuları
+// sırayla doldurulur: CEV('Ruhsat için {0} gerekli', fmt(fee)).
+// ⚠️ AD NEDEN T DEĞİL: kod tabanında ~50 yerde `const T = PLANT_TYPES[...]` yerel değişkeni var —
+// aynı kapsamda golge/TDZ tuzağı kurardı. CEV = çeviri.
+const CEV = (k, ...a) => {
+  let s = (LANG !== 'tr' && SOZLUK[LANG] && SOZLUK[LANG][k]) || k;
+  for (let i = 0; i < a.length; i++) s = s.split('{' + i + '}').join(a[i]);
+  return s;
+};
+window.dilSec = l => {
+  if (l === LANG || !DILLER[l]) return;
+  try { localStorage.setItem('ec_lang', l); } catch (e) {}
+  location.reload(); // tertemiz geçiş: yarım çizilmiş panel kalıntısı kalmasın
+};
+// ⚠️ İçerik-dili notu: şehir/il adları, toLocaleUpperCase('tr') ve localeCompare('tr')
+// TÜRKÇE İÇERİK işledikleri için LANG'a bağlanmaz (İstanbul→İSTANBUL her dilde doğru).
+// LOCALE yalnız SAYI/TARİH biçimini izler.
+const SOZLUK = {
+en: {
+  // ── karşılama + kuruluş sihirbazı ──
+  'Gerçek dünya haritasında enerji imparatorluğunu kur.': 'Build your energy empire on a real world map.',
+  'Adil · Şeffaf · Günde ~2 saat yeter.': 'Fair · Transparent · ~2 hours a day is enough.',
+  '🌍 Yeni Oyun — Haritadan Başla': '🌍 New Game — Start from the Map',
+  'test sürümü': 'test build',
+  '🌍 Ülke seç': '🌍 Choose a country',
+  '— Ülke seç —': '— Choose a country —',
+  '💡 Öner': '💡 Suggest',
+  'Devam Et →': 'Continue →',
+  'Başla →': 'Start →',
+  '📍 İl seç (81 ilin tamamı!) — listeden ya da noktaya dokun': '📍 Choose a province (all 81!) — pick from the list or tap a dot',
+  '📍 Bölge seç': '📍 Choose a region',
+  '— İl seç —': '— Choose a province —',
+  '— Bölge seç —': '— Choose a region —',
+  'gün': 'day',
+  'Bölge': 'Region',
+  'Nüfus': 'Population',
+  'talep': 'demand',
+  '☁️ Kayıt aranıyor': '☁️ Looking for your save',
+  'Buluttaki şirket kaydın kontrol ediliyor...': 'Checking your company save in the cloud...',
+  '☁️ Buluttaki şirketinle devam ediyorsun: {0}': '☁️ Continuing with your cloud company: {0}',
+  '☁️ Bulutta daha yeni kayıt var': '☁️ Newer save found in the cloud',
+  '☁️ Yükleniyor': '☁️ Loading',
+  'Buluttaki kayıt getiriliyor...': 'Fetching the cloud save...',
+  // ── kalıcı çerçeve: alt bar + sabit düğmeler ──
+  '🏗️ İnşa': '🏗️ Build',
+  'ℹ️ Bilgi': 'ℹ️ Info',
+  '🗺️ Görünüm': '🗺️ View',
+  '🤝 İttifak': '🤝 Alliance',
+  '🔨 Müzayede': '🔨 Auction',
+  '📬 Posta': '📬 Mail',
+  '🔄 Santralleri Yeniden Başlat (tek tuş)': '🔄 Restart Power Plants (one tap)',
+  '⚖️ Varlıklarına el konuldu — gerekçe postanda (dokun)': '⚖️ Your assets were seized — reason in your mail (tap)',
+  '❓ Yardım ve SSS': '❓ Help & FAQ',
+  '🐞 Hata Bildir (test sürümü)': '🐞 Report a Bug (test build)',
+  '🎁 Ödülü Al': '🎁 Claim Reward',
+  // ── kalıcı çerçeve: sayfa başlıkları + çekmeceler ──
+  '📈 ELEKTRİK PİYASASI': '📈 ELECTRICITY MARKET',
+  '☰ ŞİRKET MENÜSÜ': '☰ COMPANY MENU',
+  '🔧 TOPLU BAKIM': '🔧 BULK MAINTENANCE',
+  '🏢 ŞİRKET': '🏢 COMPANY',
+  '📬 POSTA KUTUSU': '📬 MAILBOX',
+  '🔔 BİLDİRİMLER': '🔔 NOTIFICATIONS',
+  '👥 ARKADAŞLAR': '👥 FRIENDS',
+  '🗺️ HARİTA GÖRÜNÜMÜ': '🗺️ MAP VIEW',
+  '🤝 İTTİFAK': '🤝 ALLIANCE',
+  '🔨 MÜZAYEDE PAZARI': '🔨 AUCTION MARKET',
+  '🧭 SAHA': '🧭 FIELD',
+  '⚡ ENERJİ NAKİL HATTI': '⚡ POWER TRANSMISSION LINE',
+  '💬 SOHBET': '💬 CHAT',
+  'Kare': 'Tile',
+  'Birim': 'Unit',
+  // title ipuçları
+  'Sohbet': 'Chat',
+  'İmtiyaz Mağazası': 'Concession Store',
+  'Postaları sil': 'Delete mails',
+  'Bildirimler': 'Notifications',
+  'Saha': 'Field',
+  'Enerji Nakil Hattı': 'Power Transmission Line',
+  'Menü': 'Menu',
+  'Menüyü kapat': 'Close menu',
+  // ── ilk 60 saniyenin toast'ları ──
+  '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Your wind turbine is feeding the battery. 🔋 Tap the battery → SELL the energy!',
+  '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Tap an empty spot → build a plant/storage on that tile. 🚀 ×10 bonus active!',
+  '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Extended city data could not be loaded — the demand map is limited to core cities. Will retry automatically.',
+  '🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 City database loaded — demand map is complete.',
+},
+};
+// Sabit HTML'deki metinler (satır 446-752 gövdede, script'ten ÖNCE geliyor → öğeler hazır).
+// TR'de hiçbir şey yapılmaz; başka dilde bilinen kimliklerin metni sözlükten basılır.
+(() => {
+  if (LANG === 'tr') return;
+  const kimlikler = { buildbtn: '🏗️ İnşa', infobtn: 'ℹ️ Bilgi', viewbtn: '🗺️ Görünüm', allybtn: '🤝 İttifak',
+    aucbtn: '🔨 Müzayede', mailbtn: '📬 Posta', restartbtn: '🔄 Santralleri Yeniden Başlat (tek tuş)',
+    banstrip: '⚖️ Varlıklarına el konuldu — gerekçe postanda (dokun)', wiztitle: '🌍 Ülke seç',
+    wizsuggest: '💡 Öner', wiznext: 'Devam Et →', helpbtn: '❓ Yardım ve SSS',
+    bugbtn: '🐞 Hata Bildir (test sürümü)', claimbtn: '🎁 Ödülü Al' };
+  for (const [id, k] of Object.entries(kimlikler)) { const el = $(id); if (el) el.textContent = CEV(k); }
+  const ilkSecenek = $('wizselect') && $('wizselect').querySelector('option');
+  if (ilkSecenek) ilkSecenek.textContent = CEV('— Ülke seç —');
+  // Sayfa başlıkları: <h3>BAŞLIK<span class="x">✕</span></h3> — YALNIZ ilk metin düğümü
+  // değiştirilir, ✕ kapatma düğmesi ve iç düğmeler (posta çöp kutusu vb.) DOKUNULMAZ kalır.
+  document.querySelectorAll('.sheet h3, #navtitle, #linehead > span:first-child, #chathead > b').forEach(el => {
+    const dn = el.firstChild;
+    if (dn && dn.nodeType === 3 && dn.nodeValue.trim()) dn.nodeValue = CEV(dn.nodeValue.trim());
+  });
+  ['cs_title', 'us_title', 'comp_title'].forEach(id => { const el = $(id); if (el && el.textContent.trim()) el.textContent = CEV(el.textContent.trim()); });
+  // title ipuçları (uzun basınca/imleçle görünen adlar)
+  document.querySelectorAll('[title]').forEach(el => { const c = CEV(el.title); if (c !== el.title) el.title = c; });
+})();
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -778,9 +900,9 @@ function fmt(n) {
   if (a >= 1e12) return s + '$' + (a / 1e12).toFixed(2).replace('.', ',') + 'T';
   if (a >= 1e9) return s + '$' + (a / 1e9).toFixed(2).replace('.', ',') + 'B';
   if (a >= 1e6) return s + '$' + (a / 1e6).toFixed(2).replace('.', ',') + 'M';
-  return s + '$' + Math.round(a).toLocaleString('tr-TR');
+  return s + '$' + Math.round(a).toLocaleString(LOCALE);
 }
-const fmtN = n => Math.round(n).toLocaleString('tr-TR');
+const fmtN = n => Math.round(n).toLocaleString(LOCALE);
 // Enerji gösterimi: küçük miktarlar ondalıklı akar (depo CANLI dolar — 1 MWh beklenmez, patron isteği)
 const fmtE = x => (x >= 100 ? fmtN(x) : x >= 10 ? x.toFixed(1).replace('.', ',') : (x || 0).toFixed(2).replace('.', ',')).replace(/,0+$/, '');
 
@@ -1433,7 +1555,7 @@ function studyBlockHTML(ct) {
   const yillikTxt = gwh >= 1000 ? (gwh / 1000).toFixed(1) + ' TWh' : gwh >= 1 ? Math.round(gwh) + ' GWh' : Math.round(r.yillik) + ' MWh';
   return `<div style="border:1px solid var(--acc);border-radius:10px;padding:9px 11px;margin:8px 0;background:#0e1c33">
     <div style="font-size:12.5px;font-weight:800;color:var(--acc)">✅ Bölge araştırıldı
-      <span class="sub" style="font-weight:600">· ${new Date(r.ts).toLocaleDateString('tr-TR')}</span>${r.tazelendi ? ' <span class="sub" style="font-weight:600;color:var(--acc2)">· 🔄 şehir verisi güncellendi, rapor ücretsiz yenilendi</span>' : ''}</div>
+      <span class="sub" style="font-weight:600">· ${new Date(r.ts).toLocaleDateString(LOCALE)}</span>${r.tazelendi ? ' <span class="sub" style="font-weight:600;color:var(--acc2)">· 🔄 şehir verisi güncellendi, rapor ücretsiz yenilendi</span>' : ''}</div>
     <table class="ledger" style="margin:6px 0 2px">
       <tr><td>⚡ Ülkenin yıllık enerji ihtiyacı</td><td><b>${yillikTxt}</b></td></tr>
       <tr><td>🏙️ Talep merkezi</td><td>${r.sehirler.length} büyük şehir</td></tr>
@@ -2730,7 +2852,7 @@ window.openNotifSheet = () => {
     <div style="border-left:3px solid ${b.c === 'warn' ? 'var(--warn)' : b.c === 'bad' ? 'var(--danger)' : 'var(--acc)'};
       background:var(--panel2);border-radius:8px;padding:7px 10px;margin:5px 0">
       <div style="font-size:12.5px;line-height:1.45${b.ts > s ? ';font-weight:700' : ''}">${b.t.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))}${b.n > 1 ? ` <span class="sub">×${b.n}</span>` : ''}</div>
-      <div class="sub" style="font-size:10.5px">${new Date(b.ts).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${b.ts > s ? ' · <b style="color:var(--acc2)">YENİ</b>' : ''}</div>
+      <div class="sub" style="font-size:10.5px">${new Date(b.ts).toLocaleString(LOCALE, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${b.ts > s ? ' · <b style="color:var(--acc2)">YENİ</b>' : ''}</div>
     </div>`).join('')
     : '<p class="sub">Henüz bildirim yok. Oyundaki uyarılar, satış ve kazanç bildirimleri burada birikir.</p>';
   G._bildSeen = Date.now();              // açınca hepsi okundu sayılır
@@ -6892,7 +7014,7 @@ function allyHTML() {
       return `<div class="mrow">
         <span class="mid" style="cursor:pointer" onclick="openPlayerCard('${m.nm.replace(/'/g, '')}')">
           <div>${ico} ${me ? '<b>' + m.nm + ' (SEN)</b>' : m.nm}${m.invited ? ' <span class="sub">· davet bekliyor</span>' : ''}</div>
-          <div class="d">${roleTxt}${!m.invited && m.since ? ' · ' + new Date(m.since).toLocaleDateString('tr-TR') + '\'den beri' : ''}</div></span>
+          <div class="d">${roleTxt}${!m.invited && m.since ? ' · ' + new Date(m.since).toLocaleDateString(LOCALE) + '\'den beri' : ''}</div></span>
         ${isAllyBoss() && !me ? `<span style="display:flex;gap:4px">
           ${!m.invited && m.role !== 'yardimci' ? `<button title="Yardımcı yap" onclick="allySetRole('${m.nm.replace(/'/g, '')}','yardimci')" style="padding:7px 8px;border-radius:8px;border:none;background:var(--acc2);color:#071018;font-weight:800;font-size:11px;cursor:pointer">🎖️</button>` : ''}
           ${!m.invited && m.role !== 'uye' ? `<button title="Üye yap" onclick="allySetRole('${m.nm.replace(/'/g, '')}','uye')" style="padding:7px 8px;border-radius:8px;border:none;background:#2a3346;color:var(--cream);font-weight:800;font-size:11px;cursor:pointer">👤</button>` : ''}
@@ -7846,7 +7968,7 @@ window.openOtherSheet = o => {
   const ofis = o.kind === 'office', depo = o.kind === 'store';
   const sahipVar = o.owner && o.owner !== 'Oyuncu';
   const sahip = sahipVar ? o.owner : 'Bilinmiyor';
-  const kurulus = o.since && o.since > 864e5 ? new Date(o.since).toLocaleDateString('tr-TR') : '—';
+  const kurulus = o.since && o.since > 864e5 ? new Date(o.since).toLocaleDateString(LOCALE) : '—';
   const olcu = ofis ? { l: 'Kapsama', v: '~' + OFFICE.radiusKm + ' km' }
     : depo ? { l: 'Kapasite', v: T.cap + ' MWh' }
     : { l: 'Güç', v: (T.mw != null ? T.mw + ' MW' : '—') };
@@ -8428,7 +8550,7 @@ function renderChatBody(room) {
   $('chat_msgs').innerHTML = msgs.length ? msgs.map(m => {
     const on = m.me ? true : playerOnline(m.idx || 0);
     return `<div class="chatmsg${m.me ? ' me' : ''}">
-      <div class="who">${m.me ? '' : `<span style="color:${on ? 'var(--acc)' : 'var(--danger)'}">●</span> `}<span ${m.me ? '' : `onclick="openPlayerCard('${(m.who || '').replace(/'/g, '')}')" style="cursor:pointer;text-decoration:underline"`}>${m.who}</span> <span class="sub">${new Date(m.ts).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span></div>
+      <div class="who">${m.me ? '' : `<span style="color:${on ? 'var(--acc)' : 'var(--danger)'}">●</span> `}<span ${m.me ? '' : `onclick="openPlayerCard('${(m.who || '').replace(/'/g, '')}')" style="cursor:pointer;text-decoration:underline"`}>${m.who}</span> <span class="sub">${new Date(m.ts).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })}</span></div>
       <div>${m.txt}</div></div>`;
   }).join('') : `<p class="sub">${room === 'ally' ? 'Önce bir ittifaka katıl.' : 'Henüz mesaj yok — ilk yazan sen ol!'}</p>`;
   $('chat_msgs').scrollTop = $('chat_msgs').scrollHeight;
@@ -8461,7 +8583,7 @@ function sonGorulme(t) {
   if (fark < 90e3) return 'az önce';
   if (fark < 3600e3) return Math.round(fark / 60e3) + ' dakika önce';
   if (fark < 24 * 3600e3) return Math.round(fark / 3600e3) + ' saat önce';
-  return new Date(t).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(t).toLocaleString(LOCALE, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 window.openLeaderboard = (tab) => {
   if (!G || !G.company) return;
@@ -8768,7 +8890,7 @@ window.mailCiz = () => {
         ${sec ? `<span class="mtik${MAIL_SEC.sel.has(m.id) ? ' on' : ''}">${MAIL_SEC.sel.has(m.id) ? '✅' : '⬜'}</span>` : ''}
         <div style="flex:1;min-width:0">
         <div style="font-size:12.5px;font-weight:${m.read ? '600' : '800'}">${m.sys ? '📢' : '✉️'} ${m.subj}</div>
-        <div class="sub">${m.from} · ${new Date(m.ts).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${m.read ? '' : ' · <b style="color:var(--acc2)">YENİ</b>'}</div>
+        <div class="sub">${m.from} · ${new Date(m.ts).toLocaleString(LOCALE, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${m.read ? '' : ' · <b style="color:var(--acc2)">YENİ</b>'}</div>
         ${!sec && m.allyInv ? `<div style="display:flex;gap:6px;margin-top:7px" onclick="event.stopPropagation()">
           <button onclick="acceptAllyInvite('${m.allyInv.aid}','${(m.allyInv.nm || '').replace(/'/g, '')}')" ${G.allyId ? 'disabled' : ''} style="flex:1;padding:9px 4px;border-radius:8px;border:none;background:${G.allyId ? '#2a3346' : 'var(--acc)'};color:${G.allyId ? 'var(--dim)' : '#071018'};font-weight:800;font-size:11.5px;cursor:pointer">🤝 ${G.allyId ? 'Zaten bir ittifaktasın' : 'Katıl'}</button>
           <button onclick="rejectAllyInvite()" style="flex:0 0 90px;padding:9px 4px;border-radius:8px;border:none;background:#2a3346;color:var(--cream);font-weight:800;font-size:11.5px;cursor:pointer">✖️ Reddet</button>
@@ -10389,7 +10511,7 @@ function bankTabBar(sekme) {
 const yz = (o, d) => '%' + (o * 100).toFixed(d === undefined ? 1 : d).replace('.', ',').replace(/,0$/, '');
 const invFiyatYaz = (k) => {
   const px = invPx(k);
-  return px >= 1e6 ? fmt(px) : '$' + px.toLocaleString('tr-TR', { maximumFractionDigits: px < 100 ? 2 : 0 });
+  return px >= 1e6 ? fmt(px) : '$' + px.toLocaleString(LOCALE, { maximumFractionDigits: px < 100 ? 2 : 0 });
 };
 
 // Tutar kutusuna her yazıldığında YALNIZ bu blok yeniden basılır (imleç kaçmasın diye).
@@ -10490,7 +10612,7 @@ function invPanel() {
     + '<div class="sub" style="margin-bottom:6px">' + T.not + '</div>'
     + sparkSVG((INV_SPARK[secili] || {}).d)
     + '<table class="ledger"><tr><td>Oyun fiyatı <span class="sub">(1 ' + T.birim + ')</span></td><td><b>' + (INV_PX[secili] ? invFiyatYaz(secili) : '—') + '</b></td></tr>'
-    + (INV_PX[secili] ? '<tr><td class="sub">↳ gerçek piyasa</td><td class="sub">$' + INV_PX[secili].px.toLocaleString('tr-TR', { maximumFractionDigits: 2 })
+    + (INV_PX[secili] ? '<tr><td class="sub">↳ gerçek piyasa</td><td class="sub">$' + INV_PX[secili].px.toLocaleString(LOCALE, { maximumFractionDigits: 2 })
         + ' · ' + (INV_PX[secili].kaynak || '?') + '</td></tr>'
       + '<tr><td class="sub">↳ fiyatın yaşı</td><td class="sub ' + (invTaze(secili) ? 'pos' : 'neg') + '">'
         + (invYas(secili) <= 0 ? 'şu an canlı ✓' : invYas(secili) + ' dakika önce' + (invTaze(secili) ? ' ✓' : ' — işlem kapalı'))
@@ -12580,7 +12702,7 @@ function renderCompany() {
   plants().forEach(u => { const T = PLANT_TYPES[u.t]; bySrc[T.cat] = (bySrc[T.cat] || 0) + T.mw; });
   const lifeProd = plants().reduce((s, u) => s + (u.lifeProd || 0), 0);
   $('companystats').innerHTML = `
-    <div style="font-size:12px;margin-bottom:4px">🏢 <b>ŞİRKET</b> <span class="sub">${new Date(G.founded || Date.now()).toLocaleDateString('tr-TR')}'den beri</span></div>
+    <div style="font-size:12px;margin-bottom:4px">🏢 <b>ŞİRKET</b> <span class="sub">${new Date(G.founded || Date.now()).toLocaleDateString(LOCALE)}'den beri</span></div>
     <div class="qline" style="font-size:11.5px">
       <span>⚡ Kurulu güç: <b>${Math.round(installedMW() * 10) / 10} MW</b></span>
       ${Object.entries(bySrc).map(([c, mw]) => `<span class="sub">${c}: ${mw} MW</span>`).join('')}
@@ -12626,7 +12748,7 @@ function openCompanySheet() {
       ${lvl >= D.max ? '<b class="pos">MAKS ✓</b>' : `<button onclick="startResearch('${key}')" ${blocked ? 'disabled' : ''} style="padding:8px 12px;border-radius:8px;border:none;background:${blocked ? '#2a3346' : 'var(--acc2)'};color:${blocked ? 'var(--dim)' : '#071018'};font-weight:800;font-size:11.5px;cursor:pointer">🧪 Başlat</button>`}</div>`;
   };
   $('comp_body').innerHTML = `
-    <div class="sub" style="margin-bottom:6px">${COUNTRIES[G.country].flag} ${G.il}, ${G.country} · ${new Date(G.founded || Date.now()).toLocaleDateString('tr-TR')}'den beri</div>
+    <div class="sub" style="margin-bottom:6px">${COUNTRIES[G.country].flag} ${G.il}, ${G.country} · ${new Date(G.founded || Date.now()).toLocaleDateString(LOCALE)}'den beri</div>
     <!-- 📬 POSTA + 💡 ÖNERİ/İSTEK — patron 27 Ağu: "buton konumlarını Araştırma satırının
          hemen üstüne al." Sayfanın en altındaydı; banlı oyuncu (ve Play'in aradığı hesap
          yolu) için ikisi de kaydırmadan görünmek zorunda. -->
@@ -12929,7 +13051,7 @@ function renderHUD() {
   $('coloc').textContent = G.country ? `${COUNTRIES[G.country].flag} ${G.il}, ${G.country}` : '—';
   $('cash').textContent = fmt(G.cash);
   const d = clockDate();
-  $('clockline').textContent = '🕐 ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) + (G.demo ? ' ⏩' : '') + (boostFactor() > 1 ? ' 🚀' : '');
+  $('clockline').textContent = '🕐 ' + d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' }) + (G.demo ? ' ⏩' : '') + (boostFactor() > 1 ? ' 🚀' : '');
   if (boostFactor() > 1) {
     $('lvltxt').textContent = '🚀 Bonus ×' + BOOST_MULT;
     $('lvlfill').style.width = Math.min(100, 100 * G.totalEarned / BOOST_CAP) + '%';
@@ -12950,7 +13072,7 @@ function renderHUD() {
   $('allybtn').style.color = (G.ally && G.ally.tender) ? 'var(--danger)' : (allyBuffOn() ? 'var(--gold)' : '');
   const um = unreadMail();
   $('mailbtn').classList.toggle('unread', um > 0);
-  $('mailbtn').textContent = um > 0 ? '📬 ' + um : '📬 Posta';
+  $('mailbtn').textContent = um > 0 ? '📬 ' + um : CEV('📬 Posta');
   const ub = bildirimOkunmamis();
   $('notifbtn').classList.toggle('unread', ub > 0);
   $('notifbtn').textContent = ub > 0 ? '🔔' + (ub > 99 ? '99+' : ub) : '🔔';
@@ -12983,7 +13105,7 @@ function wizardStart() {
     CLOUD_CHECKED = true;
     LOGIN_BUSY = true; // closeModal emniyet ağı bu bekleme sırasında sihirbazı tetiklemesin
     $('app').classList.add('wiz');
-    $('modal').innerHTML = '<h2>☁️ Kayıt aranıyor</h2><p>Buluttaki şirket kaydın kontrol ediliyor...</p>';
+    $('modal').innerHTML = '<h2>' + CEV('☁️ Kayıt aranıyor') + '</h2><p>' + CEV('Buluttaki şirket kaydın kontrol ediliyor...') + '</p>';
     $('overlay').classList.add('show');
     Promise.race([NET.cloudLoad(), new Promise(r => setTimeout(() => r(null), 8000))])
       .then(cloud => {
@@ -12994,7 +13116,7 @@ function wizardStart() {
           closeModal();
           $('app').classList.remove('wiz');
           startGame(true);
-          toast('☁️ Buluttaki şirketinle devam ediyorsun: ' + G.company, '', null, 0, true);
+          toast(CEV('☁️ Buluttaki şirketinle devam ediyorsun: {0}', G.company), '', null, 0, true);
         } else { closeModal(); wizardWelcome(); }
       })
       .catch(() => { LOGIN_BUSY = false; closeModal(); wizardWelcome(); });
@@ -13013,9 +13135,11 @@ function wizardWelcome() { // karşılama + kuruluş sihirbazının kapısı (wi
     <div class="biglogo">${LOGO_SVG}</div>
     <h2 style="text-align:center">ENERGY COMPANY</h2>
     <p style="text-align:center;font-size:11px;color:var(--gold)">Development of Company games</p>
-    <p style="text-align:center">Gerçek dünya haritasında enerji imparatorluğunu kur.<br>Adil · Şeffaf · Günde ~2 saat yeter.</p>
-    <button class="primary" onclick="wizMapStart()">🌍 Yeni Oyun — Haritadan Başla</button>
-    <p style="text-align:center;font-size:10px;margin-top:10px">${BUILD_TAG} — test sürümü</p>`;
+    <p style="text-align:center">${CEV('Gerçek dünya haritasında enerji imparatorluğunu kur.')}<br>${CEV('Adil · Şeffaf · Günde ~2 saat yeter.')}</p>
+    <button class="primary" onclick="wizMapStart()">${CEV('🌍 Yeni Oyun — Haritadan Başla')}</button>
+    <p style="text-align:center;font-size:12px;margin-top:10px">${Object.entries(DILLER).map(([k, d]) =>
+      k === LANG ? `<b>${d.bayrak} ${d.ad}</b>` : `<span class="lnk" onclick="dilSec('${k}')">${d.bayrak} ${d.ad}</span>`).join(' · ')}</p>
+    <p style="text-align:center;font-size:10px;margin-top:10px">${BUILD_TAG} — ${CEV('test sürümü')}</p>`;
   $('overlay').classList.add('show');
 }
 // Yerel kayıtla oyuna girildi ama bulutta 3+ dk daha yeni kayıt varsa: sessizce ezme, SOR.
@@ -13026,7 +13150,7 @@ function cloudNewerCheck(localS) {
     if (!cloud || !cloud.company || !cloud._sv) return;
     const yerel = localS.lastSeen || 0;
     if (cloud._sv <= yerel + 3 * 60000) return; // bulut belirgin yeni değil — dokunma
-    const tf = t => new Date(t).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const tf = t => new Date(t).toLocaleString(LOCALE, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     $('modal').innerHTML = `
       <h2>☁️ Bulutta daha yeni kayıt var</h2>
       <p>📱 Bu cihaz: <b>${localS.company}</b> <span class="sub">· son oynama ${tf(yerel)}</span><br>
@@ -13038,7 +13162,7 @@ function cloudNewerCheck(localS) {
   }).catch(() => {});
 }
 window.adoptCloudSave = async () => {
-  $('modal').innerHTML = '<h2>☁️ Yükleniyor</h2><p>Buluttaki kayıt getiriliyor...</p>';
+  $('modal').innerHTML = '<h2>' + CEV('☁️ Yükleniyor') + '</h2><p>' + CEV('Buluttaki kayıt getiriliyor...') + '</p>';
   try {
     const cloud = await NET.cloudLoad();
     if (cloud && cloud.company) {
@@ -13186,23 +13310,23 @@ function wizStep2() {
     const ll2 = IL_COORD[il]; if (!ll2) return;
     const m = L.marker(ll2, { icon: divIcon('<div class="ilmark" style="background:#ff8c42"></div>', [18, 18]) }).addTo(map);
     const pop = (isTR ? TR_POP[il] : STATE_POP[il]) || 0;
-    m.bindPopup(() => `<b>${il.toUpperCase()}</b><br>${COUNTRIES[G.country].flag} ${G.country}<br>Bölge: ${cellCode(cellId(ll2))}<br>Nüfus: ${fmtN(pop)}K → talep ${fmtN(cellDemand(cellId(ll2)))} MWh/gün`); // tembel: talep yalnız popup açılınca hesaplanır
+    m.bindPopup(() => `<b>${il.toUpperCase()}</b><br>${COUNTRIES[G.country].flag} ${G.country}<br>${CEV('Bölge')}: ${cellCode(cellId(ll2))}<br>${CEV('Nüfus')}: ${fmtN(pop)}K → ${CEV('talep')} ${fmtN(cellDemand(cellId(ll2)))} MWh/${CEV('gün')}`); // tembel: talep yalnız popup açılınca hesaplanır
     m.on('click', () => { wizSetIl(il); });
     wizLayer.push(m);
   });
   // alt kart
-  $('wiztitle').textContent = isTR ? '📍 İl seç (81 ilin tamamı!) — listeden ya da noktaya dokun' : '📍 Bölge seç';
+  $('wiztitle').textContent = T(isTR ? '📍 İl seç (81 ilin tamamı!) — listeden ya da noktaya dokun' : '📍 Bölge seç');
   if (isTR) {
-    $('wizselect').innerHTML = '<option value="">— İl seç —</option>' +
+    $('wizselect').innerHTML = `<option value="">${CEV('— İl seç —')}</option>` +
       Object.entries(TR_ILLER).map(([r, ils]) =>
         `<optgroup label="${r}">${ils.map(il => `<option value="${il}">${il}</option>`).join('')}</optgroup>`).join('');
   } else {
-    $('wizselect').innerHTML = '<option value="">— Bölge seç —</option>' +
+    $('wizselect').innerHTML = `<option value="">${CEV('— Bölge seç —')}</option>` +
       COUNTRIES[G.country].states.map(il => `<option value="${il}">${il}</option>`).join('');
   }
   $('wiznext').style.display = '';
   $('wiznext').disabled = true;
-  $('wiznext').textContent = 'Başla →';
+  $('wiznext').textContent = CEV('Başla →');
 }
 function wizSetIl(il) {
   WIZ.il = il;
@@ -13314,14 +13438,14 @@ function startGame(resumed) {
   // 🌍 B6 sessiz kalmasın: şehir seti gelmediyse söyle ve 60 sn sonra bir kez daha dene
   // (oyun 448 çekirdek şehirle sorunsuz sürer — kilitleme YOK, world50m ilkesi).
   if (SEHIR_DURUM === 'hata') {
-    toast('🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.', 'warn', null, 0, true);
-    setTimeout(() => { if (SEHIR_DURUM !== 'tamam') sehirleriYukle().then(ok => { if (ok) { toast('🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.', ''); drawOverlay(); } }).catch(() => {}); }, 60000);
+    toast(CEV('🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.'), 'warn', null, 0, true);
+    setTimeout(() => { if (SEHIR_DURUM !== 'tamam') sehirleriYukle().then(ok => { if (ok) { toast(CEV('🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.'), ''); drawOverlay(); } }).catch(() => {}); }, 60000);
   }
   if (resumed) offlineProgress();
   else {
     setTimeout(askNotifPermission, 9000); // oyunu bir görsün, sonra kibarca soralım
-    toast('👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!', '', null, 0, true);
-    toast('🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!', '', null, 0, true);
+    toast(CEV('👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!'), '', null, 0, true);
+    toast(CEV('🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!'), '', null, 0, true);
     save();
   }
 }
@@ -13417,6 +13541,12 @@ $('resetlink').addEventListener('click', () => {
   if (confirm('Tüm ilerleme silinsin mi?')) { G = null; localStorage.removeItem(SAVE_KEY); location.reload(); } // G=null: otokayıt geri yazmasın
 });
 $('mutelink').addEventListener('click', () => { G.muted = !G.muted; $('mutelink').textContent = G.muted ? '🔇' : '🔊'; });
+// 🌐 dil değiştirici: menü altındaki bağlantı diller arasında döner (2 dil — çoğalınca modal olur)
+$('langlink').textContent = '🌐 ' + LANG.toUpperCase();
+$('langlink').addEventListener('click', () => {
+  const sira = Object.keys(DILLER);
+  dilSec(sira[(sira.indexOf(LANG) + 1) % sira.length]);
+});
 // 💾 pagehide: mobilde sekme/uygulama kapanışında visibilitychange bazen hiç ateşlenmiyor;
 // bu yol keepalive'lı son yazmayı garantiye alır (bot bulgusu: son 20 sn kayboluyordu).
 window.addEventListener('pagehide', () => {
