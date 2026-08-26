@@ -205,6 +205,10 @@
   #bottombar button{font-size:10px;padding:11px 0}
   #bottombar{gap:3px;padding:7px 5px 10px}
   #mailbtn.unread{border-color:var(--gold);color:var(--gold)}
+  /* 🔔 Bildirim düğmesi: flex:1 DEĞİL — sabit dar. Yoksa 7 düğme eşit bölününce "Müzayede"
+     gibi uzun etiketler taşıyor. Sayı varken altın çerçeve. */
+  #bottombar #notifbtn{flex:0 0 44px;padding:11px 0;font-size:13px}
+  #notifbtn.unread{border-color:var(--gold);color:var(--gold);font-size:10px}
 
   /* 💬 SOHBET ÇEKMECESİ */
   #chathandle{position:absolute;top:64%;right:0;z-index:1155;width:28px;height:60px;border-radius:12px 0 0 12px;border:1px solid var(--line);border-right:none;background:var(--acc2);color:#071018;font-size:15px;font-weight:800;cursor:pointer;box-shadow:-2px 2px 10px #0006;padding:0}
@@ -325,6 +329,47 @@
   /* ── toasts & modal ── */
   /* z-index 60'tı → giriş ekranı (#overlay, 80) ve panellerin (1200) ARKASINDA kalıyordu:
      telefon testinde Google giriş hatası okunamıyordu. Artık her şeyin üstünde. */
+  /* ── 🛡️ YÖNETİM PERDELERİ (bakım · ban · asgari sürüm) ──
+     TEK KATMAN + pointer-events ile kilit. Dağınık `disabled` denemesi kaçak bırakır
+     (patron: "bunu iyi ayarla"). Perde #app'in KARDEŞİ — #app'in overflow:hidden'ı kırpmasın. */
+  #gmveil{position:fixed;inset:0;z-index:9990;display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;padding:26px 20px;text-align:center;background:linear-gradient(180deg,#0a1220f7,#05070cfc);backdrop-filter:blur(4px)}
+  #gmveil.show{display:flex}
+  #gmveil .ico{font-size:clamp(40px,13vw,58px);filter:drop-shadow(0 3px 12px #000a);line-height:1}
+  #gmveil h3{margin:0;font-size:clamp(16px,5.2vw,23px);font-weight:900;letter-spacing:.6px;line-height:1.32;color:var(--cream)}
+  #gmveil p{margin:0;max-width:min(440px,94%);font-size:13px;line-height:1.55;color:#c9d4e4}
+  #gmveil .why{border:1px solid var(--gold);border-radius:12px;padding:9px 13px;color:var(--gold);font-weight:700;
+    font-size:12.5px;max-width:min(440px,94%);line-height:1.5;white-space:pre-wrap}
+  #gmveil .kalan{font-size:12.5px;color:var(--acc2);font-weight:800}
+  #gmveil button{padding:12px 30px;border:none;border-radius:11px;background:var(--gold);color:#13213a;
+    font-weight:900;font-size:14.5px;cursor:pointer;box-shadow:0 4px 16px #0008}
+  /* ⛔ BAN ŞERİDİ: perde HER açılışta gösterilmez (yoksa oyuncu her açılışta duvara toslar) —
+     ilk girişte tam perde, sonrakilerde bu ince şerit. Dokununca zincir yeniden başlar. */
+  #banstrip{position:fixed;left:0;right:0;top:0;z-index:9985;display:none;padding:7px 10px;font-size:11.5px;
+    font-weight:800;text-align:center;background:#3a0f0ff2;color:#ffb4a2;border-bottom:1px solid var(--danger);cursor:pointer}
+  #banstrip.show{display:block}
+  #app.stripon{padding-top:30px}
+  /* ⚠️ Ban ipucu #tuthint'in KOPYASI DEĞİL, AYRISI olmak zorunda: #tuthint z-index 1140 ile
+     panellerin (.sheet, 1200) ALTINDA kalıyor. Zincirin 2. adımı Şirket ekranı AÇIKKEN
+     "postayı aç" diyor — orada görünmeyen ipucu hiçbir işe yaramaz. */
+  #banhint{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;width:min(496px,94vw);z-index:9986;display:none;
+    background:#241a02f5;border:1px solid var(--gold);border-radius:12px;padding:10px 12px;font-size:12.5px;
+    font-weight:700;pointer-events:none;box-shadow:0 4px 18px #000c;color:var(--gold);text-align:center}
+  #banhint.show{display:block}
+  /* 🔒 BAN KİLİDİ (patron): "belirttiğim butonlar haricinde TÜM butonlar pasife düşecek.
+     Posta, öneri/istek ve hesabı sıfırla'ya girmek için profile basma." → TEK aktif giriş: 👤 profil.
+     ⚠️ Hedef öğe ASLA kilitlenmez: #coname ve içindeki Posta satırı açık kalmak ZORUNDA. */
+  /* ⚠️ `*` ve !important ŞART, süs değil: Leaflet KENDİ CSS'inde işaretçilere ve vektör
+     yollarına açıkça `pointer-events:auto` yazıyor; sadece #mapwrap'e none demek kilidi
+     DELİYORDU — banlı oyuncu haritadaki tesise dokunup birim ekranını açabiliyordu (ölçüldü).
+     Sıra önemli: geri-açma kuralları AŞAĞIDA, aynı özgüllükte sonra gelen kazanır. */
+  #app.banli #hdr,#app.banli #hdr *,#app.banli #evbanner,#app.banli #evbanner *,
+  #app.banli #mapwrap,#app.banli #mapwrap *,#app.banli #bottombar,#app.banli #bottombar *{pointer-events:none!important}
+  #app.banli #companysheet,#app.banli #companysheet *,
+  #app.banli #mailsheet,#app.banli #mailsheet *,
+  #app.banli #sheetdim{pointer-events:auto!important}
+  #app.banli #coname{pointer-events:auto!important;cursor:pointer}
+
   /* ── AÇILIŞ EKRANI ── */
   /* AÇILIŞ EKRANI — patron: "2010 oyunu gibi duruyor, tam ekrana sığan güzel bir tasarım istiyorum".
      Sahne artık 520px'lik bir kart değil, TÜM EKRANI kaplıyor; marka üstte, yükleme altta,
@@ -357,7 +402,15 @@
   /* 🔔 BİLDİRİMLER SOLA YAPIŞIK, ALT ALTA (patron 26 Ağu): "Ortada uzun bir bildirim
      ekranı kapat düğmesinin üstüne geliyor ve bildirim gidene kadar pencereyi kapatamıyorum."
      Ortalanmış ve tam genişlikteydi; artık solda ve dar — modalın butonlarını örtmüyor. */
-  #toasts{position:absolute;top:70px;left:8px;right:auto;display:flex;flex-direction:column;gap:5px;align-items:flex-start;z-index:1300;pointer-events:none;max-width:min(76%,320px)}
+  /* 🔔 BİLDİRİMLER (patron 26 Ağu: "bu bildirimler yukarda yine görüşü kapatıyor")
+     🐞 ASIL HATA sabit `top:70px` idi: #toasts #app'e çapalıydı, yani 70px ÜST BAŞLIĞIN
+     kendisinden ölçülüyordu. Başlık uzayan cihazlarda (büyük yazı tipi, seviye çubuğu,
+     çentik) bildirimler şirket adının ve emisyon bandının ÜSTÜNE biniyordu.
+     🔧 Çözüm: #toasts artık #mapwrap'in İÇİNDE ve `top:8px` — yani her cihazda banttan
+     hemen sonra başlar. Piksel tahmini yok. SABİT PİKSELE GERİ DÖNME.
+     Ayrıca aynı anda en fazla 2 bildirim durur (toast() eskisini düşürür) ve süre kısaldı;
+     kaçırılan hiçbir şey kaybolmuyor — hepsi 🔔 Bildirimler ekranında birikiyor. */
+  #toasts{position:absolute;top:8px;left:8px;right:auto;display:flex;flex-direction:column;gap:5px;align-items:flex-start;z-index:1300;pointer-events:none;max-width:min(70%,286px)}
   .toast{background:#000d;border:1px solid var(--acc);color:var(--ink);padding:7px 12px;border-radius:14px;font-size:12px;max-width:100%;animation:pop .25s;backdrop-filter:blur(4px);text-align:left;line-height:1.4;overflow-wrap:anywhere}
   .toast.warn{border-color:var(--warn)} .toast.bad{border-color:var(--danger)}
   @keyframes pop{from{transform:scale(.85);opacity:0}}
@@ -519,7 +572,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 16:46) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 19:45) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -550,6 +603,13 @@
       <h3>📬 POSTA KUTUSU<span class="x" onclick="hideSheets()">✕</span></h3>
       <div id="mail_body"></div>
     </div>
+    <!-- 🔔 BİLDİRİM DEFTERİ (patron): ekranda 2,6 sn duran bir uyarıyı kaçırmak kolay;
+         geçmişi buradan okunur. Girişi alt bardaki 📬 Posta'nın yanındaki 🔔 düğmesi. -->
+    <div class="sheet" id="notifsheet">
+      <h3>🔔 BİLDİRİMLER<span class="x" onclick="hideSheets()">✕</span></h3>
+      <p class="sub" style="margin-bottom:4px">Ekranda kaçırdıklarını buradan oku — en yenisi üstte.</p>
+      <div id="notif_body"></div>
+    </div>
     <div class="sheet" id="friendssheet">
       <h3>👥 ARKADAŞLAR<span class="x" onclick="hideSheets()">✕</span></h3>
       <div id="friends_body"></div>
@@ -570,6 +630,9 @@
       <div id="auc_body"></div>
     </div>
     <div id="tuthint"></div>
+    <!-- 🔔 Bildirim yığını: #mapwrap İÇİNDE durmak zorunda — #app'e çapalıyken sabit 70px
+         üst başlığın üstüne biniyordu (patron bildirdi). Buradan `top:8px` her cihazda doğru. -->
+    <div id="toasts"></div>
 
     <!-- Sağ çekmece menü: hızlı erişim (rakip paraleli, ayna tasarım) -->
     <!-- SOL: SAHA ÇEKMECESİ — ofisler ve talep merkezleri arası tek dokunuşla atlama -->
@@ -623,11 +686,25 @@
     <button id="allybtn">🤝 İttifak</button>
     <button id="aucbtn">🔨 Müzayede</button>
     <button id="mailbtn">📬 Posta</button>
+    <!-- 🔔 Posta'nın YANINDA, ikon-only ve dar (flex:0 0 44px): alt barda zaten 6 düğme var,
+         7. düğmeye metin de koysaydık hepsi okunamayacak kadar daralırdı. -->
+    <button id="notifbtn" title="Bildirimler">🔔</button>
   </div>
 
-  <div id="toasts"></div>
   <div id="overlay"><div id="modal"></div></div>
 </div>
+
+<!-- 🛡️ YÖNETİM PERDESİ — bakım · ban · asgari sürüm. #app'in KARDEŞİ (overflow:hidden kırpmasın). -->
+<div id="gmveil">
+  <div class="ico" id="gmv_ico">🛠️</div>
+  <h3 id="gmv_title">—</h3>
+  <p id="gmv_text"></p>
+  <div class="why" id="gmv_why" style="display:none"></div>
+  <div class="kalan" id="gmv_kalan"></div>
+  <button id="gmv_btn" style="display:none">Tamam</button>
+</div>
+<div id="banstrip">⚖️ Varlıklarına el konuldu — gerekçe postanda (dokun)</div>
+<div id="banhint"></div>
 
 <script src="vendor/leaflet.js"></script>
 <!-- Firebase Auth (yerel kopya): Google ile giriş — hesap telefon değişse de taşınır -->
@@ -641,7 +718,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 16:46)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 19:45)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2359,11 +2436,50 @@ function toast(msg, cls, key, cd, sticky) {
   // "Oyunu kapatma!<br>..." şeklinde çıktı). Çözüm: etiketleri RENDER etmiyoruz, TEMİZLİYORUZ.
   const duz = String(msg).replace(/<br\s*\/?>/gi, ' · ').replace(/<\/?[a-z][^>]*>/gi, '');
   t.className = 'toast ' + (cls || ''); t.textContent = duz;
-  $('toasts').appendChild(t);
-  const life = sticky ? 6500 : 3800;
+  const kutu = $('toasts');
+  kutu.appendChild(t);
+  // 🔔 EN FAZLA 2 (patron: "bildirimler yukarda görüşü kapatıyor"). Üçüncüsü gelince en
+  // eskisi ANINDA düşer. Bilgi kaybı yok: hepsi aşağıdaki deftere yazılıyor.
+  while (kutu.children.length > 2) kutu.firstChild.remove();
+  const life = sticky ? 5000 : 2600;
   setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .4s'; }, life);
   setTimeout(() => t.remove(), life + 500);
+  bildirimYaz(duz, cls);
 }
+// 🔔 BİLDİRİM DEFTERİ (patron: "geçmiş bildirimleri de kontrol edebilsin, bir şeyi gözden
+// kaçırmamak için"). Ekranda 2,6 saniye duran bir şeyi kaçırmak çok kolay — özellikle
+// telefonu cebe koyup dönünce. Defter olmadan bildirimi kısaltmak BİLGİ KAYBI olurdu.
+const BILDIRIM_MAX = 80;
+function bildirimYaz(txt, cls) {
+  if (!G) return;                       // açılıştan önceki bildirimler (kayıt yok) atlanır
+  G._bild = G._bild || [];
+  const son = G._bild[0];
+  // aynı metin arka arkaya gelirse tekrar yazma, sayacını artır (satış/üretim bildirimleri
+  // saniyede birkaç kez düşebiliyor — defter onlarla dolarsa okunamaz hâle gelir)
+  if (son && son.t === txt) { son.n = (son.n || 1) + 1; son.ts = Date.now(); return; }
+  G._bild.unshift({ t: txt, c: cls || '', ts: Date.now(), n: 1 });
+  if (G._bild.length > BILDIRIM_MAX) G._bild.length = BILDIRIM_MAX;
+}
+const bildirimOkunmamis = () => {
+  if (!G || !G._bild) return 0;
+  const s = G._bildSeen || 0;
+  return G._bild.filter(b => b.ts > s).length;
+};
+window.openNotifSheet = () => {
+  hideSheets();
+  const list = (G._bild || []);
+  const s = G._bildSeen || 0;
+  $('notif_body').innerHTML = list.length ? list.map(b => `
+    <div style="border-left:3px solid ${b.c === 'warn' ? 'var(--warn)' : b.c === 'bad' ? 'var(--danger)' : 'var(--acc)'};
+      background:var(--panel2);border-radius:8px;padding:7px 10px;margin:5px 0">
+      <div style="font-size:12.5px;line-height:1.45${b.ts > s ? ';font-weight:700' : ''}">${b.t.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))}${b.n > 1 ? ` <span class="sub">×${b.n}</span>` : ''}</div>
+      <div class="sub" style="font-size:10.5px">${new Date(b.ts).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${b.ts > s ? ' · <b style="color:var(--acc2)">YENİ</b>' : ''}</div>
+    </div>`).join('')
+    : '<p class="sub">Henüz bildirim yok. Oyundaki uyarılar, satış ve kazanç bildirimleri burada birikir.</p>';
+  G._bildSeen = Date.now();              // açınca hepsi okundu sayılır
+  showSheet('notifsheet');
+  save();
+};
 
 // ── CANLI HAVA (Open-Meteo — ücretsiz, anahtarsız). Rakip 10m yer rüzgarı kullanıp rezil oldu;
 // biz türbin göbek yüksekliği olan 100m rüzgarını çekiyoruz. 15 dakikada bir tazelenir. ──
@@ -3506,6 +3622,28 @@ function placeAt(c, ll) {
     return;
   }
   if (kind === 'plant' && capBlocked(t)) { toast('🔒 ' + T.cat + ' kurulu güç limitin dolu — İnşa ekranından lisans yükselt', 'warn'); PENDING = null; setMode(null); return; }
+  // 🎓 EĞİTİMDE YANLIŞ KAREYE KURMA UYARISI (patron 26 Ağu: "ya uyarı ekranı gelecek ya da
+  // sayması gerek"). İKİSİNİ DE yapıyoruz: görev artık her hâlükârda sayılıyor (bkz.
+  // tutDepoOk) — bu uyarı parayı boşa harcamasını önlemek için, ÖDEMEDEN ÖNCE çıkıyor.
+  // ⚠️ Kilitleme DEĞİL, sorma: oyuncu isterse "yine de buraya kur" diyebilir. Kilitlesek
+  //    yanlış kareye ısrar eden oyuncu bu sefer başka bir çıkmaza girerdi.
+  if (tutGuide() && tutId() === 'depo' && kind === 'store' && !G._tutDepoUyarildi) {
+    const hedef = tutCellTarget4();
+    if (hedef && c !== hedef) {
+      G._tutDepoUyarildi = true;                       // bir kez sor, ısrar edeni bezdirme
+      const cn = String(c), lla = ll[0], llo = ll[1];
+      $('modal').innerHTML = `
+        <h2>🔋 Burası yanıp sönen bölge değil</h2>
+        <p>Görev, <b>yeni ruhsat aldığın bölgeye</b> depo kurmanı istiyor. Sebebi şu:
+        bir depo <b>yalnız kendi karesindeki</b> santrallerden enerji toplar — yeni bölgendeki
+        santraller ancak orada bir depo varsa satış yapabilir.</p>
+        <p class="sub">Yine de buraya kurabilirsin: <b>görev sayılacak</b>, sadece ${fmt(Math.round(T.cost * (PENDING.disc || 1)))} harcamış olursun.</p>
+        <button class="primary" onclick="closeModal()">↩️ Vazgeç — yanıp sönen bölgeye kuracağım</button>
+        <button class="primary ghostbtn" onclick="closeModal();placeAt('${cn}',[${lla},${llo}])">Yine de buraya kur</button>`;
+      $('overlay').classList.add('show');
+      return;                                          // PENDING KORUNUR — para gitmedi, ürün elinde
+    }
+  }
   const price = Math.round(T.cost * (PENDING.disc || 1)); // 🎬 reklam indirimi burada uygulanır
   if (G.cash < price) { toast('Yetersiz bakiye — ' + fmt(price) + ' gerekli', 'warn'); PENDING = null; setMode(null); return; }
   G.cash -= price; gider('yatirim', price);
@@ -6585,6 +6723,196 @@ function allyHTML() {
 // Firebase Realtime Database REST API (SDK gerekmez). net-config.json içindeki "db" adresi
 // doluysa GERÇEK çok oyuncu: tesisler, sohbet, posta, arkadaşlar ve çevrimiçi durumu paylaşılır.
 // Adres boşsa oyun aynen çalışır — tek fark, diğer oyuncular simülasyondan gelir.
+// ═══════════ 🛡️ YÖNETİM: BAKIM · DUYURU · BAN · GM HEDİYESİ ═══════════
+// Patron paneli: tools/yonetim.html (kendi bilgisayarında localhost'ta açılır, REST ile yazar).
+// Sunucu düğümleri: config/ (bakim·duyuru·minSurum·adminler) · banlar/ · banGecmis/ · gmlog/ · odul/
+//
+// 🔑 EN ÖNEMLİ TASARIM KARARI — GM parası saves/'e DEĞİL odul/ kutusuna yazılır:
+//    oyuncunun istemcisi 20 sn'de bir cloudSave() ile KENDİ kasasını sunucuya komple yazıyor;
+//    saves/'e yazılan hediye bir sonraki kayıtta SİLİNİRDİ. (Aynı ders ittifak kasasında
+//    birebir yaşandı: "kasa tek sayı değil, defter toplamıdır".) Oyuncu kutudan alır,
+//    kasasına ekler ve kaydı SİLER — çevrimdışıyken de kaybolmaz, iki kez de uygulanmaz.
+// 🏛️ GM = DEVLET (patron 26 Ağu): *"oyunda GM=DEVLET, oyuncular bunu böyle bilsin."*
+// Yönetimin oyuncuya görünen TEK yüzü budur — ban perdesi ("devlet tarafından el konulmuştur"),
+// teşvik, katkı programı ve kamulaştırma zaten aynı kurguya oturuyordu; GM postası da oraya
+// bağlandı. ⚠️ Bu dize posta kutusunda GÖNDEREN adı olarak görünüyor ve `mail` kuralında
+// `from` en fazla 28 karakter — uzatma. Panel (tools/yonetim.html) AYNI dizeyi yazmak
+// zorunda: ana ekran bildirimi gönderen adına bakarak tetikleniyor.
+const DEVLET = '🏛️ Devlet';
+const GM = {
+  cfg: null, ban: null, surumEski: false, _bakimdaydi: false,
+  // ⛔ Ban AKTİF mi? 'sifirlandi' damgası ts'ten yeniyse oyuncu cezayı kabul edip sıfırdan
+  // başlamıştır: kayıt defterde DURUR ama artık uygulanmaz. Ban kaydını oyuncuya
+  // SİLDİRTMİYORUZ — silebilseydi tek istekle kendini banından kurtarırdı.
+  aktif(b) {
+    if (!b || typeof b !== 'object' || !b.ts) return false;
+    if (b.sifirlandi && b.sifirlandi >= b.ts) return false;             // kabul etti, sıfırdan başladı
+    if (b.bitis && b.bitis > 0 && b.bitis <= Date.now()) return false;  // süreli ban doldu
+    return true;
+  },
+};
+// 📦 Sürüm damgası karşılaştırması: BUILD_TAG yayında "Prototip 1.0 (2026-08-25 16:43)" olur.
+// ⚠️ Damga YOKSA asla kilitleme — yanlış yazılmış bir minSurum tüm oyuncuları dışarıda bırakırdı.
+function gmSurumEski(min) {
+  if (typeof min !== 'string' || !min.trim()) return false;
+  const dmg = s => { const m = /\((\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/.exec(String(s || '')); return m ? m[1] + ' ' + m[2] : ''; };
+  const a = dmg(BUILD_TAG), b = dmg(min);
+  if (!a || !b) return false;
+  return a < b;
+}
+function gmKalanTxt(bitis) {
+  const ms = (+bitis || 0) - Date.now();
+  if (!bitis || ms <= 0) return '';
+  const dk = Math.floor(ms / 60000), sn = Math.floor(ms / 1000) % 60;
+  return dk >= 60 ? '⏳ tahmini ' + (Math.round(dk / 6) / 10) + ' saat' : '⏳ tahmini ' + dk + ' dk ' + String(sn).padStart(2, '0') + ' sn';
+}
+// 📣 DUYURU: config.duyuru.id yerel damgadan büyükse postaya düşer — her açılışta tekrarlamaz.
+function gmDuyuru(d) {
+  if (!d || !G || !G._started || typeof d.id !== 'number') return;
+  if ((G._sonDuyuru || 0) >= d.id) return;
+  G._sonDuyuru = d.id;
+  addMail(DEVLET, String(d.baslik || 'Duyuru').slice(0, 60), String(d.metin || '').slice(0, 600), true);
+  toast('📣 Devletten duyuru: ' + String(d.baslik || '').slice(0, 40) + ' — 📬 postana düştü', '', 'gmduyuru', 0, true);
+  save();
+}
+// ⛔ Ban durumu DEĞİŞTİYSE akışı baştan kur: yeni ban → perde + zincirleme yönlendirme.
+function banUygula(b) {
+  if (!G || !G._started) return;
+  const ts = GM.aktif(b) ? b.ts : 0;
+  if ((G._banTs || 0) === ts) return;                  // değişmedi
+  const oncekiVardi = !!(G._banTs || 0);
+  G._banTs = ts;
+  G._banAdim = 0; G._banGoruldu = false;               // 0 = tam perde göster
+  // ✅ İtiraz haklı bulundu: hiçbir veri silinmediği için şirket kaldığı yerden devam eder.
+  if (!ts && oncekiVardi) toast('✅ Kısıtlama kaldırıldı — şirketin kaldığı yerden devam ediyor', '', 'banoff', 0, true);
+  save();
+}
+// 🎁 HEDİYE KUTUSU — ÖNCE SİL, SONRA UYGULA. Ters sırada (uygula→sil) silme başarısız olursa
+// hediye her turda yeniden uygulanır ve PARA BASILIR. Silme başarısızsa kayıt yerinde kalır,
+// sonraki turda yeniden denenir: en fazla bir hediye gecikir, asla çoğalmaz.
+async function odulAl(box) {
+  if (!box || typeof box !== 'object' || !G || !G._started) return;
+  if (NET.kilit) return;   // bakım/ban: silme yazması engelli → hediye İKİ KEZ uygulanırdı
+  let para = 0, ip = 0, n = 0;
+  for (const [k, o] of Object.entries(box)) {
+    try { await NET.req('odul/' + NET.id + '/' + k, 'DELETE'); } catch (e) { continue; }  // önce sahiplen
+    if (!o || typeof o !== 'object') continue;                                            // bozuk kayıt: sil, geç
+    const p = Math.max(0, Math.min(1e15, +o.para || 0)), i = Math.max(0, Math.min(1e5, Math.floor(+o.ip || 0)));
+    G.cash += p; G.ip = (G.ip || 0) + i; para += p; ip += i; n++;
+    const ek = (p || i) ? '<br><br><b>' + [p ? fmt(p) : '', i ? '💠 ' + i + ' İmtiyaz Puanı' : ''].filter(Boolean).join(' + ') + '</b> hesabına eklendi.' : '';
+    addMail(DEVLET, String(o.baslik || '🎁 Devletten hediye').slice(0, 60),
+      String(o.mesaj || 'Devletten bir hediye aldın.').slice(0, 600) + ek, true);
+  }
+  if (!n) return;
+  toast('🏛️ Devletten hediye: ' + (para ? fmt(para) : '') + (para && ip ? ' + ' : '') + (ip ? '💠' + ip + ' İmtiyaz Puanı' : ''), '', null, 0, true);
+  beep(880, .1); setTimeout(() => beep(1180, .12), 130);
+  try { ipRozetTazele(); } catch (e) {}
+  save(); renderHUD();
+}
+// 🔁 SUNUCU YOKLAMASI — NET.loop içinden. `tam` yalnız 5 turda bir (60 sn): kota önemli.
+// config HER turda okunur (patron: "bakıma al → 12 sn içinde herkes düşer"); ban ve hediye
+// kutusu için 60 sn fazlasıyla yeterli.
+async function gmPoll(tam) {
+  if (!NET.on()) return;
+  try {
+    const cfg = await NET.get('config');
+    GM.cfg = (cfg && typeof cfg === 'object') ? cfg : null;
+    GM.surumEski = gmSurumEski(GM.cfg && GM.cfg.minSurum);
+    if (GM.cfg) gmDuyuru(GM.cfg.duyuru);
+  } catch (e) {}
+  if (tam) {
+    try { GM.ban = await NET.get('banlar/' + NET.id); } catch (e) {}
+    banUygula(GM.ban);
+  }
+  gmRender();
+  if (tam && !NET.kilit) { try { const od = await NET.get('odul/' + NET.id); if (od) await odulAl(od); } catch (e) {} }
+}
+// 🖥️ PERDE + KİLİT. Kilitlemeyi "butonları gizle" ile DEĞİL tek katman + pointer-events ile
+// yapıyoruz — dağınık `disabled` denemesi mutlaka kaçak bırakır (patron: "bunu iyi ayarla").
+function gmRender() {
+  const v = $('gmveil'); if (!v) return;
+  const bakim = !!(GM.cfg && GM.cfg.bakim && GM.cfg.bakim.on);
+  const surum = !!GM.surumEski;
+  const banli = !!(G && G._started && GM.aktif(GM.ban));
+  NET.kilit = (bakim || surum) ? 'bakim' : (banli ? 'ban' : '');
+  // 🔄 Bakım BİTİNCE sayfa kendini yeniler: yeni sürüm ve yeni kurallar temiz bir kopyaya insin.
+  if (GM._bakimdaydi && !bakim && !surum) { GM._bakimdaydi = false; setTimeout(() => location.reload(), 800); }
+  if (bakim || surum) GM._bakimdaydi = true;
+  const app = $('app');
+  const banKilit = banli && !bakim && !surum;
+  app.classList.toggle('banli', banKilit);
+  const adim = (G && G._banAdim) | 0;
+  const strip = banKilit && adim >= 1;
+  $('banstrip').classList.toggle('show', strip);
+  app.classList.toggle('stripon', strip);
+  const tur = surum ? 'surum' : bakim ? 'bakim' : (banKilit && adim === 0) ? 'ban' : '';
+  const btn = $('gmv_btn'), why = $('gmv_why');
+  if (!tur) { v.classList.remove('show'); btn.dataset.act = ''; return; }
+  if (tur === 'surum') {
+    $('gmv_ico').textContent = '🔄';
+    $('gmv_title').textContent = 'GÜNCELLEME GEREKLİ';
+    $('gmv_text').innerHTML = 'Sunucu yeni bir sürüme geçti. Bu kopya artık veri yazamıyor —<br>oyunu güncelleyip devam edebilirsin.';
+    why.style.display = 'none';
+    $('gmv_kalan').textContent = 'Yüklü sürüm: ' + BUILD_TAG;
+    btn.style.display = ''; btn.textContent = '🔄 Güncelle ve Aç'; btn.dataset.act = 'reload';
+  } else if (tur === 'bakim') {
+    const bk = (GM.cfg && GM.cfg.bakim) || {};
+    const msj = String(bk.mesaj || '').trim();
+    $('gmv_ico').textContent = '🛠️';
+    $('gmv_title').textContent = 'SUNUCU BAKIMDA';
+    $('gmv_text').innerHTML = 'Kısa bir bakım yapılıyor. Bu sürede ilerlemen <b>sunucuya yazılmaz</b>;<br>bakım bitince oyun kendiliğinden açılır.';
+    why.style.display = msj ? '' : 'none'; why.textContent = msj;
+    $('gmv_kalan').textContent = gmKalanTxt(bk.bitis);
+    btn.style.display = 'none'; btn.dataset.act = 'bakim';
+  } else {
+    $('gmv_ico').textContent = '⚖️';
+    $('gmv_title').innerHTML = 'TÜM MAL VARLIĞINIZ<br>DEVLET TARAFINDAN<br>EL KONULMUŞTUR';
+    $('gmv_text').textContent = 'Sebebi size posta ile iletilmiştir.';
+    why.style.display = 'none'; $('gmv_kalan').textContent = '';
+    btn.style.display = ''; btn.textContent = 'Tamam'; btn.dataset.act = 'ban';
+  }
+  v.classList.add('show');
+}
+// ⏱️ Hafif tik (her karede): yalnız bakım sayacı metni + ban yönlendirme zinciri.
+function gmTick() {
+  const v = $('gmveil');
+  if (v.classList.contains('show') && $('gmv_btn').dataset.act === 'bakim' && GM.cfg && GM.cfg.bakim)
+    $('gmv_kalan').textContent = gmKalanTxt(GM.cfg.bakim.bitis);
+  banTick();
+}
+// 🟠 ZİNCİRLEME YÖNLENDİRME (patron): "Tamam'a bastığında profil parlayıp sönsün, oraya
+// tıklayınca da aynı tutorial gibi postaya yönlendir. Yoksa direkt 'aa banlanmışım' deyip
+// oyunu siler." — Bu madde olmadan bütün ban tasarımı BOŞA ÇIKAR: itiraz kanalını kurduk
+// ama oyuncu postayı bulamazsa gerekçeyi hiç okumaz, itiraz etmez, uygulamayı siler.
+// ⚠️ Eğitimin tutGuide() kilidine BAĞLANMAZ: tutGuide() = !G.starterClaimed, eğitimi bitirmiş
+// oyuncuda false döner ve zincir hiç çalışmazdı. Ayrı durum makinesi (G._banAdim),
+// yalnız görsel yardımcılar (setTutCls / ipucu çubuğu) paylaşılıyor.
+function banTick() {
+  const hint = $('banhint');
+  if (!$('app').classList.contains('banli') || !G || !G._started) {
+    hint.classList.remove('show');
+    setTutCls('coname', 'attn', false); setTutCls('comp_mailbtn', 'tut', false);
+    return;
+  }
+  let a = G._banAdim | 0;
+  if (a <= 0) { hint.classList.remove('show'); setTutCls('coname', 'attn', false); setTutCls('comp_mailbtn', 'tut', false); return; }
+  if (a === 1 && $('companysheet').classList.contains('show')) { a = G._banAdim = 2; }
+  if (a === 2 && $('mailsheet').classList.contains('show')) { a = G._banAdim = 3; G._banGoruldu = true; save(); }
+  setTutCls('coname', 'attn', a === 1);
+  setTutCls('comp_mailbtn', 'tut', a === 2);
+  if (a === 1) hint.innerHTML = '⚖️ <b>Gerekçeyi okumak için</b> üstteki şirket adına dokun 👤';
+  else if (a === 2) hint.innerHTML = '📬 <b>Devletin sana ilettiği mesajı aç</b> — gerekçe ve itiraz yolu orada';
+  hint.classList.toggle('show', a === 1 || a === 2);
+}
+// ⚠️ Hesabı sıfırlama BANI da düşürür (yoksa sıfırlayıp yine ban ekranına düşerdi = ölü döngü).
+// Ban KAYDI silinmez, üzerine 'sifirlandi' damgası atılır: sicil panelde durur ("3 kez banlanmış"),
+// böylece tekrar tekrar sıfırlayan istismarcı temiz sicille geri gelemez.
+async function banSifirlaDamgala() {
+  if (!NET.on() || !GM.aktif(GM.ban)) return;
+  const now = Date.now();
+  try { await NET.put('banlar/' + NET.id + '/sifirlandi', now); } catch (e) {}
+  try { await NET.push('banGecmis/' + NET.id, { neden: String((GM.ban && GM.ban.neden) || '').slice(0, 300), sonuc: 'sifirlandi', ts: now }); } catch (e) {}
+}
 const NET = {
   db: null, key: null, id: null, ready: false, players: {}, units: {}, chat: {}, lastPull: 0,
   auth: null,   // { kind:'guest'|'google', uid, token, refresh, email, name }
@@ -6923,7 +7251,25 @@ const NET = {
     } catch (e) { console.warn('[NET] yetki uyarısı gösterilemedi'); }
     console.warn('[NET] yazma reddedildi:', kod, path, 'saatFark(dk)=', dk);
   },
+  // 🛡️ YÖNETİM KİLİDİ (bakım / ban). Kilitliyken YAZMA hiç yola çıkmaz.
+  // ⚠️ throw ETMİYORUZ, sessizce null dönüyoruz: kodda NET.put/push çağrılarının bir kısmı
+  //    .catch'siz — atsaydık yakalanmamış reddedilmiş söz yağmuru olurdu. Okuma (GET) her
+  //    zaman serbest; bakım perdesi ancak config okunabildiği için kalkabiliyor.
+  kilit: '',
+  yazmaIzinli(path, method) {
+    if (this.kilit !== 'ban') return false;      // bakım/sürüm: hiçbir yazma geçmez
+    // Banlı oyuncunun İKİ hakkı var: itiraz etmek ve hesabını sıfırlamak (Play şartı).
+    if (method === 'DELETE') return ['saves/', 'units/', 'players/'].some(x => path === x + this.id);
+    return path === 'suggestions' || path === 'reports'
+      || path === 'banGecmis/' + this.id
+      || path === 'banlar/' + this.id + '/sifirlandi'
+      || !!(this.adminId && path === 'mail/' + this.adminId);
+  },
   async req(path, method, body, kapanis, sessiz) {
+    if (this.kilit && method && method !== 'GET' && !this.yazmaIzinli(path, method)) {
+      console.warn('[GM] yazma kilitli (' + this.kilit + '):', method, path);
+      return null;
+    }
     const o = { method, cache: 'no-store' };
     if (body !== undefined) { o.headers = { 'Content-Type': 'application/json' }; o.body = JSON.stringify(body); }
     // sayfa kapanırken isteğin iptal edilmemesi için keepalive (yalnız 64KB altındaki gövdelerde)
@@ -6973,6 +7319,10 @@ const NET = {
   push(p, v) { return this.req(p, 'POST', v); },
   async loop() { // 12 sn'de bir: kendi durumunu yaz + dünyayı oku
     if (!this.on() || !G || !G._started) { setTimeout(() => this.loop(), 5000); return; }
+    // 🛡️ YÖNETİM YOKLAMASI EN BAŞTA, KENDİ try'ında: aşağıdaki yazmalardan biri ağ hatasıyla
+    // patlarsa bakım/ban okuması ATLANMAMALI — atlansaydı bakım perdesi hiç kalkmazdı.
+    this._tur = (this._tur || 0) + 1;
+    try { await gmPoll(this._tur === 1 || this._tur % 5 === 0); } catch (e) {}
     try {
       await this.put('players/' + this.id, {
         // ⚠️ Kurallar alan uzunluk/aralıklarını doğruluyor — TEK alan taşsa TÜM kayıt reddediliyor
@@ -7018,7 +7368,16 @@ const NET = {
           // Çözüm: okunan postayı sunucudan da düş (kutu tek okuyuculu, kimse mağdur olmaz).
           if (!(G.mail || []).some(x => x.nid === k)) {
             const s = socialMail(m.from, m.body); // 🤝 arkadaşlık istek/kabul/red etiketlerini çöz
-            addMail(m.from, s ? s.subj : m.subj, s ? s.body : m.body, !!s);
+            // 🏛️ DEVLET POSTASI ANA EKRANA DÜŞER (patron): "birine GM olarak posta
+            // yolladığımda 'Devletten gelen çok gizli bir mesaj posta kutunuzda' bildirimi
+            // ana ekrana düşsün." Sıradan oyuncu postası sessiz gelir; devletinki gelmez.
+            // `sys:true` veriyoruz ki engellenen-oyuncu süzgecine takılmasın ve 📢 ikonuyla dursun.
+            const devletMi = String(m.from || '') === DEVLET;
+            addMail(m.from, s ? s.subj : m.subj, s ? s.body : m.body, !!s || devletMi);
+            if (devletMi) {
+              toast('🏛️ Devletten gelen ÇOK GİZLİ bir mesaj posta kutunuzda', 'warn', null, 0, true);
+              beep(320, .14); setTimeout(() => beep(240, .18), 160); // alçak, resmî ton
+            }
             G.mail[0].nid = k;
             if (s && s.req) G.mail[0].req = s.req;           // arkadaşlık yanıt butonları
             if (s && s.allyInv) G.mail[0].allyInv = s.allyInv; // ittifak daveti butonları
@@ -7995,7 +8354,7 @@ window.reportPlayerAsk = nm => {
   const n2 = nm.replace(/'/g, '');
   $('modal').innerHTML = `
     <h2>🚩 Şikayet Et — ${nm}</h2>
-    <p class="sub">Şikayetin yalnız yönetime gider; incelenir, gerekirse hesap kısıtlanır. Asılsız şikayet de ihlaldir.</p>
+    <p class="sub">Şikayetin yalnız Devlete gider; incelenir, gerekirse hesap kısıtlanır. Asılsız şikayet de ihlaldir.</p>
     ${dis ? '<p class="sub" style="color:var(--warn)">Bu şirketi zaten şikayet ettin — incelemesi sırada.</p>' : ''}
     <textarea id="repdetail" placeholder="İstersen ayrıntı yaz: ne gördün, ne zaman, hangi bölgede..." style="width:100%;height:70px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px;font-size:12px"></textarea>
     <button class="bigsell half" ${dis ? 'disabled' : ''} onclick="reportPlayerDo('${n2}','hile')">🎮 Hile / adil olmayan kazanç</button>
@@ -8012,7 +8371,7 @@ window.suggestAsk = () => {
   if (!G || !G.company) return;
   $('modal').innerHTML = `
     <h2>💡 Öneri / İstek</h2>
-    <p class="sub">Oyunda ne görmek istersin, ne rahatsız ediyor? Yaz — doğrudan yönetimin posta kutusuna düşer.</p>
+    <p class="sub">Oyunda ne görmek istersin, ne rahatsız ediyor? Yaz — doğrudan Devletin posta kutusuna düşer.</p>
     <textarea id="sugtext" maxlength="500" placeholder="Önerin ya da isteğin..." style="width:100%;height:110px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px;font-size:13px"></textarea>
     <button class="primary" onclick="suggestSend()">📤 Gönder</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
@@ -8039,7 +8398,7 @@ window.suggestSend = async () => {
       body: JSON.stringify({ _subject: '🎮 EC Öneri — ' + String(G.company || '?').slice(0, 28),
         sirket: String(G.company || '?').slice(0, 28), oyuncuId: String(NET.id || ''), oneri: tx.slice(0, 500) }),
     }).catch(() => {});
-    toast('💡 Önerin yönetime iletildi — teşekkürler!', '', null, 0, true);
+    toast('💡 Önerin Devlete iletildi — teşekkürler!', '', null, 0, true);
     beep(500, .08);
   } catch (e) { toast('⚠️ Gönderilemedi — bağlantını kontrol edip yeniden dene', 'warn'); }
 };
@@ -8058,7 +8417,7 @@ window.reportPlayerDo = async (nm, kind) => {
       reason: ((REASONS[kind] || kind) + (det ? ' — ' + det : '')).slice(0, 200), ts: Date.now(),
     });
     G._reported[nm] = Date.now(); save();
-    toast('🚩 Şikayetin yönetime iletildi — teşekkürler, incelenecek', '', null, 0, true);
+    toast('🚩 Şikayetin Devlete iletildi — teşekkürler, incelenecek', '', null, 0, true);
     beep(500, .08);
   } catch (e) { toast('⚠️ Şikayet gönderilemedi — bağlantını kontrol edip yeniden dene', 'warn'); }
 };
@@ -8073,15 +8432,18 @@ const unreadMail = () => (G.mail || []).filter(m => !m.read).length;
 function seedMail() { // ilk açılışta yönetici duyuruları (sunucuda gerçek admin mesajları)
   if (G._mailSeeded) return;
   G._mailSeeded = true;
-  addMail('⚙️ Yönetim', 'Test sürümüne hoş geldin!', 'Energy Company test sürümündesin. Gördüğün hataları ☰ menüdeki 🐞 Hata Bildir ile iletebilirsin. Sohbet, posta ve arkadaşlık sistemleri açıldı — diğer oyuncularla iletişime geçebilirsin.', true);
-  addMail('⚙️ Yönetim', '🎮 Hafta sonu etkinliği', 'Hafta sonu ve her akşam 21:00 sonrası Frekans Nöbeti mini oyunu açık — ekstra kazanç için menüden oynayabilirsin.', true);
+  addMail(DEVLET, 'Test sürümüne hoş geldin!', 'Energy Company test sürümündesin. Gördüğün hataları ☰ menüdeki 🐞 Hata Bildir ile iletebilirsin. Sohbet, posta ve arkadaşlık sistemleri açıldı — diğer oyuncularla iletişime geçebilirsin.', true);
+  addMail(DEVLET, '🎮 Hafta sonu etkinliği', 'Hafta sonu ve her akşam 21:00 sonrası Frekans Nöbeti mini oyunu açık — ekstra kazanç için menüden oynayabilirsin.', true);
 }
 window.openMailSheet = () => {
   hideSheets(); seedMail();
   // 🚫 engellenen şirketin postası listelenmez — sistem/yönetim postası her zaman görünür
   const ms = (G.mail || []).filter(m => m.sys || !isBlocked(m.from));
+  // ⛔ BANLIYKEN POSTA SALT-OKUNUR: gerekçeyi okur, ama kimseye mesaj atamaz. İtiraz kanalı
+  // ayrı ve açık (💡 Öneri/İstek → yönetim). Yoksa "postam açık" boşluğu spam kapısı olurdu.
+  const banli = $('app').classList.contains('banli');
   $('mail_body').innerHTML = `
-    <button class="bigsell half" onclick="openDM('')">✉️ Yeni Mesaj Yaz</button>
+    ${banli ? '<p class="sub" style="color:var(--warn)">⚖️ Kısıtlı hesap — postanı okuyabilirsin, mesaj gönderemezsin. İtiraz için 👤 profilindeki <b>💡 Öneri/İstek</b> bölümünü kullan.</p>' : '<button class="bigsell half" onclick="openDM(\'\')">✉️ Yeni Mesaj Yaz</button>'}
     ${ms.length ? ms.map(m => `
       <div style="border:1px solid ${m.read ? 'var(--line)' : 'var(--acc2)'};border-radius:10px;padding:8px 10px;margin:6px 0" onclick="readMail(${m.id})">
         <div style="font-size:12.5px;font-weight:${m.read ? '600' : '800'}">${m.sys ? '📢' : '✉️'} ${m.subj}</div>
@@ -8094,7 +8456,7 @@ window.openMailSheet = () => {
           <button onclick="answerFriendReq('${m.req.replace(/'/g, '')}',true)" style="flex:1;padding:9px 4px;border-radius:8px;border:none;background:var(--acc);color:#071018;font-weight:800;font-size:11.5px;cursor:pointer">✅ Kabul Et</button>
           <button onclick="answerFriendReq('${m.req.replace(/'/g, '')}',false)" style="flex:1;padding:9px 4px;border-radius:8px;border:none;background:#2a3346;color:var(--cream);font-weight:800;font-size:11.5px;cursor:pointer">✖️ Reddet</button>
         </div>` : ''}
-        ${m._open ? `<p style="font-size:12px;margin-top:6px">${m.body}</p>${m.sys || m.req ? '' : `<button class="bigsell half" onclick="event.stopPropagation();openDM('${m.from}')">↩️ Yanıtla</button>`}` : ''}
+        ${m._open ? `<p style="font-size:12px;margin-top:6px">${m.body}</p>${m.sys || m.req || banli ? '' : `<button class="bigsell half" onclick="event.stopPropagation();openDM('${m.from}')">↩️ Yanıtla</button>`}` : ''}
       </div>`).join('') : '<p class="sub">Posta kutun boş.</p>'}`;
   showSheet('mailsheet');
 };
@@ -11701,7 +12063,11 @@ const STARTER_TASKS = [
   { id: 'turbin', t: '🌬️ Bir rüzgar türbini kur', ok: () => G.units.some(u => u.kind === 'plant' && PLANT_TYPES[u.t].kind === 'wind'), hint: '🏗️ İnşa\'ya bas → 🌬️ ALTIN ÇERÇEVELİ türbini Satın Al → sonra YANIP SÖNEN karene dokun', el: 'buildbtn' },
   { id: 'satis1', t: '💰 İlk enerji satışını yap', ok: () => G.totalSold >= .01, hint: '🔋 Haritada ALTIN PARLAYAN depona dokun → 💰 SAT butonuna bas', el: null },
   { id: 'ruhsat', t: '📜 Yeni bir kare ruhsatı al', ok: () => Object.keys(G.licenses).length >= 2, hint: 'ℹ️ Bilgi\'ye bas → YANIP SÖNEN kareye dokun — yeni bölgeye ruhsat almak için dokun (📜 ' + fmt(licenseFee('')) + ')', el: 'infobtn' },
-  { id: 'depo', t: '🔋 Yeni bölgene 30 MWh Pil İstasyonu kur', ok: () => Object.keys(G.licenses).slice(1).some(c => G.units.some(u => u.kind === 'store' && baseTypeOf(u.t) === 'bat' && u.cell === c)), hint: '🏗️ İnşa\'ya bas → 🔋 ALTIN ÇERÇEVELİ Pil İstasyonu\'nu Satın Al → YANIP SÖNEN yeni bölgene dokun', el: 'buildbtn' },
+  // 🐞 PATRON 26 Ağu — OYUNCU KAYBETTİREN HATA: "turuncu yanıp sönen bölgeye koymazsa,
+  // yani merkezin olduğu bölgeye koyarsa bu görevi saymıyor. Yoksa yanlış yapar, para
+  // sıfırlanır ve oyuncu oyuna başlayamadan oyunu siler."
+  // 🔧 Görev artık depoyu NEREYE kurduğuna bakmıyor — YENİ bir pil istasyonu kurulduysa sayar.
+  { id: 'depo', t: '🔋 30 MWh Pil İstasyonu kur (yeni bölgen için)', ok: () => tutDepoOk(), hint: '🏗️ İnşa\'ya bas → 🔋 ALTIN ÇERÇEVELİ Pil İstasyonu\'nu Satın Al → YANIP SÖNEN yeni bölgene dokun', el: 'buildbtn' },
   { id: 'arastirma', t: '🧪 İlk araştırmanı başlat', ok: () => G.research && (!!G.research.active || Object.values(G.research.lvl).some(v => v > 0)), hint: '🧪 YUKARIDA yanıp sönen şirket adına dokun → Araştırma bölümünden birini başlat', el: 'coname' },
   { id: 'satis2', t: '💰 Toplam 2 MWh satış yap', ok: () => G.totalSold >= 2, hint: '💰 Üretmeye ve satmaya devam — 2 MWh\'e ulaş (1 dakikada dolar)', el: null },
   // 🏦 PATRON 26 Ağu: "Son bir görev ekle ve oyuncuya günlük banka kredisi çektir yüzde 5'lik
@@ -11723,6 +12089,20 @@ const STARTER_TASKS = [
     // 🔗 Zincir: çekmece kapalıyken TUTAMAK parlar, açılınca içindeki BANKA butonu parlar
     el: () => $('drawer') && $('drawer').classList.contains('open') ? 'drawerbank' : 'drawerhandle' },
 ];
+// 🔋 DEPO GÖREVİ — "yanlış kareye kurdum, görev saymadı" çıkmazının çözümü.
+// ⚠️ "herhangi bir pil istasyonu var mı?" DİYEMEYİZ: oyun zaten 1 pil istasyonuyla başlıyor,
+//    görev daha açılmadan tamamlanmış görünür ve oyuncu depo kurmayı hiç öğrenmezdi.
+//    Bu yüzden görev AÇILDIĞI ANDAKİ sayı damgalanıyor (G._tutDepoBase, tutTick'te) ve
+//    yalnızca o sayının ÜSTÜNE çıkılması aranıyor. Nereye kurduğu önemli değil.
+// ⚠️ İlk koşul (yeni bölgede mi?) KALDI ve önce bakılıyor: damga bir şekilde kaybolsa
+//    (eski kayıt, sıfırlama) doğru yere kuran oyuncu yine de takılmasın.
+const batAdet = () => G.units.filter(u => u.kind === 'store' && baseTypeOf(u.t) === 'bat').length;
+const tutDepoYeniBolgede = () => Object.keys(G.licenses).slice(1)
+  .some(c => G.units.some(u => u.kind === 'store' && baseTypeOf(u.t) === 'bat' && u.cell === c));
+function tutDepoOk() {
+  if (tutDepoYeniBolgede()) return true;
+  return G._tutDepoBase != null && batAdet() > G._tutDepoBase;
+}
 const STARTER_REWARD = 10e6; // patron ayarı: 25M fazlaydı
 const tutStep = () => { for (let i = 0; i < STARTER_TASKS.length; i++) if (!STARTER_TASKS[i].ok()) return i; return -1; };
 // 🔑 Görevi İNDİSLE değil KİMLİKLE sor — araya görev eklenince kod bozulmasın.
@@ -11743,7 +12123,7 @@ function tutTargetUnit(u) { // satış görevlerinde dolu depolar altın parlar
   return (g === 'satis1' || g === 'satis2') && u.kind === 'store' && u.buildDone <= Date.now() && u.stored > .05;
 }
 // her 500 ms: ipucu çubuğu + hedef öğe parlatma + hedef dışı KİLİT + bitiş kontrolü (ödül otomatik)
-const TUT_BAR = ['buildbtn', 'infobtn', 'viewbtn', 'allybtn', 'aucbtn', 'mailbtn', 'drawerbank', 'drawerhandle'];
+const TUT_BAR = ['buildbtn', 'infobtn', 'viewbtn', 'allybtn', 'aucbtn', 'mailbtn', 'notifbtn', 'drawerbank', 'drawerhandle'];
 // 📜 Ruhsat görevi: KOMŞU kare haritada yanıp söner (patron isteği — oyuncu nereye tıklayacağını görsün)
 let tutCellRect = null, tutCellIdCur = null;
 function clearTutCell() { if (tutCellRect) { tutCellRect.remove(); tutCellRect = null; tutCellIdCur = null; } }
@@ -11769,6 +12149,10 @@ function tutClearMarks() { // BUGFIX: infobtn listede yoktu → eğitim bitince 
   setTutCls('coname', 'attn', false);
 }
 function tutTick() {
+  // ⛔ BANLIYKEN EĞİTİM YÖNLENDİRMESİ SUSAR: ikisi de aynı görsel yardımcıları (attn/.tut/ipucu)
+  // kullanıyor — birlikte çalışsalardı tutClearMarks() ban zincirinin parlamasını her karede
+  // söndürürdü. Ban zinciri banTick()'te, ayrı durum makinesiyle yürüyor.
+  if ($('app').classList.contains('banli')) { $('tuthint').classList.remove('show'); clearTutCell(); return; }
   TUT_BAR.forEach(id => $(id).disabled = false);
   $('drawerhandle').disabled = false;
   $('linehandle').disabled = false;
@@ -11793,6 +12177,9 @@ function tutTick() {
     return;
   }
   const task = STARTER_TASKS[i];
+  // 🔋 Depo görevi açıldığı ANDA mevcut pil istasyonu sayısını damgala — görev "bu sayının
+  // üstüne çık" diye ölçülüyor, böylece depoyu MERKEZ bölgesine kuran oyuncu da tamamlıyor.
+  if (task.id === 'depo' && G._tutDepoBase == null) { G._tutDepoBase = batAdet(); save(); }
   // 🔗 ZİNCİRLEME HEDEF (patron 26 Ağu): "önce o çekmece turuncu yanıp sönecek,
   // sonra çekmece açılınca içindeki banka butonu yanıp sönecek, böyle devam edecek."
   // Bu yüzden `el` artık FONKSİYON olabiliyor — o anki duruma göre hedef değişir.
@@ -11963,6 +12350,17 @@ function openCompanySheet() {
          yükleniyor ekranı ile oyunu güncellemek." Haklı — güncelleme oyuncunun işi değil.
          Artık AÇILIŞTA, sunucuya bağlanmadan ÖNCE yapılıyor (bkz. bootGuncelle).
          Buraya düğme geri EKLEME. */ ''}
+    <!-- 📬 POSTA + 💡 ÖNERİ/İSTEK PROFİLE TAŞINDI — iki sebeple:
+         1) ⚖️ Google Play, hesap işlemlerinin (sıfırlama/silme) uygulama içinden BULUNABİLİR
+            olmasını şart koşuyor; üçünü profilin altında toplamak bu şartı karşılıyor.
+         2) ⛔ Ban perdesinde TEK aktif giriş profildir (patron: "belirttiğim butonlar haricinde
+            TÜM butonlar pasife düşecek"). Posta ve itiraz kanalı buradan ulaşılabilir olmasaydı
+            banlı oyuncu gerekçeyi hiç okuyamaz, itiraz da edemezdi.
+         Normal oyunda alt bardaki 📬 Posta düğmesi YERİNDE KALIR — bu ikinci bir yol. -->
+    <div style="display:flex;gap:6px;margin-top:14px">
+      <button id="comp_mailbtn" class="bigsell half" style="margin:0" onclick="openMailSheet()">📬 Posta${unreadMail() ? ' (' + unreadMail() + ')' : ''}</button>
+      <button id="comp_sugbtn" class="bigsell half" style="margin:0" onclick="suggestAsk()">💡 Öneri / İstek</button>
+    </div>
     <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">
       <div style="font-size:11px;color:var(--dim)">Sürüm: <b>${BUILD_TAG}</b></div>
     </div>
@@ -12079,9 +12477,11 @@ window.startResearch = key => {
 };
 // HESABI SIFIRLA (patron isteği): açılışta soru yok — sıfırlama burada, çift onaylı
 window.resetAccountAsk = () => {
+  const banli = $('app').classList.contains('banli');
   $('modal').innerHTML = `
     <h2>⚠️ Hesabı Sıfırla — Emin misin?</h2>
     <p style="color:var(--danger)"><b>TÜM ilerlemen SİLİNİR:</b> şirketin, santrallerin, paran, ruhsatların ve <b>satın alımların dahil</b> her şey kaybolur. Bu işlem GERİ ALINAMAZ.</p>
+    ${banli ? `<p class="sub">⚖️ Varlıklarına el konulmuş durumda. Sıfırlarsan <b>kısıtlama kalkar ve sıfırdan başlarsın</b> — ama şirketin geri gelmez.<br>Bir yanlışlık olduğunu düşünüyorsan önce <b>💡 Öneri/İstek</b>ten itiraz et: haklı bulunursan varlıkların <b>aynen iade edilir</b>.</p>` : ''}
     <button class="primary" style="background:var(--danger);color:#fff" onclick="resetAccount()">🗑️ Evet, Her Şeyi Sil ve Baştan Başla</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
@@ -12090,12 +12490,16 @@ window.resetAccount = async () => {
   // ⚖️ Google Play, hesap açtıran uygulamalarda VERİ SİLME yolu şart koşuyor ve gizlilik
   // politikamız "hepsi silinir" diyor — o söz tutulmalı. players/ düğümü (canlı durum,
   // şirket adı, ofis/ruhsat sayıları) eskiden silinmiyordu, oyuncu adı listelerde kalıyordu.
+  // ⚖️ BAN → SIFIRLAMA: ban damgalanmadan silersek oyuncu sıfırdan başlayıp YİNE ban ekranına
+  // düşer (ölü döngü) — ban kaydı uid'ye bağlı, sıfırlama uid'yi değiştirmiyor. Damga ÖNCE
+  // atılır: aşağıda G=null olunca ve sayfa yenilenince bu iş için ikinci bir şans yok.
+  const del0 = NET.on() ? banSifirlaDamgala().catch(() => {}) : null;
   const del = NET.on() ? NET.req('saves/' + NET.id, 'DELETE').catch(() => {}) : null; // bulut kaydı da silinir
   const del2 = NET.on() ? NET.req('units/' + NET.id, 'DELETE').catch(() => {}) : null;
   const del3 = NET.on() ? NET.req('players/' + NET.id, 'DELETE').catch(() => {}) : null;
   G = null; // KRİTİK: otokayıt ve sayfa-kapanış kaydı sıfırlamayı geri yazmasın (telefon testi bug'ı)
   localStorage.removeItem(SAVE_KEY);
-  try { await Promise.race([Promise.all([del, del2, del3]), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
+  try { await Promise.race([Promise.all([del0, del, del2, del3]), new Promise(r => setTimeout(r, 3500))]); } catch (e) {}
   location.reload();
 };
 function renderMenu() {
@@ -12180,7 +12584,11 @@ function renderHUD() {
   const um = unreadMail();
   $('mailbtn').classList.toggle('unread', um > 0);
   $('mailbtn').textContent = um > 0 ? '📬 ' + um : '📬 Posta';
+  const ub = bildirimOkunmamis();
+  $('notifbtn').classList.toggle('unread', ub > 0);
+  $('notifbtn').textContent = ub > 0 ? '🔔' + (ub > 99 ? '99+' : ub) : '🔔';
   tutTick(); // tutorial yönlendirmesi (hedef parlatma + ipucu çubuğu)
+  gmTick();  // 🛡️ bakım sayacı + ⛔ ban zincirleme yönlendirmesi (tutTick'ten SONRA gelmeli)
   const o = activeOffer();
   // 📅 hafta sonu 2 etkinlik var — bandda ikisi de ayrı ayrı görünür
   const evTxt = todayEvents().map(e => `<b${e.weekend ? ' style="color:var(--gold)"' : ''}>${e.ico} ${e.nm}</b> — ${e.d}`).join(' · ');
@@ -12553,6 +12961,7 @@ $('infobtn').addEventListener('click', () => setMode(MODE === 'info' ? null : 'i
 $('modecancel').addEventListener('click', () => { PENDING = null; setMode(null); });
 $('viewbtn').addEventListener('click', () => { modKapat(); openViewSheet(); });
 $('mailbtn').addEventListener('click', () => { modKapat(); const open = $('mailsheet').classList.contains('show'); hideSheets(); if (!open) openMailSheet(); });
+$('notifbtn').addEventListener('click', () => { if (!G || !G._started) return; modKapat(); const open = $('notifsheet').classList.contains('show'); hideSheets(); if (!open) openNotifSheet(); });
 $('aucbtn').addEventListener('click', () => { modKapat(); const open = $('aucsheet').classList.contains('show'); hideSheets(); if (!open) { seedAucMarket(); openAucSheet(); } });
 $('chathandle').addEventListener('click', () => {
   if (!G || !G._started) return;
@@ -12562,6 +12971,17 @@ $('chathandle').addEventListener('click', () => {
 window.closeChat = () => { $('chatpanel').classList.remove('open'); $('chathandle').style.display = ''; };
 $('allybtn').addEventListener('click', () => { modKapat(); const open = $('allysheet').classList.contains('show'); hideSheets(); if (!open) openAllySheet(); });
 $('coname').addEventListener('click', () => { if (!G || !G._started) return; const open = $('companysheet').classList.contains('show'); hideSheets(); if (!open) openCompanySheet(); });
+// 🛡️ YÖNETİM PERDESİ düğmesi: sürümde yenile, banda perdeyi kapat ve zinciri başlat.
+$('gmv_btn').addEventListener('click', () => {
+  const act = $('gmv_btn').dataset.act;
+  if (act === 'reload') { location.reload(); return; }
+  if (act !== 'ban' || !G) return;
+  G._banAdim = 1;            // 1 = 👤 profil parlıyor  (2 = 📬 posta parlıyor · 3 = bitti)
+  G._banGoruldu = true;
+  save(); gmRender();
+});
+// ⛔ Şerit: ikinci ve sonraki girişlerde perde yerine bu görünür — dokununca zincir yeniden başlar.
+$('banstrip').addEventListener('click', () => { if (!G || !G._started) return; G._banAdim = 1; save(); hideSheets(); });
 function openMarket() { const open = $('pricesheet').classList.contains('show'); hideSheets(); if (!open) { renderPriceSheet(); showSheet('pricesheet'); } }
 function openTasks() { const open = $('menusheet').classList.contains('show'); hideSheets(); if (!open) { renderMenu(); showSheet('menusheet'); } }
 function goHome() { if (map && G && G.il) { try { map.flyTo(IL_COORD[G.il], 11); } catch (e) { map.setView(IL_COORD[G.il], 11); } } }
