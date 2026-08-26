@@ -480,9 +480,9 @@
   (function () {
     // 🔢 GÖRSEL SÜRÜMÜ — `deploy.js` yalnız index.html'e BUILD_TAG damgalıyor; görseller
     // WebView önbelleğinde bayat kalabilir. Açılış fotoğrafları DEĞİŞTİĞİNDE bu sayıyı
-    // bir artır, telefonlar yenisini çeksin. (27 Ağu: v2 — gömülü siyah bantlar kırpıldı,
-    // rüzgar eski tek türbin fotoğrafına döndü, jeotermale yıldız eklendi.)
-    var SV = '?v=2';
+    // bir artır, telefonlar yenisini çeksin. (27 Ağu v2: gömülü bantlar kırpıldı, rüzgar eski
+    // fotoğrafa döndü, jeotermale yıldız eklendi. v3: 5 görsel 9:16 olarak YENİDEN ÜRETİLDİ.)
+    var SV = '?v=3';
     var t = ['solar', 'wind', 'coal', 'gas', 'hydro', 'geo', 'nuke'];
     for (var i = t.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), k = t[i]; t[i] = t[j]; t[j] = k; }
     var sira = t.map(function (x) { return 'img/splash-' + x + '.webp' + SV; }).concat(['img/splash.webp' + SV]);
@@ -599,7 +599,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 21:45) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 22:13) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -762,7 +762,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 21:45)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 22:13)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
