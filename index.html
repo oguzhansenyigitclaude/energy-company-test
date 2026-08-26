@@ -519,7 +519,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 14:29) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 16:46) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -641,7 +641,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 14:29)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 16:46)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -8336,10 +8336,14 @@ const krediKalan = () => krediVar() ? G.loan.borc - G.loan.odenen : 0;
 // Kredi ancak GERÇEKTEN sıkışıkken açılır: ihtiyaç var ve kasan onu karşılamıyor
 function krediUygun() {
   if (!G || krediVar()) return false;
-  // 🚫 İSTİSMAR KAPISI KAPALI: açık yatırım pozisyonu varken kurtarma kredisi verilmez.
-  // Yoksa oyuncu parasını borsaya park eder, "kasam boş" deyip bedava kredi alırdı.
-  // Gerçek bankada da önce kendi varlığını nakde çevirmen istenir.
-  if (invVar()) return false;
+  // 🔒 TEK KREDİ KURALI (patron 26 Ağu, 20. tur): "oyuncu krediyi kapatmadan diğerini çekemez."
+  // Aynı kural acilLimit() ve yatLimit() içinde ZATEN vardı; yalnız kurtarma kredisinde eksikti,
+  // yani açık acil nakdi ya da büyüme kredisi olan oyuncu üstüne bir de kurtarma kredisi
+  // alabiliyordu. Üç kredinin işi ayrıdır ve üst üste binmezler:
+  //   ⚡ acil nakit  = "ufak para eksik kaldı" — küçük, pahalı, tek seferde kapanır
+  //   🏗️ büyüme    = planlı yatırım, taksitli
+  //   🏦 kurtarma  = BATMAKTAN koruyan can halatı — para kasaya girmez, doğrudan tamire gider
+  if (yatVar() || acilVar()) return false;
   const n = krediIhtiyaci();
   return n > 0 && G.cash < n;
 }
@@ -8590,6 +8594,16 @@ window.openBank = (tab) => {
     h += '<p class="sub" style="margin-top:0">Tesislerinin bakımı tam ve yakıtı yerinde — <b>kredi gerekmiyor.</b></p>'
       + (deposuz ? '<p class="sub" style="color:var(--warn)">🛢️ <b>Ama yakıt deposu sorunun var.</b> Yakıtsız duran santralin var ve o yakıtı koyacak <b>boş depon yok</b>. Kurtarma kredisi yalnız <b>depoya sığan</b> yakıtı satın alabilir — bu yüzden bu masraf krediye girmiyor.<br>Yapman gereken: önce bir <b>yakıt deposu kur</b>. Nakdin yetmiyorsa ⚡ <b>Acil Nakit</b> sekmesini kullan; o para kasana girer ve depoyu kurabilirsin.</p>' : '')
       + '<p class="sub">Kurtarma kredisi yalnız <b>gerçekten sıkıştığında</b> açılır: bakım ya da yakıt masrafını karşılayamadığın anda. Parası doğrudan tamire ve ikmale gider, eline geçmez.</p>';
+  } else if (yatVar() || acilVar()) {
+    // 🔒 TEK KREDİ KURALI — sebebi açıkça söyle, yoksa "kredi gerekmiyor" yalan olurdu.
+    const hangi = acilVar() ? '⚡ acil nakit' : '🏗️ büyüme kredisi';
+    const kalan = acilVar() ? acilBorc() : G.kredi.borc;
+    h += '<p class="sub" style="margin-top:0">Açık bir <b>' + hangi + '</b> borcun var: <b class="neg">' + fmt(kalan) + '</b></p>'
+      + '<p class="sub">Bankamız aynı anda <b>tek kredi</b> açar — önce mevcut borcunu kapat, sonra yeni kredi konuşulur. '
+      + 'Üç kredinin işi ayrıdır ve üst üste binmezler.</p>'
+      + '<p class="sub">' + (acilVar()
+        ? '⚡ Acil nakit küçük ve kısa vadelidir — <b>tek seferde</b> kapatılır. Kapatınca kurtarma kredisi kapısı açılır.'
+        : '🏗️ Büyüme kredisi taksitle kapanır. Son taksit ödendiğinde kurtarma kredisi kapısı açılır.') + '</p>';
   } else if (!krediUygun()) {
     h += '<p class="sub" style="margin-top:0">Bekleyen masrafın <b>' + fmt(ihtiyac) + '</b>, kasanda <b>' + fmt(G.cash) + '</b> var — <b>kendi paranla ödeyebilirsin.</b></p>'
       + '<p class="sub">Kurtarma kredisi yalnız kasan yetmediğinde açılır. Bankaya faiz ödemek yerine kendi paranı kullan.</p>';
@@ -8734,6 +8748,8 @@ const ACIL_NOT_CEZA = 35;       // kredi notuna vurulan darbe
 
 const acilVar = () => !!(G && G.acil && G.acil.anapara > 0);
 // Biriken faiz oranı. Kurtarma kredisi açıkken DONDURULUR (büyüme kredisiyle aynı moratoryum).
+// ⚠️ 20. turdan sonra bu dal YALNIZ eski kayıtlarda geçerlidir — tek kredi kuralı artık
+// ikisinin aynı anda açılmasını engelliyor. Bkz. krediUygun().
 function acilFaizOran() {
   if (!acilVar()) return 0;
   const A = G.acil;
@@ -8980,7 +8996,11 @@ function yatIsle() {
   if (K.bas > bugun) K.bas = bugun;
   if (K.sonIslem > bugun) K.sonIslem = bugun;
   if (K.sonIslem >= bugun) return;
-  // 🧊 MORATORYUM: kurtarma kredisi açıkken büyüme kredisi DONDURULUR. Oyuncu zaten
+  // 🧊 MORATORYUM — ARTIK YALNIZ ESKİ KAYITLAR İÇİN (20. tur):
+  // "Tek kredi kuralı" (krediUygun) artık iki kredinin aynı anda açılmasını ENGELLİYOR, yani
+  // yeni oyunda bu dala hiç girilmez. AMA ÖNCEKİ sürümde ikisi birden açılmış kayıtlar
+  // canlıda var — onlar ezilmesin diye moratoryum KALIYOR. SİLME.
+  // Kurtarma kredisi açıkken büyüme kredisi DONDURULUR. Oyuncu zaten
   // batmış durumda; üstüne gecikme zammı bindirmek onu oyundan atardı. Gerçek bankalar
   // da yeniden yapılandırmada ödeme tatili verir.
   // ⚠️ SIRA ÖNEMLİ: önce bas ötelenir, sonra sonIslem güncellenir. Ters sırada yazılırsa
