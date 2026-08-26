@@ -470,7 +470,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:33) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-26 11:41) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -592,7 +592,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:33)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-26 11:41)'; // deploy.js yayında tarih damgası ekler
 // ⚡ MARKA ŞİMŞEĞİ — uygulama simgesiyle BİREBİR aynı çokgen (tools/ikon-uret.js ile ortak).
 // Önce ⚡ emojisiydi; emoji her cihazda farklı çizilir (Windows turuncu, Android sarı-mavi),
 // simge olacaksa her yerde aynı görünmeli. Bu yüzden kendi çizimimiz.
@@ -2215,7 +2215,36 @@ async function checkUpdate(zorla) {
     location.replace(location.pathname + '?v=' + encodeURIComponent(v) + '&r=' + Date.now());
   } catch (e) {}
 }
-checkUpdate();
+// 🔄 AÇILIŞ GÜNCELLEMESİ (patron 26 Ağu: "Bu işlemi oyuncuya bırakamazsın. Oyun açılırken
+// güncelleme yükleniyor ekranı ile oyunu güncellemek. İlk giriş 'sunucuya bağlanıyor' yazan
+// yazı yerine 'Güncelleniyor' sonrası 'sunucuya bağlanıyor' gelsin.")
+// Sunucuya BAĞLANMADAN ÖNCE çalışır; oyuncu hiçbir şey yapmadan tazelenir.
+// Dönüş: true = sayfa yenilenecek (açılışı sürdürme), false = güncel, devam et.
+async function bootGuncelle() {
+  if (location.protocol === 'file:') return false;
+  try {
+    bootStep(30, 'Güncelleme denetleniyor…');
+    let r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).catch(() => null);
+    // 📦 Gömülü pakette version.json yoktur — canlı adrese sor
+    if (!r || !r.ok) r = await fetch(CANLI_ADRES + 'version.json?t=' + Date.now(), { cache: 'no-store' }).catch(() => null);
+    if (!r || !r.ok) return false;              // sürüm sorulamadı — oyunu bekletme
+    const v = (await r.json()).build;
+    if (!v || v === BUILD_TAG) {                // güncel
+      sessionStorage.removeItem('ec_upd'); sessionStorage.removeItem('ec_upd_n');
+      return false;
+    }
+    // ⚠️ SONSUZ DÖNGÜ KALKANI: iki denemede tazelenemediyse oyunu kilitleme, eskiyle devam et.
+    const kez = sessionStorage.getItem('ec_upd') === v ? +(sessionStorage.getItem('ec_upd_n') || 0) : 0;
+    if (kez >= 2) return false;
+    sessionStorage.setItem('ec_upd', v); sessionStorage.setItem('ec_upd_n', String(kez + 1));
+    bootStep(45, '🔄 Güncelleniyor…');
+    try { save(); } catch (e) {}
+    await new Promise(r2 => setTimeout(r2, 500));  // yazı görünsün
+    // ⚠️ &r= zaman damgası ŞART: yalnız ?v= ile bazı WebView'lar aynı önbellek kaydını veriyor
+    location.replace(location.pathname + '?v=' + encodeURIComponent(v) + '&r=' + Date.now());
+    return true;
+  } catch (e) { return false; }
+}
 // APK'da uygulama simgeden geri açılınca sayfa YENİDEN YÜKLENMEZ — o yüzden öne gelince tekrar bak
 document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(checkUpdate, 1200); });
 // ⏱️ DÜZENLİ KONTROL: oyuncu saatlerce oyunu açık bıraksa da yeni sürümü yakalasın
@@ -10821,6 +10850,14 @@ function openCompanySheet() {
     </table>
     ${brandPanelHTML()}
     ${accountRowHTML()}
+    ${/* ⚠️ BURAYA "Güncellemeyi Denetle" DÜĞMESİ KONDU VE KALDIRILDI (patron 26 Ağu):
+         "Ne düğmesi bu, bu işlemi oyuncuya bırakamazsın. Oyun açılırken güncelleme
+         yükleniyor ekranı ile oyunu güncellemek." Haklı — güncelleme oyuncunun işi değil.
+         Artık AÇILIŞTA, sunucuya bağlanmadan ÖNCE yapılıyor (bkz. bootGuncelle).
+         Buraya düğme geri EKLEME. */ ''}
+    <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">
+      <div style="font-size:11px;color:var(--dim)">Sürüm: <b>${BUILD_TAG}</b></div>
+    </div>
     <button class="bigsell half" onclick="resetAccountAsk()" style="color:var(--danger);margin-top:8px">⚠️ Hesabı Sıfırla</button>`;
   showSheet('companysheet');
 }
@@ -11736,7 +11773,12 @@ function bootDone() {
 })();
 
 const BOOT_AT = Date.now();
-NET.init().then(async () => { // online sunucu (net-config.json varsa) — yoksa simülasyon sürer
+// 🔄 ÖNCE GÜNCELLE, SONRA SUNUCUYA BAĞLAN (patron sırası). Güncelleme varsa sayfa
+// yenileneceği için açılışı sürdürmüyoruz — yeni kopya baştan başlar.
+bootGuncelle().then(yenilenecek => {
+  if (yenilenecek) return;
+  bootStep(52, 'Sunucuya bağlanılıyor…');
+  NET.init().then(async () => { // online sunucu (net-config.json varsa) — yoksa simülasyon sürer
   bootStep(58, NET.on() ? 'Sunucuya bağlanıldı' : 'Çevrimdışı mod');
   // Sahne en az 1.6 sn görünsün — yoksa "görsel şölen" göz kırpmasına dönüyor
   const bekle = Math.max(0, 1600 - (Date.now() - BOOT_AT));
@@ -11762,6 +11804,7 @@ NET.init().then(async () => { // online sunucu (net-config.json varsa) — yoksa
   bootDone();
   wizardStart();
 }).catch(() => { bootDone(); wizardStart(); }); // açılış ekranı ASLA takılı kalmasın
+}); // ← bootGuncelle().then kapanışı: güncelleme yoksa açılış buradan sürer
 setTimeout(bootDone, 12000); // son emniyet: ağ ölse bile 12 sn sonra oyuna gir
 requestAnimationFrame(frame);
 // debug/test
