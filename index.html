@@ -391,10 +391,11 @@
      ekranına 0,45 sn solma. (Dairesel açılım animasyonu DENENDİ ve patron kararıyla KALDIRILDI —
      "animasyon kötü durdu". Geri ekleme.) Zemin fotoğraf yüklenene kadarki an için: gece siyah,
      gündüz krem. object-fit:cover → her ekran oranında tam kaplar; logo ortada, kırpma kenarlardan. */
-  #cgslogo{position:fixed;inset:0;z-index:10000;background:#000;transition:opacity .45s}
+  #cgslogo{position:fixed;inset:0;z-index:10000;background:#000;transition:opacity .5s}
   #cgslogo.krem{background:#f3ead8}
   #cgslogo.gone{opacity:0;pointer-events:none}
-  #cgslogo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  #cgslogo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s}
+  #cgslogo img.on{opacity:1} /* fotoğraf PAT diye değil, 0,3 sn yumuşak belirir */
   #boot{position:fixed;inset:0;z-index:9999;background:var(--bg);overflow:hidden;transition:opacity .55s}
   #boot.gone{opacity:0;pointer-events:none}
   #bootscene{position:absolute;inset:0}
@@ -414,6 +415,12 @@
   #bootbrand .tag{font-size:clamp(9.5px,2.7vw,12px);font-weight:700;letter-spacing:2.2px;color:#ffc24a;text-shadow:0 2px 10px #000c}
   @keyframes bootin{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
   #bootfoot{width:100%;display:flex;flex-direction:column;align-items:center;animation:bootin .7s .15s ease both}
+  /* "YÜKLENİYOR" — çubuğun üstünde belirgin başlık; üç nokta sırayla yanıp söner (oyun donmadı hissi) */
+  #bootloading{font-size:14px;font-weight:900;letter-spacing:.22em;color:#fff;text-shadow:0 1px 10px #000;margin-bottom:9px}
+  #bootloading span{animation:bootnokta 1.2s infinite}
+  #bootloading span:nth-child(2){animation-delay:.2s}
+  #bootloading span:nth-child(3){animation-delay:.4s}
+  @keyframes bootnokta{0%,60%,100%{opacity:.15}30%{opacity:1}}
   #bootbar{width:min(340px,84%);height:5px;border-radius:4px;background:#ffffff26;overflow:hidden}
   #bootfill{display:block;height:100%;width:4%;border-radius:4px;background:linear-gradient(90deg,#ffc24a,#ff8a1f);
     transition:width .45s ease;box-shadow:0 0 10px #ff8a1f99}
@@ -477,16 +484,24 @@
 <script>
 (function () {
   var LSV = '?v=1';                                     // ⚠️ logo görselleri DEĞİŞİNCE elle artır (splash SV deseni)
+  var t0 = Date.now();                                   // süre AÇILIŞTAN sayılır — indirme süresi 2 sn'nin İÇİNDE
   var h = new Date().getHours();
   var gece = (h >= 18 || h < 6);
   var img = document.getElementById('cgslogoimg');
   var perde = document.getElementById('cgslogo');
   perde.classList.add(gece ? 'gece' : 'krem');           // gece: siyah zemin · gündüz: krem zemin
   var kalkti = false;
-  var kalk = function () { if (kalkti) return; kalkti = true; perde.classList.add('gone'); setTimeout(function () { perde.remove(); }, 600); };
+  var kalk = function () {
+    if (kalkti) return;
+    kalkti = true;
+    window.CGS_LOGO_KALKIS = Date.now();                 // bootDone bunu okur: yükleme ekranı bundan sonra ≥2 sn görünür
+    perde.classList.add('gone');
+    setTimeout(function () { perde.remove(); }, 650);
+  };
   img.onerror = kalk;                                    // görsel gelmezse bekletme yok
-  img.onload = function () { setTimeout(kalk, 3000); };  // patron kuralı: fotoğraf DİREKT görünür, 3 sn kalır
-  setTimeout(kalk, 6000);                                // emniyet: ağ ne yaparsa yapsın 6 sn'de kalk
+  // patron kuralı: TOPLAM ~2 sn logo (telefonda indirme uzarsa toplam şişmesin — kalan süre kadar kalır)
+  img.onload = function () { img.classList.add('on'); setTimeout(kalk, Math.max(600, 2000 - (Date.now() - t0))); };
+  setTimeout(kalk, 4000);                                // emniyet: ağ ne yaparsa yapsın 4 sn'de kalk
   img.src = 'img/' + (gece ? 'logo-gece' : 'logo-gunduz') + '.webp' + LSV;
 })();
 </script>
@@ -544,6 +559,8 @@
       <div class="tag">GERÇEK DÜNYA · GERÇEK ENERJİ</div>
     </div>
     <div id="bootfoot">
+      <!-- 🏢 patron: "yükleniyor yazısı koy — insanlar oyun açılmıyor zanneder" -->
+      <div id="bootloading">YÜKLENİYOR<span>.</span><span>.</span><span>.</span></div>
       <div id="bootbar"><i id="bootfill"></i></div>
       <div id="bootstep">Motor hazırlanıyor…</div>
       <div id="boottip"></div>
@@ -629,7 +646,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-27 00:53) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-27 01:01) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -792,7 +809,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-27 00:53)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-27 01:01)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -840,6 +857,7 @@ en: {
   '— İl seç —': '— Choose a province —',
   '— Bölge seç —': '— Choose a region —',
   'gün': 'day',
+  'YÜKLENİYOR': 'LOADING',
   'Bölge': 'Region',
   'Nüfus': 'Population',
   'talep': 'demand',
@@ -905,6 +923,9 @@ en: {
   for (const [id, k] of Object.entries(kimlikler)) { const el = $(id); if (el) el.textContent = CEV(k); }
   const ilkSecenek = $('wizselect') && $('wizselect').querySelector('option');
   if (ilkSecenek) ilkSecenek.textContent = CEV('— Ülke seç —');
+  // "YÜKLENİYOR" başlığı: içindeki nokta span'ları korunur — yalnız ilk metin düğümü çevrilir
+  const by = $('bootloading');
+  if (by && by.firstChild && by.firstChild.nodeType === 3) by.firstChild.nodeValue = CEV('YÜKLENİYOR');
   // Sayfa başlıkları: <h3>BAŞLIK<span class="x">✕</span></h3> — YALNIZ ilk metin düğümü
   // değiştirilir, ✕ kapatma düğmesi ve iç düğmeler (posta çöp kutusu vb.) DOKUNULMAZ kalır.
   document.querySelectorAll('.sheet h3, #navtitle, #linehead > span:first-child, #chathead > b').forEach(el => {
@@ -13840,6 +13861,12 @@ function bootStep(pct, txt) {
 }
 function bootDone() {
   if (location.search.includes('acilis')) return; // ?acilis — sahneyi incelemek için açık tut (yenile = yeni sahne)
+  // 🏢 PATRON AKIŞI: "2 sn logo + 2 sn yükleme ekranı". Eskiden yükleme, logo perdesinin
+  // ARKASINDA bitiyordu — perde kalkınca oyuncu yükleme ekranını hiç görmeden oyuna düşüyordu.
+  // Artık: logo perdesi kalkmadan boot kapanmaz; kalkıştan sonra da en az 2 sn görünür.
+  if (!window.CGS_LOGO_KALKIS && $('cgslogo')) { setTimeout(bootDone, 150); return; } // perde hâlâ ekranda — kalkışını bekle
+  const kalan = window.CGS_LOGO_KALKIS ? 2000 - (Date.now() - window.CGS_LOGO_KALKIS) : 0;
+  if (kalan > 0) { setTimeout(bootDone, kalan + 30); return; }
   if (!BOOT_ON) return;
   BOOT_ON = false;
   bootStep(100, 'Hazır ⚡');
