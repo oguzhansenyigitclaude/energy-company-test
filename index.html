@@ -387,6 +387,11 @@
   /* AÇILIŞ EKRANI — patron: "2010 oyunu gibi duruyor, tam ekrana sığan güzel bir tasarım istiyorum".
      Sahne artık 520px'lik bir kart değil, TÜM EKRANI kaplıyor; marka üstte, yükleme altta,
      ikisinin arkasında okunabilirlik için karartma perdesi var. */
+  /* 🏢 CGS ŞİRKET LOGOSU PERDESİ: açılışta 2 sn tam ekran logo, sonra yükleme ekranına yumuşak geçiş.
+     object-fit:cover → görsel (1080×2297, ~9:19) her ekran oranında tam kaplar; logo ortada, kırpma kenarlardan. */
+  #cgslogo{position:fixed;inset:0;z-index:10000;background:#0d1626;transition:opacity .45s}
+  #cgslogo.gone{opacity:0;pointer-events:none}
+  #cgslogo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   #boot{position:fixed;inset:0;z-index:9999;background:var(--bg);overflow:hidden;transition:opacity .55s}
   #boot.gone{opacity:0;pointer-events:none}
   #bootscene{position:absolute;inset:0}
@@ -461,6 +466,26 @@
 </style>
 </head>
 <body>
+<!-- 🏢 CGS ŞİRKET LOGOSU (patron istedi): açılışta 2 sn logo → yükleme ekranı.
+     18:00-06:00 gece görseli, 06:00-18:00 gündüz görseli. EK BEKLEME DEĞİL: yükleme altta
+     paralel sürüyor, bu yalnız bir PERDE. Görsel yoksa (404/ilk çevrimdışı açılış) perde
+     ANINDA kalkar — "açılış ASLA takılı kalmasın" ilkesi burada da geçerli. -->
+<div id="cgslogo"><img id="cgslogoimg" alt=""></div>
+<script>
+(function () {
+  var LSV = '?v=1';                                     // ⚠️ logo görselleri DEĞİŞİNCE elle artır (splash SV deseni)
+  var h = new Date().getHours();
+  var img = document.getElementById('cgslogoimg');
+  var perde = document.getElementById('cgslogo');
+  var kalkti = false;
+  var kalk = function () { if (kalkti) return; kalkti = true; perde.classList.add('gone'); setTimeout(function () { perde.remove(); }, 600); };
+  img.onerror = kalk;                                    // görsel gelmezse bekletme yok
+  img.onload = function () { setTimeout(kalk, 2000); };  // patron kuralı: 2 sn ekranda kal
+  setTimeout(kalk, 5000);                                // emniyet: ağ ne yaparsa yapsın 5 sn'de kalk
+  img.src = 'img/' + ((h >= 18 || h < 6) ? 'logo-gece' : 'logo-gunduz') + '.webp' + LSV;
+})();
+</script>
+
 <!-- AÇILIŞ EKRANI (patron: "her seferinde farklı bir görsel şölen") — sahne JS ile çizilir -->
 <div id="boot">
   <div id="bootscene"></div>
@@ -599,7 +624,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-26 23:55) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-27 00:46) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -762,7 +787,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-26 23:55)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-27 00:46)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
