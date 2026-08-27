@@ -646,8 +646,8 @@
       <div id="modrow"></div>
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
-      <div class="fairline">✅ Gördüğün fiyat = aldığın para · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-27 08:40) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $500M kazanca kadar üretim ×10 (tam oyunda $5B)<br>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-27 08:45) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -810,7 +810,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-27 08:40)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-27 08:45)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -844,6 +844,7 @@ window.dilSec = l => {
 const SOZLUK = {
 en: {
   // ── karşılama + kuruluş sihirbazı ──
+  'Sürüm': 'Version',
   'Gerçek dünya haritasında enerji imparatorluğunu kur.': 'Build your energy empire on a real world map.',
   'Adil · Şeffaf · Günde ~2 saat yeter.': 'Fair · Transparent · ~2 hours a day is enough.',
   '🌍 Yeni Oyun — Haritadan Başla': '🌍 New Game — Start from the Map',
@@ -3285,6 +3286,12 @@ function step(dtMin, silent, atMin) {
 // ── Satış (şeffaf) — depoya dokun, sat ──
 // 🎬 Reklam bonusu: SADECE elle yapılan dolu depo satışında +%15, günde 5 hak (oto-satışta yok — aktifliği ödüllendirir)
 const AD_BONUS = 1.15, AD_MAX = 5;
+// 🎁 İLK 1 SAAT REKLAMSIZ (patron 27 Ağu: "insanları hemen korkutmayalım"): yeni oyuncuda
+// reklam düğmeleri ilk 1 saat reklam AKIŞI yerine ödülü DOĞRUDAN verir ("Reklamı Geç" gibi).
+// Ölçüt G.founded (kuruluş anı) — starterBoost/BOOST penceresi DEĞİL, o ayrı mekanizma.
+// Süre dolunca normal akış kendiliğinden döner; eski kayıtlarda founded eski → hiç açılmaz.
+const ilkSaatReklamsiz = () => { const dt = Date.now() - ((G && G.founded) || 0); return dt >= 0 && dt < 3600e3; };
+const adVerb = () => ilkSaatReklamsiz() ? '🎬 Reklamı Geç' : '🎬 Reklam İzle';
 function adAvail() {
   const key = new Date().toDateString();
   if (G.adDate !== key) { G.adDate = key; G.adUses = 0; }
@@ -3294,9 +3301,9 @@ window.sellUnitAd = id => {
   const u = G.units.find(x => x.id === id);
   if (!u || adAvail() <= 0 || u.stored < STORE_TYPES[u.t].cap * .9) return;
   if (u.disch) { toast('⚡ Bu depo zaten boşaltılıyor', 'warn'); return; }
-  if (adFreeActive()) { // VIP: reklam İZLETMEDEN aynı bonus
+  if (adFreeActive() || ilkSaatReklamsiz()) { // VIP ya da ilk 1 saat: reklam İZLETMEDEN aynı bonus
     G.adUses = (G.adUses || 0) + 1;
-    toast('🚫 VIP Reklamsız: +%15 bonus reklamsız uygulandı', '');
+    toast(adFreeActive() ? '🚫 VIP Reklamsız: +%15 bonus reklamsız uygulandı' : '🎁 Yeni oyuncu jesti — ilk 1 saat reklamsız: +%15 bonus doğrudan uygulandı', '');
     startDischarge(id, 1, AD_BONUS);
     return;
   }
@@ -3321,6 +3328,7 @@ window.sellUnitAd = id => {
 // VIP Reklamsız kuralı burada da geçerli: reklam izletmeden ödül uygulanır.
 function adPlay(mesaj, cb) {
   if (adFreeActive()) { toast('🚫 VIP Reklamsız: ödül reklamsız uygulandı', ''); cb(); return; }
+  if (ilkSaatReklamsiz()) { toast('🎁 Yeni oyuncu jesti — ilk 1 saat reklamsız: ödül doğrudan uygulandı', ''); cb(); return; }
   let t = 3;
   $('modal').innerHTML = `<h2>🎬 Reklam (simülasyon)</h2><p style="text-align:center;font-size:40px" id="adcnt">3</p><p style="text-align:center">Gerçek oyunda burada ödüllü reklam oynar — ${mesaj}</p>`;
   $('overlay').classList.add('show');
@@ -3347,7 +3355,7 @@ window.adFinishBuild = id => {
     if ($('unitsheet').classList.contains('show') && window.__lastUnit === id) openUnitSheet(id);
   });
 };
-const adFinishBtnHTML = u => `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="adFinishBuild(${u.id})">🎬 Reklam İzle — İnşaatı HEMEN Bitir</button>`;
+const adFinishBtnHTML = u => `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="adFinishBuild(${u.id})">${adVerb()} — İnşaatı HEMEN Bitir</button>`;
 // ═══ 💠 İMTİYAZ PUANI + İMTİYAZ MAĞAZASI (patron tasarımı) ═══
 // Oyunun "elması" — ama GÜÇ SATMAZ sözü korunur: oyun parası, santral, lisans, kapasite asla.
 // Kazanma: 🏛️ Devlet Katkı Programı sıralaması + ölçek terfileri + haftalık görev.
@@ -4010,7 +4018,7 @@ window.buildHere = (kind, t) => {
     <div class="detimg" style="background:${CAT_GRAD[T.cat || 'Depo']};height:110px;font-size:52px"><img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()">${T.ico}</div>
     <p><b>${T.nm}</b> — <b style="color:var(--acc)">${fmt(T.cost)}</b><br>Onaydan sonra haritada <b>kurmak istediğin yere dokunacaksın</b> — ödeme yerleştirme anında alınır.</p>
     <button class="primary" onclick="closeModal();doBuild('${kind}','${t}')">✅ Evet, Satın Al — ${fmt(T.cost)}</button>
-    <button class="primary" style="background:#8a6cff" onclick="closeModal();adPlay('izleyene bu alışverişte %10 indirim.', () => doBuild('${kind}','${t}', .9))">🎬 Reklam İzle — %10 İndirimli Al (${fmt(Math.round(T.cost * .9))})</button>
+    <button class="primary" style="background:#8a6cff" onclick="closeModal();adPlay('izleyene bu alışverişte %10 indirim.', () => doBuild('${kind}','${t}', .9))">${adVerb()} — %10 İndirimli Al (${fmt(Math.round(T.cost * .9))})</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
@@ -4096,8 +4104,8 @@ function placeAt(c, ll) {
   if (!tutActive() && nu.buildDone - Date.now() >= 45000) {
     $('modal').innerHTML = `
       <h2>🎬 İnşaatı hemen bitir?</h2>
-      <p style="text-align:center">${T.ico} <b>${T.nm}</b> inşaatı sürüyor — <b>~${T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn'}</b>.<br>Reklam izlersen HEMEN tamamlanır.</p>
-      <button class="primary" style="background:#8a6cff" onclick="closeModal();adFinishBuild(${nu.id})">🎬 Reklam İzle — HEMEN Bitir</button>
+      <p style="text-align:center">${T.ico} <b>${T.nm}</b> inşaatı sürüyor — <b>~${T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn'}</b>.<br>${ilkSaatReklamsiz() ? 'İlk 1 saat hediyen: reklamsız HEMEN tamamlanır.' : 'Reklam izlersen HEMEN tamamlanır.'}</p>
+      <button class="primary" style="background:#8a6cff" onclick="closeModal();adFinishBuild(${nu.id})">${adVerb()} — HEMEN Bitir</button>
       <button class="primary ghostbtn" onclick="closeModal()">Vazgeç — beklerim</button>`;
     $('overlay').classList.add('show');
   }
@@ -9464,7 +9472,7 @@ window.openBank = (tab) => {
         ? '⚡ Acil nakit küçük ve kısa vadelidir — <b>tek seferde</b> kapatılır. Kapatınca kurtarma kredisi kapısı açılır.'
         : '🏗️ Büyüme kredisi taksitle kapanır. Son taksit ödendiğinde kurtarma kredisi kapısı açılır.') + '</p>';
   } else if (!krediUygun()) {
-    h += '<p class="sub" style="margin-top:0">Bekleyen masrafın <b>' + fmt(ihtiyac) + '</b>, kasanda <b>' + fmt(G.cash) + '</b> var — <b>kendi paranla ödeyebilirsin.</b></p>'
+    h += '<p class="sub" style="margin-top:0">Bekleyen Tamir - İkmal masrafın <b>' + fmt(ihtiyac) + '</b>, kasanda <b>' + fmt(G.cash) + '</b> var — <b>kendi paranla ödeyebilirsin.</b></p>'
       + '<p class="sub">Kurtarma kredisi yalnız kasan yetmediğinde açılır. Bankaya faiz ödemek yerine kendi paranı kullan.</p>';
   } else {
     const borc = Math.round(ihtiyac * kat);
@@ -12223,7 +12231,7 @@ function openUnitSheet(id) {
         <div style="font-size:12.5px;font-weight:700">⚡ Boşaltılıyor${u.disch.target ? ' → 🔁 ' + cellCode(u.disch.target) + ' pazarı (-%10 aktarım)' : ''}</div>
         <div class="rsbar" style="margin:6px 0"><i style="width:${Math.min(100, 100 * u.disch.sold / (u.disch.sold + u.disch.left))}%"></i></div>
         <div class="sub">Satılan: ${fmtE(u.disch.sold)} MWh · +${fmt(u.disch.gain)} · kalan ${fmtE(u.disch.left)} MWh</div>
-        <button class="bigsell" style="background:#8a6cff;color:#0d0a1a;margin-top:8px" onclick="adFinishDischarge(${u.id})">🎬 Reklam İzle — Satışı HEMEN Bitir (kalan ${fmtE(u.disch.left)} MWh)</button>
+        <button class="bigsell" style="background:#8a6cff;color:#0d0a1a;margin-top:8px" onclick="adFinishDischarge(${u.id})">${adVerb()} — Satışı HEMEN Bitir (kalan ${fmtE(u.disch.left)} MWh)</button>
       </div>` : `
       <button class="bigsell" onclick="sellUnit(${u.id},1)" ${satMwh < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(satMwh)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * satMwh / T.cap))} sn)</button>
       <p class="sub" style="margin:2px 0 6px;text-align:center">⚡ Tutara <b>kayıp-kaçak bedeli −%${LOSS_LEAK * 100}</b> dahildir (iletim/dağıtım kaybı). Boşaltma boyunca birim fiyat <b>sabitlenir</b> — gördüğün tutarı alırsın.</p>
@@ -12260,7 +12268,7 @@ function openUnitSheet(id) {
           🌍 KONSORSİYUM HATTI ile SAT — ${fmt(net * (1 - (cn.rentRate || 0)))}/MWh <span style="font-size:10px">(${cn.kiralik ? '🌍 KİRALIK · %' + Math.round(cn.rentRate * 100) + ' kira ' + cn.rentNm + ' kasasına' : cn.asShareholder ? '⚖️ HİSSEDAR hakkın · ÜCRETSİZ' : 'ittifak hattı · ÜCRETSİZ'} · kayıp %${CONS_LOSS} · merkeze ${cn.dist} km)</span></button>`;
       })()}
       ${adAvail() > 0 ? (satMwh >= satCap * .9
-        ? `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="sellUnitAd(${u.id})">🎬 Reklam İzle & SAT — ${fmt(rAll.gain * AD_BONUS)} (+%15) · hak ${adAvail()}/${AD_MAX}</button>`
+        ? `<button class="bigsell" style="background:#8a6cff;color:#0d0a1a" onclick="sellUnitAd(${u.id})">${adVerb()} & SAT — ${fmt(rAll.gain * AD_BONUS)} (+%15) · hak ${adAvail()}/${AD_MAX}</button>`
         : `<button class="bigsell" style="background:#8a6cff33;color:var(--dim)" disabled>🎬 Reklam bonusu (+%15) — depo %90 dolunca · hak ${adAvail()}/${AD_MAX}</button>`) : ''}
       <button class="bigsell half" onclick="sellUnit(${u.id},.5)" ${satMwh < .01 ? 'disabled' : ''}>Yarısını Sat — ~${fmt(rHalf.gain)}</button>`}
       ${(() => { // 🔗 DEPO BAĞLANTISI — patron: uzun buton listesi YOK, iki buton var.
@@ -13090,7 +13098,7 @@ function openHelp() {
     <details><summary>Neden oto-satış yok?</summary><p>Bilinçli tasarım: satış anı bu oyunun kalbidir — fiyata bakarsın, zamanlarsın, SEN satarsın. Depon dolunca 🔔 bildirim gelir; dolu depoyu elle satarken 🎬 reklam bonusu (+%15) da alabilirsin.</p></details>
     <details><summary>Etkinlikler ne zaman?</summary><p>Her gün farklı bir etkinlik (üst bantta). Hafta sonları ve her akşam 21:00'den sonra mini oyunlar açılır (Frekans Nöbeti) — ekstra kazanç, günde 3 hak.</p></details>
     <details><summary>Gerçek para ne satın alır?</summary><p>SADECE hız ve kolaylık (kampanya paketleri, reklamsızlık, kozmetik). Oyun parası, santral, lisans asla gerçek parayla satılmaz — her içerik oynayarak alınır. Seviye/kilit yoktur.</p></details>
-    <details><summary>Enerjim/param kaybolur mu?</summary><p>Asla. Sürekli otokayıt; gördüğün fiyat = hesabına geçen para; gizli kesinti (trafo kaybı vb.) yok.</p></details>
+    <details><summary>Enerjim/param kaybolur mu?</summary><p>Asla. Sürekli otokayıt; gördüğün fiyat = hesabına geçen para; tüm kesintiler şeffaf — sürpriz yok.</p></details>
     <button class="primary" onclick="closeModal()">Kapat</button>
     <p style="text-align:center;font-size:10px;margin-top:8px">Hava verisi: Open-Meteo · Harita: Leaflet/CARTO (prototip)</p>`;
   $('overlay').classList.add('show');
@@ -13303,7 +13311,7 @@ async function afterLogin() {
     <h2 style="text-align:center">ENERGY COMPANY</h2>
     <p style="text-align:center">Gerçek dünya haritasında enerji imparatorluğunu kur.<br>Adil · Şeffaf · Günde ~2 saat yeter.</p>
     <button class="primary" onclick="wizMapStart()">🌍 Yeni Oyun — Haritadan Başla</button>
-    <p style="text-align:center;font-size:10px;margin-top:10px">${BUILD_TAG} · ${NET.auth && NET.auth.kind === 'google' ? '🔓 ' + (NET.auth.email || 'Google') : '👤 Misafir'}</p>`;
+    <p style="text-align:center;font-size:10px;margin-top:10px">${CEV('Sürüm')}: ${BUILD_TAG} · ${NET.auth && NET.auth.kind === 'google' ? '🔓 Google' : '👤 Misafir'}</p>`;
   $('overlay').classList.add('show');
 }
 window.wizMapStart = () => {
@@ -13740,7 +13748,7 @@ try {
 // rastgele yerleşiyor. Böylece 6 sahne aslında sonsuz varyasyon demek ve APK'ya tek byte
 // görsel yükü binmiyor. Çubuk gerçek yükleme adımlarına bağlı, sahte ilerleme yok.
 const BOOT_TIPS = [
-  'Gördüğün fiyat = hesabına geçen para. Trafo kaybı yok, gizli kesinti yok.',
+  'Gördüğün fiyat = hesabına geçen para. Tüm kesintiler şeffaf — sürpriz yok.',
   'Rüzgâr mükemmel ama nüfus azsa satış zordur — talebi olan şehre ⚡ hat çek.',
   'Ruhsat kalıcı ve oyuncu başına: kimse bir kareyi sana kapatamaz.',
   'Depon dolunca üretim durur. 🔔 bildirimi aç, boşa üretim yapma.',
