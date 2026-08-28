@@ -657,11 +657,10 @@
       <div style="font-size:12px;margin:12px 0 2px">🏆 <b>LİDERLİK</b> <span class="sub">simülasyon — gerçek MP tam sürümde</span></div>
       <div class="lb" id="lb"></div>
       <div id="modrow"></div>
-      <button id="settingsbtn" onclick="ayarlarAc()" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">⚙️ Ayarlar</button>
-      <button id="helpbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
+      <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-28 20:31) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-28 20:35) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -783,6 +782,7 @@
       <button data-act="menu"><span class="big">📋</span>Görevler</button>
       <button data-act="friends"><span class="big">👥</span>Arkadaş</button>
       <button data-act="rank"><span class="big">🏆</span>Sıralama</button>
+      <button data-act="ayarlar"><span class="big">⚙️</span>Ayarlar</button>
       <button data-act="help"><span class="big">❓</span>Yardım</button>
     </div>
   </div>
@@ -824,7 +824,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-28 20:31)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-28 20:35)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -16152,6 +16152,7 @@ document.querySelectorAll('#drawer button[data-act]').forEach(b => b.addEventLis
   else if (act === 'menu') openTasks();
   else if (act === 'rank') openLeaderboard(); // patron: Merkez kalktı, 🏆 Sıralama geldi
   else if (act === 'friends') openFriendsSheet();
+  else if (act === 'ayarlar') ayarlarAc(); // patron 28 Ağu: "Sıralamanın altına, Yardım'ın üstüne"
   else if (act === 'help') openHelp();
 }));
 $('sellallbtn').addEventListener('click', () => { sellAll(1); renderPriceSheet(); });
