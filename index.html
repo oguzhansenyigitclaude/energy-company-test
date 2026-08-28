@@ -660,7 +660,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-28 19:34) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-28 19:46) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -823,7 +823,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-28 19:34)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-28 19:46)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -3078,7 +3078,11 @@ function plantOutput(u, atMin) {
   // 🎯 SAHA ÇARPANI (rakım/kıyı/iz kaybı/keşif — ±%30 kelepçeli). Hidro kendi coğrafi
   // puanını hydroFactor içinde alıyor, ikinci kez çarpılmaz.
   if (T.kind !== 'hydro') f *= siteFactor(u);
-  if (tutActive()) f = Math.max(f, .35); // tutorial: gece/rüzgarsızlıkta bile akış olsun — eğitim 10 dk'da bitsin
+  // tutorial tabanı — patron 28 Ağu (B): rüzgar türbini eğitim saatinde HANGİ bölgede olursa
+  // olsun TAM GÜÇ çalışır (f=1; fırtına/rüzgarsızlık dahil) — oyuncu "burası rüzgarsızmış"
+  // dersini parası varken, eğitim BİTTİKTEN sonra alır (bitişte Enerji Bakanlığı postası uyarır).
+  // Diğer türlerde eski %35 tabanı sürer (gece güneşi 0'a düşmesin, eğitim 10 dk'da bitsin).
+  if (tutActive()) f = Math.max(f, T.kind === 'wind' ? 1 : .35);
   return T.mw * f * (u.cond / 100) * ipProdBoost(); // 💠 Üretim Takviyesi (İmtiyaz Mağazası, 24 sa)
 }
 function co2Avg() {
@@ -12784,6 +12788,10 @@ function tutTick() {
   if (i < 0) { // 🎓 TAMAMLANDI — ödülü ver, oyuncuyu serbest bırak
     G.starterClaimed = true;
     G.cash += STARTER_REWARD;
+    // 📬 patron 28 Ağu: eğitim bitişinde Enerji Bakanlığı postası — iklimlendirme takviyesini
+    // ve "bundan sonra Bilgi ekranına göre kur" uyarısını oyuncuya BİLDİR (metin patrondan).
+    addMail('⚡ Enerji Bakanlığı', '🌤️ İklimlendirme takviyesi hakkında',
+      'Kuruluşunuzun ilk 1 saati boyunca santralleriniz için iklimlendirme takviyesi mevcuttur — rüzgar türbinleriniz tam güçte çalışır, güneş verimi desteklenir.\n\nBundan sonraki santral ve bölge seçimlerinizi ℹ️ Bilgi ekranındaki verilere göre kurun; aksi hâlde zarar edersiniz.\n\n⚡ Enerji Bakanlığı', true);
     tutClearMarks(); clearTutCell();
     $('tuthint').classList.remove('show');
     $('modal').innerHTML = `
@@ -13556,7 +13564,11 @@ window.wizDone = () => {
   })();
   // hediye kit: haritada BAŞKALARINA görünmez (hidden) — kalabalık önleme (patron kararı)
   addUnit('plant', 'wind_2', [cc[0] + .012, cc[1] - .015], 0).hidden = true;
-  addUnit('store', 'bat', [cc[0] - .01, cc[1] + .015], 0).hidden = true;
+  const kitPil = addUnit('store', 'bat', [cc[0] - .01, cc[1] + .015], 0); kitPil.hidden = true;
+  // 🔋 patron 28 Ağu (C): hediye pil YARI DOLU başlar — gece giren / rüzgarsız bölge seçen
+  // oyuncu bile İLK DAKİKADA "SAT"a basıp parayı görür; "ilk satış" görevi hiçbir koşulda
+  // takılmaz. ⚠️ TAM dolu DEĞİL (patron): dolu depo "boşa giden enerji" uyarısını tetiklerdi.
+  kitPil.stored = STORE_TYPES.bat.cap / 2;
   const hq = addUnit('office', 'office', [cc[0] - .022, cc[1] - .022], 0); hq.hq = true; // merkez ofis GÖRÜNÜR
   startGame(false);
 };
