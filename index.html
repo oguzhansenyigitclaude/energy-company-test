@@ -657,10 +657,11 @@
       <div style="font-size:12px;margin:12px 0 2px">🏆 <b>LİDERLİK</b> <span class="sub">simülasyon — gerçek MP tam sürümde</span></div>
       <div class="lb" id="lb"></div>
       <div id="modrow"></div>
-      <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
+      <button id="settingsbtn" onclick="ayarlarAc()" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">⚙️ Ayarlar</button>
+      <button id="helpbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-28 20:11) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-28 20:31) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -823,7 +824,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-28 20:11)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-28 20:31)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -833,7 +834,24 @@ const BUILD_TAG = 'Prototip 1.0 (2026-08-28 20:11)'; // deploy.js yayında tarih
 //   metin İngilizce ekranda Türkçe görünür ve gözle hemen yakalanır — sessiz boşluk olmaz.
 // · Dil cihaz seviyesinde (localStorage), kayda YAZILMAZ: giriş/karşılama ekranı kayıt
 //   yüklenmeden önce de doğru dilde açılmalı.
-const LANG = (() => { try { return localStorage.getItem('ec_lang') || 'tr'; } catch (e) { return 'tr'; } })();
+// 🌐 patron 28 Ağu: "oyuncu hangi bölgeden indirdiyse dil otomatik o olsun" — kayıtlı tercih
+// yoksa CİHAZ DİLİ eşlenir (zh-TW→zht, tl/fil→fil, eski Android 'in'→id); desteklenmeyen dil → en.
+const LANG = (() => {
+  try {
+    const k = localStorage.getItem('ec_lang');
+    if (k) return k;
+    const destek = ['tr', 'en', 'de', 'fr', 'es', 'it', 'pt', 'ru', 'zh', 'ja', 'ko', 'id', 'pl', 'ar', 'th', 'nl', 'ms', 'fil', 'vi', 'uk', 'zht'];
+    for (const ham of (navigator.languages || [navigator.language || 'en'])) {
+      const d = String(ham).toLowerCase();
+      if (d.startsWith('zh')) return (d.includes('tw') || d.includes('hant') || d.includes('hk') || d.includes('mo')) ? 'zht' : 'zh';
+      if (d.startsWith('tl') || d.startsWith('fil')) return 'fil';
+      if (d.startsWith('in') && !d.startsWith('int')) return 'id'; // eski Android Endonezce kodu
+      const kisa = d.split('-')[0];
+      if (destek.includes(kisa)) return kisa;
+    }
+    return 'en';
+  } catch (e) { return 'en'; }
+})();
 // 🌐 21 dil (25. tur — rakip 18'de, hedef aşıldı). Hintçe BİLEREK yok: patron kararı —
 // "Hindistan'da soyut gösterim" hazır olmadan Hintçe EKLENMEZ (sınır-çizimi 1★ riski).
 const DILLER = {
@@ -843,14 +861,16 @@ const DILLER = {
   pt: { ad: 'Português (BR)', bayrak: '🇧🇷', locale: 'pt-BR' }, ru: { ad: 'Русский', bayrak: '🇷🇺', locale: 'ru-RU' },
   zh: { ad: '简体中文', bayrak: '🇨🇳', locale: 'zh-CN' }, ja: { ad: '日本語', bayrak: '🇯🇵', locale: 'ja-JP' },
   ko: { ad: '한국어', bayrak: '🇰🇷', locale: 'ko-KR' }, id: { ad: 'Bahasa Indonesia', bayrak: '🇮🇩', locale: 'id-ID' },
-  pl: { ad: 'Polski', bayrak: '🇵🇱', locale: 'pl-PL' }, ar: { ad: 'العربية', bayrak: '🇸🇦', locale: 'ar-SA' },
+  // ar: -u-nu-latn → Latin rakam (٣٩٬٤٥٦ değil 39,456) · -ca-gregory → Miladi takvim
+  // (ar-SA varsayılanı Hicri takvim — kuruluş/posta tarihleri Hicri görünürdü; bug avı bulgusu)
+  pl: { ad: 'Polski', bayrak: '🇵🇱', locale: 'pl-PL' }, ar: { ad: 'العربية', bayrak: '🇸🇦', locale: 'ar-SA-u-nu-latn-ca-gregory' },
   th: { ad: 'ไทย', bayrak: '🇹🇭', locale: 'th-TH' }, nl: { ad: 'Nederlands', bayrak: '🇳🇱', locale: 'nl-NL' },
   ms: { ad: 'Bahasa Melayu', bayrak: '🇲🇾', locale: 'ms-MY' }, fil: { ad: 'Filipino', bayrak: '🇵🇭', locale: 'fil-PH' },
   vi: { ad: 'Tiếng Việt', bayrak: '🇻🇳', locale: 'vi-VN' }, uk: { ad: 'Українська', bayrak: '🇺🇦', locale: 'uk-UA' },
   zht: { ad: '繁體中文', bayrak: '🇹🇼', locale: 'zh-TW' },
 };
 const LOCALE = (DILLER[LANG] || DILLER.tr).locale;
-document.documentElement.lang = LANG;
+document.documentElement.lang = LOCALE.split('-u-')[0]; // 'zht' gibi anahtar adı değil geçerli BCP-47 (zh-TW)
 // Çeviri: CEV('Türkçe metin') → aktif dildeki karşılık; yoksa Türkçesi. {0} {1} yer tutucuları
 // sırayla doldurulur: CEV('Ruhsat için {0} gerekli', fmt(fee)).
 // ⚠️ AD NEDEN T DEĞİL: kod tabanında ~50 yerde `const T = PLANT_TYPES[...]` yerel değişkeni var —
@@ -871,7 +891,21 @@ window.dilSec = l => {
 const SOZLUK = {
 en: {
   // ── karşılama + kuruluş sihirbazı ──
-  'Sürüm': 'Version',
+  'Sürüm': 'Version', 'Kapat': 'Close',
+  // ── ⚙️ ayarlar + 🔔 push anahtarı (26. tur; diğer 19 dile sonraki dilimde) ──
+  'Ayarlar': 'Settings', 'Dil': 'Language', 'Değiştir': 'Change', 'Ses': 'Sound',
+  'açık': 'on', 'kapalı': 'off', 'Sesi Aç': 'Unmute', 'Sesi Kapat': 'Mute',
+  'Bildirimler': 'Notifications', 'tarayıcıdan engellenmiş': 'blocked by the browser', 'İzin ver': 'Allow',
+  'Diğer oyuncuların tesisleri': "Other players' facilities", 'görünür': 'visible', 'gizli': 'hidden',
+  'Gizle': 'Hide', 'Göster': 'Show', 'Hesabı Sıfırla': 'Reset Account',
+  'tüm ilerleme silinir': 'all progress is deleted', 'Sıfırla': 'Reset',
+  'Push bildirimlerine izin ver': 'Allow push notifications',
+  'depon dolunca telefonuna haber gelir': 'get a phone alert when your storage is full',
+  'cihaz düzeyinde engelli — dokun, nasıl açılacağını göster': 'blocked at device level — tap to see how to enable',
+  'Bu cihaz bildirim desteklemiyor': 'This device does not support notifications',
+  'Bildirim izni cihaz düzeyinde kapalı — Android: Ayarlar → Uygulamalar → Energy Company → Bildirimler': 'Notifications are blocked at device level — Android: Settings → Apps → Energy Company → Notifications',
+  'Bildirim izni verilmedi (menüden tekrar deneyebilirsin)': 'Notification permission not granted (you can retry from the menu)',
+  'Henüz bildirim yok. Oyundaki uyarılar, satış ve kazanç bildirimleri burada birikir.': 'No notifications yet. Game alerts, sales and earnings updates collect here.',
   'ENERJİ İMPARATORLUĞUNU KUR': 'BUILD YOUR ENERGY EMPIRE',
   'GERÇEK HARİTA · GERÇEK VERİ': 'REAL MAP · REAL DATA',
   'Gerçek dünya haritasında enerji imparatorluğunu kur.': 'Build your energy empire on a real world map.',
@@ -1081,7 +1115,8 @@ de: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Deine Windturbine speist in den Speicher ein. 🔋 Tippe auf den Speicher → VERKAUFE die Energie!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Tippe auf eine freie Stelle → baue auf dem Feld ein neues Kraftwerk/einen Speicher. 🚀 ×10-Bonus aktiv!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Erweiterte Stadtdaten konnten nicht geladen werden — die Bedarfskarte ist auf Kernstädte beschränkt. Bei Verbindung wird es automatisch erneut versucht.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Stadtdatenbank geladen — Bedarfskarte vollständig.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Stadtdatenbank geladen — Bedarfskarte vollständig.',
+'Kapat': 'Schließen'
 },
 fr: {
 'Sürüm': 'Version',
@@ -1121,7 +1156,7 @@ fr: {
 '⚖️ Varlıklarına el konuldu — gerekçe postanda (dokun)': '⚖️ Tes actifs ont été saisis — motif dans ton courrier (touche)',
 '❓ Yardım ve SSS': '❓ Aide et FAQ',
 '🐞 Hata Bildir (test sürümü)': '🐞 Signaler un bug (version de test)',
-'🎁 Ödülü Al': '🎁 Récupérer la récompense',
+'🎁 Ödülü Al': '🎁 Récupérer',
 '📈 ELEKTRİK PİYASASI': '📈 MARCHÉ DE L\'ÉLECTRICITÉ',
 '☰ ŞİRKET MENÜSÜ': '☰ MENU DE L\'ENTREPRISE',
 '🔧 TOPLU BAKIM': '🔧 MAINTENANCE GROUPÉE',
@@ -1193,10 +1228,11 @@ fr: {
 '🎬 Reklam İzle': '🎬 Regarder une pub',
 '🚀 Başlangıç bonusu bitti! Gerçek ritim: yakıt stokları ~12 saatte biter, sabah-akşam iki oturum yeter.': '🚀 Bonus de départ terminé ! Rythme réel : les stocks de combustible durent ~12 h, deux sessions matin et soir suffisent.',
 '🚀 ×10 bonus doldu — yumuşak iniş: {0} kazanca kadar üretim ×{1} devam ediyor!': '🚀 Bonus ×10 épuisé — atterrissage en douceur : la production continue à ×{1} jusqu\'à {0} de gains !',
-'👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Ton éolienne alimente la batterie. 🔋 Touche la batterie → VENDS l\'énergie !',
+'👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Ton éolienne alimente le stockage. 🔋 Touche le stockage → VENDS l\'énergie !',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Touche un endroit vide → construis une centrale ou un stockage sur cette case. 🚀 Bonus ×10 actif !',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Impossible de charger les données étendues des villes — la carte de la demande se limite aux villes principales. Nouvel essai automatique dès que la connexion revient.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Base de données des villes chargée — carte de la demande complète.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Base de données des villes chargée — carte de la demande complète.',
+'Kapat': 'Fermer'
 },
 es: {
 'Sürüm': 'Versión',
@@ -1311,7 +1347,8 @@ es: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Tu turbina eólica alimenta el almacenamiento. 🔋 Toca el almacenamiento → ¡VENDE la energía!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Toca un lugar vacío → construye una central/almacenamiento en esa casilla. 🚀 ¡Bono ×10 activo!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 No se pudieron cargar los datos ampliados de ciudades — el mapa de demanda se limita a las ciudades principales. Se reintentará automáticamente al recuperar la conexión.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Base de datos de ciudades cargada — el mapa de demanda está completo.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Base de datos de ciudades cargada — el mapa de demanda está completo.',
+'Kapat': 'Cerrar'
 },
 it: {
 'Sürüm': 'Versione',
@@ -1382,7 +1419,7 @@ it: {
 'Enerji Holdingi': 'Holding Energetica',
 'hafta': 'settimana',
 '🏭 Tesis yatırımı': '🏭 Investimento in impianti',
-'⛽ Yakıt': '⛽ Carburante',
+'⛽ Yakıt': '⛽ Combustibile',
 '🔧 Bakım ve onarım': '🔧 Manutenzione e riparazione',
 '📜 Ruhsat · ofis · lisans': '📜 Permessi · uffici · licenze',
 '⚡ Nakil hattı': '⚡ Linea di trasmissione',
@@ -1401,7 +1438,7 @@ it: {
 'Jeotermal': 'Geotermico',
 'Nükleer': 'Nucleare',
 'Depo': 'Deposito',
-'Yakıt': 'Carburante',
+'Yakıt': 'Combustibile',
 'Bu hafta {0} MWh enerji sat': 'Vendi {0} MWh di energia questa settimana',
 ' — ✅ tamamlandı!': ' — ✅ completato!',
 '🎮 Bugünkü haklar bitti': '🎮 Tentativi di oggi esauriti',
@@ -1409,7 +1446,7 @@ it: {
 'Tam sıralamayı gör': 'Vedi la classifica completa',
 '🏗️ İnşa — ürün seç': '🏗️ Costruisci — scegli un prodotto',
 'Satın Al → sonra haritada kurulacak YERE dokun (ödeme yerleştirme anında). Saha raporu ℹ️ Bilgi ekranında.': 'Acquista → poi tocca il PUNTO sulla mappa dove costruire (pagamento al posizionamento). Il rapporto sul campo è nella schermata ℹ️ Info.',
-'⛽ {0} yakıtı bitti — santrale dokun, yakıt deponden ikmal et': '⛽ {0} ha esaurito il carburante — tocca la centrale e rifornisci dal tuo deposito di carburante',
+'⛽ {0} yakıtı bitti — santrale dokun, yakıt deponden ikmal et': '⛽ {0} ha esaurito il combustibile — tocca la centrale e rifornisci dal tuo deposito di combustibile',
 '🎬 {0} inşaatı reklamla TAMAMLANDI!': '🎬 Costruzione di {0} COMPLETATA con un annuncio!',
 'Tesis': 'Impianto',
 '💰 Satış tamam: {0} MWh = {1}': '💰 Vendita completata: {0} MWh = {1}',
@@ -1421,12 +1458,13 @@ it: {
 '🎁 Yeni oyuncu jesti — ilk 1 saat reklamsız: +%15 bonus doğrudan uygulandı': '🎁 Regalo per i nuovi giocatori — prima ora senza annunci: bonus +15% applicato direttamente',
 '🎬 Reklamı Geç': '🎬 Salta Annuncio',
 '🎬 Reklam İzle': '🎬 Guarda Annuncio',
-'🚀 Başlangıç bonusu bitti! Gerçek ritim: yakıt stokları ~12 saatte biter, sabah-akşam iki oturum yeter.': '🚀 Bonus iniziale terminato! Ritmo reale: le scorte di carburante durano ~12 ore, bastano due sessioni al giorno.',
+'🚀 Başlangıç bonusu bitti! Gerçek ritim: yakıt stokları ~12 saatte biter, sabah-akşam iki oturum yeter.': '🚀 Bonus iniziale terminato! Ritmo reale: le scorte di combustibile durano ~12 ore, bastano due sessioni al giorno.',
 '🚀 ×10 bonus doldu — yumuşak iniş: {0} kazanca kadar üretim ×{1} devam ediyor!': '🚀 Bonus ×10 esaurito — atterraggio morbido: la produzione continua a ×{1} fino a {0} di guadagni!',
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 La tua turbina eolica alimenta il deposito. 🔋 Tocca il deposito → VENDI l\'energia!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Tocca un punto vuoto → costruisci una nuova centrale/deposito su quella casella. 🚀 Bonus ×10 attivo!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Impossibile caricare i dati estesi delle città — la mappa della domanda è limitata alle città principali. Riproverà automaticamente appena torna la connessione.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Database delle città caricato — mappa della domanda completata.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Database delle città caricato — mappa della domanda completata.',
+'Kapat': 'Chiudi'
 },
 pt: {
 'Sürüm': 'Versão',
@@ -1541,7 +1579,8 @@ pt: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Sua turbina eólica está abastecendo o armazenamento. 🔋 Toque no armazenamento → VENDA a energia!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Toque em um lugar vazio → construa uma usina/armazenamento nessa célula. 🚀 Bônus ×10 ativo!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Não foi possível carregar os dados ampliados de cidades — o mapa de demanda está limitado às cidades principais. Vamos tentar de novo automaticamente quando houver conexão.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Banco de dados de cidades carregado — mapa de demanda completo.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Banco de dados de cidades carregado — mapa de demanda completo.',
+'Kapat': 'Fechar'
 },
 ru: {
 'Sürüm': 'Версия',
@@ -1656,7 +1695,8 @@ ru: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Твоя ветротурбина подключена к накопителю. 🔋 Нажми на накопитель → ПРОДАЙ энергию!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Нажми на пустое место → построй на этой клетке станцию или накопитель. 🚀 Бонус ×10 активен!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Не удалось загрузить расширенные данные городов — карта спроса ограничена основными городами. Повторим автоматически при появлении связи.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 База городов загружена — карта спроса готова.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 База городов загружена — карта спроса готова.',
+'Kapat': 'Закрыть'
 },
 zh: {
 'Sürüm': '版本',
@@ -1771,7 +1811,8 @@ zh: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 你的风力发电机正在向储能供电。🔋 点击储能 → 出售能源！',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 点击空地 → 在该地块建造新电厂/储能。🚀 ×10 加成生效中！',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 扩展城市数据加载失败 — 需求地图暂限核心城市。联网后将自动重试。',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 城市数据库已加载 — 需求地图已完成。'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 城市数据库已加载 — 需求地图已完成。',
+'Kapat': '关闭'
 },
 ja: {
 'Sürüm': 'バージョン',
@@ -1886,7 +1927,8 @@ ja: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 風力タービンが蓄電池につながって稼働中。🔋 蓄電池をタップ → エネルギーを売ろう！',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 空いた場所をタップ → そのタイルに発電所や蓄電池を建設。🚀 ×10ボーナス有効！',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 拡張都市データを読み込めませんでした — 需要マップは主要都市に限定されます。接続が回復したら自動で再試行します。',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 都市データベースを読み込みました — 需要マップが完成しました。'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 都市データベースを読み込みました — 需要マップが完成しました。',
+'Kapat': '閉じる'
 },
 ko: {
 'Sürüm': '버전',
@@ -2001,7 +2043,8 @@ ko: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 풍력 터빈이 저장소에 연결되어 가동 중이에요. 🔋 저장소를 탭 → 에너지를 판매하세요!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 빈 곳을 탭 → 그 타일에 새 발전소/저장소를 건설하세요. 🚀 ×10 보너스 활성화!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 확장 도시 데이터를 불러오지 못했어요 — 수요 지도는 핵심 도시로 제한됩니다. 연결되면 자동으로 다시 시도해요.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 도시 데이터베이스 로드 완료 — 수요 지도가 완성되었습니다.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 도시 데이터베이스 로드 완료 — 수요 지도가 완성되었습니다.',
+'Kapat': '닫기'
 },
 id: {
 'Sürüm': 'Versi',
@@ -2116,7 +2159,8 @@ id: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Turbin anginmu tersambung ke penyimpanan. 🔋 Ketuk penyimpanan → JUAL energinya!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Ketuk tempat kosong → bangun pembangkit/penyimpanan baru di petak itu. 🚀 Bonus ×10 aktif!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Data kota lengkap gagal dimuat — peta permintaan terbatas pada kota inti. Akan dicoba lagi otomatis saat koneksi tersedia.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Basis data kota berhasil dimuat — peta permintaan lengkap.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Basis data kota berhasil dimuat — peta permintaan lengkap.',
+'Kapat': 'Tutup'
 },
 pl: {
 'Sürüm': 'Wersja',
@@ -2231,7 +2275,8 @@ pl: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Twoja turbina wiatrowa zasila magazyn. 🔋 Dotknij magazynu → SPRZEDAJ energię!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Dotknij pustego miejsca → postaw na tym polu elektrownię/magazyn. 🚀 Bonus ×10 aktywny!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Nie udało się wczytać rozszerzonych danych miast — mapa popytu ograniczona do głównych miast. Po odzyskaniu połączenia spróbujemy automatycznie.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Baza miast wczytana — mapa popytu jest kompletna.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Baza miast wczytana — mapa popytu jest kompletna.',
+'Kapat': 'Zamknij'
 },
 ar: {
 'Sürüm': 'الإصدار',
@@ -2346,7 +2391,8 @@ ar: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 توربين الرياح لديك يعمل متصلًا بوحدة التخزين. 🔋 المس وحدة التخزين → بِع الطاقة!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 المس مكانًا فارغًا → ابنِ محطة/وحدة تخزين جديدة على ذلك المربع. 🚀 مكافأة ×10 مفعّلة!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 تعذّر تحميل بيانات المدن الموسّعة — خريطة الطلب مقتصرة على المدن الأساسية. ستُعاد المحاولة تلقائيًا عند عودة الاتصال.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 تم تحميل قاعدة بيانات المدن — اكتملت خريطة الطلب.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 تم تحميل قاعدة بيانات المدن — اكتملت خريطة الطلب.',
+'Kapat': 'إغلاق'
 },
 th: {
 'Sürüm': 'เวอร์ชัน',
@@ -2461,7 +2507,8 @@ th: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 กังหันลมของคุณกำลังส่งพลังงานเข้าคลังพลังงาน 🔋 แตะที่คลังพลังงาน → ขายพลังงานเลย!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 แตะพื้นที่ว่าง → สร้างโรงไฟฟ้า/คลังพลังงานใหม่บนช่องนั้น 🚀 โบนัส ×10 กำลังทำงาน!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 โหลดข้อมูลเมืองเพิ่มเติมไม่สำเร็จ — แผนที่ความต้องการแสดงเฉพาะเมืองหลัก จะลองใหม่อัตโนมัติเมื่อมีการเชื่อมต่อ',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 โหลดฐานข้อมูลเมืองแล้ว — แผนที่ความต้องการสมบูรณ์แล้ว'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 โหลดฐานข้อมูลเมืองแล้ว — แผนที่ความต้องการสมบูรณ์แล้ว',
+'Kapat': 'ปิด'
 },
 nl: {
 'Sürüm': 'Versie',
@@ -2576,7 +2623,8 @@ nl: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Je windturbine is aangesloten op de opslag. 🔋 Tik op de opslag → VERKOOP de energie!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Tik op een lege plek → bouw daar een nieuwe centrale/opslag op die tegel. 🚀 ×10-bonus actief!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Uitgebreide stadsdata kon niet worden geladen — de vraagkaart is beperkt tot de kernsteden. Er wordt automatisch opnieuw geprobeerd zodra er verbinding is.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Stedendatabase geladen — vraagkaart compleet.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Stedendatabase geladen — vraagkaart compleet.',
+'Kapat': 'Sluiten'
 },
 ms: {
 'Sürüm': 'Versi',
@@ -2691,7 +2739,8 @@ ms: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Turbin angin anda menyalurkan tenaga ke storan. 🔋 Ketik storan → JUAL tenaganya!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Ketik tempat kosong → bina loji/storan baru di petak itu. 🚀 Bonus ×10 aktif!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Data bandar lanjutan gagal dimuatkan — peta permintaan terhad kepada bandar teras. Akan dicuba semula secara automatik apabila ada sambungan.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Pangkalan data bandar dimuatkan — peta permintaan lengkap.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Pangkalan data bandar dimuatkan — peta permintaan lengkap.',
+'Kapat': 'Tutup'
 },
 fil: {
 'Sürüm': 'Bersyon',
@@ -2806,7 +2855,8 @@ fil: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Gumagana na ang wind turbine mo, nakakabit sa imbakan. 🔋 I-tap ang imbakan → IBENTA ang enerhiya!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 I-tap ang bakanteng lugar → magtayo ng bagong planta/imbakan sa tile na iyon. 🚀 Aktibo ang ×10 bonus!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Hindi na-load ang extended na data ng lungsod — limitado sa mga pangunahing lungsod ang demand map. Kusang susubukan ulit kapag may koneksyon na.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Na-load na ang database ng lungsod — kumpleto na ang demand map.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Na-load na ang database ng lungsod — kumpleto na ang demand map.',
+'Kapat': 'Isara'
 },
 vi: {
 'Sürüm': 'Phiên bản',
@@ -2863,7 +2913,7 @@ vi: {
 'Kare': 'Ô',
 'Birim': 'Đơn vị',
 'Sohbet': 'Trò chuyện',
-'İmtiyaz Mağazası': 'Cửa hàng Nhượng quyền',
+'İmtiyaz Mağazası': 'Cửa hàng Đặc quyền',
 'Postaları sil': 'Xóa thư',
 'Bildirimler': 'Thông báo',
 'Saha': 'Thực địa',
@@ -2921,7 +2971,8 @@ vi: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Tuabin gió của bạn đang nạp vào kho lưu trữ. 🔋 Chạm vào kho lưu trữ → BÁN năng lượng!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Chạm vào chỗ trống → xây nhà máy/kho lưu trữ mới trên ô đó. 🚀 Thưởng ×10 đang bật!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Không tải được dữ liệu thành phố mở rộng — bản đồ nhu cầu chỉ giới hạn ở các thành phố chính. Sẽ tự động thử lại khi có kết nối.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Đã tải cơ sở dữ liệu thành phố — bản đồ nhu cầu đã hoàn tất.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Đã tải cơ sở dữ liệu thành phố — bản đồ nhu cầu đã hoàn tất.',
+'Kapat': 'Đóng'
 },
 uk: {
 'Sürüm': 'Версія',
@@ -2951,7 +3002,7 @@ uk: {
 '☁️ Bulutta daha yeni kayıt var': '☁️ У хмарі є новіше збереження',
 '☁️ Yükleniyor': '☁️ Завантаження',
 'Buluttaki kayıt getiriliyor...': 'Отримуємо збереження з хмари...',
-'🏗️ İnşa': '🏗️ Будівництво',
+'🏗️ İnşa': '🏗️ Будова',
 'ℹ️ Bilgi': 'ℹ️ Інфо',
 '🗺️ Görünüm': '🗺️ Вигляд',
 '🤝 İttifak': '🤝 Альянс',
@@ -3036,7 +3087,8 @@ uk: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 Твоя вітрова турбіна живить сховище. 🔋 Торкнись сховища → ПРОДАЙ енергію!',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Торкнись вільного місця → збудуй на тій клітинці станцію чи сховище. 🚀 Бонус ×10 активний!',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Не вдалося завантажити розширені дані міст — карта попиту обмежена основними містами. Повторимо автоматично, щойно з\'явиться з\'єднання.',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Базу даних міст завантажено — карта попиту повна.'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 Базу даних міст завантажено — карта попиту повна.',
+'Kapat': 'Закрити'
 },
 zht: {
 'Sürüm': '版本',
@@ -3151,7 +3203,8 @@ zht: {
 '👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!': '👋 你的風力渦輪機已連接儲能運作中。🔋 點按儲能 → 賣出能源！',
 '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 點按空地 → 在該方格建造新電廠／儲能。🚀 ×10 加成生效中！',
 '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 無法載入完整城市資料 — 需求地圖僅限核心城市。連線恢復後將自動重試。',
-'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 城市資料庫已載入 — 需求地圖已完成。'
+'🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 城市資料庫已載入 — 需求地圖已完成。',
+'Kapat': '關閉'
 },
 // DIL-OTOMATIK-BIT
 };
@@ -3202,7 +3255,9 @@ function fmt(n) {
 }
 const fmtN = n => Math.round(n).toLocaleString(LOCALE);
 // Enerji gösterimi: küçük miktarlar ondalıklı akar (depo CANLI dolar — 1 MWh beklenmez, patron isteği)
-const fmtE = x => (x >= 100 ? fmtN(x) : x >= 10 ? x.toFixed(1).replace('.', ',') : (x || 0).toFixed(2).replace('.', ',')).replace(/,0+$/, '');
+// ⚠️ ,0 kırpması YALNIZ toFixed dallarına: fmtN çıktısına uygulanınca binlik ayracı virgül olan
+// yerellerde (en-US, zh, ja, ko…) binlikleri YUTUYORDU — en-US'ta fmtE(1000) '1' oluyordu (bug avı, kritik).
+const fmtE = x => x >= 100 ? fmtN(x) : (x >= 10 ? x.toFixed(1).replace('.', ',') : (x || 0).toFixed(2).replace('.', ',')).replace(/,0+$/, '');
 
 // ── Coğrafya (ülke/il seçimi için) ──
 const REGIONS = {
@@ -3494,7 +3549,15 @@ function isLand(ll) {
   if (!LAND_BOX) return true; // harita verisi henüz gelmediyse oyunu KİLİTLEME — serbest bırak
   // Kurulum kararında pay DAHA DAR (~6 km): kıyı şehri kara sayılsın ama açık deniz deniz kalsın,
   // yoksa "denize kömür santrali kurulamaz" kuralı gevşer.
-  return !!countryAt(ll, 0.06);
+  if (countryAt(ll, 0.06)) return true;
+  // 🏝️ ADACIK İSTİSNASI (26. tur bug avı): Tuvalu/Kiribati/Mikronezya atolleri NE 50m
+  // haritasında POLİGONSUZ — şehirleri var ama kara testinden kalıyor, oyuncu ORAYA KURAMIYORDU.
+  // Bilinen bir şehrin ~6 km yakını KARADIR; şehir yoksa açık deniz deniz kalır (kural gevşemez).
+  const cf = Math.max(.02, Math.cos(ll[0] * Math.PI / 180));
+  for (const grup of citiesNear(ll, 7))
+    for (const s of grup)
+      if (111 * Math.sqrt((s[1] - ll[0]) ** 2 + ((s[2] - ll[1]) * cf) ** 2) <= 6) return true;
+  return false;
 }
 const hash01 = (a, b, s) => { const x = Math.sin(a * 127.1 + b * 311.7 + s * 74.7) * 43758.5453; return x - Math.floor(x); };
 // 💵 NAKİT HACMİ TAHMİNİ (patron 26 Ağu: "100M parası varsa → Nakit Hacmi tahmini: 70-130M")
@@ -3761,7 +3824,7 @@ const CITY_DB = {
   BZ: [['Belize City',17.5,-88.198,65],['San Ignacio (Belize)',17.159,-89.07,21],['San Pedro (Belize)',17.916,-87.966,17],['Belmopan',17.25,-88.767,25]],
   CD: [['Kinşasa',-4.328,15.314,16000],['Lubumbashi',-11.661,27.479,2222],['Mbuji-Mayi',-6.136,23.59,2101],['Kananga',-5.896,22.417,1247],['Kisangani',0.515,25.191,1182],['Bukavu',-2.491,28.843,817],['Kolwezi',-10.715,25.467,790],['Kikwit',-5.041,18.816,509],['Goma',-1.679,29.222,1000],['Tshikapa',-6.416,20.8,700]],
   CF: [['Bangui',4.361,18.555,812],['Bimbo',4.257,18.416,349],['Bégoua',4.454,18.535,264],['Carnot',4.943,15.877,129],['Berbérati',4.261,15.792,104],['Bambari',5.768,20.676,83],['Bouar',5.934,15.596,72],['Bossangoa',6.493,17.455,55]],
-  CG: [['Brazzaville',-4.266,15.283,1982],['Pointe-Noire',-4.776,11.864,1032],['Dolisie',-4.198,12.667,121],['Nkayi',-4.184,13.286,103],['Kayes',-4.205,13.286,59]],
+  CG: [['Brazzaville',-4.266,15.283,1982],['Pointe-Noire',-4.776,11.864,1032],['Dolisie',-4.198,12.667,121],['Nkayi',-4.184,13.286,103]],
   CV: [['Praia',14.932,-23.513,138],['Mindelo',16.89,-24.98,69],['Espargos',16.755,-22.945,25]],
   DJ: [['Cibuti',11.589,43.145,627],['Ali Sabih',11.156,42.712,50],['Dikhil',11.105,42.37,33],['Tadjoura',11.788,42.884,25]],
   DM: [['Roseau',15.302,-61.388,17],['Portsmouth (Dominika)',15.583,-61.456,4],['Berekua',15.233,-61.317,3]],
@@ -3772,9 +3835,9 @@ const CITY_DB = {
   GA: [['Libreville',0.392,9.454,846],['Port-Gentil',-0.719,8.782,164],['Franceville',-1.633,13.584,133],['Owendo',0.291,9.505,95],['Oyem',1.599,11.579,73],['Moanda (Gabon)',-1.567,13.199,71],['Ntoum',0.391,9.761,62]],
   GD: [['Saint George\'s',12.053,-61.752,8],['Gouyave',12.165,-61.73,3],['Grenville',12.123,-61.625,2]],
   GM: [['Banjul',13.453,-16.578,31],['Serekunda',13.438,-16.678,340],['Brikama',13.271,-16.649,97],['Sukuta',13.41,-16.708,56]],
-  GN: [['Conakry',9.538,-13.677,1928],['Nzérékoré',7.756,-8.818,226],['Kankan',10.385,-9.306,221],['Manéah',9.733,-13.417,194],['Dubréka',9.791,-13.523,182],['Kindia',10.057,-12.866,161],['Siguiri',11.423,-9.169,148],['Dixinn',9.551,-13.673,137],['Labé',11.318,-12.283,107]],
+  GN: [['Conakry',9.538,-13.677,1928],['Nzérékoré',7.756,-8.818,226],['Kankan',10.385,-9.306,221],['Manéah',9.733,-13.417,194],['Dubréka',9.791,-13.523,182],['Kindia',10.057,-12.866,161],['Siguiri',11.423,-9.169,148],['Labé',11.318,-12.283,107]],
   GQ: [['Bata',1.864,9.766,173],['Malabo',3.756,8.782,156],['Ebebiyin',2.152,11.33,25]],
-  GW: [['Bissau',11.864,-15.598,440],['Gabú',12.28,-14.222,49],['Reino de Bandim',11.85,-15.6,45],['Bafatá',12.167,-14.657,22]],
+  GW: [['Bissau',11.864,-15.598,440],['Gabú',12.28,-14.222,49],['Bafatá',12.167,-14.657,22]],
   HN: [['Tegucigalpa',14.082,-87.207,851],['San Pedro Sula',15.506,-88.026,801],['Danlí',14.033,-86.583,234],['Puerto Cortés',15.826,-87.93,142],['Catacamas',14.851,-85.894,141],['Choloma',15.614,-87.953,139],['Siguatepeque',14.597,-87.831,127],['Olanchito',15.481,-86.574,124],['El Progreso',15.401,-87.81,188]],
   HT: [['Port-au-Prince',18.543,-72.339,1235],['Carrefour',18.533,-72.4,511],['Delmas (Haiti)',18.545,-72.3,395],['Pétionville',18.512,-72.285,377],['Port-de-Paix',19.94,-72.83,306],['Saint-Marc',19.111,-72.701,267],['Dessalines',19.262,-72.516,182],['Jacmel',18.236,-72.537,138],['Gonaïves',19.448,-72.689,300],['Cap-Haïtien',19.758,-72.204,274]],
   JM: [['Kingston (Jamaika)',17.997,-76.794,938],['Spanish Town',17.991,-76.957,145],['Portmore',17.971,-76.887,103],['Montego Bay',18.471,-77.919,83]],
@@ -3808,7 +3871,7 @@ const CITY_DB = {
   SB: [['Honiara',-9.433,159.95,92],['Noro',-8.223,157.2,7],['Buala',-8.145,159.592,3],['Auki',-8.768,160.702,8],['Gizo',-8.103,156.842,7]],
   SC: [['Victoria (Seyşeller)',-4.62,55.455,23],['Cascade',-4.669,55.5,7],['Perseverance',-4.604,55.464,6]],
   SL: [['Freetown',8.487,-13.236,803],['Kenema',7.877,-11.19,255],['Bo (Sierra Leone)',7.965,-11.738,234],['Koidu',8.644,-10.971,128],['Makeni',8.886,-12.044,85],['Waterloo (Sierra Leone)',8.339,-13.071,55]],
-  SM: [['San Marino (San Marino)',43.936,12.447,4],['Serravalle',43.969,12.482,9],['Dogana',43.98,12.491,7],['Domagnano',43.95,12.468,3],['Borgo Maggiore',43.941,12.447,7]],
+  SM: [['San Marino Şehri',43.936,12.447,4],['Serravalle',43.969,12.482,9],['Domagnano',43.95,12.468,3],['Borgo Maggiore',43.941,12.447,7]],
   SO: [['Mogadişu',2.037,45.344,2587],['Hargeysa',9.56,44.065,1100],['Berbera',10.44,45.014,242],['Kismayo',-0.358,42.545,235],['Marka',1.716,44.772,230],['Borama',9.936,43.183,215],['Cabudwaaq',6.246,46.225,120],['Burao',9.522,45.534,99],['Bosaso',11.284,49.182,450],['Baydabo',3.114,43.65,300]],
   SS: [['Juba',4.852,31.582,450],['Yei',4.094,30.676,261],['Malakal',9.533,31.66,161],['Wau (Güney Sudan)',7.701,27.99,127],['Kuacjok',8.303,27.98,78],['Aweil',8.768,27.4,63]],
   ST: [['São Tomé',0.338,6.73,53],['Neves',0.357,6.549,8],['Folha Fede',0.284,6.684,7],['Trindade (São Tomé ve Príncipe)',0.296,6.681,11]],
@@ -4214,7 +4277,7 @@ const DEMAND_STACK_MAX = 4.5;
 // Önbellek anahtarı ?v=SEHIR_SV — BUILD_TAG DEĞİL: deploy damgası her yayında değişir ve
 // 1,2 MB'lık DEĞİŞMEMİŞ dosyayı her seferinde yeniden indirtirdi; APK'da ise damga sabit
 // kalıp hiç iş görmezdi. no-store da değil: dosya büyük ve nadiren değişir (world50m ilkesi).
-const SEHIR_SV = 2;   // ⚠️ sehirler.json İÇERİĞİ DEĞİŞTİĞİNDE ELLE ARTIR
+const SEHIR_SV = 3;   // ⚠️ sehirler.json İÇERİĞİ DEĞİŞTİĞİNDE ELLE ARTIR
 let SEHIR_DURUM = 'yok';   // 'yok' | 'tamam' | 'hata' — B6: dosya gelmezse 448 şehirle DEVAM, bekletme YOK
 async function sehirleriYukle() {
   const qs = 'sehirler.json?v=' + SEHIR_SV;
@@ -5319,17 +5382,38 @@ const bildirimOkunmamis = () => {
   const s = G._bildSeen || 0;
   return G._bild.filter(b => b.ts > s).length;
 };
+// 🔔 PUSH ANAHTARI (patron 28 Ağu, rakip ekranından: "başta kapalı seçtim, bir daha açamıyorum")
+// Defterin başında sağ-sol kaydırmalı anahtar. Üç durum: izin verilmiş → G.notifOn aç/kapat;
+// hiç sorulmamış/ertelenmiş → dokununca tarayıcı izni istenir; tarayıcı/işletim sistemi
+// düzeyinde REDDEDİLMİŞ → programla yeniden sorulamaz, Android ayar yolu tarif edilir.
+window.pushToggle = () => {
+  if (!('Notification' in window)) { toast(CEV('Bu cihaz bildirim desteklemiyor'), 'warn'); return; }
+  const p = Notification.permission;
+  if (p === 'granted') { G.notifOn = !G.notifOn; save(); try { scheduleFillNotifs(); } catch (e) {} openNotifSheet(); }
+  else if (p === 'denied') toast(CEV('Bildirim izni cihaz düzeyinde kapalı — Android: Ayarlar → Uygulamalar → Energy Company → Bildirimler'), 'warn', null, 8000);
+  else Notification.requestPermission().then(r => { G.notifOn = r === 'granted'; save(); try { scheduleFillNotifs(); } catch (e) {} openNotifSheet();
+    if (!G.notifOn) toast(CEV('Bildirim izni verilmedi (menüden tekrar deneyebilirsin)'), 'warn'); });
+};
 window.openNotifSheet = () => {
   hideSheets();
   const list = (G._bild || []);
   const s = G._bildSeen || 0;
-  $('notif_body').innerHTML = list.length ? list.map(b => `
+  const izin = ('Notification' in window) ? Notification.permission : 'yok';
+  const acik = izin === 'granted' && !!G.notifOn;
+  const anahtarHtml = `
+    <div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:2px 0 8px;background:var(--panel2)">
+      <div style="flex:1;min-width:0"><b style="font-size:12.5px">🔔 ${CEV('Push bildirimlerine izin ver')}</b>
+      <div class="sub" style="font-size:10.5px">${izin === 'denied' ? CEV('cihaz düzeyinde engelli — dokun, nasıl açılacağını göster') : CEV('depon dolunca telefonuna haber gelir')}</div></div>
+      <span onclick="pushToggle()" style="cursor:pointer;flex:none;display:inline-flex;align-items:center;width:46px;height:26px;border-radius:13px;background:${acik ? 'var(--acc)' : '#3a4356'};padding:2px;transition:background .2s">
+        <span style="width:22px;height:22px;border-radius:50%;background:#fff;transform:translateX(${acik ? '20px' : '0px'});transition:transform .2s"></span></span>
+    </div>`;
+  $('notif_body').innerHTML = anahtarHtml + (list.length ? list.map(b => `
     <div style="border-left:3px solid ${b.c === 'warn' ? 'var(--warn)' : b.c === 'bad' ? 'var(--danger)' : 'var(--acc)'};
       background:var(--panel2);border-radius:8px;padding:7px 10px;margin:5px 0">
       <div style="font-size:12.5px;line-height:1.45${b.ts > s ? ';font-weight:700' : ''}">${b.t.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))}${b.n > 1 ? ` <span class="sub">×${b.n}</span>` : ''}</div>
       <div class="sub" style="font-size:10.5px">${new Date(b.ts).toLocaleString(LOCALE, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${b.ts > s ? ' · <b style="color:var(--acc2)">YENİ</b>' : ''}</div>
     </div>`).join('')
-    : '<p class="sub">Henüz bildirim yok. Oyundaki uyarılar, satış ve kazanç bildirimleri burada birikir.</p>';
+    : '<p class="sub">' + CEV('Henüz bildirim yok. Oyundaki uyarılar, satış ve kazanç bildirimleri burada birikir.') + '</p>');
   G._bildSeen = Date.now();              // açınca hepsi okundu sayılır
   showSheet('notifsheet');
   save();
@@ -16112,6 +16196,26 @@ window.dilSecici = () => {
 };
 $('langlink').textContent = '🌐 ' + LANG.toUpperCase();
 $('langlink').addEventListener('click', dilSecici);
+// ⚙️ AYARLAR EKRANI (patron 28 Ağu, rakip ekranından: "bizde ayarlar yok, oyunu çıkarmadan
+// ekleyelim") — dağınık ayarları TEK yerde toplar; her satır MEVCUT işlevi çağırır, yeni
+// mekanizma icat etmez. Rakipteki 'performans modu' bilerek YOK (bizde kademe sistemi yok,
+// sahte düğme koymayız); 'Çıkış Yap' da yok (Google oturum kapatma akışı ayrı iş — riskli).
+window.ayarSes = () => { G.muted = !G.muted; const m = $('mutelink'); if (m) m.textContent = G.muted ? '🔇' : '🔊'; save(); ayarlarAc(); };
+window.ayarlarAc = () => {
+  const izin = ('Notification' in window) ? Notification.permission : 'yok';
+  const satir = (icerik) => `<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0">${icerik}</div>`;
+  const dugme = (metin, tik, renk) => `<button onclick="${tik}" style="margin-left:auto;padding:8px 12px;border-radius:8px;border:none;background:${renk || 'var(--panel2)'};color:var(--ink);font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">${metin}</button>`;
+  $('modal').innerHTML = `
+    <h2>⚙️ ${CEV('Ayarlar')}</h2>
+    ${satir(`🌐 <b>${CEV('Dil')}</b><span class="sub">${DILLER[LANG].bayrak} ${DILLER[LANG].ad}</span>${dugme(CEV('Değiştir'), 'dilSecici()')}`)}
+    ${satir(`${G && G.muted ? '🔇' : '🔊'} <b>${CEV('Ses')}</b><span class="sub">${CEV(G && G.muted ? 'kapalı' : 'açık')}</span>${G && G._started ? dugme(CEV(G.muted ? 'Sesi Aç' : 'Sesi Kapat'), 'ayarSes()') : ''}`)}
+    ${satir(`🔔 <b>${CEV('Bildirimler')}</b><span class="sub">${izin === 'granted' ? CEV('açık') : izin === 'denied' ? CEV('tarayıcıdan engellenmiş') : CEV('kapalı')}</span>${izin === 'granted' ? '' : dugme(CEV('İzin ver'), 'enableNotifs();')}`)}
+    ${G && G._started ? satir(`👥 <b>${CEV('Diğer oyuncuların tesisleri')}</b><span class="sub">${CEV(G.showOthers ? 'görünür' : 'gizli')}</span>${dugme(CEV(G.showOthers ? 'Gizle' : 'Göster'), 'toggleOthers();ayarlarAc()')}`) : ''}
+    ${satir(`🪪 <b>${CEV('Sürüm')}</b><span class="sub">${BUILD_TAG}</span>`)}
+    ${G && G._started ? satir(`🗑️ <b>${CEV('Hesabı Sıfırla')}</b><span class="sub">${CEV('tüm ilerleme silinir')}</span>${dugme(CEV('Sıfırla'), "closeModal();$('resetlink').click()", 'var(--danger)')}`) : ''}
+    <button class="primary ghostbtn" onclick="closeModal()" style="margin-top:8px">${CEV('Kapat')}</button>`;
+  $('overlay').classList.add('show');
+};
 // 💾 pagehide: mobilde sekme/uygulama kapanışında visibilitychange bazen hiç ateşlenmiyor;
 // bu yol keepalive'lı son yazmayı garantiye alır (bot bulgusu: son 20 sn kayboluyordu).
 window.addEventListener('pagehide', () => {
