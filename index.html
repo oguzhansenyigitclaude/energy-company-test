@@ -659,8 +659,8 @@
       <div id="modrow"></div>
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
-      <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-28 19:19) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-28 19:34) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -823,7 +823,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-28 19:19)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-28 19:34)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -2712,14 +2712,22 @@ function freshState() {
 }
 // patron 27 Ağu canlı test: "×10 bonusunu 50 milyona geri yükselt — yeni oyuncu santral ve
 // depo KURABILMELI ki oyuna dönmek için sebebi olsun." ($500M → $50M → $25M → yine $50M)
+// patron 28 Ağu: KADEMELİ İNİŞ — tavanda gelir bir anda 10'a bölünüp "oyun durdu" hissi
+// vermesin (ilk haftanın kaçış noktası): $50M'ye kadar ×10 → $100M'ye kadar ×3 → sonra ×1.
 const BOOST_CAP = 50e6, BOOST_MULT = 10;
+const BOOST_CAP2 = 100e6, BOOST_MULT2 = 3;
 // 🌱 YENİ ŞİRKET TAKVİYESİ (patron tasarımı): ilk $50M'a kadar hava koşulları acımasız olmasın —
 // rüzgara +m/s, güneşte bulut etkisine indirim. Kazanç arttıkça DOĞRUSAL azalır, $50M'da biter.
 // (Rakip bunu GİZLİCE yapıyor; biz ŞEFFAF gösteriyoruz — panelde "🌱 takviye" satırı görünür.)
 const newbieAid = () => (G && !G.demo) ? Math.max(0, 1 - G.totalEarned / BOOST_CAP) : 0;
 const NEWBIE_WIND = 3.5;   // en fazla +3,5 m/s rüzgar
 const NEWBIE_CLOUD = .65;  // bulut etkisi en fazla %65 azalır
-const boostFactor = () => (G && G.totalEarned < BOOST_CAP && !G.demo) ? BOOST_MULT : 1;
+const boostFactor = () => {
+  if (!G || G.demo) return 1;
+  if (G.totalEarned < BOOST_CAP) return BOOST_MULT;
+  if (G.totalEarned < BOOST_CAP2) return BOOST_MULT2; // yumuşak iniş kademesi
+  return 1;
+};
 // BUGFIX: nowMin UTC dakikası döndürüyordu → güneş eğrisi ve puant fiyat saatleri TR'de 3 saat kaymıştı
 // (HUD saati yerel, sim UTC). Artık ikisi de YEREL saat.
 function nowMin() { return Date.now() / 60000 - new Date().getTimezoneOffset() + (G ? G.demoOffsetMin : 0); }
@@ -3616,13 +3624,17 @@ function sellChunk(st, mwh, targetCell, mult) {
   noteSold(cell, mwh);
   satisGeliri(gain); // 🏦 borç varsa bankanın payı burada kesilir
   G.cellEarned[st.cell] = (G.cellEarned[st.cell] || 0) + gain; // ofis bölge raporu (kaynak bölgeye yazılır)
-  const wasBoosted = G.totalEarned < BOOST_CAP;
+  // 🚀 kademe geçiş anonsları: 2 = ×10 · 1 = ×3 (yumuşak iniş) · 0 = bonus bitti
+  const kademeOnce = G.totalEarned < BOOST_CAP ? 2 : G.totalEarned < BOOST_CAP2 ? 1 : 0;
   G.totalSold += mwh; G.totalEarned += gain; G.weekSold += mwh;
   // ⚠️ HATA AVI (yüksek): burası hattı HİÇ KULLANMAYAN yerel satışlara da pay yazıyordu —
   // konsorsiyum devredeyken kasaya yoktan para basılıyordu. Gerçek taşıma payı zaten yukarıdaki
   // konsorsiyum dalında yazılıyor; bu satır tamamen kaldırıldı.
-  if (wasBoosted && G.totalEarned >= BOOST_CAP)
+  const kademeSonra = G.totalEarned < BOOST_CAP ? 2 : G.totalEarned < BOOST_CAP2 ? 1 : 0;
+  if (kademeOnce > 0 && kademeSonra === 0)
     toast('🚀 Başlangıç bonusu bitti! Gerçek ritim: yakıt stokları ~12 saatte biter, sabah-akşam iki oturum yeter.', '', null, 0, true);
+  else if (kademeOnce === 2 && kademeSonra === 1)
+    toast('🚀 ×10 bonus doldu — yumuşak iniş: ' + fmt(BOOST_CAP2) + ' kazanca kadar üretim ×' + BOOST_MULT2 + ' devam ediyor!', '', null, 0, true);
   return gain;
 }
 window.startDischarge = (id, frac, adMult, targetCell, quiet) => {
@@ -12778,7 +12790,7 @@ function tutTick() {
       <h2>🎓 Eğitim Tamamlandı!</h2>
       <p style="text-align:center;font-size:40px">🏆</p>
       <p style="text-align:center">Tüm başlangıç görevleri bitti.<br>Ödülün: <b class="pos" style="font-size:18px">+${fmt(STARTER_REWARD)}</b></p>
-      <p style="text-align:center;font-size:11px">Artık serbestsin — kurulum süreleri normale döndü, 🚀 başlangıç bonusun (${fmt(BOOST_CAP)} kazanca kadar ×${BOOST_MULT} üretim) devam ediyor.</p>
+      <p style="text-align:center;font-size:11px">Artık serbestsin — kurulum süreleri normale döndü, 🚀 başlangıç bonusun devam ediyor (${fmt(BOOST_CAP)} kazanca kadar ×${BOOST_MULT}, sonra ${fmt(BOOST_CAP2)}'a kadar ×${BOOST_MULT2} üretim).</p>
       <button class="primary" onclick="closeModal()">Oyuna Devam ▶</button>`;
     $('overlay').classList.add('show');
     beep(880, .12); setTimeout(() => beep(1320, .15), 140);
@@ -13188,9 +13200,11 @@ function renderHUD() {
   const d = clockDate();
   $('clockline').textContent = '🕐 ' + d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' }) + (G.demo ? ' ⏩' : '') + (boostFactor() > 1 ? ' 🚀' : '');
   if (boostFactor() > 1) {
-    $('lvltxt').textContent = '🚀 Bonus ×' + BOOST_MULT;
-    $('lvlfill').style.width = Math.min(100, 100 * G.totalEarned / BOOST_CAP) + '%';
-    $('xptxt').textContent = fmt(G.totalEarned) + ' / ' + fmt(BOOST_CAP);
+    // kademeli iniş: çubuk aktif kademenin hedefini gösterir (×10 → $50M, ×3 → $100M)
+    const bHedef = G.totalEarned < BOOST_CAP ? BOOST_CAP : BOOST_CAP2;
+    $('lvltxt').textContent = '🚀 Bonus ×' + boostFactor();
+    $('lvlfill').style.width = Math.min(100, 100 * G.totalEarned / bHedef) + '%';
+    $('xptxt').textContent = fmt(G.totalEarned) + ' / ' + fmt(bHedef);
   } else {
     $('lvltxt').textContent = '💼 Şirket Değeri';
     $('lvlfill').style.width = '100%';
