@@ -43,7 +43,7 @@
   #lvlbar{flex:1;height:6px;background:#2a3346;border-radius:4px;overflow:hidden}
   #lvlfill{height:100%;background:var(--acc2);width:0%;transition:width .4s}
   /* üst bant: KAYAN YAZI (patron isteği) — taşan içerik sürekli akar, kaydırma çubuğu yok */
-  #evbanner{flex:0 0 auto;padding:4px 0;font-size:11px;background:#1c2a3e;border-bottom:1px solid var(--line);z-index:20;overflow:hidden;white-space:nowrap}
+  #evbanner{flex:0 0 auto;padding:4px 0;font-size:11px;background:#1c2a3e;border-bottom:1px solid var(--line);z-index:20;overflow:hidden;white-space:nowrap;cursor:pointer}
   #evtext{display:inline-block;padding-left:100%;animation:evscroll 26s linear infinite}
   #evbanner:hover #evtext{animation-play-state:paused}
   @keyframes evscroll{to{transform:translateX(-100%)}}
@@ -275,23 +275,27 @@
   .mtik{flex:0 0 20px;font-size:15px;line-height:1;color:var(--dim)}
   .mtik.on{color:var(--acc)}
   .sheet .sub{font-size:11px;color:var(--dim)}
-  /* İnşa kataloğu — ürün kartları (rakip tarzı) */
+  /* İnşa kataloğu — BÜYÜK ürün kartları (patron 29 Ağu: rakip tarzı — üstte isim + İncele,
+     solda büyük foto, sağda etiketli özellik satırları, altta büyük fiyat + Satın al) */
   .catrow{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
-  .catrow button{padding:6px 12px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);font-size:11.5px;font-weight:700;cursor:pointer}
+  .catrow button{padding:7px 13px;border-radius:15px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);font-size:12px;font-weight:700;cursor:pointer}
   .catrow button.on{background:var(--acc2);border-color:var(--acc2);color:#071018}
-  .pcard{display:flex;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px;margin:8px 0;align-items:center}
-  .pimg{width:62px;height:62px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:34px;flex:0 0 62px;box-shadow:inset 0 -8px 16px #0003}
-  .pbody{flex:1;min-width:0}
-  .pname{font-size:13.5px;font-weight:800}
-  .pname .pmw{color:var(--acc2);font-weight:700;font-size:12px}
-  .pspecs{display:flex;gap:8px;flex-wrap:wrap;font-size:10.5px;color:var(--dim);margin:4px 0}
-  .pspecs span{background:#141b28;border:1px solid var(--line);border-radius:6px;padding:2px 6px}
-  .pdesc{font-size:10.5px;color:var(--dim)}
-  .pbuy{flex:0 0 auto;text-align:center}
-  .pprice{font-size:13px;font-weight:800;color:var(--acc);margin-bottom:5px}
-  .pbuy button{min-height:44px;padding:11px 14px;border-radius:9px;border:none;background:var(--acc);color:#08110c;font-weight:800;font-size:12px;cursor:pointer}
+  .pcard{display:flex;flex-direction:column;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:12px;margin:10px 0}
+  .phead{display:flex;align-items:flex-start;gap:8px}
+  .pname{font-size:16px;font-weight:800;flex:1;min-width:0;cursor:pointer}
+  .pname .pmw{color:var(--acc2);font-weight:800;font-size:13px}
+  .pmain{display:flex;gap:10px;align-items:stretch}
+  .pimg{width:38%;min-width:104px;max-width:150px;aspect-ratio:1;flex:0 0 auto;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:inset 0 -8px 16px #0003;cursor:pointer}
+  .prows{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;justify-content:center}
+  .prow{display:flex;align-items:center;gap:8px;background:#141b28;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12px}
+  .prow .pl{color:var(--dim);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .prow b{font-size:12.5px;white-space:nowrap}
+  .pdesc{font-size:11px;color:var(--dim)}
+  .pbuy{display:flex;align-items:center;gap:10px}
+  .pprice{font-size:18px;font-weight:900;color:var(--acc);flex:1;min-width:0}
+  .pbuy button{min-height:46px;padding:12px 22px;border-radius:12px;border:none;background:var(--acc);color:#08110c;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
   .pbuy button:disabled{background:#2a3346;color:var(--dim)}
-  .ghostmini{display:block;width:100%;min-height:34px;margin-top:5px;padding:8px 0;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:10.5px;font-weight:700;cursor:pointer}
+  .ghostmini{flex:0 0 auto;min-height:38px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#141b28;color:var(--ink);font-size:12px;font-weight:800;cursor:pointer}
   .detimg{position:relative;width:100%;height:200px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:74px;margin-bottom:10px}
   .detimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .detcols{display:flex;gap:8px;margin-bottom:8px}
@@ -589,7 +593,7 @@
     </div>
     <div class="lvlrow"><span id="lvltxt">🚀</span><div id="lvlbar"><div id="lvlfill"></div></div><span id="xptxt"></span></div>
   </div>
-  <div id="evbanner"><span id="evtext">—</span></div>
+  <div id="evbanner" onclick="etkinlikAc()" title="Etkinlikler"><span id="evtext">—</span></div>
 
   <div id="mapwrap">
     <div id="mapdiv"></div>
@@ -660,7 +664,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-28 20:35) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-29 18:45) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -824,7 +828,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-28 20:35)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-29 18:45)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -1000,6 +1004,37 @@ en: {
   '🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!': '🔲 Tap an empty spot → build a plant/storage on that tile. 🚀 ×10 bonus active!',
   '🌍 Geniş şehir verisi yüklenemedi — talep haritası çekirdek şehirlerle sınırlı. Bağlantı gelince kendiliğinden denenecek.': '🌍 Extended city data could not be loaded — the demand map is limited to core cities. Will retry automatically.',
   '🌍 Şehir veritabanı yüklendi — talep haritası tamamlandı.': '🌍 City database loaded — demand map is complete.',
+  // ── 29 Ağu dilimi: büyük katalog kartları + etkinlikler sayfası + şirket adı değiştirme ──
+  'Kapasite': 'Capacity', 'Kurulum süresi': 'Build time', 'Salınım': 'Emissions',
+  'Bağlantı': 'Connections', 'Trafo kaybı': 'Transformer loss', 'Yakıt gideri': 'Fuel cost',
+  'Başlangıç': 'Initial stock', 'Kademe başına': 'Per tier', 'Şart': 'Requirement',
+  'jeotermal kare': 'geothermal tile', 'İncele': 'Details', 'Satın al': 'Buy',
+  'Etkinlikler': 'Events', 'BUGÜN AKTİF': 'ACTIVE TODAY', 'YARIN': 'TOMORROW',
+  'Yeşil teşvik aktif: satışa +%{0}': 'Green incentive active: +{0}% on sales',
+  'Kampanyayı Gör': 'View Offer',
+  'Mini oyun (Frekans Nöbeti): hafta sonları ve her akşam 21:00 sonrası açılır.': 'Mini-game (Frequency Watch): opens on weekends and every evening after 21:00.',
+  'Rüzgar Festivali': 'Wind Festival', 'Rüzgar üretimi +%50': 'Wind output +50%',
+  'Sıcak Hava Dalgası': 'Heat Wave', 'Gündüz fiyat +%35, güneş +%15': 'Daytime price +35%, solar +15%',
+  'Sağanak': 'Downpour', 'Güneş −%40, hidro +%40': 'Solar −40%, hydro +40%',
+  'Akşam Krizi': 'Evening Crisis', '18-22 arası fiyat +%80!': 'Price +80% between 18:00-22:00!',
+  'Bakım Günü': 'Maintenance Day', 'Toplu bakım yarı fiyat': 'Bulk maintenance at half price',
+  'Talep Patlaması': 'Demand Surge', 'Tüm gün fiyat +%25': 'All-day price +25%',
+  'Durgun Hava': 'Calm Air', 'Rüzgar −%45, gündüz fiyat +%20': 'Wind −45%, daytime price +20%',
+  'Soğuk Dalgası': 'Cold Snap', 'Tüm gün fiyat +%40, güneş −%15': 'All-day price +40%, solar −15%',
+  'Gece Tarifesi': 'Night Tariff', '00-06 arası fiyat +%60 — depoyu gece boşalt': 'Price +60% between 00:00-06:00 — discharge storage at night',
+  'Kar Erimesi': 'Snowmelt', 'Hidro +%60, güneş −%10': 'Hydro +60%, solar −10%',
+  'Sanayi Vardiyası': 'Industry Shift', 'Gündüz (10-20) fiyat +%30': 'Daytime (10:00-20:00) price +30%',
+  'Açık Gökyüzü': 'Clear Skies', 'Güneş +%45, rüzgar −%20': 'Solar +45%, wind −20%',
+  'Hafta Sonu Kampanyası': 'Weekend Campaign', 'Devlet alım fiyatı 2 KATI — tüm gün': 'State purchase price DOUBLED — all day',
+  'Şirket Adı': 'Company Name', 'ilk değişiklik ücretsiz': 'first change free',
+  'Şirket Adını Değiştir': 'Change Company Name', 'Mevcut ad': 'Current name',
+  'Yeni şirket adı...': 'New company name...', 'İlk ad değişikliği ücretsiz!': 'First name change is free!',
+  'Ücret: {0} İmtiyaz Puanı (bakiyen: {1})': 'Cost: {0} Privilege Points (balance: {1})',
+  'Değiştir — ücretsiz': 'Change — free', 'Vazgeç': 'Cancel',
+  'Şirket adı boş olamaz': 'Company name cannot be empty',
+  'Bu zaten mevcut adın': 'That is already your current name',
+  '🏢 "{0}" adında bir şirket zaten var — başka bir ad seç': '🏢 A company named "{0}" already exists — pick another name',
+  '🏢 Şirket adın artık: {0}': '🏢 Your company is now named: {0}',
 },
 // DIL-OTOMATIK-BASLA — tools/dil-entegre.js üretti (19 dil, dil başına bir ajan); elle düzenleme buraya DEĞİL, ajana/betiğe
 de: {
@@ -5129,6 +5164,37 @@ function todayEvent() {
   _evCacheKey = key; _evCache = o;
   return o;
 }
+// 📅 ETKİNLİKLER SAYFASI (patron 29 Ağu: "kayan yazıya basınca mevcut etkinlikler sayfası
+// açılsın") — kayan şeride (#evbanner) dokununca bugünün + yarının etkinlikleri ve aktif
+// ayrıcalıklar tek ekranda. Takvim deterministik (yılın günü mod 12) olduğu için yarın da
+// aynı formülle türetilir.
+window.etkinlikAc = () => {
+  if (!G || !G._started) return;
+  const kart = (e, kucuk) => `
+    <div style="display:flex;align-items:center;gap:12px;border:1px solid ${e.weekend ? 'var(--gold)' : 'var(--line)'};border-radius:12px;padding:${kucuk ? '8px 12px' : '12px 14px'};margin:6px 0${kucuk ? ';opacity:.75' : ''}">
+      <div style="font-size:${kucuk ? 22 : 30}px">${e.ico}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:800;font-size:${kucuk ? 12.5 : 14.5}px${e.weekend ? ';color:var(--gold)' : ''}">${CEV(e.nm)}</div>
+        <div class="sub" style="font-size:${kucuk ? 10.5 : 12}px">${CEV(e.d)}</div>
+      </div>
+    </div>`;
+  const yarinD = new Date(Date.now() + 864e5);
+  const doyY = Math.floor((yarinD - new Date(yarinD.getFullYear(), 0, 0)) / 864e5);
+  const gunY = DAILY_EVENTS[doyY % DAILY_EVENTS.length];
+  const yarinList = isWeekend(yarinD) ? [WEEKEND_EVENT, gunY] : [gunY];
+  const o = typeof activeOffer === 'function' ? activeOffer() : null;
+  $('modal').innerHTML = `
+    <h2>📅 ${CEV('Etkinlikler')}</h2>
+    <div style="font-size:11px;color:var(--acc2);margin:6px 0 2px">${CEV('BUGÜN AKTİF')}</div>
+    ${todayEvents().map(e => kart(e)).join('')}
+    <div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">${CEV('YARIN')}</div>
+    ${yarinList.map(e => kart(e, true)).join('')}
+    ${greenBonus() > 0 ? `<p class="sub">🌿 ${CEV('Yeşil teşvik aktif: satışa +%{0}', Math.round(greenBonus() * 100))}</p>` : ''}
+    ${o ? `<button class="bigsell" onclick="closeModal();reopenOffer()">🎁 ${CEV('Kampanyayı Gör')} ⏳${offerLeft(o)}</button>` : ''}
+    <p class="sub">🎮 ${CEV('Mini oyun (Frekans Nöbeti): hafta sonları ve her akşam 21:00 sonrası açılır.')}</p>
+    <button class="primary ghostbtn" onclick="closeModal()">${CEV('Kapat')}</button>`;
+  $('overlay').classList.add('show');
+};
 const isoWeek = () => { const d = new Date(), t = new Date(d.getFullYear(), 0, 1); return d.getFullYear() + '-' + Math.ceil(((d - t) / 864e5 + t.getDay() + 1) / 7); };
 
 // ── Durum ──
@@ -5926,32 +5992,35 @@ window.openImtiyazShop = () => {
   $('overlay').classList.add('show');
 };
 window.ipSatinAl = kod => {
+  // 🐞 29 Ağu: fiyat çapası ×1,43 güncellemesi yalnız ETİKETLERE işlenmişti — ipHarca()
+  // çağrıları eski fiyatları düşüyordu (etikette 15 görüp 10 ödüyordu). "Gördüğün = ödediğin"
+  // ilkesi gereği düşülen tutarlar etiketlerle (5913-5921) hizalandı.
   if (kod === 'insaat') {
     const liste = G.units.filter(u => u.buildDone > Date.now());
-    if (!liste.length || !ipHarca(10)) return;
+    if (!liste.length || !ipHarca(15)) return;
     liste.forEach(u => { u.buildDone = Date.now(); u._ann = true; });
     ensureConnections(); ensureGridLinks();
     toast('💠🏗️ ' + liste.length + ' inşaat anında tamamlandı!', '', null, 0, true);
   } else if (kod === 'arastirma') {
-    if (!G.research.active || !ipHarca(12)) return;
+    if (!G.research.active || !ipHarca(17)) return;
     G.research.active.until = Date.now(); // tamamlama anonsunu mevcut tik verir
     toast('💠🧪 Araştırma anında tamamlanıyor!', '', null, 0, true);
   } else if (kod === 'prod' || kod === 'sat') {
     if (G.ipBoost && Date.now() < G.ipBoost.until) { toast('💠 Zaten aktif bir takviyen var — bitmesini bekle', 'warn'); return; }
-    if (!ipHarca(20)) return;
+    if (!ipHarca(30)) return;
     G.ipBoost = { t: kod, until: Date.now() + 24 * 3600e3 };
     toast(kod === 'prod' ? '💠🚀 Üretim Takviyesi aktif: 24 saat +%15!' : '💠💰 Satış Primi aktif: 24 saat +%10!', '', null, 0, true);
   } else if (kod === 'bakim') {
-    if (G.bakimAnlasma || !ipHarca(120)) return;
+    if (G.bakimAnlasma || !ipHarca(170)) return;
     G.bakimAnlasma = true;
     G.maintDiscount = Math.min(G.maintDiscount || 1, .8);
     toast('💠🔧 Bakım Anlaşması imzalandı — bakım giderleri KALICI -%20!', '', null, 0, true);
   } else if (kod === 'vipAy') {
-    if (!ipHarca(60)) return;
+    if (!ipHarca(85)) return;
     G.adFreeUntil = Math.max(Date.now(), G.adFreeUntil || 0) + 30 * 864e5;
     toast('💠🎬 VIP Reklamsız 1 ay aktif!', '', null, 0, true);
   } else if (kod === 'vipLife') {
-    if (G.adFreeLife || !ipHarca(700)) return;
+    if (G.adFreeLife || !ipHarca(1000)) return;
     G.adFreeLife = true;
     toast('💠♾️ Ömür Boyu VIP Reklamsız aktif!', '', null, 0, true);
   } else return;
@@ -6704,15 +6773,17 @@ const katkiIpFor = (olcek, sira) => {
   const t = KATKI_IP[olcek]; if (!t) return 0;
   return sira === 0 ? t.bir : sira === 1 ? t.iki : sira === 2 ? t.uc : sira < 20 ? t.yirmi : t.kalan;
 };
-// 📈 Ölçek terfi teşviki de aynı sebeple üçte bire indi (eşik × 20.000 → × 7.000):
-// Holding terfisi $400M ödüyordu — tek ödemeyle end-game'e atlatıyordu.
-const OLCEK_TESVIK = 7000;
+// 📈 Ölçek terfi teşviki eşikle çarpılır. Eşikler 29 Ağu'da (patron) ~17 kat büyüyünce
+// çarpan da 7.000 → 700'e indi ki terfi ödülleri eski seviyede kalsın
+// (Küçük ~$3,5M · Orta ~$7M; 7.000 kalsaydı 35M/70M ödeyip ekonomiyi bozardı).
+const OLCEK_TESVIK = 700;
+// ⚖️ Eşikler (patron, 29 Ağu): Holding 100k · Büyük 20k · Orta 10k · Küçük 5k · altı Mikro.
 const OLCEK = [
   { nm: 'Mikro İşletme', ico: '🏠', esik: 0 },
-  { nm: 'Küçük İşletme', ico: '🏢', esik: 300 },       // esik: bir ÜST ölçeğe geçmek için haftalık katkı (MWh)
-  { nm: 'Orta Ölçekli İşletme', ico: '🏬', esik: 1500 },
-  { nm: 'Büyük Ölçekli İşletme', ico: '🏭', esik: 6000 },
-  { nm: 'Enerji Holdingi', ico: '👑', esik: 20000 },
+  { nm: 'Küçük İşletme', ico: '🏢', esik: 5000 },      // esik: bir ÜST ölçeğe geçmek için haftalık katkı (MWh)
+  { nm: 'Orta Ölçekli İşletme', ico: '🏬', esik: 10000 },
+  { nm: 'Büyük Ölçekli İşletme', ico: '🏭', esik: 20000 },
+  { nm: 'Enerji Holdingi', ico: '👑', esik: 100000 },
 ];
 const olcekOf = i => OLCEK[Math.max(0, Math.min(OLCEK.length - 1, i || 0))];
 const olcekBadge = i => { const o = olcekOf(i); return `${o.ico} ${CEV(o.nm)}`; };
@@ -14626,30 +14697,44 @@ function openBuildSheet() {
     const tutOff = tutLock && t !== tutPickT;        // diğerlerini karartma yalnız ilk 60 dk
     const capLock = mode === 'plant' && capBlocked(t);
     const disabled = G.cash < T.cost || tutOff;
-    const bt = `⏱ ${T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn'}`;
-    const specs = isDepot ?
-      `<span>${FUEL_TYPES[T.fuel].ico} ${T.baseCap} t başlangıç</span><span>⏫ +${DEPOT_STEP} t/kademe</span><span>${bt}</span>` :
+    const btTxt = T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn';
+    // 🏷️ Rakip tarzı ETİKETLİ SATIRLAR (patron 29 Ağu): yatay çipler yerine her özellik ayrı satır
+    const prow = (ik, et, deger) => `<div class="prow"><span class="pl">${ik} ${et}</span><b>${deger}</b></div>`;
+    const rowsHtml = isDepot ?
+      prow(FUEL_TYPES[T.fuel].ico, CEV('Başlangıç'), T.baseCap + ' t') +
+      prow('⏫', CEV('Kademe başına'), '+' + DEPOT_STEP + ' t') +
+      prow('⏱', CEV('Kurulum süresi'), btTxt) :
       isStore ?
-      `<span>🔋 ${T.cap} MWh</span><span>🔗 ${T.conn} bağlantı</span><span>${bt}</span>` :
-      `<span>⚡ ${T.mw} MW</span><span>${bt}</span><span>🌫️ ${T.em || 0} g/kWh</span>${T.geoOnly ? '<span>♨️ jeotermal kare</span>' : ''}${T.fuel ? `<span>⛽ $${T.fuel}/MWh</span>` : ''}`;
+      prow('🔋', CEV('Kapasite'), T.cap + ' MWh') +
+      prow('🔗', CEV('Bağlantı'), T.conn) +
+      (T.loss ? prow('⚡', CEV('Trafo kaybı'), '%' + Math.round(T.loss * 100)) : '') +
+      prow('⏱', CEV('Kurulum süresi'), btTxt) :
+      prow('⚡', CEV('Kapasite'), T.mw + ' MW') +
+      prow('⏱', CEV('Kurulum süresi'), btTxt) +
+      prow('🌫️', CEV('Salınım'), (T.em || 0) + ' g/kWh') +
+      (T.fuel ? prow('⛽', CEV('Yakıt gideri'), '$' + T.fuel + '/MWh') : '') +
+      (T.geoOnly ? prow('♨️', CEV('Şart'), CEV('jeotermal kare')) : '');
+    const markaSatiri = T.brand && BRAND_ARCH[T.brand] ? (() => { const B = BRAND_ARCH[T.brand], rel = brandRel(T.brand);
+      return `<div style="font-size:11px;font-weight:800;color:${B.col};margin-top:1px">${brandLogoHTML(T.brand, 13)} ${brandNm(T.brand)}${rel > 0 ? ` <span class="sub">· sadakat ${rel} → -%${Math.round(25 * rel / 100)}</span>` : ''}</div>`; })() : '';
     return `<div class="pcard${tutPick ? ' tut' : ''}"${tutOff ? ' style="opacity:.4;pointer-events:none"' : ''}>
-      <div class="pimg" style="background:${CAT_GRAD[isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat]};position:relative;overflow:hidden" onclick="openDetail('${t}','${mode}')">
-        <img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
-        ${T.ico}
-        ${T.brand && BRAND_ARCH[T.brand] ? `<span style="position:absolute;top:2px;right:2px;background:#0b1220e6;border-radius:6px;padding:2px;line-height:0;box-shadow:0 1px 4px #000a">${brandLogoHTML(T.brand, 18)}</span>` : ''}
+      <div class="phead">
+        <div class="pname" onclick="openDetail('${t}','${mode}')">${T.nm} <span class="pmw">${isDepot ? T.baseCap + ' ton' : isStore ? T.cap + ' MWh' : T.mw + ' MW'}</span>${markaSatiri}</div>
+        <button class="ghostmini" onclick="openDetail('${t}','${mode}')">${CEV('İncele')} ›</button>
       </div>
-      <div class="pbody" onclick="openDetail('${t}','${mode}')">
-        <div class="pname">${T.nm} <span class="pmw">${isDepot ? T.baseCap + ' ton' : isStore ? T.cap + ' MWh' : T.mw + ' MW'}${isStore && T.loss ? ' <span class="sub">· ⚡kayıp %' + Math.round(T.loss * 100) + '</span>' : ''}</span></div>
-        ${T.brand && BRAND_ARCH[T.brand] ? (() => { const B = BRAND_ARCH[T.brand], rel = brandRel(T.brand);
-          return `<div style="font-size:10.5px;font-weight:800;color:${B.col};margin:1px 0 2px">${brandLogoHTML(T.brand, 13)} ${brandNm(T.brand)}${rel > 0 ? ` <span class="sub">· sadakat ${rel} → -%${Math.round(25 * rel / 100)}</span>` : ''}</div>`; })() : ''}
-        <div class="pspecs">${specs}</div>
-        <div class="pdesc">${T.d}</div>
+      <div class="pmain">
+        <div class="pimg" style="background:${CAT_GRAD[isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat]};position:relative;overflow:hidden" onclick="openDetail('${t}','${mode}')">
+          <img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+          ${T.ico}
+          <span style="position:absolute;left:4px;top:4px;background:#0b1220cc;border-radius:7px;padding:2px 7px;font-size:10px;font-weight:800;z-index:1">${CEV(isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat)}</span>
+          ${T.brand && BRAND_ARCH[T.brand] ? `<span style="position:absolute;top:4px;right:4px;background:#0b1220e6;border-radius:6px;padding:2px;line-height:0;box-shadow:0 1px 4px #000a">${brandLogoHTML(T.brand, 18)}</span>` : ''}
+        </div>
+        <div class="prows">${rowsHtml}</div>
       </div>
+      <div class="pdesc">${T.d}</div>
       <div class="pbuy">
         <div class="pprice">${fmt(T.cost)}</div>
         ${capLock ? `<button onclick="buyCapLic('${T.cat}')" style="background:var(--gold);color:#131313">🔒 Lisans</button>`
-          : `<button onclick="buildHere('${kind}','${t}')" ${disabled ? 'disabled' : ''} ${tutOff ? '' : `data-cost="${T.cost}"`}>${(tutPick ? '👉 ' : '') + 'Satın al'}</button>`}
-        <button class="ghostmini" onclick="openDetail('${t}','${mode}')">İncele ›</button>
+          : `<button onclick="buildHere('${kind}','${t}')" ${disabled ? 'disabled' : ''} ${tutOff ? '' : `data-cost="${T.cost}"`}>${(tutPick ? '👉 ' : '') + CEV('Satın al')}</button>`}
       </div>
     </div>`;
   };
@@ -14840,11 +14925,12 @@ function openUnitSheet(id) {
           <tr><td><b>Tümünü satarsan</b></td><td><b>${fmt(rAll.gain)}</b></td></tr>
         </table>
         <p class="sub" style="margin-top:6px">Şeffaf kural: gördüğün = hesabına geçen. Trafo kaybı YOK, sürpriz kesinti yok.${rAll.excess > .5 ? ' 💡 Fazlan yok pahasına gidiyor: kalabalık şehir yakınına depo kur ya da yarını bekle.' : ''}</p>
-        ${(() => { // 🔗 GRUP KİLİDİ (patron kuralı): bağlantılı depo (merkez ya da bağlı) bağlantı
-          // kesilmeden SATILAMAZ, satılığa/müzayedeye çıkarılamaz — uyarı butonun kendisinde.
-          if (isLinked(u)) return `<button class="bigsell half" style="color:var(--dim)" onclick="toast('🔗 Bu depo bir depo grubuna bağlı — bağlantı kesilmeden satılamaz ve müzayedeye konulamaz. Önce yukarıdan 🔌 Bağlantıyı Kes.','warn',null,0,true)">🔒 Depoyu Sat — önce bağlantıyı kes</button>`;
-          const r = resaleValue(u); return `<button class="bigsell half" onclick="demolishUnit(${u.id})" style="color:var(--danger)">🗑️ Depoyu Sat — ${fmt(r.value)} iade (%${100 - r.pct} zarar edilecek)</button>`; })()}
-      </details>`;
+      </details>
+      ${(() => { // 🗑️ VARLIK SATIŞI (patron 29 Ağu: "Sat butonu ayrıntıların içinden çıksın,
+        // direkt en altta kırmızı buton olsun") — 🔗 GRUP KİLİDİ korunur: bağlantılı depo
+        // (merkez ya da bağlı) bağlantı kesilmeden SATILAMAZ, uyarı butonun kendisinde.
+        if (isLinked(u)) return `<button class="bigsell" style="color:var(--dim)" onclick="toast('🔗 Bu depo bir depo grubuna bağlı — bağlantı kesilmeden satılamaz ve müzayedeye konulamaz. Önce yukarıdan 🔌 Bağlantıyı Kes.','warn',null,0,true)">🔒 Depoyu Sat — önce bağlantıyı kes</button>`;
+        const r = resaleValue(u); return `<button class="bigsell" onclick="demolishUnit(${u.id})" style="background:var(--danger);color:#fff">🗑️ Depoyu Sat — ${fmt(r.value)} iade (%${100 - r.pct} zarar edilecek)</button>`; })()}`;
     if (wasOpen) { const d = $('us_det'); if (d) d.open = true; }
   } else if (u.kind === 'office') {
     // ── OFİS: bölge raporu (patron isteği — net kazanç/zarar + cihaz sayısı) ──
@@ -14883,7 +14969,7 @@ function openUnitSheet(id) {
         <p style="font-size:11.5px;font-weight:700;color:var(--danger);text-align:center;margin:8px 0 2px">Şehre gitmek için şehir ismine tıklayın</p>
         <p class="sub" style="margin-top:2px">Üretim iyi ama talep düşükse: kalabalık şehre ⚡ nakil hattı çekip oraya sat.</p>` : ''}`;
       })()}
-      ${u.hq ? '<p class="sub">🏢 Merkez ofis — satılamaz.</p>' : `<button class="bigsell half" onclick="demolishUnit(${u.id})" style="color:var(--danger)">🗑️ Ofisi Kapat — ${fmt(resaleValue(u).value)} iade</button>
+      ${u.hq ? '<p class="sub">🏢 Merkez ofis — satılamaz.</p>' : `<button class="bigsell" onclick="demolishUnit(${u.id})" style="background:var(--danger);color:#fff">🗑️ Ofisi Kapat — ${fmt(resaleValue(u).value)} iade</button>
       <p class="sub">⚠️ Ofis kapanınca bu bölgede YENİ ruhsat alamazsın (mevcut ruhsat ve tesisler çalışmaya devam eder).</p>`}`;
   } else if (u.kind === 'fueldepot') {
     // ── YAKIT DEPOSU: ton bazlı stok + kapasite kademesi (patron tasarımı) ──
@@ -14905,7 +14991,7 @@ function openUnitSheet(id) {
       <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">⏫ KAPASİTE ARTTIR <span class="sub">(kademe: ${fmt(T.cost / 2)} · +${DEPOT_STEP} ton)</span></div>
       ${avail < 1 && !u.upgUntil ? `<p class="sub">${lvl === 0 ? '🧪 Önce şirket ekranından (yukarıda şirket adına dokun) "' + RESEARCH[depotResKey(u)].nm + '" araştır.' : lvl >= RESEARCH[depotResKey(u)].max ? 'Bu deponun tüm kademeleri kullanıldı — maksimum kapasite.' : 'Tüm açık kademeler kullanıldı — araştırmaya devam et.'}</p>` : ''}
       ${!u.upgUntil && avail >= 1 ? [1, 5, 10, 20].filter(n => n <= avail).map(n => `<button class="bigsell half" onclick="upgradeDepotAsk(${u.id},${n})">⏫ +${n} kademe (+${n * DEPOT_STEP} t) — ${fmt(n * T.cost / 2)} · ${fmtHrs(n * KAD_SEC * lvl / 3600)}</button>`).join('') : ''}
-      <button class="bigsell half" onclick="demolishUnit(${u.id})" style="color:var(--danger)">🗑️ Depoyu Sat — ${fmt(resaleValue(u).value)} iade</button>`;
+      <button class="bigsell" onclick="demolishUnit(${u.id})" style="background:var(--danger);color:#fff">🗑️ Depoyu Sat — ${fmt(resaleValue(u).value)} iade</button>`;
   } else {
     const T = PLANT_TYPES[u.t];
     const out = plantOutput(u);
@@ -14989,7 +15075,7 @@ function openUnitSheet(id) {
       })()}
       ${repairCost >= 1 ? `<button class="bigsell" onclick="repairUnit(${u.id})" ${G.cash < repairCost ? 'disabled' : ''}>🔧 Onar — ${fmt(repairCost)}</button>` : ''}
       <button class="bigsell half" onclick="toggleUnit(${u.id})">${u.on ? '⏸ Durdur' : '▶ Çalıştır'}</button>
-      ${(() => { const r = resaleValue(u); const loss = 100 - r.pct; return `<button class="bigsell half" onclick="demolishUnit(${u.id})" style="color:var(--danger)">💰 Santrali Sat — ${fmt(r.value)} iade (%${loss} zarar edilecek${loss >= 75 ? ' — HURDA fiyatı!' : ''})</button>
+      ${(() => { const r = resaleValue(u); const loss = 100 - r.pct; return `<button class="bigsell" onclick="demolishUnit(${u.id})" style="background:var(--danger);color:#fff">💰 Santrali Sat — ${fmt(r.value)} iade (%${loss} zarar edilecek${loss >= 75 ? ' — HURDA fiyatı!' : ''})</button>
       <p class="sub">İkinci el fiyatı VERİME göre: iyi sahadaki tesis değerini korur, kötü sahadaki hurdaya gider. Yıpranma da düşürür — satmadan önce onarmak bazen kârlı.</p>`; })()}`;
   }
   showSheet('unitsheet');
@@ -15717,7 +15803,7 @@ function renderHUD() {
   // 📅 hafta sonu 2 etkinlik var — bandda ikisi de ayrı ayrı görünür
   const evTxt = todayEvents().map(e => `<b${e.weekend ? ' style="color:var(--gold)"' : ''}>${e.ico} ${e.nm}</b> — ${e.d}`).join(' · ');
   $('evtext').innerHTML = `🌫️ ${co2Avg()} g/kWh${greenBonus() > 0 ? ' · <span style="color:var(--acc)">🌿 teşvik +%' + Math.round(greenBonus() * 100) + '</span>' : ''} · ${evTxt}` +
-    (o ? ` · <span style="color:var(--gold);cursor:pointer;text-decoration:underline" onclick="reopenOffer()">🎁 Kampanya ⏳${offerLeft(o)}</span>` : '') +
+    (o ? ` · <span style="color:var(--gold);cursor:pointer;text-decoration:underline" onclick="event.stopPropagation();reopenOffer()">🎁 Kampanya ⏳${offerLeft(o)}</span>` : '') +
     '' + // 🎮 mini oyun gizliyken HUD çipi de görünmesin
     (allyBuffOn() ? ' · <span style="color:var(--gold)">🤝 +%50 bonus ⏳' + fmtHrs((G.allyBuffUntil - Date.now()) / 36e5) + '</span>' : '') +
     (G.ally && G.ally.tender ? ' · <span style="color:var(--danger)">🚨 ihale: ' + fmtN(G.ally.tender.delivered) + '/' + fmtN(G.ally.tender.need) + ' MWh</span>' : '');
@@ -15997,6 +16083,26 @@ $('wizback').addEventListener('click', () => {
     wizardStart();
   }
 });
+// 🏷️ ŞİRKET ADI BENZERSİZLİĞİ (patron 29 Ağu: "aynı isme sahip şirket olmaz").
+// Ad-tabanlı aramalar (openPlayerCard, ittifak akışları) çakışmaya açıktı. Normalleştirme:
+// TR yereliyle küçük harf + boşluk sadeleştirme. Kontrol istemcidendir: taze players listesi
+// + bot adları; çevrimdışıysa engellenemez (sunucu tarafı kural yok) — en iyi çaba.
+const adNorm = s => String(s || '').toLocaleLowerCase('tr').replace(/\s+/g, ' ').trim();
+async function sirketAdiAlinmisMi(ad) {
+  const n = adNorm(ad);
+  if (!n) return false;
+  try { if (typeof WORLD_PLAYERS !== 'undefined' && WORLD_PLAYERS.some(b => adNorm(b) === n)) return true; } catch (e) { }
+  if (!NET.on()) return false;
+  try {
+    const pl = await NET.get('players'); // taze liste — 12 sn'lik NET.players önbelleğine güvenme
+    for (const [pid, v] of Object.entries(pl || {})) {
+      if (pid === NET.id) continue;
+      if (v && adNorm(v.nm) === n) return true;
+    }
+  } catch (e) { } // ağ hatasında kuruluşu engelleme
+  return false;
+}
+let wizDoneBusy = false;
 function wizNameModal(il) {
   G.il = il;
   if (map) map.closePopup();
@@ -16009,7 +16115,15 @@ function wizNameModal(il) {
     <button class="primary ghostbtn" onclick="closeModal()">← Haritaya dön</button>`;
   $('overlay').classList.add('show');
 }
-window.wizDone = () => {
+window.wizDone = async () => {
+  // 🏷️ Benzersiz ad denetimi ÖNCE (patron 29 Ağu): çakışmada modal açık kalır, oyuncu adı
+  // düzeltir. wizDoneBusy çift tıklamada kuruluş kitinin iki kez eklenmesini önler.
+  if (wizDoneBusy) return;
+  wizDoneBusy = true;
+  const ad = (document.getElementById('nameinput').value || '').replace(/[<>&"]/g, '').trim() || 'Enerji A.Ş.';
+  const alinmis = await sirketAdiAlinmisMi(ad).catch(() => false);
+  wizDoneBusy = false;
+  if (alinmis) { toast(CEV('🏢 "{0}" adında bir şirket zaten var — başka bir ad seç', ad), 'warn', null, 0, true); return; }
   // ⚠️ İKİ AYRI SAAT TABANI — BİRLEŞTİRME (denetimde yakalandı, eğitimi tamamen öldürüyordu):
   // `G.founded` EĞİTİM penceresidir ve `tutActive()` onu HAM `Date.now()` ile karşılaştırır
   // (`dt >= 0` şartı var). bankaZaman() sunucu farkı kadar İLERİ olabildiği için dt negatif
@@ -16019,7 +16133,7 @@ window.wizDone = () => {
   // `G.foundedBanka` BANKANIN 24 saatlik güven penceresidir; o monoton saatte durur ki
   // saati geri alıp "şirketim eski" numarası yapılamasın.
   G.foundedBanka = bankaZaman();
-  G.company = (document.getElementById('nameinput').value || '').replace(/[<>&"]/g, '').trim() || 'Enerji A.Ş.';
+  G.company = ad;
   closeModal();
   $('wizsheet').classList.remove('show');
   wizLayer.forEach(m => m.remove()); wizLayer = [];
@@ -16202,6 +16316,38 @@ $('langlink').addEventListener('click', dilSecici);
 // mekanizma icat etmez. Rakipteki 'performans modu' bilerek YOK (bizde kademe sistemi yok,
 // sahte düğme koymayız); 'Çıkış Yap' da yok (Google oturum kapatma akışı ayrı iş — riskli).
 window.ayarSes = () => { G.muted = !G.muted; const m = $('mutelink'); if (m) m.textContent = G.muted ? '🔇' : '🔊'; save(); ayarlarAc(); };
+// 🏢 ŞİRKET ADI DEĞİŞTİRME (patron 29 Ağu): Ayarlar içinde; İLK değişiklik ÜCRETSİZ,
+// sonrakiler 💠 100 İmtiyaz Puanı. Benzersizlik denetimi kuruluşla aynı (sirketAdiAlinmisMi).
+const SIRKET_AD_IP = 100;
+window.sirketAdiDegistir = () => {
+  if (!G || !G._started) return;
+  const ilk = !(G.renameSay > 0);
+  $('modal').innerHTML = `
+    <h2>🏢 ${CEV('Şirket Adını Değiştir')}</h2>
+    <p class="sub">${CEV('Mevcut ad')}: <b>${(G.company || '').replace(/[<>&"]/g, '')}</b></p>
+    <input id="conameinput" maxlength="24" placeholder="${CEV('Yeni şirket adı...')}">
+    <p class="sub">${ilk ? '🎁 ' + CEV('İlk ad değişikliği ücretsiz!') : '💠 ' + CEV('Ücret: {0} İmtiyaz Puanı (bakiyen: {1})', SIRKET_AD_IP, ipBakiye())}</p>
+    <button class="primary" onclick="sirketAdiKaydet()">${ilk ? CEV('Değiştir — ücretsiz') : '💠 ' + SIRKET_AD_IP + ' — ' + CEV('Değiştir')}</button>
+    <button class="primary ghostbtn" onclick="closeModal();ayarlarAc()">${CEV('Vazgeç')}</button>`;
+  $('overlay').classList.add('show');
+  setTimeout(() => { const i = $('conameinput'); if (i) i.focus(); }, 100);
+};
+window.sirketAdiKaydet = async () => {
+  const v = ($('conameinput').value || '').replace(/[<>&"]/g, '').trim();
+  if (!v) { toast(CEV('Şirket adı boş olamaz'), 'warn'); return; }
+  if (adNorm(v) === adNorm(G.company)) { toast(CEV('Bu zaten mevcut adın'), 'warn'); return; }
+  if (await sirketAdiAlinmisMi(v).catch(() => false)) { toast(CEV('🏢 "{0}" adında bir şirket zaten var — başka bir ad seç', v), 'warn', null, 0, true); return; }
+  const ilk = !(G.renameSay > 0);
+  if (!ilk && !ipHarca(SIRKET_AD_IP)) return; // bakiye yetersizse ipHarca kendisi uyarır
+  G.company = v;
+  G.renameSay = (G.renameSay || 0) + 1;
+  save();
+  if (typeof renderHUD === 'function') renderHUD(); // #coname anında tazelensin (NET 12 sn'de yayar)
+  closeModal();
+  toast(CEV('🏢 Şirket adın artık: {0}', v) + (ilk ? '' : ' · 💠 -' + SIRKET_AD_IP), '', null, 0, true);
+  beep(700, .1);
+  ayarlarAc();
+};
 window.ayarlarAc = () => {
   const izin = ('Notification' in window) ? Notification.permission : 'yok';
   const satir = (icerik) => `<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0">${icerik}</div>`;
@@ -16210,6 +16356,7 @@ window.ayarlarAc = () => {
     <h2>⚙️ ${CEV('Ayarlar')}</h2>
     ${satir(`🌐 <b>${CEV('Dil')}</b><span class="sub">${DILLER[LANG].bayrak} ${DILLER[LANG].ad}</span>${dugme(CEV('Değiştir'), 'dilSecici()')}`)}
     ${satir(`${G && G.muted ? '🔇' : '🔊'} <b>${CEV('Ses')}</b><span class="sub">${CEV(G && G.muted ? 'kapalı' : 'açık')}</span>${G && G._started ? dugme(CEV(G.muted ? 'Sesi Aç' : 'Sesi Kapat'), 'ayarSes()') : ''}`)}
+    ${G && G._started ? satir(`🏢 <b>${CEV('Şirket Adı')}</b><span class="sub">${(G.company || '').replace(/[<>&"]/g, '')}${G.renameSay > 0 ? '' : ' · 🎁 ' + CEV('ilk değişiklik ücretsiz')}</span>${dugme(CEV('Değiştir'), 'sirketAdiDegistir()')}`) : ''}
     ${satir(`🔔 <b>${CEV('Bildirimler')}</b><span class="sub">${izin === 'granted' ? CEV('açık') : izin === 'denied' ? CEV('tarayıcıdan engellenmiş') : CEV('kapalı')}</span>${izin === 'granted' ? '' : dugme(CEV('İzin ver'), 'enableNotifs();')}`)}
     ${G && G._started ? satir(`👥 <b>${CEV('Diğer oyuncuların tesisleri')}</b><span class="sub">${CEV(G.showOthers ? 'görünür' : 'gizli')}</span>${dugme(CEV(G.showOthers ? 'Gizle' : 'Göster'), 'toggleOthers();ayarlarAc()')}`) : ''}
     ${satir(`🪪 <b>${CEV('Sürüm')}</b><span class="sub">${BUILD_TAG}</span>`)}
