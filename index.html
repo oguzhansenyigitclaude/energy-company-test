@@ -664,7 +664,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-29 19:39) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-29 19:48) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -828,7 +828,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-29 19:39)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-29 19:48)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -5448,23 +5448,42 @@ const bildirimOkunmamis = () => {
   const s = G._bildSeen || 0;
   return G._bild.filter(b => b.ts > s).length;
 };
+// ── 🔔 BİLDİRİM KÖPRÜSÜ (patron 29 Ağu: "4 farklı telefonda denedim çalışmıyor") ──
+// KÖK NEDEN: Android WebView web Notification API'sini DESTEKLEMEZ ('Notification' in window
+// APK'da false) — cihaz sorunu değil platform sorunu, o yüzden 4 telefonda da aynıydı.
+// ÇÖZÜM: APK'da Capacitor LocalNotifications eklentisi (İŞLETİM SİSTEMİ planlı bildirim:
+// uygulama tamamen KAPALIYKEN bile gelir — setTimeout yolundan daha doğru), tarayıcıda
+// eski web Notification yolu. Eklenti yalnız YENİ derlenen APK'da vardır; eski APK'larda
+// capLN() null döner ve davranış eskisi gibi kalır (gerileme yok).
+const capLN = () => (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) || null;
+const bildirimDestek = () => !!capLN() || ('Notification' in window);
+let _lnIzin = 'default'; // Capacitor izin önbelleği: izin API'si async, UI senkron okuyor
+const lnIzinNorm = r => { const d = r && r.display; return d === 'granted' ? 'granted' : d === 'denied' ? 'denied' : 'default'; };
+if (capLN()) { try { capLN().checkPermissions().then(r => { _lnIzin = lnIzinNorm(r); }).catch(() => { }); } catch (e) { } }
+const bildirimIzin = () => capLN() ? _lnIzin : (('Notification' in window) ? Notification.permission : 'denied');
+async function bildirimIzinIste() {
+  const ln = capLN();
+  if (ln) { try { _lnIzin = lnIzinNorm(await ln.requestPermissions()); } catch (e) { _lnIzin = 'denied'; } return _lnIzin; }
+  if ('Notification' in window) return await Notification.requestPermission();
+  return 'denied';
+}
 // 🔔 PUSH ANAHTARI (patron 28 Ağu, rakip ekranından: "başta kapalı seçtim, bir daha açamıyorum")
 // Defterin başında sağ-sol kaydırmalı anahtar. Üç durum: izin verilmiş → G.notifOn aç/kapat;
 // hiç sorulmamış/ertelenmiş → dokununca tarayıcı izni istenir; tarayıcı/işletim sistemi
 // düzeyinde REDDEDİLMİŞ → programla yeniden sorulamaz, Android ayar yolu tarif edilir.
 window.pushToggle = () => {
-  if (!('Notification' in window)) { toast(CEV('Bu cihaz bildirim desteklemiyor'), 'warn'); return; }
-  const p = Notification.permission;
+  if (!bildirimDestek()) { toast(CEV('Bu cihaz bildirim desteklemiyor'), 'warn'); return; }
+  const p = bildirimIzin();
   if (p === 'granted') { G.notifOn = !G.notifOn; save(); try { scheduleFillNotifs(); } catch (e) {} openNotifSheet(); }
   else if (p === 'denied') toast(CEV('Bildirim izni cihaz düzeyinde kapalı — Android: Ayarlar → Uygulamalar → Energy Company → Bildirimler'), 'warn', null, 8000);
-  else Notification.requestPermission().then(r => { G.notifOn = r === 'granted'; save(); try { scheduleFillNotifs(); } catch (e) {} openNotifSheet();
+  else bildirimIzinIste().then(r => { G.notifOn = r === 'granted'; save(); try { scheduleFillNotifs(); } catch (e) {} openNotifSheet();
     if (!G.notifOn) toast(CEV('Bildirim izni verilmedi (menüden tekrar deneyebilirsin)'), 'warn'); });
 };
 window.openNotifSheet = () => {
   hideSheets();
   const list = (G._bild || []);
   const s = G._bildSeen || 0;
-  const izin = ('Notification' in window) ? Notification.permission : 'yok';
+  const izin = bildirimDestek() ? bildirimIzin() : 'yok';
   const acik = izin === 'granted' && !!G.notifOn;
   const anahtarHtml = `
     <div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:2px 0 8px;background:var(--panel2)">
@@ -13422,7 +13441,7 @@ window.closeModal = () => {
 // ── 🔔 BİLDİRİM: İSTEĞE BAĞLI (rakip zorluyor ve nefret ediliyor — bizde hayır diyen de rahatça oynar) ──
 function askNotifPermission() {
   if (!G || G.notifAsked) return;
-  if (!('Notification' in window)) { G.notifAsked = true; save(); return; } // APK/WebView: bildirim API'si yok — boş yere sorma
+  if (!bildirimDestek()) { G.notifAsked = true; save(); return; } // ne eklenti ne web API — boş yere sorma
   G.notifAsked = true; save();
   $('modal').innerHTML = `
     <h2>🔔 Depon dolunca haber verelim mi?</h2>
@@ -13435,30 +13454,45 @@ function askNotifPermission() {
 window.enableNotifs = () => {
   closeModal();
   try {
-    if (!('Notification' in window)) { toast('Bu tarayıcı bildirim desteklemiyor', 'warn'); return; }
-    Notification.requestPermission().then(p => {
+    if (!bildirimDestek()) { toast(CEV('Bu cihaz bildirim desteklemiyor'), 'warn'); return; }
+    bildirimIzinIste().then(p => {
       G.notifOn = p === 'granted';
       toast(G.notifOn ? '🔔 Bildirimler açık — depon dolunca haber vereceğiz' : 'Bildirim izni verilmedi (menüden tekrar deneyebilirsin)', G.notifOn ? '' : 'warn');
       save();
+      try { scheduleFillNotifs(); } catch (e) {}
     });
   } catch (e) {}
 };
-// Oyuncu sekmeden ayrılınca: her deponun dolum süresini hesapla, tam dolunca bildirim ateşle
+// Oyuncu sekmeden ayrılınca: her deponun dolum süresini hesapla, tam dolunca bildirim ateşle.
+// APK yolunda (Capacitor) bildirim İŞLETİM SİSTEMİNE planlanır — uygulama kapalıyken bile gelir;
+// web yolunda eski setTimeout + document.hidden davranışı aynen durur.
 let notifTimers = [];
+const LN_ID_BASE = 9100, LN_ID_MAX = 40; // planlı depo bildirimleri sabit kimlik aralığı (iptal için)
+function lnPlanlariIptal() {
+  const ln = capLN(); if (!ln) return;
+  try { ln.cancel({ notifications: Array.from({ length: LN_ID_MAX }, (_, i) => ({ id: LN_ID_BASE + i })) }).catch(() => { }); } catch (e) { }
+}
 function scheduleFillNotifs() {
   notifTimers.forEach(t => clearTimeout(t)); notifTimers = [];
-  if (!G || !G.notifOn || !('Notification' in window) || Notification.permission !== 'granted') return;
+  lnPlanlariIptal(); // eski planlar temizlenmeden yenisi kurulmaz (depo satıldıysa hayalet bildirim kalmasın)
+  if (!G || !G.notifOn || bildirimIzin() !== 'granted') return;
+  const ln = capLN(); let lnIdx = 0; const lnList = [];
   for (const st of stores()) {
     const T = STORE_TYPES[st.t];
     const inflow = plants().filter(p => assignedStoreOf(p) === st).reduce((s, p) => s + plantOutput(p), 0) * speedMult();
     const space = T.cap - st.stored;
     if (inflow > .05 && space > .5) {
       const ms = Math.min(12 * 3600e3, space / inflow * 3600e3);
-      notifTimers.push(setTimeout(() => {
-        try { if (document.hidden) new Notification('🔋 Enerji depon doldu!', { body: 'Kazanç zamanı — ' + unitName(st) + ' satışa hazır. Energy Company seni bekliyor ⚡' }); } catch (e) {}
-      }, ms));
+      if (ln && lnIdx < LN_ID_MAX) {
+        lnList.push({ id: LN_ID_BASE + (lnIdx++), title: '🔋 Enerji depon doldu!', body: 'Kazanç zamanı — ' + unitName(st) + ' satışa hazır. Energy Company seni bekliyor ⚡', schedule: { at: new Date(Date.now() + ms) } });
+      } else {
+        notifTimers.push(setTimeout(() => {
+          try { if (document.hidden) new Notification('🔋 Enerji depon doldu!', { body: 'Kazanç zamanı — ' + unitName(st) + ' satışa hazır. Energy Company seni bekliyor ⚡' }); } catch (e) {}
+        }, ms));
+      }
     }
   }
+  if (ln && lnList.length) { try { ln.schedule({ notifications: lnList }).catch(() => { }); } catch (e) { } }
 }
 
 // ── Kayıt ──
@@ -14723,13 +14757,15 @@ function openBuildSheet() {
         <button class="ghostmini" onclick="openDetail('${t}','${mode}')">${CEV('İncele')} ›</button>
       </div>
       <div class="pmain">
+        ${/* 🪞 patron 29 Ağu: rakiple birebir aynı görünmesin (telif kaygısı) — bizde AYNA
+           düzen: yazılar SOLDA, resim SAĞDA (rakipte foto solda) */''}
+        <div class="prows">${rowsHtml}</div>
         <div class="pimg" style="background:${CAT_GRAD[isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat]};position:relative;overflow:hidden" onclick="openDetail('${t}','${mode}')">
           <img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
           ${T.ico}
           <span style="position:absolute;left:4px;top:4px;background:#0b1220cc;border-radius:7px;padding:2px 7px;font-size:10px;font-weight:800;z-index:1">${CEV(isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat)}</span>
           ${T.brand && BRAND_ARCH[T.brand] ? `<span style="position:absolute;top:4px;right:4px;background:#0b1220e6;border-radius:6px;padding:2px;line-height:0;box-shadow:0 1px 4px #000a">${brandLogoHTML(T.brand, 18)}</span>` : ''}
         </div>
-        <div class="prows">${rowsHtml}</div>
       </div>
       <div class="pdesc">${T.d}</div>
       <div class="pbuy">
@@ -16350,7 +16386,7 @@ window.sirketAdiKaydet = async () => {
   ayarlarAc();
 };
 window.ayarlarAc = () => {
-  const izin = ('Notification' in window) ? Notification.permission : 'yok';
+  const izin = bildirimDestek() ? bildirimIzin() : 'yok';
   const satir = (icerik) => `<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0">${icerik}</div>`;
   const dugme = (metin, tik, renk) => `<button onclick="${tik}" style="margin-left:auto;padding:8px 12px;border-radius:8px;border:none;background:${renk || 'var(--panel2)'};color:var(--ink);font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">${metin}</button>`;
   $('modal').innerHTML = `
@@ -16380,7 +16416,7 @@ document.addEventListener('visibilitychange', () => {
     // her açılışta son ≤20 saniyelik oynanış geri alınıyordu.
     if (NET.on()) NET.cloudSave(true, true); // keepalive: kapanışta iptal edilmesin
   }
-  else { notifTimers.forEach(t => clearTimeout(t)); notifTimers = []; offlineProgress(); }
+  else { notifTimers.forEach(t => clearTimeout(t)); notifTimers = []; lnPlanlariIptal(); offlineProgress(); }
 });
 
 // ── Ana döngü ──
