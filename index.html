@@ -664,7 +664,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-29 18:45) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-29 19:39) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -828,7 +828,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-29 18:45)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-29 19:39)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -6773,10 +6773,11 @@ const katkiIpFor = (olcek, sira) => {
   const t = KATKI_IP[olcek]; if (!t) return 0;
   return sira === 0 ? t.bir : sira === 1 ? t.iki : sira === 2 ? t.uc : sira < 20 ? t.yirmi : t.kalan;
 };
-// 📈 Ölçek terfi teşviki eşikle çarpılır. Eşikler 29 Ağu'da (patron) ~17 kat büyüyünce
-// çarpan da 7.000 → 700'e indi ki terfi ödülleri eski seviyede kalsın
-// (Küçük ~$3,5M · Orta ~$7M; 7.000 kalsaydı 35M/70M ödeyip ekonomiyi bozardı).
-const OLCEK_TESVIK = 700;
+// 📈 Ölçek terfi teşviki = yeni kademenin eşiği × bu çarpan. PATRON KARARI (29 Ağu, ikinci
+// düzeltme): "Ödülleri küçültme — ama ölçek küçüldükçe ödül de küçülsün." Çarpan 7.000 kalır;
+// kademelenmeyi formül kendisi yapar: Küçük'e terfi 5.000×7.000=$35M · Orta'ya terfi
+// 10.000×7.000=$70M (üstü zaten para değil İmtiyaz Puanı). Önerilen 700'e indirme GERİ ALINDI.
+const OLCEK_TESVIK = 7000;
 // ⚖️ Eşikler (patron, 29 Ağu): Holding 100k · Büyük 20k · Orta 10k · Küçük 5k · altı Mikro.
 const OLCEK = [
   { nm: 'Mikro İşletme', ico: '🏠', esik: 0 },
