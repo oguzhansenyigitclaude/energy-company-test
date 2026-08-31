@@ -146,6 +146,8 @@
   @keyframes navping{0%{transform:scale(.25);opacity:.95}70%{opacity:.4}100%{transform:scale(3.4);opacity:0}}
   /* 🏙️ Şehir katmanı etiketi — yakınlaştıkça küçük şehirler de belirir, çakışanlar elenir */
   .citylbl{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;background:#0b1424e6;border:1px solid #4b6a99;border-radius:9px;padding:2px 7px;font-size:11px;font-weight:800;color:var(--cream);cursor:pointer;box-shadow:0 2px 8px #0008}
+  /* 🏷️ Alım garantili karo filigranı: sahibinin şirket adı — çapraz, şeffaf, tıklamayı YEMEZ */
+  .kiratag{pointer-events:none;transform:rotate(-24deg);opacity:.42;color:#fff;font-weight:900;font-size:12.5px;letter-spacing:.6px;text-transform:uppercase;white-space:nowrap;text-align:center;text-shadow:0 1px 4px #000c,0 0 2px #0009;user-select:none}
   .citylbl i{font-style:normal;font-size:9.5px;font-weight:700;color:var(--acc2)}
   .citylbl:active{background:var(--acc);color:#071018}
   .navping{border-radius:50%;border:3px solid var(--gold);box-shadow:0 0 20px #ffd166cc;animation:navping 1.5s ease-out 2}
@@ -664,7 +666,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-29 19:48) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-31 17:21) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -828,7 +830,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-29 19:48)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-31 17:21)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -980,6 +982,14 @@ en: {
   '🏭 Tesis yatırımı': '🏭 Facility investment', '⛽ Yakıt': '⛽ Fuel', '🔧 Bakım ve onarım': '🔧 Maintenance & repair',
   '📜 Ruhsat · ofis · lisans': '📜 Permits · offices · licenses', '⚡ Nakil hattı': '⚡ Transmission line',
   '🔬 Araştırma': '🔬 Research', '🏛️ İhale / alım garantisi': '🏛️ Tenders / purchase guarantee',
+  'İhale sicil çakışması — tam iade': 'Tender registry conflict — full refund',
+  '{0} karosunun bu dönemki alım garantisini başka bir gerçek şirket senden önce sicile işletmiş. Teklifin tam iade edildi: {1}.': 'Another real company registered this period\'s purchase guarantee for tile {0} before you. Your bid was fully refunded: {1}.',
+  '🏛️ Karo başka bir gerçek şirkette çıktı — teklifin TAM iade edildi: {0}': '🏛️ The tile turned out to be held by another real company — your bid was FULLY refunded: {0}',
+  '🏛️ Bu karoyu az önce başka bir gerçek şirket kiraladı — sicile o işlendi': '🏛️ Another real company just leased this tile — the registry recorded them first',
+  '🏛️ Sicile yazılamadı (ağ/sunucu) — ücret alınmadı, tekrar dene': '🏛️ Could not write to the registry (network/server) — you were not charged, try again',
+  'Alım garantisi vergi tahsilatı': 'Purchase guarantee tax collection',
+  'Alım garantin olan karolardaki rakip satışlarından {0} vergi tahsil edildi ({1} kayıt).': 'Collected {0} in taxes from rival sales on tiles under your purchase guarantee ({1} entries).',
+  '🏛️💸 Bölge vergisi tahsil edildi: +{0}': '🏛️💸 Region tax collected: +{0}',
   '🔨 Müzayede': '🔨 Auction', '🤝 İttifak / konsorsiyum': '🤝 Alliance / consortium', '⚖️ Cezalar': '⚖️ Penalties',
   '💱 Yatırım işlem bedeli ve vergi': '💱 Investment fees & taxes', '🏦 Kredi taksiti, faiz ve haciz': '🏦 Loan payments, interest & seizure',
   'Tümü': 'All', 'Güneş': 'Solar', 'Rüzgar': 'Wind', 'Kömür': 'Coal', 'Gaz': 'Gas', 'Hidro': 'Hydro',
@@ -4471,6 +4481,14 @@ function resolveAuction(cell, a) {
     G.leases[cell] = a.leaseUntil; // imtiyaz dönemi (escrow = ödeme, geri gelmez)
     G.wonWeek = G.wonWeek || {}; G.wonWeek[cell] = weekIdx(); // gelecek hafta bu karede ihaleye giremezsin
     toast('🏛️ İHALEYİ KAZANDIN! ' + fmt(a.top) + ' — 1 hafta boyunca bu bölge senden +%20 pahalı fiyatla alır. (Gelecek haftaki ihaleye katılamazsın — tekel önleme)', '', null, 0, true);
+    // 🌐 SİCİL TALEBİ (kalıcı kuyruk): kazanım ancak sunucu sicili kabul ederse kesinleşir.
+    // Ateşle-unut DEĞİL — talep G.kiraBekleyen'e yazılır; uygulama o an kapansa bile sonraki
+    // açılışta yeniden denenir, kesin retse TAM iade edilir (kiraBekleyenIsle).
+    if (a.leaseUntil > Date.now()) {
+      G.kiraBekleyen = G.kiraBekleyen || {};
+      G.kiraBekleyen[cell] = { until: a.leaseUntil, bedel: a.top, ts: Date.now() };
+      try { kiraBekleyenIsle(); } catch (e) { }
+    }
     a.myEscrow = 0;
   } else if (a.myEscrow > 0) {
     G.cash += a.myEscrow; gider('ihale', -a.myEscrow); // kaybettin: TAM iade
@@ -4538,7 +4556,7 @@ function nextSunday00(from) {
 // ihale, gece yarısı karoyu kapan biri tarafından baypas edilmesin.
 function directRentOpen(cell) {
   const a = auctionOf(cell), w = auctionWindow();
-  if (myLease(cell) || botLease(cell)) return false; // sahibi var → yalnız ihaleyle alınır
+  if (myLease(cell) || gercekKiraci(cell) || botLease(cell)) return false; // sahibi var (sicil dahil) → yalnız ihaleyle alınır
   if (a.top > 0) return false;                       // bu dönemin ihalesinde teklif var
   if (G.demo) return true;
   const d = clockDate();
@@ -4547,7 +4565,7 @@ function directRentOpen(cell) {
 }
 window.directRentConfirm = cell => {
   if (!directRentOpen(cell)) {
-    const sahip = myLease(cell) ? 'SENDE' : botLease(cell);
+    const sahip = myLease(cell) ? 'SENDE' : leaseOwnerOf(cell);
     toast(sahip ? '🏛️ Bu karonun alım garantisi ' + sahip + ' — elinden almanın tek yolu PAZAR ihalesini kazanmak' : '🏛️ Şu an doğrudan kiralama kapalı — Pazar ihalesini bekle', 'warn', null, 0, true);
     return;
   }
@@ -4561,23 +4579,143 @@ window.directRentConfirm = cell => {
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
-window.directRent = cell => {
+window.directRent = async cell => {
   if (krediKilidi('doğrudan kiralama')) return;
+  if (directRent._busy) return; // çift tık: iki paralel sicil talebi = çifte ücret olurdu
+  directRent._busy = true;
+  try {
   // ⛔ tek kapı: sahibi olan karo doğrudan kiralanamaz (patron 25 Ağu bug'ı)
   if (!directRentOpen(cell)) {
-    const sahip = myLease(cell) ? 'SENDE' : botLease(cell);
+    const sahip = myLease(cell) ? 'SENDE' : leaseOwnerOf(cell);
     toast(sahip ? '🏛️ Bu karonun alım garantisi ' + sahip + ' — yalnız PAZAR ihalesiyle alınır' : '🏛️ Doğrudan kiralama şu an kapalı', 'warn', null, 0, true);
     return;
   }
   const fee = minBid(cell);
   if (G.cash < fee) { toast('Doğrudan kiralama için ' + fmt(fee) + ' gerekli', 'warn'); return; }
+  // 🌐 SİCİL ONAYI OLMADAN KİRA YOK (patron 30 Ağu bug'ı: iki gerçek oyuncu aynı karoyu kiralayabiliyordu).
+  // Ücret nakit kontrolüyle AYNI senkron blokta kesilir (await sırasında kasa düşerse eksiye
+  // inmesin — inceleme bulgusu); sicil reddederse TAM iade edilir.
   G.cash -= fee; gider('ihale', fee);
-  G.leases[cell] = nextSunday00(); // TAKVİM kuralı: dönem PAZAR 00:00'da biter, karo boşa düşer
+  const until = nextSunday00();
+  if (!(await kiraTalepEt(cell, until))) {
+    G.cash += fee; gider('ihale', -fee);
+    toast(gercekKiraci(cell)
+      ? CEV('🏛️ Bu karoyu az önce başka bir gerçek şirket kiraladı — sicile o işlendi')
+      : CEV('🏛️ Sicile yazılamadı (ağ/sunucu) — ücret alınmadı, tekrar dene'), 'warn', null, 0, true);
+    try { openCellSheet(cell, SEL.ll); } catch (e) { }
+    return;
+  }
+  G.leases[cell] = until; // TAKVİM kuralı: dönem PAZAR 00:00'da biter, karo boşa düşer
   toast('🏛️ Boş karo kiralandı (+%20 prim) — dönem Pazar 00:00\'da biter, sonra ihaleye çıkar', '', null, 0, true);
   beep(700, .12);
   save(); openCellSheet(cell, SEL.ll);
+  } finally { directRent._busy = false; }
 };
-function myLease(cell) { return G.leases[cell] && G.leases[cell] > Date.now(); }
+// 🌐 KÜRESEL KİRA SİCİLİ (patron 30 Ağu bug'ı): ihale/kira eskiden TAMAMEN YERELDİ — iki
+// gerçek oyuncu aynı karoyu ayrı ayrı "kiralayabiliyor", vergi kimseye ulaşmıyordu.
+// Artık tek gerçek: Firebase `kiralar/<cell>` = {uid, nm, until, ts}. Kural gereği süresi
+// dolmamış YABANCI kaydın üstüne yazım sunucuda REDDEDİLİR → çifte kiralama imkânsız.
+const KIRA = { map: {}, at: 0 };
+// 🛡️ XSS kalkanı (inceleme bulgusu, KRİTİK): sicil kayıtlarındaki nm RAKİP İSTEMCİ verisidir ve
+// birçok yerde innerHTML'e giriyor — kaynağında HTML karakterlerinden arındırılır (tek nokta,
+// tüm tüketiciler korunur; filigranın htmlKacir'ı çifte kodlama yapmaz çünkü karakter kalmaz).
+const nmTemizle = v => String(v == null ? '' : v).replace(/[<>&"']/g, '').slice(0, 28);
+async function kiralarCek(zorla) {
+  if (!NET.on() || NET.kilit) return;
+  if (!zorla && Date.now() - KIRA.at < 30000) return; // 30 sn önbellek (12 sn'lik loop'ta her turda çekme)
+  KIRA.at = Date.now();
+  try {
+    const r = await NET.get('kiralar');
+    if (r && typeof r === 'object' && !Array.isArray(r)) {
+      for (const k in r) {
+        if (!r[k] || typeof r[k] !== 'object') { delete r[k]; continue; }
+        r[k].nm = nmTemizle(r[k].nm);
+        // dağıtık temizlik: KENDİ süresi dolmuş kaydını sil (sicil sınırsız büyümesin)
+        if (r[k].uid === NET.id && r[k].until < Date.now() - 36e5) { try { NET.req('kiralar/' + k, 'DELETE', undefined, false, true).catch(() => { }); } catch (e) { } delete r[k]; }
+      }
+      KIRA.map = r; try { refreshLicenseTiles(); } catch (e) { }
+    }
+  } catch (e) { }
+}
+const gercekKira = cell => { const k = KIRA.map[cell]; return k && k.until > Date.now() ? k : null; };
+const gercekKiraci = cell => { const k = gercekKira(cell); return k && k.uid !== NET.id ? k : null; }; // benden BAŞKA gerçek oyuncu
+async function kiraTalepEt(cell, until) {
+  // sicile yazım: başarı = karo bu dönem SENİN. Çevrimdışıysa yerel davranış korunur (diğer
+  // oyuncularla zaten etkileşemezsin).
+  if (!NET.on()) return true;
+  if (NET.kilit) return false;
+  until = Math.min(until, Date.now() + 62e7); // kural tavanı (now+63e7) altında kal — demo saati/saat kayması kelepçesi
+  try {
+    await kiralarCek(true);
+    if (gercekKiraci(cell)) return false;
+    const kayit = { uid: NET.id, nm: nmTemizle(G.company), until, ts: Date.now() };
+    // ⚠️ NET.kilit AWAIT SIRASINDA dolarsa put sessizce null döner (throw etmez) — null = BAŞARISIZ.
+    const r = await NET.put('kiralar/' + cell, kayit);
+    if (r == null) return false;
+    KIRA.map[cell] = kayit;
+    try { refreshLicenseTiles(); } catch (e) { }
+    return true;
+  } catch (e) {
+    // yanıt-kaybı yarışı: PUT sunucuda UYGULANIP yanıt düşmüş olabilir — sicili doğrula:
+    // kayıt bizimse başarı say (yoksa hem kira sicilde kalır hem iade yapılırdı).
+    try {
+      const k = await NET.get('kiralar/' + cell);
+      if (k && k.uid === NET.id && k.until > Date.now()) { k.nm = nmTemizle(k.nm); KIRA.map[cell] = k; try { refreshLicenseTiles(); } catch (e2) { } return true; }
+    } catch (e2) { }
+    return false; // 401 = kural reddi: biri senden önce sahiplendi
+  }
+}
+// 🗂️ BEKLEYEN SİCİL TALEPLERİ (inceleme bulgusu): ihale kazanımı anında sicile yazım ateşle-unut
+// olursa uygulama kapanınca para/karo kalıcı kaybolurdu. Talep G'ye KALICI yazılır, her ağ
+// turunda yeniden denenir; kesin ret gelirse TAM iade (odul deseni: önce kaydı düşür, sonra öde).
+async function kiraBekleyenIsle() {
+  if (kiraBekleyenIsle._busy || !NET.on() || NET.kilit || !G || !G.kiraBekleyen) return;
+  kiraBekleyenIsle._busy = true;
+  try {
+    for (const [cell, e] of Object.entries(G.kiraBekleyen)) {
+      if (!e || typeof e !== 'object') { delete G.kiraBekleyen[cell]; continue; }
+      if (e.until <= Date.now()) { // dönem tescillenemeden bitti: iade
+        delete G.kiraBekleyen[cell]; kiraIade(cell, e.bedel); continue;
+      }
+      const ok = await kiraTalepEt(cell, e.until);
+      if (ok) { delete G.kiraBekleyen[cell]; save(); continue; } // sicil bizim — iş bitti
+      if (NET.kilit) return; // kilit: dokunma, sonraki tur
+      // taze sicilde başka GERÇEK oyuncu varsa kesin ret → iade; değilse (geçici ağ sorunu) beklet
+      if (gercekKiraci(cell)) { delete G.kiraBekleyen[cell]; kiraIade(cell, e.bedel); }
+    }
+  } finally { kiraBekleyenIsle._busy = false; }
+}
+function kiraIade(cell, bedel) {
+  bedel = Math.max(0, Math.round(+bedel || 0));
+  delete G.leases[cell];
+  if (G.wonWeek) delete G.wonWeek[cell]; // almadığın kira için ihale yasağı da kalksın
+  if (bedel > 0) { G.cash += bedel; gider('ihale', -bedel); }
+  addMail('🏛️ İhale Kurumu', CEV('İhale sicil çakışması — tam iade'), CEV('{0} karosunun bu dönemki alım garantisini başka bir gerçek şirket senden önce sicile işletmiş. Teklifin tam iade edildi: {1}.', cellCode(cell), fmt(bedel)), true);
+  toast(CEV('🏛️ Karo başka bir gerçek şirkette çıktı — teklifin TAM iade edildi: {0}', fmt(bedel)), 'warn', null, 0, true);
+  save(); try { renderHUD(); } catch (e) { } try { refreshLicenseTiles(); } catch (e) { }
+}
+// 🚚 GEÇİŞ GÖÇÜ: sicil açılmadan ÖNCE ödenmiş yerel kiralar sicile taşınır (tek sefer/oturum).
+// Reddedilirse (karo bu dönem başka gerçek oyuncuda) doğrudan-kiralama taban bedeli iade edilir.
+async function kiraSicilGoc() {
+  if (kiraSicilGoc._done || !NET.on() || NET.kilit || !G || !G.leases) return;
+  kiraSicilGoc._done = true;
+  for (const [cell, until] of Object.entries(G.leases)) {
+    if (!(until > Date.now()) || (KIRA.map[cell] && KIRA.map[cell].uid === NET.id)) continue;
+    G.kiraBekleyen = G.kiraBekleyen || {};
+    const a = (G.auctions || {})[cell]; // ihaleyle alındıysa gerçek bedel oradadır, yoksa taban
+    const bedel = (a && a.resolved && a.topBy === 'SEN' && a.top > 0) ? a.top : minBid(cell);
+    if (!G.kiraBekleyen[cell]) G.kiraBekleyen[cell] = { until, bedel, ts: Date.now() };
+  }
+}
+function myLease(cell) {
+  const g = gercekKira(cell);
+  if (g) {
+    if (g.uid === NET.id) return true; // sicil benim der: cihaz değişse de geçerli
+    if (G.leases && G.leases[cell]) delete G.leases[cell]; // sicil başkasının: bayat yerel kayıt düşür
+    return false;
+  }
+  return G.leases[cell] && G.leases[cell] > Date.now();
+}
 function botLease(cell) { // rakip şirketin bu dönemki alım garantisi (dönem PAZAR 00:00'da biter)
   if (myLease(cell)) return null;
   const a = (G.auctions || {})[cell];
@@ -4588,8 +4726,64 @@ function botLease(cell) { // rakip şirketin bu dönemki alım garantisi (dönem
 // 🏛️ ALIM GARANTİSİ VERGİSİ (patron): kareyi başkası kazandıysa o karedeki satış gelirinin
 // %20'si garanti sahibine vergi olarak gider. İhaleye girmenin ikinci sebebi budur:
 // kazanan hem +%20 prim alır hem rakiplerinden vergi toplar.
-const leaseOwnerOf = cell => botLease(cell);
+// Öncelik SİCİL (gerçek oyuncu); sicil boşsa yerel bot simülasyonu.
+const leaseOwnerOf = cell => { const g = gercekKiraci(cell); return g ? g.nm : botLease(cell); };
 const leaseTaxRate = cell => (!myLease(cell) && leaseOwnerOf(cell)) ? LEASE_PRIM : 0;
+// 💸 VERGİ DEFTERİ: gerçek kiracıya giden pay `vergi/<uid>` kutusuna yazılır (mail deseni),
+// sahibi 60 sn'lik gmPoll turunda ÖNCE SİL SONRA UYGULA kuralıyla tahsil eder (odul deseni).
+// sellChunk animasyon karesi başına çalıştığı için kayıtlar boşaltma boyunca BİRİKTİRİLİR,
+// bitişte TEK kayıt gider (rentFlush deseni — RTDB kota bombası olmasın).
+// İnceleme bulgusu: tek atımlık push ağ hatasında/kilitte vergiyi yok ediyordu (satıcıdan
+// kesildi, sahibine hiç ulaşmadı). Artık kayıtlar KALICI kuyruğa (G.vergiKuyruk) girer ve
+// her ağ turunda İDEMPOTENT anahtarla (put + yerel benzersiz id) denenir — başarı sonrası
+// çökme çifte ödeme yapamaz (aynı anahtara ikinci put aynı kaydı ezer).
+function vergiGonder(uid, cell, tutar) {
+  tutar = Math.round(tutar);
+  if (!(tutar >= 1) || !uid) return;
+  G.vergiKuyruk = G.vergiKuyruk || [];
+  G.vergiKuyruk.push({ uid, cell: String(cell).slice(0, 20), tutar: Math.min(tutar, 1e10), id: NET.id + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8), ts: Date.now() });
+  while (G.vergiKuyruk.length > 200) G.vergiKuyruk.shift(); // bozuk uid birikimi şişmesin
+  vergiKuyrukDene();
+}
+async function vergiKuyrukDene() {
+  if (vergiKuyrukDene._busy || !NET.on() || NET.kilit || !G || !(G.vergiKuyruk || []).length) return;
+  vergiKuyrukDene._busy = true;
+  try {
+    while (G.vergiKuyruk.length) {
+      const k = G.vergiKuyruk[0];
+      if (!k || !(k.tutar >= 1) || !k.uid || Date.now() - k.ts > 7 * 864e5) { G.vergiKuyruk.shift(); continue; }
+      try {
+        const r = await NET.put('vergi/' + k.uid + '/' + k.id, { from: nmTemizle(G.company), cell: k.cell, tutar: k.tutar, ts: Date.now() });
+        if (r == null) return; // kilit sessiz yutması: kuyrukta kalsın
+        G.vergiKuyruk.shift();
+      } catch (e) {
+        // 40x = kural reddi. En olası sebep: ilk deneme aslında YAZILMIŞTI, yanıt düştü —
+        // ikinci put "!data.exists()" kuralına takılır (sahibinin kutusu okunamaz, doğrulanamaz).
+        // 3 kalıcı retten sonra düşür (teslim edildi say / kalıcı ret döngüsü olmasın); ağ
+        // hatasında (throw ama HTTP değil) süresiz bekle.
+        if (/HTTP 4\d\d/.test((e && e.message) || '')) { k.deneme = (k.deneme || 0) + 1; if (k.deneme >= 3) G.vergiKuyruk.shift(); }
+        return;
+      }
+    }
+  } finally { vergiKuyrukDene._busy = false; }
+}
+function kiraVergiBirik(st, cell, tutar) {
+  if (!(tutar > 0)) return;
+  const g = gercekKiraci(cell);
+  if (!g) return; // kiracı yerel bot simülasyonu: kesinti var, tahsilat yok (eski davranış)
+  const d = st && st.disch;
+  if (d) {
+    d.vAcc = d.vAcc || {};
+    const e = d.vAcc[g.uid] = d.vAcc[g.uid] || { cell, tutar: 0 };
+    e.tutar += tutar;
+  } else vergiGonder(g.uid, cell, tutar);
+}
+function vergiFlush(st) {
+  const d = st && st.disch;
+  if (!d || !d.vAcc) return;
+  for (const [uid, e] of Object.entries(d.vAcc)) vergiGonder(uid, e.cell, e.tutar);
+  d.vAcc = null;
+}
 // ── HER KARE FARKLI FİYATTAN ALIR (patron tasarımı): bölge alım çarpanı 0.80–1.30 (kare karakteri, sabit).
 // İmtiyaz kazananın avantajı artık ALIM FİYATINA +%20 (ek prim kalemine değil — patron düzeltmesi).
 const cellPriceFactor = c => { const [cy, cx] = c.split('_').map(Number); return .8 + hash01(cy, cx, 77) * .5; };
@@ -4625,8 +4819,10 @@ function sellRevenueAfter(cell, mwh, oncekiMwh, sabitFiyat) {
   const base = sabitFiyat || cellPriceNow(cell);
   const d = doygunGelir(cell, mwh, oncekiMwh);
   const gb = 1 + greenBonus();
-  return { gain: (d.inD * base * d.carpan + d.excess * base * DUMP_RATE) * gb * ipSatBoost() * (1 - LOSS_LEAK),
-    inD: d.inD, excess: d.excess, remaining: d.kalan, price: base, green: gb - 1, doygun: d.doygunMwh };
+  // 🏛️ tahmin de karo vergisini düşer — rakip karosunda "vaat edilen para gelmedi" olmasın
+  const vRate = leaseTaxRate(cell);
+  return { gain: (d.inD * base * d.carpan + d.excess * base * DUMP_RATE) * gb * ipSatBoost() * (1 - LOSS_LEAK) * (1 - vRate),
+    inD: d.inD, excess: d.excess, remaining: d.kalan, price: base, green: gb - 1, doygun: d.doygunMwh, leaseTaxRate: vRate };
 }
 function sellRevenue(cell, mwh, sabitFiyat) {
   const base = sabitFiyat || cellPriceNow(cell);
@@ -6070,6 +6266,7 @@ window.adFinishDischarge = id => {
       d.left -= chunk; d.sold += chunk;
     }
     rentFlush(s2);   // 🌍 biriken kıta hattı kirası ev sahibine yazılır (bu bitiş yolu atlanmıştı)
+    vergiFlush(s2);  // 🏛️ biriken karo vergisi gerçek kiracının defterine TEK kayıtla
     s2.disch = null;
     plants().forEach(p => { if (p.st === s2.id && p._autoOff) { p.on = true; p._autoOff = false; } });
     toast('🎬💰 Satış reklamla TAMAMLANDI: ' + fmtE(d.sold) + ' MWh = ' + fmt(d.gain) + (d.target ? ' · 🔁 ' + cellCode(d.target) : ''), '', null, 0, true);
@@ -6116,7 +6313,9 @@ function sellChunk(st, mwh, targetCell, mult) {
   const cn = targetCell && targetCell !== st.cell ? consortiumFor(st.cell) : null;
   if (cn && cn.cell === targetCell) {
     const r = sellRevenue(cell, mwh, px);
-    gain = r.gain * (mult || 1) * (1 - CONS_LOSS / 100);
+    const konsKayip = 1 - CONS_LOSS / 100;
+    kiraVergiBirik(st, cell, r.leaseTax * (mult || 1) * konsKayip); // 🏛️ sahibe, satıcının GERÇEK kaybettiği kadar (para basımı olmasın)
+    gain = r.gain * (mult || 1) * konsKayip;
     // 🌍 KİRA GERÇEKTEN KESİLİR (patron: "kiraladığı kişiden para kazanacak").
     // Emsali oyunda var: Alım Garantisi vergisi de sellRevenue içinde gerçekten kesiliyor.
     // ⚠️ satisGeliri'nden ÖNCE kesilir — banka payı kiradan SONRAKİ tutar üzerinden hesaplanır,
@@ -6149,7 +6348,9 @@ function sellChunk(st, mwh, targetCell, mult) {
   const aline = targetCell && targetCell !== st.cell ? allyLineTo(st.cell, targetCell) : null;
   if (aline) {
     const r = sellRevenue(cell, mwh, px);
-    gain = r.gain * (mult || 1) * (1 - lineLoss(aline) / 100);
+    const hatKayip = 1 - lineLoss(aline) / 100;
+    kiraVergiBirik(st, cell, r.leaseTax * (mult || 1) * hatKayip);
+    gain = r.gain * (mult || 1) * hatKayip;
     st.stored = Math.max(0, st.stored - mwh);
     noteSold(cell, mwh);
     satisGeliri(gain); // 🏦 borç varsa bankanın payı burada kesilir
@@ -6163,7 +6364,9 @@ function sellChunk(st, mwh, targetCell, mult) {
   if (line) {
     // ⚡ NAKİL HATTI: hedef bölgenin fiyatı, mesafe kaybı düşülür (aktarım bedeli YOK — hattı zaten sen kurdun)
     const r = sellRevenue(cell, mwh, px);
-    gain = r.gain * (mult || 1) * (1 - lineLoss(line) / 100);
+    const hatKayip = 1 - lineLoss(line) / 100; // lineTasi ömrü yediği için TEK kez, taşımadan ÖNCE hesapla
+    kiraVergiBirik(st, cell, r.leaseTax * (mult || 1) * hatKayip);
+    gain = r.gain * (mult || 1) * hatKayip;
     lineTasi(line, mwh);   // ⚡ kişisel hattın ömrü tükenir
     st.stored = Math.max(0, st.stored - mwh);
     noteSold(cell, mwh);
@@ -6183,12 +6386,17 @@ function sellChunk(st, mwh, targetCell, mult) {
     // de sınırsız talep fiyatından ödeniyordu. Artık tavan üstü kısım normal satış kurallarına
     // (kalan talep + DUMP_RATE) tabi; mesaj da gerçeği söylüyor.
     const fazla = sellRevenue(cell, mwh - cnt, px);
-    gain = (cnt * cellPriceNow(cell) * (1 + greenBonus()) + fazla.gain) * (mult || 1);
+    // 🏛️ HATA AVI (patron 30 Ağu): tavan İÇİ kısım sellRevenue'dan geçmediği için karo
+    // vergisinden tamamen kaçıyordu — rakip karosunda acil ihale = vergisiz satış. Kapatıldı.
+    const atVergi = cnt * cellPriceNow(cell) * (1 + greenBonus()) * leaseTaxRate(cell);
+    gain = (cnt * cellPriceNow(cell) * (1 + greenBonus()) - atVergi + fazla.gain) * (mult || 1);
+    kiraVergiBirik(st, cell, (atVergi + fazla.leaseTax) * (mult || 1));
     if (cnt < mwh - .01) toast('🤝 Katkı tavanına ulaştın (%40) — kalan ' + fmtE(mwh - cnt) + ' MWh normal fiyattan satıldı', 'warn', 'allycap', 30000);
   } else {
     const r = sellRevenue(cell, mwh, px);
-    gain = r.gain * (mult || 1);
-    if (targetCell && targetCell !== st.cell) gain *= 1 - TRANSFER_FEE; // -%10 aktarım bedeli
+    const aktarim = (targetCell && targetCell !== st.cell) ? 1 - TRANSFER_FEE : 1;
+    kiraVergiBirik(st, cell, r.leaseTax * (mult || 1) * aktarim);
+    gain = r.gain * (mult || 1) * aktarim; // aktarım bedeli
   }
   st.stored = Math.max(0, st.stored - mwh);
   noteSold(cell, mwh);
@@ -6259,6 +6467,7 @@ function dischargeTick(dtSec) {
     }
     if (d.left <= .005 || st.stored <= .001) {
       rentFlush(st);   // 🌍 biriken kirayı ev sahibi ittifakın defterine TEK kayıtla yaz
+      vergiFlush(st);  // 🏛️ biriken karo vergisi gerçek kiracının defterine TEK kayıtla
       st.disch = null;
       plants().forEach(p => { if (p.st === st.id && p._autoOff) { p.on = true; p._autoOff = false; } }); // oyunun kapattıkları geri açılır
       toast(CEV('💰 Satış tamam: {0} MWh = {1}', fmtE(d.sold), fmt(d.gain)) + (d.mult > 1 ? ' ' + CEV('(🎬 +%15 dahil)') : '') + (d.target ? ' · 🔁 ' + cellCode(d.target) : ''), '');
@@ -6280,11 +6489,9 @@ function estimateBulkGain(frac) {
     if (st.link) continue; // uydu tek başına satılmaz — grup toplamı aşağıda hub üzerinden sayılıyor
     const mwh = (isLinked(st) ? groupStored(st) : st.stored) * frac;
     if (mwh < .005) continue;
-    const base = cellPriceNow(st.cell); // her karenin KENDİ alım fiyatı (+imtiyazda ×1.2)
-    const remaining = Math.max(0, demandLeft(st.cell) - (soldTmp[st.cell] || 0));
-    const inD = Math.min(mwh, remaining);
-    const excess = mwh - inD;
-    gain += (inD * base + excess * base * DUMP_RATE) * (1 + greenBonus());
+    // 🏛️ İnceleme bulgusu: el hesabı karo vergisini (ve doygunluk/ipSatBoost/kayıp-kaçağı)
+    // atlıyordu — buton ile onay modalı farklı rakam gösteriyordu. Gerçek satışla aynı fonksiyon:
+    gain += sellRevenueAfter(st.cell, mwh, soldTmp[st.cell] || 0).gain;
     soldTmp[st.cell] = (soldTmp[st.cell] || 0) + mwh;
   }
   return gain;
@@ -9898,6 +10105,32 @@ async function gmPoll(tam) {
   }
   gmRender();
   if (tam && !NET.kilit) { try { const od = await NET.get('odul/' + NET.id); if (od) await odulAl(od); } catch (e) {} }
+  if (tam && !NET.kilit) { try { const vg = await NET.get('vergi/' + NET.id); if (vg) await vergiAl(vg); } catch (e) {} }
+}
+// 🏛️ KARO VERGİSİ TAHSİLATI (patron 30 Ağu): rakiplerin senin karondaki satışlarından kesilen
+// %20, `vergi/<uid>` kutunda birikir. odulAl kuralı birebir: ÖNCE SİL (sahiplen), SONRA uygula —
+// silinemeyen kayıt atlanır (çifte tahsil imkânsız), NET.kilit varken hiç girilmez.
+async function vergiAl(box) {
+  if (NET.kilit || !box || typeof box !== 'object') return;
+  // Tur tavanı (inceleme bulgusu): saves/cash kuralı tek yazımda +1e12'den fazlasını reddeder —
+  // kutu selle doldurulursa sınırsız toplam bulut kaydını SESSİZCE dondururdu. Tavanı aşacak
+  // kayıt SİLİNMEDEN bırakılır (sonraki tura kalır), kasa artışı hep kural sınırının altında kalır.
+  const TUR_TAVAN = 1e11;
+  let toplam = 0, n = 0; const karolar = {};
+  for (const [k, o] of Object.entries(box)) {
+    const p = (o && typeof o === 'object') ? Math.max(0, Math.min(+o.tutar || 0, 1e10)) : 0;
+    if (toplam + p > TUR_TAVAN) break;
+    try { await NET.req('vergi/' + NET.id + '/' + k, 'DELETE', undefined, false, true); } catch (e) { continue; }
+    if (!(p > 0)) continue;
+    toplam += p; n++;
+    if (o.cell) karolar[o.cell] = (karolar[o.cell] || 0) + p;
+  }
+  if (!n) return;
+  G.cash += toplam; gider('ihale', -toplam); // gider defterinde negatif kalem = ihale/imtiyaz geliri
+  const dokum = Object.entries(karolar).map(([c, t]) => cellCode(c) + ': ' + fmt(t)).join(' · ');
+  addMail('🏛️ İhale Kurumu', CEV('Alım garantisi vergi tahsilatı'), CEV('Alım garantin olan karolardaki rakip satışlarından {0} vergi tahsil edildi ({1} kayıt).', fmt(toplam), n) + (dokum ? '\n' + dokum : ''), true);
+  toast(CEV('🏛️💸 Bölge vergisi tahsil edildi: +{0}', fmt(toplam)), '', null, 0, true);
+  save(); try { renderHUD(); } catch (e) { }
 }
 // 🖥️ PERDE + KİLİT. Kilitlemeyi "butonları gizle" ile DEĞİL tek katman + pointer-events ile
 // yapıyoruz — dağınık `disabled` denemesi mutlaka kaçak bırakır (patron: "bunu iyi ayarla").
@@ -10444,6 +10677,10 @@ const NET = {
       await this.put('units/' + this.id, mine);
       const [pl, un] = await Promise.all([this.get('players'), this.get('units')]);
       this.players = pl || {}; this.units = un || {};
+      try { await kiralarCek(); } catch (e) { } // 🌐 küresel kira sicili (30 sn önbellekli)
+      try { await kiraSicilGoc(); } catch (e) { }     // sicil öncesi ödenmiş yerel kiraların tek seferlik göçü
+      try { await kiraBekleyenIsle(); } catch (e) { } // bekleyen sicil talepleri (kalıcı kuyruk — iade güvencesi)
+      try { await vergiKuyrukDene(); } catch (e) { }  // gönderilemeyen karo vergileri (idempotent yeniden deneme)
       // gelen posta
       const mb = await this.get('mail/' + this.id);
       if (mb) {
@@ -13384,6 +13621,7 @@ function offlineProgress() {
     const d = st.disch;
     dischGain += sellChunk(st, Math.min(d.left, st.stored), d.target, d.mult); // kalan kısım satılır
     rentFlush(st);   // 🌍 biriken kıta hattı kirası ev sahibi ittifakın defterine yazılır
+    vergiFlush(st);  // 🏛️ biriken karo vergisi gerçek kiracıya
     st.disch = null; dischN++;
     plants().forEach(p => { if (p.st === st.id && p._autoOff) { p.on = true; p._autoOff = false; } });
   }
@@ -13712,6 +13950,7 @@ function initMap(center, zoom) {
     guvenli('refreshUnitMarkers', () => { G.units.forEach(u => u._lastIcon = null); refreshUnitMarkers(); });
     guvenli('drawOverlay', drawOverlay);
     guvenli('drawOthers', drawOthers);
+    guvenli('licTiles', refreshLicenseTiles); // 🏷️ kira filigranı zoom eşiğini (9) işlesin
   });
   map.on('moveend', () => {
     if (!(G && G._started)) return;
@@ -14364,8 +14603,12 @@ function refreshLicenseTiles() {
   // patlatıyordu; istisna açılışı G._started'a varmadan kesiyor, hesap AÇILAMAZ hale
   // geliyordu (canlı test kaydında yaşandı, elle onarıldı). Ayrıca istisna yüzünden alttaki
   // temizlik döngüsü hiç çalışmayıp licLayer sızıyordu. Bozuk kimlik EN KAYNAKTA elenir.
+  // 🌐 SİCİL KAROLARI DA ÇİZİLİR (patron 30 Ağu): gerçek bir oyuncunun alım garantisi olan
+  // karo HERKESİN haritasında görünür — ruhsatın olmasa bile (sende yeşil, rakipte kırmızı).
+  const sicilKarolar = Object.keys(KIRA.map || {}).filter(c => (KIRA.map[c] || {}).until > Date.now());
   const kareler = new Set(Object.keys(G.licenses || {})
     .concat(Object.keys(G.leases || {}).filter(c => G.leases[c] > Date.now()))
+    .concat(sicilKarolar)
     .filter(gecerliKare));
   for (const c of kareler) {
     const st = tileStyle(c);
@@ -14374,6 +14617,41 @@ function refreshLicenseTiles() {
   }
   for (const c of Object.keys(licLayer))
     if (!kareler.has(c)) { licLayer[c].remove(); delete licLayer[c]; }
+  refreshKiraTags(kareler);
+}
+// 🏷️ KİRA FİLİGRANI (patron 30 Ağu): alım garantili karonun üzerine sahibinin şirket adı
+// ÇAPRAZ ve ŞEFFAF yazılır — kendi karonda kendi adın, rakibinkinde onunki. Karolar canvas
+// (VEC) ile çiziliyor ve canvas'a CSS dönüşü uygulanamaz → etiket L.divIcon ile basılır;
+// tıklamayı YEMEZ (interactive:false + pointer-events:none — yönetim paneli Leaflet dersi).
+// Zoom < 9'da gizlenir (o uzaklıkta okunmaz, drawOthers eşiğiyle tutarlı).
+let kiraTagLayer = {};
+const htmlKacir = v => String(v).replace(/[<>&"]/g, s => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[s]));
+function kiraTagAdi(c) {
+  if (myLease(c)) { const g = gercekKira(c); return (g && g.nm) || G.company || 'SEN'; }
+  return leaseOwnerOf(c) || null;
+}
+function refreshKiraTags(kareler) {
+  if (!map) return;
+  const istenen = {};
+  if (zoomNow() >= 9) {
+    let n = 0;
+    for (const c of kareler) {
+      const nm = kiraTagAdi(c);
+      if (!nm || ++n > 200) continue; // emniyet tavanı (drawOthers'ın 260 desenine paralel)
+      istenen[c] = nm;
+    }
+  }
+  for (const c of Object.keys(kiraTagLayer))
+    if (istenen[c] === undefined || kiraTagLayer[c]._kiraNm !== istenen[c]) { kiraTagLayer[c].remove(); delete kiraTagLayer[c]; }
+  for (const [c, nm] of Object.entries(istenen)) {
+    if (kiraTagLayer[c]) continue;
+    const m = L.marker(cellCenter(c), {
+      icon: L.divIcon({ html: `<div class="kiratag">${htmlKacir(nm)}</div>`, className: '', iconSize: [150, 22], iconAnchor: [75, 11] }),
+      interactive: false, keyboard: false, zIndexOffset: -300,
+    }).addTo(map);
+    m._kiraNm = nm;
+    kiraTagLayer[c] = m;
+  }
 }
 
 // ═══ 🧭 SAHA ÇEKMECESİ + SİNEMATİK GEÇİŞ (patron isteği) ═══
@@ -14488,7 +14766,7 @@ function renderStorePanel() {
         <div class="foot">
           <span class="val">${fmtE(mwh)}/${cap} MWh${bagli ? ' <b style="color:var(--acc2)">👑 ' + storeGroup(s).length + ' depo</b>' : ''} · %${Math.round(pct * 100)}
             ${inflow > .05 ? ` · ⚡${inflow.toFixed(1)} MW` : ' · <span class="neg">üretim yok</span>'}
-            ${s.disch ? '' : `<br><b style="color:var(--acc)">${fmt(r.gain)}</b>${r.excess > .5 ? ' <span class="neg">· talep aşımı</span>' : ''}${dolumTxt(dolum, inflow)}`}</span>
+            ${s.disch ? '' : `<br><b style="color:var(--acc)">${fmt(r.gain)}</b>${r.leaseTaxRate ? ' <span class="neg">(%' + LEASE_PRIM * 100 + ' karo sahibine)</span>' : ''}${r.excess > .5 ? ' <span class="neg">· talep aşımı</span>' : ''}${dolumTxt(dolum, inflow)}`}</span>
           ${s.disch
             ? `<span style="font-size:10.5px;color:var(--gold);font-weight:800">⚡ %${Math.round(100 * s.disch.sold / (s.disch.sold + s.disch.left))}</span>`
             : `<button onclick="sellUnit(${s.id},1);renderNav()" ${mwh < .005 ? 'disabled' : ''}>SAT</button>`}
@@ -14518,6 +14796,7 @@ window.sellAllStoresAsk = () => {
     <p><b>${sts.length} depo</b> · ${fmtE(mwh)} MWh · tahmini <b class="pos">${fmt(toplam)}</b></p>
     <p class="sub">Boşaltma süresince her depoya bağlı santraller duracak, bitince kendiliğinden açılır.
     Bölge talebini aşan kısım yok pahasına gider — panelde "talep aşımı" yazan depolar için bekle.</p>
+    ${sts.some(s => leaseTaxRate(s.cell)) ? `<p class="sub neg">🏛️ Alım garantisi rakipte olan karolardaki satışlardan <b>%${LEASE_PRIM * 100} karo vergisi</b> düşülür (tutara işlenmiştir, karo sahibine ödenir).</p>` : ''}
     <button class="primary" onclick="closeModal();sellAllStores()">💰 Evet, ${sts.length} Depoyu Sat</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
@@ -14599,6 +14878,18 @@ function openCellSheet(c, ll, mode) {
   SEL.buildGeneric = false;
   SEL.cell = c; SEL.ll = ll;
   if (mode) SEL.mode = mode;
+  // 🌐 sicil tazele (tek karo): kiracı değiştiyse açık sayfayı yeniden çiz — 12 sn'lik döngüyü bekletme
+  if (NET.on() && !NET.kilit && !openCellSheet._sicil) {
+    openCellSheet._sicil = true;
+    NET.get('kiralar/' + c).then(k => {
+      openCellSheet._sicil = false;
+      const degisti = JSON.stringify(k || null) !== JSON.stringify(KIRA.map[c] || null);
+      if (!degisti) return;
+      if (k) KIRA.map[c] = k; else delete KIRA.map[c];
+      try { refreshLicenseTiles(); } catch (e) { }
+      if (SEL.cell === c && $('cellsheet').classList.contains('show')) openCellSheet(c, ll);
+    }).catch(() => { openCellSheet._sicil = false; });
+  }
   const infoOnly = SEL.mode === 'info';
   highlightCell(c);
   const q = cellQuality(c);
@@ -14647,10 +14938,11 @@ function openCellSheet(c, ll, mode) {
   let html = '';
   if (infoOnly) {
     // BİLGİ MODU: sadece durum — inşa/satın alma öğeleri görünmez
-    const bl = botLease(c), ml = myLease(c);
+    const gk = gercekKiraci(c), bl = leaseOwnerOf(c), ml = myLease(c); // 🌐 sicil öncelikli (gerçek oyuncu > bot)
+    const mlKalan = ml ? Math.max(G.leases[c] || 0, (gercekKira(c) || {}).until || 0) : 0;
     html = `
       <p style="font-size:12px;color:var(--dim)">📜 Ruhsat: <b>${licensed ? 'SENDE ✅' : 'Devlette (ücret: ' + fmt(licenseFee(c)) + ')'}</b><br>
-      🏛️ Alım Garantisi: <b>${ml ? 'SENDE — kalan ~' + fmtHrs((G.leases[c] - Date.now()) / 36e5) + ' (alım fiyatı +%20)' : bl ? bl + ' (bu dönem)' : 'boşta (taban: ' + fmt(minBid(c)) + ')'}</b>
+      🏛️ Alım Garantisi: <b>${ml ? 'SENDE — kalan ~' + fmtHrs((mlKalan - Date.now()) / 36e5) + ' (alım fiyatı +%20)' : bl ? bl + (gk ? ' 👤 (gerçek oyuncu · bu dönem)' : ' (bu dönem)') : 'boşta (taban: ' + fmt(minBid(c)) + ')'}</b>
       ${bl ? `<br><span class="neg">💸 Bu karedeki satış gelirinin %${LEASE_PRIM * 100}'si vergi olarak ${bl} şirketine gider — ihaleyi kazanırsan hem +%20 prim alır hem vergiyi sen toplarsın.</span>` : ''}</p>
       ${!licensed ? (officeCovers(c)
         ? `<p class="sub">📜 Ruhsatların: ${Object.keys(G.licenses).length}/${licCap()}</p>
@@ -14819,7 +15111,7 @@ function auctionPanelHTML(c) {
       <button class="bigsell" onclick="placeBid('${c}')" ${!w.open || a.topBy === 'SEN' || G.cash < next - a.myEscrow ? 'disabled' : ''}>🏛️ Teklif Ver — ${fmt(next)}</button>
       ${a.myEscrow > 0 ? `<button class="bigsell half" onclick="withdrawBid('${c}')" style="color:var(--danger)">↩️ Teklifi Çek — %20 ceza (${fmt(Math.round(a.myEscrow * WITHDRAW_PENALTY))} yanar)</button>` : ''}
       ${directRentOpen(c) ? `<button class="bigsell half" onclick="directRentConfirm('${c}')" ${G.cash < minBid(c) ? 'disabled' : ''}>🏛️ Boş Karoyu Doğrudan Kirala — ${fmt(minBid(c))} (dönem Pazar 00:00'da biter)</button><p class="sub">Geçen ihalede teklif çıkmadı — <b>boş</b> karolar doğrudan teminle kiralanabilir.</p>` : ''}
-      ${(myLease(c) || botLease(c)) && !w.open ? `<p class="sub">🔒 Bu karonun alım garantisi <b>${myLease(c) ? 'SENDE' : botLease(c)}</b> — dönem bitmeden doğrudan kiralanamaz. Sahiplik yalnız <b>Pazar 09:00–21:00 ihalesiyle</b> el değiştirir.</p>` : ''}`;
+      ${(myLease(c) || leaseOwnerOf(c)) && !w.open ? `<p class="sub">🔒 Bu karonun alım garantisi <b>${myLease(c) ? 'SENDE' : leaseOwnerOf(c)}</b> — dönem bitmeden doğrudan kiralanamaz. Sahiplik yalnız <b>Pazar 09:00–21:00 ihalesiyle</b> el değiştirir.</p>` : ''}`;
   }
   return h;
 }
@@ -14901,9 +15193,11 @@ function openUnitSheet(id) {
       </div>` : `
       <button class="bigsell" onclick="sellUnit(${u.id},1)" ${satMwh < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(satMwh)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * satMwh / T.cap))} sn)</button>
       <p class="sub" style="margin:2px 0 6px;text-align:center">⚡ Tutara <b>kayıp-kaçak bedeli −%${LOSS_LEAK * 100}</b> dahildir (iletim/dağıtım kaybı). Boşaltma boyunca birim fiyat <b>sabitlenir</b> — gördüğün tutarı alırsın.</p>
-      ${alt ? (() => { // 🚨 acil ihale teslimatı — tam fiyat, kesinti yok
+      ${rAll.leaseTaxRate ? `<p class="sub neg" style="margin:2px 0 6px;text-align:center">🏛️ Bu karonun alım garantisi <b>${rAll.leaseOwner || 'rakipte'}</b> — tutardan <b>%${LEASE_PRIM * 100} karo vergisi düşülmüştür</b> (karo sahibine ödenir).</p>` : ''}
+      ${alt ? (() => { // 🚨 acil ihale teslimatı — aktarım kesintisi yok; rakip kiralı karoda karo vergisi düşer
         const g = altSatGain(alt.c, satMwh, 1);
-        return `<button class="bigsell" style="background:var(--danger);color:#fff" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${satMwh < .005 ? 'disabled' : ''}>🚨 ACİL İHALEYE SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">${cellCode(alt.c)} · tam fiyat, kesinti yok</span></button>`;
+        const altVergi = leaseTaxRate(alt.c);
+        return `<button class="bigsell" style="background:var(--danger);color:#fff" onclick="startDischarge(${u.id},1,null,'${alt.c}')" ${satMwh < .005 ? 'disabled' : ''}>🚨 ACİL İHALEYE SAT — ~${fmt(g)}${karRozeti(g, rAll.gain)}<br><span style="font-size:10px">${cellCode(alt.c)}${altVergi ? ' · %' + LEASE_PRIM * 100 + ' karo vergisi düşüldü (garanti: ' + (leaseOwnerOf(alt.c) || 'rakipte') + ')' : ' · tam fiyat, kesinti yok'}</span></button>`;
       })() : ''}
       ${/* ⛔ hattı olmayan depo yalnız KENDİ karesine satar — sebebini söyle, oyuncu boşuna aramasın */
         (!storeLineTargets(u).length && !isLinked(u)) ? `<p class="sub" style="margin:6px 0;border:1px dashed var(--line);border-radius:8px;padding:6px 8px">
@@ -14959,9 +15253,10 @@ function openUnitSheet(id) {
           <tr><td>Bölgede bugün kalan talep</td><td class="${left < satMwh ? 'neg' : ''}">${fmtN(left)} / ${fmtN(D)} MWh</td></tr>
           <tr><td>→ Talep içinde satılacak</td><td class="pos">${fmtE(rAll.inD)} MWh × ${fmt(base)}</td></tr>
           ${rAll.excess > .5 ? `<tr><td>→ Talebi aşan kısım</td><td class="neg">${fmtN(rAll.excess)} MWh × ${fmt(base * DUMP_RATE)} (yok pahasına)</td></tr>` : ''}
+          ${rAll.leaseTax > .5 ? `<tr><td>→ 🏛️ Karo vergisi (%${LEASE_PRIM * 100})</td><td class="neg">−${fmt(rAll.leaseTax)} → ${rAll.leaseOwner || 'karo sahibi'}</td></tr>` : ''}
           <tr><td><b>Tümünü satarsan</b></td><td><b>${fmt(rAll.gain)}</b></td></tr>
         </table>
-        <p class="sub" style="margin-top:6px">Şeffaf kural: gördüğün = hesabına geçen. Trafo kaybı YOK, sürpriz kesinti yok.${rAll.excess > .5 ? ' 💡 Fazlan yok pahasına gidiyor: kalabalık şehir yakınına depo kur ya da yarını bekle.' : ''}</p>
+        <p class="sub" style="margin-top:6px">${rAll.leaseTaxRate ? 'Şeffaf kural: gördüğün = hesabına geçen — tek kesinti, tutara işlenmiş <b>%' + LEASE_PRIM * 100 + ' karo vergisi</b> (alım garantisi ' + (rAll.leaseOwner || 'rakipte') + ').' : 'Şeffaf kural: gördüğün = hesabına geçen. Trafo kaybı YOK, sürpriz kesinti yok.'}${rAll.excess > .5 ? ' 💡 Fazlan yok pahasına gidiyor: kalabalık şehir yakınına depo kur ya da yarını bekle.' : ''}</p>
       </details>
       ${(() => { // 🗑️ VARLIK SATIŞI (patron 29 Ağu: "Sat butonu ayrıntıların içinden çıksın,
         // direkt en altta kırmızı buton olsun") — 🔗 GRUP KİLİDİ korunur: bağlantılı depo
