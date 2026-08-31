@@ -70,7 +70,7 @@
      ve max-height ile #mapwrap'e hapsedildi. ⚠️ top:auto ŞART — top+bottom birlikte kalırsa gerilir.
      ⚠️ max-height olmadan kısa ekranda çekmece YUKARI taşıp Banka butonunu #hdr'ın arkasına sokuyordu
      (eğitimin hedef butonu odur). Şimdi yer yetmezse butonlar sıkışır, hiçbiri kaybolmaz. */
-  #drawer{position:absolute;top:auto;bottom:10px;right:0;z-index:1156;max-height:calc(100% - 12px);display:flex;flex-direction:column;gap:4px;padding:8px 7px;background:#13213af2;border:1px solid var(--line);border-right:none;border-radius:14px 0 0 14px;transform:translateX(110%);transition:transform .22s;box-shadow:-4px 4px 18px #0009;backdrop-filter:blur(3px)}
+  #drawer{position:absolute;top:auto;bottom:10px;right:0;z-index:1156;max-height:calc(100% - 12px);overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding:8px 7px;background:#13213af2;border:1px solid var(--line);border-right:none;border-radius:14px 0 0 14px;transform:translateX(110%);transition:transform .22s;box-shadow:-4px 4px 18px #0009;backdrop-filter:blur(3px)}
   /* ✏️ Hat çizim çubuğu (#drawbar, z-index:1160) ekranın altını kaplıyor — çekmece alta çapalanınca
      son iki buton onun ALTINDA kalıp tıklanamaz oluyordu. Çizim sürerken çekmece yukarı kalkar. */
   #drawbar.show ~ #drawer{bottom:96px;max-height:calc(100% - 106px)}
@@ -650,6 +650,7 @@
       <div id="goalbar"><div id="goalfill"></div></div>
       <div class="qline"><span class="sub" id="goalprog">0</span><span class="sub" id="goalreward"></span></div>
       <button id="claimbtn">🎁 Ödülü Al</button>
+      <div id="gprow"></div>
       <div id="allysec"></div>
       <!-- 🎮 MİNİ OYUN GİZLENDİ (patron: "mini oyunu şimdilik kaldır").
            Kod duruyor, yalnız giriş noktası kapalı: yeni rekabet sistemi (5 oyun, günün oyunu,
@@ -666,7 +667,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-31 19:23) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-31 23:17) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -679,6 +680,12 @@
     <div class="sheet" id="companysheet">
       <h3><span id="comp_title">🏢 ŞİRKET</span><span class="x" onclick="hideSheets()">✕</span></h3>
       <div id="comp_body"></div>
+    </div>
+    <!-- 🧬 GELİŞİM AĞACI (31 Ağu): gelişim görevleri + 5 dal × 5 düğüm + tam sıfırlama.
+         Başlık DÜZ METİN bırakıldı — sayfa yüklenirken .sheet h3 döngüsü 21 dile çeviriyor. -->
+    <div class="sheet" id="gelisimsheet">
+      <h3>🧬 GELİŞİM AĞACI<span class="x" onclick="hideSheets()">✕</span></h3>
+      <div id="gel_body"></div>
     </div>
     <!-- 💬 SOHBET ÇEKMECESİ (sağ çekmecenin altında, ayrı kulp) -->
     <button id="chathandle" title="Sohbet">💬</button>
@@ -786,6 +793,7 @@
       <button data-act="maint"><span class="big">🔧</span><span id="drawermaint">Bakım</span></button>
       <button data-act="company"><span class="big">🏢</span>Şirket</button>
       <button data-act="menu"><span class="big">📋</span>Görevler</button>
+      <button data-act="gelisim"><span class="big">🧬</span>Gelişim</button>
       <button data-act="friends"><span class="big">👥</span>Arkadaş</button>
       <button data-act="rank"><span class="big">🏆</span>Sıralama</button>
       <button data-act="ayarlar"><span class="big">⚙️</span>Ayarlar</button>
@@ -830,7 +838,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-31 19:23)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-31 23:17)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -1045,6 +1053,146 @@ en: {
   'Bu zaten mevcut adın': 'That is already your current name',
   '🏢 "{0}" adında bir şirket zaten var — başka bir ad seç': '🏢 A company named "{0}" already exists — pick another name',
   '🏢 Şirket adın artık: {0}': '🏢 Your company is now named: {0}',
+  // ── 🧬 GELİŞİM AĞACI (31 Ağu) ──
+  'Gelişim Puanı': 'Development Points',
+  'GELİŞİM AĞACI': 'DEVELOPMENT TREE',
+  '🧬 GELİŞİM AĞACI': '🧬 DEVELOPMENT TREE',
+  // 🎯 gelişim görev şablonları — CEV(g.t, ...) ile ÇALIŞMA ANINDA çağrılıyor, statik
+  //    tarayıcı bunları yakalayamaz; elle eklendi (eksik kalırsa sekme İngilizcede Türkçe kalır)
+  '{0} MWh enerji sat': 'Sell {0} MWh of energy',
+  '{0} ciro yap': 'Earn {0} in revenue',
+  '{0} ayrı satış işlemi yap': 'Make {0} separate sales',
+  '{0} yeni tesis kur': 'Build {0} new facilities',
+  '{0} tesise bakım yap': 'Service {0} facilities',
+  '{0} kez yakıt ikmali yap': 'Refuel {0} times',
+  'Güneşten {0} MWh üret': 'Generate {0} MWh from solar',
+  'Rüzgardan {0} MWh üret': 'Generate {0} MWh from wind',
+  'Yenilenebilir kaynaklardan {0} MWh üret': 'Generate {0} MWh from renewables',
+  'Nükleerden {0} MWh üret': 'Generate {0} MWh from nuclear',
+  'Kömür ve gazdan {0} MWh üret': 'Generate {0} MWh from coal and gas',
+  'Bu hafta {0} MWh enerji sat': 'Sell {0} MWh of energy this week',
+  'Bu hafta {0} ciro yap': 'Earn {0} in revenue this week',
+  'Bu hafta {0} yeni tesis kur': 'Build {0} new facilities this week',
+  'Bu hafta yenilenebilirden {0} MWh üret': 'Generate {0} MWh from renewables this week',
+  'Gelişim Ağacını Aç': 'Open Development Tree',
+  'Ar-Ge Enstitüsü — 2030 Ufku': 'R&D Institute — 2030 Horizon',
+  'günlük görev': 'daily task',
+  'haftalık büyük görev': 'weekly major task',
+  'ödül verildi': 'reward granted',
+  'GP': 'DP',
+  'Aç': 'Unlock',
+  'ana dal seçilmedi': 'no main branch chosen',
+  'ana dal yok': 'no main branch',
+  'düğüm': 'nodes',
+  'Görevler': 'Tasks',
+  'Ağaç': 'Tree',
+  'GÜNLÜK GELİŞİM GÖREVLERİ': 'DAILY DEVELOPMENT TASKS',
+  'her gün 3 görev · görev başına': '3 tasks per day · each worth',
+  'Görevler yükleniyor…': 'Loading tasks…',
+  'HAFTALIK BÜYÜK GÖREV': 'WEEKLY MAJOR TASK',
+  'Tanıtım modu': 'Preview mode',
+  'ANA DALIN': 'YOUR MAIN BRANCH',
+  'TAM SIFIRLAMA': 'FULL RESET',
+  'Ar-Ge Enstitüsü — 2030 Ufku. Her düğüm bugün pilot aşamada gerçekten var olan bir teknoloji. Gelişim Puanı yalnız aşağıdaki görevlerden kazanılır: İmtiyaz Puanıyla SATIN ALINAMAZ.': 'R&D Institute — 2030 Horizon. Every node is a technology that really exists at pilot stage today. Development Points come only from the tasks below: they CANNOT be bought with Privilege Points.',
+  'Ödüller otomatik verilir — düğmeye basman gerekmez. Görevler her gün gece yarısı (TSİ) yenilenir.': 'Rewards are granted automatically — no button to press. Tasks refresh every day at midnight (TRT).',
+  'düğümler Küçük İşletme ölçeğinden itibaren açılır (haftalık 5.000 MWh şebeke satışı). Puanların birikmeye şimdiden başladı.': 'nodes unlock from Small Business scale onward (5,000 MWh weekly grid sales). Your points are already accumulating.',
+  'Her dalın ilk 2 düğümü serbesttir. 3. düğümü açtığın dal ANA DALIN olur ve adının yanında uzmanlık rozetin görünür — o andan sonra yalnız o dalda ilerlersin.': 'The first 2 nodes of every branch are free. The branch whose 3rd node you unlock becomes YOUR MAIN BRANCH and your specialty badge appears next to your name — from then on you advance only in that branch.',
+  'serbest düğümlerin bitti — ana dalın bu değil': 'free nodes used up — this is not your main branch',
+  'Tüm düğümler kapanır, harcadığın Gelişim Puanının TAMAMI geri gelir ve ana dalını yeniden seçersin. ⚠️ Düğümlere ödediğin PARA geri gelmez.': 'All nodes close, you get back ALL the Development Points you spent, and you pick a new main branch. ⚠️ The MONEY you paid for nodes is NOT refunded.',
+  'İlk tam sıfırlama ÜCRETSİZ.': 'The first full reset is FREE.',
+  '{0} gün sonra tekrar sıfırlayabilirsin': 'you can reset again in {0} days',
+  'Ağacı Sıfırla — ücretsiz': 'Reset Tree — free',
+  'Ağacı Sıfırla': 'Reset Tree',
+  'Varlıklarına el konulmuşken gelişim düğümü açılamaz': 'You cannot unlock development nodes while your assets are seized',
+  'Ana dalını seçiyorsun': 'You are choosing your main branch',
+  'Bu düğümü açarsan': 'If you unlock this node,',
+  'ANA DALIN olur. O andan sonra diğer dallarda yalnız ilk 2 düğümü açabilirsin ve adının yanında': 'becomes YOUR MAIN BRANCH. From then on you can only unlock the first 2 nodes of other branches, and next to your name the',
+  'rozeti görünür.': 'badge will appear.',
+  'Fikrini değiştirirsen tam sıfırlama var: ilki ücretsiz, sonrakiler {0} İmtiyaz Puanı + {1} gün bekleme.': 'If you change your mind there is a full reset: the first is free, later ones cost {0} Privilege Points + a {1}-day wait.',
+  'Evet, ana dalım bu olsun': 'Yes, make this my main branch',
+  'Açıldı: {0}': 'Unlocked: {0}',
+  'Gelişim Ağacını Sıfırla': 'Reset Development Tree',
+  'Tüm düğümlerin kapanır ve ana dalın silinir.': 'All your nodes close and your main branch is cleared.',
+  '{0} Gelişim Puanı geri gelir.': '{0} Development Points come back.',
+  '⚠️ Düğümlere ödediğin PARA geri gelmez.': '⚠️ The MONEY you paid for nodes is NOT refunded.',
+  'Bu ilk sıfırlaman — ücretsiz.': 'This is your first reset — free.',
+  'Ücret: {0} İmtiyaz Puanı. Sonraki sıfırlama için {1} gün beklemen gerekir.': 'Cost: {0} Privilege Points. You must wait {1} days before the next reset.',
+  'Evet, sıfırla': 'Yes, reset',
+  'Gelişim Ağacı sıfırlandı — 🧬 +{0} geri geldi': 'Development Tree reset — 🧬 +{0} refunded',
+  'Ruhsat için {0} gerekli': '{0} needed for the licence',
+  'Bu düğüm bulunamadı': 'Node not found',
+  'Bu düğüm zaten açık': 'This node is already unlocked',
+  '🔒 Gelişim düğümleri Küçük İşletme ölçeğinden itibaren açılır (haftalık 5.000 MWh şebeke satışı)': '🔒 Development nodes unlock from Small Business scale onward (5,000 MWh weekly grid sales)',
+  '🔒 Önce bu dalın bir önceki düğümünü aç': '🔒 Unlock the previous node of this branch first',
+  '🔒 Ana dalın başka: 3. düğümden itibaren yalnız ANA DALINDA ilerleyebilirsin (sıfırlama ile değiştirilir)': '🔒 Your main branch is different: from the 3rd node on you can only advance in YOUR MAIN BRANCH (changeable by resetting)',
+  '🧬 Yeterli Gelişim Puanın yok — günlük ve haftalık gelişim görevlerinden kazanılır': '🧬 Not enough Development Points — earn them from daily and weekly development tasks',
+  '💰 Bu düğüm ayrıca milyarlık yatırım ister — kasan yetmiyor': '💰 This node also demands a billion-scale investment — your cash is not enough',
+  'Bu düğüm şu an açılamaz': 'This node cannot be unlocked right now',
+  'Güneş Ar-Ge': 'Solar R&D',
+  'Solar Takımı': 'Solar Team',
+  'Panelin gününü uzatır, sonunda geceye taşır.': 'Stretches the panel\'s day, and finally carries it into the night.',
+  'Rüzgar Ar-Ge': 'Wind R&D',
+  'Rüzgar Filosu': 'Wind Fleet',
+  'Türbini zayıf rüzgarda da fırtınada da çalışır tutar.': 'Keeps the turbine running in weak wind and in storms alike.',
+  'Nükleer Ar-Ge': 'Nuclear R&D',
+  'Nükleer Birlik': 'Nuclear Union',
+  'Zaten güçlü olanı biraz daha ucuza çalıştırır — bilerek mütevazı.': 'Runs the already-strong a little cheaper — deliberately modest.',
+  'Fosil Ar-Ge': 'Fossil R&D',
+  'Karbon Loncası': 'Carbon Guild',
+  'Yakıtı ucuzlatır, ikmali seyreltir, sonunda karbonu yakalar.': 'Cheapens fuel, thins out refuelling, and finally captures the carbon.',
+  'Şebeke Ar-Ge': 'Grid R&D',
+  'Şebeke Ağı': 'Grid Network',
+  'Kaybı kısar, hattı yaşatır — üretmez ama kaçırmaz.': 'Cuts losses and keeps lines alive — it does not produce, but it does not waste.',
+  'Panel Temizleme Robotları': 'Panel Cleaning Robots',
+  'Bulut Telafisi': 'Cloud Compensation',
+  'Alacakaranlık Penceresi': 'Twilight Window',
+  'Termal Depo Sinerjisi': 'Thermal Storage Synergy',
+  'Gece Üretimi I': 'Night Generation I',
+  'Otomatik Yağlama': 'Automatic Lubrication',
+  'Düşük Rüzgar Kanadı': 'Low-Wind Blade',
+  'Fırtına Toleransı': 'Storm Tolerance',
+  'Yüksek Kule Kiti': 'Tall Tower Kit',
+  'Gece Jeti Ayarı': 'Nocturnal Jet Tuning',
+  'Yakıt Çubuğu Geri Dönüşümü': 'Fuel Rod Recycling',
+  'Uzun Devre Bakımı': 'Long-Cycle Maintenance',
+  'Sıkı Muhafaza': 'Tight Containment',
+  'Atık Yönetimi': 'Waste Management',
+  'SMR Modüler Filo': 'SMR Modular Fleet',
+  'Genişletilmiş Stok Sahası': 'Extended Stockyard',
+  'Yanma Optimizasyonu': 'Combustion Optimisation',
+  'Kesintisiz İkmal Hattı': 'Uninterrupted Supply Line',
+  'Öngörülü Bakım': 'Predictive Maintenance',
+  'CCS Karbon Yakalama': 'CCS Carbon Capture',
+  'Hat Bakım Ekibi': 'Line Maintenance Crew',
+  'Akıllı Sayaç Ağı': 'Smart Meter Network',
+  'Yüksek Verimli Trafo': 'High-Efficiency Transformer',
+  'Çift Devre Hat': 'Double-Circuit Line',
+  'Süperiletken Kesit': 'Superconducting Section',
+  'Tozu geceleri robotlar alır: güneş santrallerinin yıpranması %25 yavaşlar.': 'Robots clear the dust at night: solar plants wear out 25% more slowly.',
+  'Perovskit-tandem hücre dağınık ışığı da toplar: bulutun götürdüğü üretimin %30 kadarı geri gelir.': 'Perovskite-tandem cells also harvest diffuse light: about 30% of the output clouds take away comes back.',
+  'Düşük açı optiği: üretim penceresi 06:00–19:30 yerine 05:00–21:00.': 'Low-angle optics: the generation window becomes 05:00–21:00 instead of 06:00–19:30.',
+  'Erimiş tuz ara devresi: güneşten depoya giden enerjinin trafo kaybı %25 azalır.': 'Molten-salt intermediate loop: transformer loss on solar energy entering storage drops 25%.',
+  'Tuz depolamalı CSP gerçekte gece de üretir: güneş santralleri gece nominal gücün %30 kadarını verir.': 'Salt-storage CSP really does generate at night: solar plants deliver about 30% of nominal power after dark.',
+  'Dişli kutusu kendini yağlar: rüzgar türbinlerinin yıpranması %25 yavaşlar.': 'The gearbox lubricates itself: wind turbines wear out 25% more slowly.',
+  'Uzun ve hafif kanat: türbinlerin devreye girme hızı (cut-in) 1 m/s düşer.': 'Long, light blades: turbine cut-in speed drops by 1 m/s.',
+  'Aktif kanat açısı kontrolü: fırtına kapatma eşiği 4 m/s yükselir.': 'Active pitch control: the storm shutdown threshold rises by 4 m/s.',
+  'Kule uzatma modülü: rüzgar her zaman 0,8 m/s daha güçlü hissedilir.': 'Tower extension module: wind always feels 0.8 m/s stronger.',
+  'Gerçekte gece alçak seviye jeti eser: 19:30–06:00 arası rüzgar 1,5 m/s daha güçlü.': 'A low-level jet really does blow at night: between 19:30 and 06:00 wind is 1.5 m/s stronger.',
+  'Kullanılmış çubuk yeniden zenginleştirilir: nükleer yakıt gideri %15 azalır.': 'Spent rods are re-enriched: nuclear fuel cost drops 15%.',
+  '18 aylık yakıt devri: nükleer santrallerin onarım bedeli %15 azalır.': '18-month fuel cycle: repair cost of nuclear plants drops 15%.',
+  'Çift kabuk muhafaza: nükleer santrallerin yıpranması %30 yavaşlar.': 'Double-shell containment: nuclear plants wear out 30% more slowly.',
+  'Derin jeolojik depolama: nükleer salımı 12 → 4 g/kWh düşer.': 'Deep geological storage: nuclear emissions fall from 12 to 4 g/kWh.',
+  'Modüler küçük reaktör bakım duruşunu kısaltır: nükleer üretimi %6 artar.': 'Small modular reactors shorten maintenance downtime: nuclear output rises 6%.',
+  'Santral içi yakıt stoğu 12 saatten 18 saate çıkar — günde bir ikmal yeter.': 'On-site fuel stock rises from 12 to 18 hours — one refuelling a day is enough.',
+  'Kızgın buhar çevrimi: kömür ve gaz santrallerinin yakıt tüketimi %10 azalır.': 'Superheated steam cycle: coal and gas plants burn 10% less fuel.',
+  'Yakıt stoğu 18 saatten 24 saate çıkar — tam gün ikmalsiz çalışır.': 'Fuel stock rises from 18 to 24 hours — a full day without refuelling.',
+  'Titreşim sensörleri: kömür ve gaz santrallerinin yıpranması %25 yavaşlar.': 'Vibration sensors: coal and gas plants wear out 25% more slowly.',
+  'Baca gazından karbon tutulur: fosil salımı %37 düşer (kömür 830 → ~523, yasal sınır 550 ALTI). Bedeli: yakıt tüketimi %15 artar.': 'Carbon is captured from flue gas: fossil emissions fall 37% (coal 830 → ~523, BELOW the 550 legal limit). The price: 15% more fuel burned.',
+  'Gezici bakım ekibi: nakil hatlarının ömrü %25 uzar (mevcut hatlarda da geçerli).': 'Mobile maintenance crew: transmission line lifespan grows 25% (applies to existing lines too).',
+  'Bileşik depo grubunda her ek üyenin getirdiği çevrim kaybı cezası yarıya iner.': 'In a combined storage group, the cycle-loss penalty of each extra member is halved.',
+  'Amorf çekirdek trafo: depoya giren enerjinin trafo kaybı %15 azalır.': 'Amorphous-core transformer: transformer loss on energy entering storage drops 15%.',
+  'Yedekli iletim: nakil hatlarının ömrü %25 daha uzar (toplam ~%56).': 'Redundant transmission: line lifespan grows another 25% (~56% in total).',
+  'Kriyojenik soğutmalı iletken: nakil hattı kaybı %25 azalır.': 'Cryogenically cooled conductor: transmission line loss drops 25%.',
 },
 // DIL-OTOMATIK-BASLA — tools/dil-entegre.js üretti (19 dil, dil başına bir ajan); elle düzenleme buraya DEĞİL, ajana/betiğe
 de: {
@@ -3346,7 +3494,15 @@ const COUNTRY_VIEW = { 'Türkiye':[[39.0,35.2],6],'Almanya':[[51.2,10.4],6],'ABD
 
 // ── KARE (hücre) sistemi: dünya 0.1°'lik karelere bölünür (~9 km) ──
 const CELL = 0.1;
-const MAX_PER_CELL = 8; // OYUNCU BAŞI limit — başkası doldursa da SENİN 8 hakkın durur (adalet)
+const MAX_PER_CELL = 8; // OYUNCU BAŞI TABAN limit — başkası doldursa da SENİN hakkın durur (adalet)
+// 🧱 KARO YERLEŞİM PLANI (patron 1 Eyl onayı): 8 slotta amiral gemisi deponun 11 bağlantısının
+// en fazla 7'si kullanılabiliyordu (1 merkez depo + 7 santral) — bağlantısız santral GELİR
+// ÜRETMEZ, yakıtlıysa aktif ZARAR eder. 'cellcap' araştırması 5 kademe × +1 ile tavanı 13'e
+// çıkarır: 1 merkez depo + 11 santral + 1 yedek slot. 12 cimri kalırdı, 14/16 ise çift-yığın
+// istismarını açardı. ⚠️ Limiti okuyan HER nokta cellCap() kullanmalı — MAX_PER_CELL doğrudan
+// okunursa araştırma o noktada işlemez (efektif limit tek kapıdan geçsin).
+const CELLCAP_MAX = 5;
+const cellCap = () => MAX_PER_CELL + Math.min(CELLCAP_MAX, (G && G.research && G.research.lvl && G.research.lvl.cellcap) || 0);
 // ENLEM DÜZELTMESİ (Kanada testi): sabit 0.1°×0.1° kare, kutuplara gidildikçe hem gerçekte
 // hem de Mercator ekranında ince-uzun şeride dönüşüyordu (oran 1/cos(enlem) — 75°'de ~4 kat).
 // Boylam adımını enlem kuşağına göre 2'nin katlarıyla büyütüyoruz: kare her yerde ~kare kalır,
@@ -3702,7 +3858,7 @@ const PLANT_TYPES = (() => {
   const bt = mw => Math.max(30, Math.min(300, Math.round(mw * 9 / 5) * 5)); // kurulum: 30 sn – 5 dk
   // GÜNEŞ (8): panelden CSP kulesine
   [[1, 'GES Çatı Paneli', '☀️'], [2, 'GES Panel Sahası S', '☀️'], [4, 'GES Saha M', '🌞'], [7, 'GES Çiftlik L', '🌞'], [10, 'GES Büyük Çiftlik', '🏜️'], [15, 'GES Mega Tarla', '🏜️'], [20, 'CSP Ayna Sahası', '🗼'], [25, 'CSP Güneş Kulesi', '🗼']]
-    .forEach(([mw, nm, ico], i) => P['solar_' + (i + 1)] = { cat: 'Güneş', kind: 'sun', nm, ico, mw, cost: Math.round(mw * 15e5 * (1 + mw / 90) / 1e5) * 1e5, build: bt(mw), em: 0, d: mw >= 20 ? 'Ayna ordusu — kategorinin amiral gemisi. Güneşli karede altın madeni.' : 'Gündüz üretir, karenin güneşine ve buluta bağlı.' });
+    .forEach(([mw, nm, ico], i) => P['solar_' + (i + 1)] = { cat: 'Güneş', kind: 'sun', nm, ico, mw, cost: Math.round(mw * 15e5 * (1 + mw / 300) / 1e5) * 1e5, build: bt(mw), em: 0, d: mw >= 20 ? 'Ayna ordusu — kategorinin amiral gemisi. Güneşli karede altın madeni.' : 'Gündüz üretir, karenin güneşine ve buluta bağlı.' });
   // RÜZGAR (12): küçük onshore → dev offshore; büyüdükçe cut-in artar (güçlü rüzgar ister)
   [[1, 'RES T-100 Onshore', 3, 10], [2, 'RES T-200 Onshore', 3, 11], [3, 'RES T-850 Onshore', 3, 11], [5, 'RES T-1500 Onshore', 4, 12], [7, 'RES RT-2000 Onshore', 4, 13], [9, 'RES RT-3000 Onshore', 4, 13], [12, 'RES YK-120 Yüksek Kule', 5, 14], [16, 'RES YK-160 Yüksek Kule', 5, 15], [22, 'RES OS-220 Offshore', 6, 16], [28, 'RES OS-280 Offshore', 6, 16], [36, 'RES OS-360 Offshore Çiftlik', 7, 17], [50, 'RES OS-500 Offshore Çiftlik', 7, 17]]
     .forEach(([mw, nm, ci, no], i) => P['wind_' + (i + 1)] = { cat: 'Rüzgar', kind: 'wind', nm, ico: mw >= 22 ? '🌊' : mw >= 12 ? '🌪️' : '🌬️', mw, cost: Math.round(mw * 15e5 * (1 + mw / 100) / 1e5) * 1e5, build: bt(mw), em: 7 + Math.round(mw / 8), cutIn: ci, nom: no, storm: mw >= 22 ? 28 : 25, d: ci >= 6 ? `Güçlü rüzgar İSTER (${ci} m/s altı dönmez) — rüzgar koridorlarının kralı.` : `${ci} m/s'de döner — zayıf rüzgarlı karelere de uygun.` });
@@ -4419,11 +4575,15 @@ const DUMP_RATE = 0.15;
 // (uzak mesafe için ⚡ nakil hattı zaten var — birleştirme onun yerine geçmesin).
 const GROUP_MAX = 3, GROUP_LOSS_STEP = .04;
 const storeLoss = st => {
-  const temel = (STORE_TYPES[st.t] && STORE_TYPES[st.t].loss) || 0;
+  // 🧬 AĞAÇ: 'Yüksek Verimli Trafo' (g3) taban kaybı ×0,85 · 'Akıllı Sayaç Ağı' (g2) grup
+  //    cezasını yarıya indirir (grupKayipAdim). İkisi de Şebeke dalında.
+  const temel = ((STORE_TYPES[st.t] && STORE_TYPES[st.t].loss) || 0) * trafoKat();
   const uye = G && G.units ? storeGroup(st).length : 1;
-  return Math.min(.45, temel + Math.max(0, uye - 1) * GROUP_LOSS_STEP); // grup büyüdükçe kayıp artar
+  return Math.min(.45, temel + Math.max(0, uye - 1) * grupKayipAdim()); // grup büyüdükçe kayıp artar
 };
-const storeEff = st => 1 - storeLoss(st);
+// T verilirse santral türüne özgü indirim de uygulanır: 'Termal Depo Sinerjisi' (s4) güneşten
+// depoya giden enerjinin trafo kaybını %25 azaltır (erimiş tuz ara devresi).
+const storeEff = (st, T) => 1 - storeLoss(st) * ((T && T.kind === 'sun' && gnd('s4')) ? .75 : 1);
 function ensureCellSold() {
   const key = new Date().toISOString().slice(0, 10);
   // 🐞 BOT DÜZELTMESİ: RTDB boş {} nesneyi buluttan siliyor — bulut kayıtta "sold" alt-nesnesi
@@ -5014,6 +5174,504 @@ const RESEARCH = {
   // 📜 patron (21 Ağu): "ruhsat sayısı artmıyor, ruhsat için de bir araştırma koy" —
   // 3. turda sabitlenen 20'lik tavan artık araştırmayla kademe kademe 60'a çıkıyor.
   liccap:  { nm: 'Ruhsat Kapasitesi', ico: '📜', max: 20, d: l => `Toplam ruhsat limiti: ${LIC_MAX + l * 2} kare (maks ${LIC_MAX + 40})` },
+  // 🧱 patron (1 Eyl): "karo limiti 8 az — büyük deponun bağlantı noktaları boş kalıyor".
+  // 5 kademe × +1 → 13. Son 2 kademe (Sv4-5) HAFTALIK puan ister (bkz. resPool) — tavan
+  // ucuz olmasın, ölçek büyüten oyuncunun ödülü olsun.
+  cellcap: { nm: 'Kare Yerleşim Planı', ico: '🧱', max: CELLCAP_MAX, d: l => `Kare başına birim limiti: ${MAX_PER_CELL + l} (maks ${MAX_PER_CELL + CELLCAP_MAX}) · ofisler sayılmaz` },
+};
+// 🧪 PUAN HAVUZU: kural Sv1-10 günlük / Sv11+ haftalık. 5 kademelik cellcap bu kurala
+// girseydi tamamı günlük puanla açılırdı — son 2 kademesi haftalığa bağlandı (patron şartı).
+const resPool = (key, lvl) => (key === 'cellcap' ? lvl >= 3 : lvl >= 10) ? 'weekly' : 'daily';
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// 🧬 GELİŞİM AĞACI — "Ar-Ge Enstitüsü · 2030 Ufku"  (tasarım: docs/gelisim-agaci-onerisi.md)
+// Patron 30-31 Ağu: "görevler + Gelişim Puanı + tek dal uzmanlaşma + 1 kez tam sıfırlama;
+// türler yarışsın, herkes nükleere yığılmasın; 10 milyarlık oyuncu parasını araştırmaya döksün."
+// ÜÇ İLKE — bozulursa sistem çürür:
+//  ① GP (Gelişim Puanı) TAMAMEN AYRI para birimi: resPts'e (araştırma) ve İP'ye karışmaz,
+//    yalnız aşağıdaki YENİ görev setinden kazanılır. Mevcut haftalık göreve DOKUNULMADI
+//    (tek görevde 4 para birimi olmasın).
+//  ② Düğümler YÜZDE değil YETENEK açar. Verim yüzdesi BRAND_ARCH'ta (Günara +%12 vb.) kalır —
+//    marka ile ağaç aynı eksende yarışmasın.
+//  ③ GÜÇ SATILMAZ: İP ile GP, düğüm ya da görev SATIN ALINAMAZ. Ağaç SÜRE bazlı değil ANINDA
+//    ödemelidir — "Araştırmayı Anında Bitir" (17💠) ürünü buraya hiç bulaşamaz.
+// KİLİT MODELİ: her dalın İLK 2 düğümü serbest (deneme alanı, yeni oyuncu kafası karışmasın);
+// 3. düğümden itibaren TEK ANA DAL ilan edilir — uzmanlık ve isim rozeti buradan gelir.
+// ⚠️ Düğüm KİMLİKLERİ (s1..g5) kalıcı sözleşmedir: kayıtta G.gelisim.nodes anahtarı olarak
+//    duruyor. Sırayı değiştirebilirsin, KİMLİĞİ DEĞİŞTİREMEZSİN (STARTER_TASKS dersi).
+// ═══════════════════════════════════════════════════════════════════════════════════════
+const DAL_KEYS = ['solar', 'wind', 'nuke', 'fossil', 'grid'];
+const AGAC_GP = [10, 20, 35, 55, 80];      // düğüm başına GP bedeli (kademe sırasına göre)
+const AGAC_PARA = [0, 0, 0, 0, 2e9];       // 5. düğüm ayrıca MİLYARLIK para ister (para batağı)
+const AGAC_SERBEST = 2;                    // ilk kaç düğüm ana dal şartı olmadan alınır
+const AGAC_SIFIR_IP = 200, AGAC_SIFIR_GUN = 7; // 1. sıfırlama ücretsiz; sonrası 200💠 + 7 gün
+const AGAC_OLCEK = 1;                      // düğüm açma Küçük ölçekten (5.000 MWh) itibaren
+const DALLAR = {
+  solar: { nm: 'Güneş Ar-Ge', ico: '☀️', rozet: 'Solar Takımı', col: '#ffc24a',
+    d: 'Panelin gününü uzatır, sonunda geceye taşır.', dugum: [
+    { id: 's1', ico: '🤖', nm: 'Panel Temizleme Robotları', d: 'Tozu geceleri robotlar alır: güneş santrallerinin yıpranması %25 yavaşlar.' },
+    { id: 's2', ico: '☁️', nm: 'Bulut Telafisi', d: 'Perovskit-tandem hücre dağınık ışığı da toplar: bulutun götürdüğü üretimin %30 kadarı geri gelir.' },
+    { id: 's3', ico: '🌅', nm: 'Alacakaranlık Penceresi', d: 'Düşük açı optiği: üretim penceresi 06:00–19:30 yerine 05:00–21:00.' },
+    { id: 's4', ico: '🔥', nm: 'Termal Depo Sinerjisi', d: 'Erimiş tuz ara devresi: güneşten depoya giden enerjinin trafo kaybı %25 azalır.' },
+    { id: 's5', ico: '🌙', nm: 'Gece Üretimi I', d: 'Tuz depolamalı CSP gerçekte gece de üretir: güneş santralleri gece nominal gücün %30 kadarını verir.' },
+  ] },
+  wind: { nm: 'Rüzgar Ar-Ge', ico: '🌬️', rozet: 'Rüzgar Filosu', col: '#8ec9ff',
+    d: 'Türbini zayıf rüzgarda da fırtınada da çalışır tutar.', dugum: [
+    { id: 'w1', ico: '🛢️', nm: 'Otomatik Yağlama', d: 'Dişli kutusu kendini yağlar: rüzgar türbinlerinin yıpranması %25 yavaşlar.' },
+    { id: 'w2', ico: '🍃', nm: 'Düşük Rüzgar Kanadı', d: 'Uzun ve hafif kanat: türbinlerin devreye girme hızı (cut-in) 1 m/s düşer.' },
+    { id: 'w3', ico: '🌪️', nm: 'Fırtına Toleransı', d: 'Aktif kanat açısı kontrolü: fırtına kapatma eşiği 4 m/s yükselir.' },
+    { id: 'w4', ico: '🗼', nm: 'Yüksek Kule Kiti', d: 'Kule uzatma modülü: rüzgar her zaman 0,8 m/s daha güçlü hissedilir.' },
+    { id: 'w5', ico: '🌙', nm: 'Gece Jeti Ayarı', d: 'Gerçekte gece alçak seviye jeti eser: 19:30–06:00 arası rüzgar 1,5 m/s daha güçlü.' },
+  ] },
+  nuke: { nm: 'Nükleer Ar-Ge', ico: '⚛️', rozet: 'Nükleer Birlik', col: '#a7f3d0',
+    d: 'Zaten güçlü olanı biraz daha ucuza çalıştırır — bilerek mütevazı.', dugum: [
+    { id: 'n1', ico: '♻️', nm: 'Yakıt Çubuğu Geri Dönüşümü', d: 'Kullanılmış çubuk yeniden zenginleştirilir: nükleer yakıt gideri %15 azalır.' },
+    { id: 'n2', ico: '🔧', nm: 'Uzun Devre Bakımı', d: '18 aylık yakıt devri: nükleer santrallerin onarım bedeli %15 azalır.' },
+    { id: 'n3', ico: '🛡️', nm: 'Sıkı Muhafaza', d: 'Çift kabuk muhafaza: nükleer santrallerin yıpranması %30 yavaşlar.' },
+    { id: 'n4', ico: '🗑️', nm: 'Atık Yönetimi', d: 'Derin jeolojik depolama: nükleer salımı 12 → 4 g/kWh düşer.' },
+    { id: 'n5', ico: '⚛️', nm: 'SMR Modüler Filo', d: 'Modüler küçük reaktör bakım duruşunu kısaltır: nükleer üretimi %6 artar.' },
+  ] },
+  fossil: { nm: 'Fosil Ar-Ge', ico: '🏭', rozet: 'Karbon Loncası', col: '#ff9b6a',
+    d: 'Yakıtı ucuzlatır, ikmali seyreltir, sonunda karbonu yakalar.', dugum: [
+    { id: 'f1', ico: '📦', nm: 'Genişletilmiş Stok Sahası', d: 'Santral içi yakıt stoğu 12 saatten 18 saate çıkar — günde bir ikmal yeter.' },
+    { id: 'f2', ico: '🔥', nm: 'Yanma Optimizasyonu', d: 'Kızgın buhar çevrimi: kömür ve gaz santrallerinin yakıt tüketimi %10 azalır.' },
+    { id: 'f3', ico: '🚚', nm: 'Kesintisiz İkmal Hattı', d: 'Yakıt stoğu 18 saatten 24 saate çıkar — tam gün ikmalsiz çalışır.' },
+    { id: 'f4', ico: '🧰', nm: 'Öngörülü Bakım', d: 'Titreşim sensörleri: kömür ve gaz santrallerinin yıpranması %25 yavaşlar.' },
+    { id: 'f5', ico: '🌍', nm: 'CCS Karbon Yakalama', d: 'Baca gazından karbon tutulur: fosil santrallerin salımı %37 düşer (temiz kömür 830 → ~523, yasal 550 sınırının ALTI; eski linyit 950 → 598 ile hâlâ sınırın üstünde). Bedeli: yakıt tüketimi %15 artar.' },
+  ] },
+  grid: { nm: 'Şebeke Ar-Ge', ico: '🔌', rozet: 'Şebeke Ağı', col: '#c4b5fd',
+    d: 'Kaybı kısar, hattı yaşatır — üretmez ama kaçırmaz.', dugum: [
+    { id: 'g1', ico: '🔩', nm: 'Hat Bakım Ekibi', d: 'Gezici bakım ekibi: nakil hatlarının ömrü %25 uzar (mevcut hatlarda da geçerli).' },
+    { id: 'g2', ico: '📟', nm: 'Akıllı Sayaç Ağı', d: 'Bileşik depo grubunda her ek üyenin getirdiği çevrim kaybı cezası yarıya iner.' },
+    { id: 'g3', ico: '⚡', nm: 'Yüksek Verimli Trafo', d: 'Amorf çekirdek trafo: depoya giren enerjinin trafo kaybı %15 azalır.' },
+    { id: 'g4', ico: '🔁', nm: 'Çift Devre Hat', d: 'Yedekli iletim: nakil hatlarının ömrü %25 daha uzar (toplam ~%56).' },
+    { id: 'g5', ico: '❄️', nm: 'Süperiletken Kesit', d: 'Kriyojenik soğutmalı iletken: nakil hattı kaybı %25 azalır.' },
+  ] },
+};
+// düğüm kimliği → { dal, i, nm, ico, d, gp, para } (tek arama kapısı)
+const AGAC_NODE = (() => {
+  const m = {};
+  for (const dk of DAL_KEYS) DALLAR[dk].dugum.forEach((n, i) => { m[n.id] = { ...n, dal: dk, i, gp: AGAC_GP[i], para: AGAC_PARA[i] }; });
+  return m;
+})();
+// ── Okuma kapıları (G yokken de güvenli — üretim/HUD kodu boot'tan önce de çağırabiliyor) ──
+const gelDurum = () => (G && G.gelisim) || null;
+const gnd = k => { const g = gelDurum(); return !!(g && g.nodes && g.nodes[k]); }; // düğüm açık mı
+const gpBakiye = () => { const g = gelDurum(); return Math.max(0, Math.floor((g && g.gp) || 0)); };
+const anaDal = () => { const g = gelDurum(); return (g && g.ana && DALLAR[g.ana]) ? g.ana : null; };
+const dalAcikSayi = dk => { const g = gelDurum(); if (!g || !g.nodes) return 0; return DALLAR[dk].dugum.filter(n => g.nodes[n.id]).length; };
+const agacAcikSayi = () => DAL_KEYS.reduce((s, dk) => s + dalAcikSayi(dk), 0);
+// Ağaç sayfası Küçük ölçekten (haftalık 5.000 MWh) önce TANITIM modunda: görevler işler ve GP
+// birikir, ama düğüm AÇILAMAZ. Yeni oyuncu ilk saatinde beş sistemle birden boğuşmasın.
+const agacAcik = () => !!(G && (G.olcek || 0) >= AGAC_OLCEK);
+// Bir düğüm şu an alınabilir mi? Boş dize = alınabilir, dolu dize = engel sebebi.
+function agacNedenOlmaz(id) {
+  const N = AGAC_NODE[id]; if (!N) return 'yok';
+  const g = gelDurum(); if (!g) return 'yok';
+  if (g.nodes && g.nodes[id]) return 'zaten';
+  if (!agacAcik()) return 'olcek';
+  if (N.i > 0 && !(g.nodes && g.nodes[DALLAR[N.dal].dugum[N.i - 1].id])) return 'sira';
+  if (N.i >= AGAC_SERBEST && anaDal() && anaDal() !== N.dal) return 'baskaDal';
+  if (gpBakiye() < N.gp) return 'gp';
+  if (N.para > 0 && (G.cash || 0) < N.para) return 'para';
+  return '';
+}
+// ═══ 🏅 UZMANLIK ROZETİ — ana dal ilan edilince isim yanında görünür (emBadgeHTML deseni) ═══
+// ⚠️ Rozet metni SABİT TABLODAN çözülür; sunucudan gelen ham dize ASLA basılmaz (XSS kalkanı).
+const specBadgeHTML = (key, big) => {
+  if (!DAL_KEYS.includes(key)) return ''; // ⚠️ DALLAR[key] tek başına yetmez: 'constructor' gibi
+  const D = DALLAR[key];                  //    prototip anahtarları truthy döner ve rozet bozulur
+  if (!D) return '';
+  return `<span style="color:${D.col};font-size:${big ? 12 : 10.5}px;white-space:nowrap">${D.ico} ${CEV(D.rozet)}</span>`;
+};
+// Botların rozeti deterministik — liderlik listesinin yarısı rozetsiz kalıp tutarsız görünmesin
+const botSpec = i => DAL_KEYS[Math.min(DAL_KEYS.length - 1, Math.floor(hash01(i, 11, 5) * DAL_KEYS.length))];
+// ═══ 🎚️ YETENEK KANCALARI — düğümlerin oyuna DOKUNDUĞU tek nokta kümesi ═══
+// Yeni düğüm eklerken kancayı BURAYA yaz; hesap yapan fonksiyonlar yalnız bu kapıları çağırsın.
+// ☀️ güneş gündüz penceresi (s3 alacakaranlık) — sunFactor ve plantOutput AYNI değeri kullanmalı
+const gunDogus = () => gnd('s3') ? 5 : 6;
+const gunBatis = () => gnd('s3') ? 21 : 19.5;
+// ☀️ GÜNDÜZ EĞRİSİ — TEK KAYNAK: sunFactor, plantOutput ve verim dökümü aynı sayıyı vermek
+// ZORUNDA ("çarpımların sonucu = anlık üretim" sözü). Üç yerde ayrı ayrı yazılmıştı.
+// ⚠️ Düğüm ASLA üretim DÜŞÜRMEZ: geniş pencere sinüsü yaydığı için öğle değeri dar pencerenin
+//    altına inebiliyordu — iki eğrinin büyüğü alınır (ölçülen kayıp: ×1,246 → ×1,241).
+function gunesEgrisi(h) {
+  const egri = (a, b) => (h >= a && h <= b) ? Math.max(.62, Math.pow(Math.sin(Math.PI * (h - a) / (b - a)), .9)) : 0;
+  return Math.max(egri(6, 19.5), egri(gunDogus(), gunBatis()));
+}
+// 🌙 güneş gece tabanı (s5) — "gece = 0" diyen ÜÇ ayrı kapının hepsi buradan geçer
+const geceTabani = () => gnd('s5') ? .30 : 0;
+// ☁️ bulut telafisi (s2): bulutun götürdüğü payın %30 kadarı geri gelir
+const bulutKat = () => gnd('s2') ? .70 : 1;
+// 🌬️ rüzgar hız eki (w4 sabit, w5 yalnız gece)
+const geceMi = atMin => { const h = ((atMin == null ? nowMin() : atMin) / 60) % 24; return h < 6 || h > 19.5; };
+const ruzgarEk = atMin => (gnd('w4') ? .8 : 0) + ((gnd('w5') && geceMi(atMin)) ? 1.5 : 0);
+// 🧰 yıpranma çarpanı — tür bazlı (nükleer 'kind' ile değil 'cat' ile ayrılır: kind'i 'geo')
+const yipranmaKat = T => {
+  if (!T) return 1;
+  let k = 1;
+  if (T.kind === 'sun' && gnd('s1')) k *= .75;
+  if (T.kind === 'wind' && gnd('w1')) k *= .75;
+  if (T.kind === 'fuel' && gnd('f4')) k *= .75;
+  if (T.cat === 'Nükleer' && gnd('n3')) k *= .70;
+  return k;
+};
+// ⛽ yakıt tüketim çarpanı (f2 −%10 · f5 CCS +%15 · n1 nükleer −%15)
+const yakitKat = T => {
+  if (!T) return 1;
+  let k = 1;
+  if (T.kind === 'fuel') { if (gnd('f2')) k *= .90; if (gnd('f5')) k *= 1.15; }
+  if (T.cat === 'Nükleer' && gnd('n1')) k *= .85;
+  return k;
+};
+// 📦 santral içi yakıt stoğu saati (f1 12→18 · f3 18→24). ⚠️ Sıfırlama sonrası mevcut stok
+// tavanın üstünde kalabilir — okuyan her yer Math.min ile kırpar (refuelUnit deseni).
+const yakitSaat = () => FUEL_HOURS + (gnd('f1') ? 6 : 0) + (gnd('f3') ? 6 : 0);
+// 🌫️ salım çarpanı (f5 CCS fosilde ×0,63 · n4 atık yönetimi nükleerde ×0,33)
+const emisKat = T => {
+  if (!T) return 1;
+  if (T.kind === 'fuel' && gnd('f5')) return .63;
+  if (T.cat === 'Nükleer' && gnd('n4')) return .33;
+  return 1;
+};
+const unitEm = T => Math.round(((T && T.em) || 0) * emisKat(T));
+// 🔌 şebeke kancaları
+const hatOmurKat = () => (gnd('g1') ? 1.25 : 1) * (gnd('g4') ? 1.25 : 1);
+const hatKayipKat = () => gnd('g5') ? .75 : 1;
+const grupKayipAdim = () => GROUP_LOSS_STEP * (gnd('g2') ? .5 : 1);
+const trafoKat = () => gnd('g3') ? .85 : 1;
+// ═══ 🎯 GELİŞİM GÖREVLERİ — GP'nin TEK kaynağı (ödül enflasyonu yok) ═══
+// Günde 3 görev × 2 GP + haftada 1 büyük görev × 15 GP ≈ 57 GP/hafta ≈ bir dalın ilk üç düğümü.
+// ⚠️ MEVCUT HAFTALIK GÖREVE (claimWeek: para + araştırma puanı + 5💠) DOKUNULMADI — tek görevde
+//    dört para birimi olmasın. Bu set AYRI bir kutudur.
+// ⚠️ GÖREVLER KİMLİKLE (id) sorgulanır, İNDİSLE DEĞİL (STARTER_TASKS dersi, satır ~15600):
+//    havuza yeni görev ekleyince eski kayıtlardaki seçim bozulmasın.
+// ⏰ GÜN/HAFTA anahtarı bankaGun() ile üretilir — Date.now() DEĞİL. Telefon saatini ileri alan
+//    oyuncu günlük görevleri tekrar tekrar sıfırlayamasın (bankada zaten kullanılan hile kalkanı).
+// 📏 ÖLÇÜM DAMGA FARKIYLA: görev açılırken kümülatif sayaç damgalanır, ilerleme = şimdi − damga.
+//    Böylece ayrı bir "bugün üretilen" sayacı tutmaya gerek kalmaz (tutDepoOk deseni).
+const GP_GUN_ODUL = 2, GP_GUN_ADET = 3, GP_HAFTA_ODUL = 15;
+// tür bazlı kurulu güç — görev hedefleri oyuncunun ölçeğiyle büyüsün (sabit hedef ya küçük
+// oyuncuya imkânsız ya büyük oyuncuya bedava gelirdi)
+const catMW = cat => plants().reduce((s, u) => s + (PLANT_TYPES[u.t] && PLANT_TYPES[u.t].cat === cat ? PLANT_TYPES[u.t].mw : 0), 0);
+const YENIL_CAT = ['Güneş', 'Rüzgar', 'Hidro', 'Jeotermal'];
+const yenilMW = () => YENIL_CAT.reduce((s, c) => s + catMW(c), 0);
+const fosilMW = () => catMW('Kömür') + catMW('Gaz');
+const gpSayac = k => ((G.gpGorev && G.gpGorev.sayac && G.gpGorev.sayac[k]) || 0);
+// olay sayacı — KÜMÜLATİF (hiç sıfırlanmaz); görevler damga farkına bakar
+function gpSay(k, n) {
+  if (!G || !G.gpGorev) return;
+  G.gpGorev.sayac = G.gpGorev.sayac || {};
+  G.gpGorev.sayac[k] = (G.gpGorev.sayac[k] || 0) + (n || 1);
+}
+const prodCat = c => ((G.prodByCat && G.prodByCat[c]) || 0);
+// ölçüm kaynakları — hepsi KÜMÜLATİF olmak ZORUNDA (damga farkı bunun üzerine kurulu)
+const GP_OLC = {
+  sold: () => G.totalSold || 0,
+  earned: () => G.totalEarned || 0,
+  gunes: () => prodCat('Güneş'),
+  ruzgar: () => prodCat('Rüzgar'),
+  yenil: () => YENIL_CAT.reduce((s, c) => s + prodCat(c), 0),
+  nuke: () => prodCat('Nükleer'),
+  fosil: () => prodCat('Kömür') + prodCat('Gaz'),
+  onar: () => gpSayac('onar'),
+  yakit: () => gpSayac('yakit'),
+  satis: () => gpSayac('satis'),
+  insa: () => gpSayac('insa'),
+};
+// uygun(): oyuncunun o görevi YAPABİLİR olması şartı — güneş santrali olmayana "güneşten üret"
+// görevi verilmez (yapılamayan görev GP'yi ölü bırakır)
+const GP_GUNLUK = [
+  { id: 'gsat', ico: '💰', olc: 'sold', t: '{0} MWh enerji sat', hedef: () => Math.max(50, Math.round(installedMW() * 4)), uygun: () => true },
+  { id: 'gciro', ico: '🏦', olc: 'earned', para: 1, t: '{0} ciro yap', hedef: () => Math.max(3e6, Math.round(installedMW() * 15e4)), uygun: () => true },
+  // eylem sayısı isteyen görevlerin hedefi de filoyla büyür (büyük oyuncuda 6 GP saniyeler
+  // içinde kapanmasın) — ama tavanla: görev angarya değil ritim olmalı
+  { id: 'gsts', ico: '🔋', olc: 'satis', t: '{0} ayrı satış işlemi yap', hedef: () => Math.min(8, Math.max(3, Math.round(stores().length / 2))), uygun: () => true },
+  { id: 'gins', ico: '🏗️', olc: 'insa', t: '{0} yeni tesis kur', hedef: () => Math.min(4, Math.max(1, Math.round(G.units.length / 12))), uygun: () => true },
+  { id: 'gonar', ico: '🔧', olc: 'onar', t: '{0} tesise bakım yap', hedef: () => Math.min(10, Math.max(2, Math.round(plants().length / 4))), uygun: () => G.units.length >= 2 },
+  { id: 'gyak', ico: '⛽', olc: 'yakit', t: '{0} kez yakıt ikmali yap', hedef: () => Math.min(8, Math.max(2, Math.round(plants().filter(u => PLANT_TYPES[u.t] && PLANT_TYPES[u.t].fuel).length / 2))), uygun: () => plants().some(u => PLANT_TYPES[u.t] && PLANT_TYPES[u.t].fuel) },
+  { id: 'ggun', ico: '☀️', olc: 'gunes', t: 'Güneşten {0} MWh üret', hedef: () => Math.max(20, Math.round(catMW('Güneş') * 5)), uygun: () => catMW('Güneş') > 0 },
+  { id: 'gruz', ico: '🌬️', olc: 'ruzgar', t: 'Rüzgardan {0} MWh üret', hedef: () => Math.max(20, Math.round(catMW('Rüzgar') * 5)), uygun: () => catMW('Rüzgar') > 0 },
+  { id: 'gyen', ico: '🌿', olc: 'yenil', t: 'Yenilenebilir kaynaklardan {0} MWh üret', hedef: () => Math.max(40, Math.round(yenilMW() * 5)), uygun: () => yenilMW() > 0 },
+  { id: 'gnuk', ico: '⚛️', olc: 'nuke', t: 'Nükleerden {0} MWh üret', hedef: () => Math.max(100, Math.round(catMW('Nükleer') * 6)), uygun: () => catMW('Nükleer') > 0 },
+  { id: 'gfos', ico: '🏭', olc: 'fosil', t: 'Kömür ve gazdan {0} MWh üret', hedef: () => Math.max(60, Math.round(fosilMW() * 6)), uygun: () => fosilMW() > 0 },
+];
+const GP_HAFTALIK = [
+  { id: 'hsat', ico: '📈', olc: 'sold', t: 'Bu hafta {0} MWh enerji sat', hedef: () => Math.max(400, Math.round(weekTarget() * 1.5)), uygun: () => true },
+  { id: 'hcir', ico: '🏛️', olc: 'earned', para: 1, t: 'Bu hafta {0} ciro yap', hedef: () => Math.max(25e6, Math.round(weekTarget() * 18000)), uygun: () => true },
+  { id: 'hins', ico: '🏗️', olc: 'insa', t: 'Bu hafta {0} yeni tesis kur', hedef: () => Math.min(12, Math.max(3, Math.round(G.units.length / 5))), uygun: () => true },
+  { id: 'hyen', ico: '🌿', olc: 'yenil', t: 'Bu hafta yenilenebilirden {0} MWh üret', hedef: () => Math.max(300, Math.round(yenilMW() * 35)), uygun: () => yenilMW() > 0 },
+];
+const GP_ALL = {};
+GP_GUNLUK.concat(GP_HAFTALIK).forEach(g => GP_ALL[g.id] = g);
+// deterministik seçim: aynı gün = aynı görevler (cihaz/oturum fark etmez), ertesi gün başkaları
+function gpSec(havuz, n, tohum) {
+  const uy = havuz.filter(g => { try { return g.uygun(); } catch (e) { return false; } });
+  if (uy.length <= n) return uy.map(g => g.id);
+  let s = (tohum % 2147483647 + 2147483647) % 2147483647 || 1;
+  const kalan = uy.slice(), out = [];
+  while (out.length < n && kalan.length) {
+    s = (s * 48271) % 2147483647;
+    out.push(kalan.splice(s % kalan.length, 1)[0].id);
+  }
+  return out;
+}
+const gpHedef = id => (G.gpGorev && G.gpGorev.hedef && G.gpGorev.hedef[id]) || 0;
+const gpIlerleme = id => {
+  const g = GP_ALL[id];
+  if (!g || !G.gpGorev) return 0;
+  const t = (G.gpGorev.temel && G.gpGorev.temel[id]) || 0;
+  return Math.max(0, (GP_OLC[g.olc] ? GP_OLC[g.olc]() : 0) - t);
+};
+const gpBitti = id => !!(G.gpGorev && G.gpGorev.alindi && G.gpGorev.alindi[id]);
+const gpMetin = id => { const g = GP_ALL[id]; if (!g) return ''; const h = gpHedef(id); return CEV(g.t, g.para ? fmt(h) : fmtN(h)); };
+// GP ödülü — TEK kapı (görünen = kazanılan)
+function gpVer(n, sebep) {
+  if (!G || !G.gelisim || !(n > 0)) return;
+  G.gelisim.gp = Math.max(0, Math.floor((G.gelisim.gp || 0) + n));
+  toast('🧬 +' + n + ' ' + CEV('Gelişim Puanı') + (sebep ? ' — ' + sebep : ''), '', null, 0, true);
+  beep(760, .1);
+}
+// ═══ gpTick: gün/hafta dönümü + otomatik ödül. ~2 sn'lik ana tikten çağrılır ═══
+// ⚠️ ÖDÜL OTOMATİK: mevcut haftalık görevin "menüyü açmayan oyuncu ödülü kaybeder" tuzağına
+//    düşmemek için düğme YOK. Toast + kayıt yeterli.
+function gpTick() {
+  if (!G || !G.gelisim || !G.gpGorev) return;
+  const Q = G.gpGorev;
+  let degisti = false;
+  // ── GÜNLÜK ──
+  const gk = String(bankaGun());
+  if (Q.gun !== gk) {
+    Q.gun = gk;
+    Q.ids = gpSec(GP_GUNLUK, GP_GUN_ADET, bankaGun() * 7919);
+    Q.alindi = {};
+    Q.temel = Q.temel || {}; Q.hedef = Q.hedef || {};
+    for (const id of Q.ids) {
+      const g = GP_ALL[id];
+      Q.temel[id] = GP_OLC[g.olc] ? GP_OLC[g.olc]() : 0;
+      Q.hedef[id] = Math.max(1, Math.round(g.hedef())); // hedef gün başında DONAR (kaçan hedef olmasın)
+    }
+    degisti = true;
+  }
+  // ── HAFTALIK ──
+  // ⏰ haftalık anahtar da HİLE KORUMALI saatten (bankaGun) — isoWeek ham cihaz saatidir.
+  //    Tohum da HAFTA'dan türetilir: aynı hafta = aynı büyük görev (gün tohumu her gün
+  //    başka görev veriyordu ve saat oynatan en ucuzunu seçebiliyordu).
+  const hafIdx = Math.floor(bankaGun() / 7), hk = 'w' + hafIdx;
+  if (Q.hafta !== hk) {
+    Q.hafta = hk;
+    Q.hid = (gpSec(GP_HAFTALIK, 1, hafIdx * 104729) || [])[0] || 'hsat';
+    Q.halindi = false;
+    const g = GP_ALL[Q.hid];
+    if (g) {
+      Q.temel = Q.temel || {}; Q.hedef = Q.hedef || {};
+      Q.temel[Q.hid] = GP_OLC[g.olc] ? GP_OLC[g.olc]() : 0;
+      Q.hedef[Q.hid] = Math.max(1, Math.round(g.hedef()));
+    }
+    degisti = true;
+  }
+  // ── TAMAMLANANLARI ÖDÜLLENDİR ──
+  for (const id of (Q.ids || [])) {
+    if (Q.alindi[id]) continue;
+    if (!GP_ALL[id] || !(gpHedef(id) > 0)) continue; // bilinmeyen kimlik bedava ödül vermesin (0 >= 0)
+    if (gpIlerleme(id) >= gpHedef(id)) {
+      Q.alindi[id] = 1;
+      gpVer(GP_GUN_ODUL, CEV('günlük görev'));
+      degisti = true;
+    }
+  }
+  if (Q.hid && GP_ALL[Q.hid] && gpHedef(Q.hid) > 0 && !Q.halindi && gpIlerleme(Q.hid) >= gpHedef(Q.hid)) {
+    Q.halindi = true;
+    gpVer(GP_HAFTA_ODUL, CEV('haftalık büyük görev'));
+    degisti = true;
+  }
+  if (degisti) {
+    save();
+    if ($('gelisimsheet') && $('gelisimsheet').classList.contains('show')) openGelisimSheet(GEL_SEKME);
+  }
+}
+// ═══ 🧬 GELİŞİM AĞACI EKRANI (sheet) + DÜĞÜM AÇMA + SIFIRLAMA ═══
+let GEL_SEKME = 'gorev';   // 'gorev' | 'agac'
+let _agacMesgul = false;   // çift tıklama kilidi (sirketAdiKaydet'te olmayan, wizDoneBusy deseni)
+const AGAC_ENGEL = {
+  yok: 'Bu düğüm bulunamadı',
+  zaten: 'Bu düğüm zaten açık',
+  olcek: '🔒 Gelişim düğümleri Küçük İşletme ölçeğinden itibaren açılır (haftalık 5.000 MWh şebeke satışı)',
+  sira: '🔒 Önce bu dalın bir önceki düğümünü aç',
+  baskaDal: '🔒 Ana dalın başka: 3. düğümden itibaren yalnız ANA DALINDA ilerleyebilirsin (sıfırlama ile değiştirilir)',
+  gp: '🧬 Yeterli Gelişim Puanın yok — günlük ve haftalık gelişim görevlerinden kazanılır',
+  para: '💰 Bu düğüm ayrıca milyarlık yatırım ister — kasan yetmiyor',
+};
+window.openGelisim = () => { const open = $('gelisimsheet').classList.contains('show'); hideSheets(); if (!open) openGelisimSheet(GEL_SEKME); };
+window.gelSekme = s => { GEL_SEKME = s; openGelisimSheet(s); };
+function gpSatirHTML(id, buyuk) {
+  const g = GP_ALL[id];
+  if (!g) return '';
+  const hedef = gpHedef(id), simdi = Math.min(hedef, gpIlerleme(id)), bitti = buyuk ? !!(G.gpGorev && G.gpGorev.halindi) : gpBitti(id);
+  const yuzde = hedef > 0 ? Math.min(100, 100 * simdi / hedef) : 0;
+  const yaz = v => g.para ? fmt(v) : fmtN(v);
+  return `<div style="padding:7px 0;border-top:1px dashed var(--line)">
+    <div style="font-size:12.5px;display:flex;gap:6px;align-items:baseline">
+      <span>${bitti ? '✅' : g.ico}</span>
+      <b style="flex:1;min-width:0;${bitti ? 'color:var(--acc)' : ''}">${gpMetin(id)}</b>
+      <span class="sub" style="white-space:nowrap">🧬 +${buyuk ? GP_HAFTA_ODUL : GP_GUN_ODUL}</span>
+    </div>
+    <div class="rsbar"><i style="width:${yuzde}%${bitti ? ';background:var(--acc)' : ''}"></i></div>
+    <div class="sub">${yaz(simdi)} / ${yaz(hedef)}${bitti ? ' — ' + CEV('ödül verildi') : ''}</div>
+  </div>`;
+}
+function agacDugumHTML(dk, n, i) {
+  const acik = gnd(n.id), engel = agacNedenOlmaz(n.id), N = AGAC_NODE[n.id];
+  const alinabilir = engel === '';
+  const paraTxt = N.para > 0 ? ' · 💰 ' + fmt(N.para) : '';
+  return `<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px dashed var(--line);${acik ? '' : 'opacity:' + (alinabilir ? '1' : '.62')}">
+    <div style="font-size:17px;line-height:1.1;width:22px;text-align:center">${acik ? '✅' : n.ico}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:12.5px"><b style="${acik ? 'color:var(--acc)' : ''}">${CEV(n.nm)}</b> <span class="sub">${i + 1}/5</span></div>
+      <div class="sub">${CEV(n.d)}</div>
+      ${acik ? '' : `<div class="sub" style="margin-top:2px">🧬 ${N.gp} ${CEV('GP')}${paraTxt}${engel && engel !== 'gp' && engel !== 'para' && engel !== 'olcek' ? ' · ' + CEV(AGAC_ENGEL[engel]) : ''}</div>`}
+    </div>
+    ${acik ? '<b class="pos" style="font-size:11px;white-space:nowrap">AÇIK ✓</b>'
+      : `<button onclick="agacAl('${n.id}')" ${alinabilir ? '' : 'disabled'} style="padding:8px 10px;border-radius:8px;border:none;background:${alinabilir ? 'var(--acc2)' : '#2a3346'};color:${alinabilir ? '#071018' : 'var(--dim)'};font-weight:800;font-size:11.5px;cursor:pointer;white-space:nowrap">${alinabilir ? '🧬 ' + CEV('Aç') : '🔒'}</button>`}
+  </div>`;
+}
+function openGelisimSheet(sekme) {
+  hideSheets();
+  GEL_SEKME = sekme || GEL_SEKME || 'gorev';
+  gpTick(); // ekran açılırken gün/hafta dönümünü ve biriken ödülleri yakala
+  const Q = G.gpGorev || { ids: [] }, ana = anaDal();
+  const sek = (k, t) => `<button class="bigsell half" style="margin:0;${GEL_SEKME === k ? 'background:var(--acc2);color:#071018' : ''}" onclick="gelSekme('${k}')">${t}</button>`;
+  const bas = `
+    <div class="qline" style="font-size:12.5px;margin-bottom:6px">
+      <span>🧬 <b>${gpBakiye()} ${CEV('Gelişim Puanı')}</b></span>
+      <span>${ana ? specBadgeHTML(ana, true) : '<span class="sub">' + CEV('ana dal seçilmedi') + '</span>'}</span>
+      <span class="sub">${agacAcikSayi()}/25 ${CEV('düğüm')}</span>
+    </div>
+    <p class="sub" style="margin:0 0 8px">${CEV('Ar-Ge Enstitüsü — 2030 Ufku. Her düğüm bugün pilot aşamada gerçekten var olan bir teknoloji. Gelişim Puanı yalnız aşağıdaki görevlerden kazanılır: İmtiyaz Puanıyla SATIN ALINAMAZ.')}</p>
+    <div style="display:flex;gap:6px;margin-bottom:8px">${sek('gorev', '🎯 ' + CEV('Görevler'))}${sek('agac', '🌳 ' + CEV('Ağaç'))}</div>`;
+  let html = bas;
+  if (GEL_SEKME === 'gorev') {
+    html += `<div style="font-size:12px;margin:2px 0 2px">🌞 <b>${CEV('GÜNLÜK GELİŞİM GÖREVLERİ')}</b> <span class="sub">${CEV('her gün 3 görev · görev başına')} 🧬 ${GP_GUN_ODUL}</span></div>
+      ${(Q.ids || []).map(id => gpSatirHTML(id, false)).join('') || '<p class="sub">' + CEV('Görevler yükleniyor…') + '</p>'}
+      <div style="height:1px;background:var(--line);margin:12px 0 2px"></div>
+      <div style="font-size:12px;margin:8px 0 2px">📅 <b>${CEV('HAFTALIK BÜYÜK GÖREV')}</b> <span class="sub">🧬 ${GP_HAFTA_ODUL}</span></div>
+      ${Q.hid ? gpSatirHTML(Q.hid, true) : ''}
+      <p class="sub" style="margin-top:10px">${CEV('Ödüller otomatik verilir — düğmeye basman gerekmez. Görevler her gün gece yarısı (TSİ) yenilenir.')}</p>`;
+  } else {
+    if (!agacAcik()) html += `<div style="border:1px solid var(--warn);border-radius:10px;padding:9px 11px;margin:2px 0 10px;font-size:12px;color:var(--warn)">🔒 <b>${CEV('Tanıtım modu')}</b> — ${CEV('düğümler Küçük İşletme ölçeğinden itibaren açılır (haftalık 5.000 MWh şebeke satışı). Puanların birikmeye şimdiden başladı.')}</div>`;
+    html += `<p class="sub" style="margin:0 0 6px">${CEV('Her dalın ilk 2 düğümü serbesttir. 3. düğümü açtığın dal ANA DALIN olur ve adının yanında uzmanlık rozetin görünür — o andan sonra yalnız o dalda ilerlersin.')}</p>`;
+    for (const dk of DAL_KEYS) {
+      const D = DALLAR[dk], acikN = dalAcikSayi(dk);
+      const kilitli = ana && ana !== dk && acikN >= AGAC_SERBEST;
+      html += `<div style="margin:10px 0 0;border:1px solid ${ana === dk ? D.col : 'var(--line)'};border-radius:10px;padding:8px 10px">
+        <div style="font-size:13px;display:flex;gap:6px;align-items:baseline">
+          <b style="color:${D.col}">${D.ico} ${CEV(D.nm)}</b>
+          <span class="sub" style="flex:1">${CEV(D.d)}</span>
+          <span class="sub">${acikN}/5</span>
+        </div>
+        ${ana === dk ? `<div class="sub" style="color:${D.col}">⭐ ${CEV('ANA DALIN')} — ${specBadgeHTML(dk)}</div>` : kilitli ? `<div class="sub">🔒 ${CEV('serbest düğümlerin bitti — ana dalın bu değil')}</div>` : ''}
+        ${D.dugum.map((n, i) => agacDugumHTML(dk, n, i)).join('')}
+      </div>`;
+    }
+    html += agacSifirBlokHTML();
+  }
+  const kaydirma = $('gelisimsheet').scrollTop; // yeniden çizimde konumu koru (gpTick de çiziyor)
+  $('gel_body').innerHTML = html;
+  showSheet('gelisimsheet');
+  $('gelisimsheet').scrollTop = kaydirma;
+}
+function agacSifirBlokHTML() {
+  const g = G.gelisim || {}, ilk = !(g.respecUsed > 0), kalan = Math.max(0, (g.respecAt || 0) - bankaGun());
+  if (!agacAcikSayi()) return '';
+  return `<div style="height:1px;background:var(--line);margin:14px 0 2px"></div>
+    <div style="font-size:12px;margin:8px 0 2px">🔄 <b>${CEV('TAM SIFIRLAMA')}</b></div>
+    <p class="sub" style="margin:2px 0 6px">${CEV('Tüm düğümler kapanır, harcadığın Gelişim Puanının TAMAMI geri gelir ve ana dalını yeniden seçersin. ⚠️ Düğümlere ödediğin PARA geri gelmez.')}<br>
+    ${ilk ? '🎁 ' + CEV('İlk tam sıfırlama ÜCRETSİZ.') : '💠 ' + CEV('Ücret: {0} İmtiyaz Puanı (bakiyen: {1})', AGAC_SIFIR_IP, ipBakiye()) + (kalan > 0 ? ' · ⏳ ' + CEV('{0} gün sonra tekrar sıfırlayabilirsin', kalan) : '')}</p>
+    <button class="bigsell" style="background:${(!ilk && kalan > 0) ? '#2a3346' : 'var(--danger)'}" ${(!ilk && kalan > 0) ? 'disabled' : ''} onclick="agacSifirSor()">🔄 ${ilk ? CEV('Ağacı Sıfırla — ücretsiz') : '💠 ' + AGAC_SIFIR_IP + ' — ' + CEV('Ağacı Sıfırla')}</button>`;
+}
+// ── DÜĞÜM AÇMA ──
+window.agacAl = id => {
+  // ⛔ BANLIYKEN İLERLEME YOK (araştırmadaki ikinci kilit deseni — görsel gizleme yetmez)
+  if ($('app').classList.contains('banli')) { toast('⚖️ ' + CEV('Varlıklarına el konulmuşken gelişim düğümü açılamaz'), 'warn'); return; }
+  const N = AGAC_NODE[id];
+  if (!N) return;
+  // 🏦 milyarlık düğüm bir YATIRIMDIR: kredi borcu/temerrüt varken diğer yatırımlar gibi kapalı
+  if (N.para > 0 && krediKilidi('gelişim düğümü açma')) return;
+  const engel = agacNedenOlmaz(id);
+  if (engel) { toast(CEV(AGAC_ENGEL[engel] || 'Bu düğüm şu an açılamaz'), 'warn', null, 7000); return; }
+  // 3. düğüm = ANA DAL İLANI — geri dönüşü yalnız sıfırlamayla olan bir karar, SOR
+  if (N.i >= AGAC_SERBEST && !anaDal()) {
+    const D = DALLAR[N.dal];
+    $('modal').innerHTML = `
+      <h2>⭐ ${CEV('Ana dalını seçiyorsun')}</h2>
+      <p>${CEV('Bu düğümü açarsan')} <b style="color:${D.col}">${D.ico} ${CEV(D.nm)}</b> ${CEV('ANA DALIN olur. O andan sonra diğer dallarda yalnız ilk 2 düğümü açabilirsin ve adının yanında')} ${specBadgeHTML(N.dal)} ${CEV('rozeti görünür.')}</p>
+      <p class="sub">${CEV('Fikrini değiştirirsen tam sıfırlama var: ilki ücretsiz, sonrakiler {0} İmtiyaz Puanı + {1} gün bekleme.', AGAC_SIFIR_IP, AGAC_SIFIR_GUN)}</p>
+      <button class="primary" onclick="closeModal();agacAlUygula('${id}')">⭐ ${CEV('Evet, ana dalım bu olsun')}</button>
+      <button class="primary ghostbtn" onclick="closeModal()">${CEV('Vazgeç')}</button>`;
+    $('overlay').classList.add('show');
+    return;
+  }
+  agacAlUygula(id);
+};
+window.agacAlUygula = id => {
+  if (_agacMesgul) return;
+  const N = AGAC_NODE[id];
+  if (!N) return;
+  const engel = agacNedenOlmaz(id); // SON kapı: modal açıkken durum değişmiş olabilir
+  if (engel) { toast(CEV(AGAC_ENGEL[engel] || 'Bu düğüm şu an açılamaz'), 'warn', null, 7000); return; }
+  if (N.para > 0 && krediKilidi('gelişim düğümü açma')) return; // modal açıkken kredi çekilmiş olabilir
+  _agacMesgul = true;
+  try {
+    if (N.para > 0) { G.cash -= N.para; gider('arastirma', N.para); }
+    G.gelisim.gp = gpBakiye() - N.gp;
+    G.gelisim.nodes = G.gelisim.nodes || {};
+    G.gelisim.nodes[id] = 1;
+    if (N.i >= AGAC_SERBEST && !G.gelisim.ana) G.gelisim.ana = N.dal;
+    save();
+    toast('🧬 ' + CEV('Açıldı: {0}', CEV(N.nm)) + ' — 🧬 -' + N.gp + (N.para > 0 ? ' · 💰 -' + fmt(N.para) : ''), '', null, 0, true);
+    beep(880, .12);
+    // yan etkileri ELLE tazele (otomatik reaktivite yok — sirketAdiKaydet deseni)
+    try { renderHUD(); } catch (e) {}
+    try { refreshUnitMarkers(); } catch (e) {}
+  } finally { _agacMesgul = false; }
+  openGelisimSheet('agac');
+};
+// ── TAM SIFIRLAMA ──
+window.agacSifirSor = () => {
+  const g = G.gelisim || {}, ilk = !(g.respecUsed > 0), kalan = Math.max(0, (g.respecAt || 0) - bankaGun());
+  if (!ilk && kalan > 0) { toast('⏳ ' + CEV('{0} gün sonra tekrar sıfırlayabilirsin', kalan), 'warn'); return; }
+  const iade = DAL_KEYS.reduce((s, dk) => s + DALLAR[dk].dugum.reduce((a, n, i) => a + (gnd(n.id) ? AGAC_GP[i] : 0), 0), 0);
+  $('modal').innerHTML = `
+    <h2>🔄 ${CEV('Gelişim Ağacını Sıfırla')}</h2>
+    <p>${CEV('Tüm düğümlerin kapanır ve ana dalın silinir.')} <b class="pos">${CEV('{0} Gelişim Puanı geri gelir.', iade)}</b></p>
+    <p style="color:var(--danger)">${CEV('⚠️ Düğümlere ödediğin PARA geri gelmez.')}</p>
+    <p class="sub">${ilk ? '🎁 ' + CEV('Bu ilk sıfırlaman — ücretsiz.') : '💠 ' + CEV('Ücret: {0} İmtiyaz Puanı. Sonraki sıfırlama için {1} gün beklemen gerekir.', AGAC_SIFIR_IP, AGAC_SIFIR_GUN)}</p>
+    <button class="primary" style="background:var(--danger);color:#fff" onclick="agacSifirla()">🔄 ${CEV('Evet, sıfırla')}</button>
+    <button class="primary ghostbtn" onclick="closeModal()">${CEV('Vazgeç')}</button>`;
+  $('overlay').classList.add('show');
+};
+window.agacSifirla = () => {
+  if (_agacMesgul) return;
+  _agacMesgul = true;
+  try {
+    const g = G.gelisim;
+    const ilk = !(g.respecUsed > 0), kalan = Math.max(0, (g.respecAt || 0) - bankaGun());
+    if (!ilk && kalan > 0) { toast('⏳ ' + CEV('{0} gün sonra tekrar sıfırlayabilirsin', kalan), 'warn'); return; }
+    // ÜCRET EN SONDA (sirketAdiKaydet sıra şartı): önce tüm kapılar, sonra ipHarca
+    if (!ilk && !ipHarca(AGAC_SIFIR_IP)) return;      // yetersizse ipHarca kendisi uyarır
+    const iade = DAL_KEYS.reduce((s, dk) => s + DALLAR[dk].dugum.reduce((a, n, i) => a + (gnd(n.id) ? AGAC_GP[i] : 0), 0), 0);
+    g.nodes = {};
+    g.ana = null;
+    g.gp = gpBakiye() + iade;
+    g.respecUsed = (g.respecUsed || 0) + 1;           // ⚠️ (x || 0) + 1 — NaN sonsuz ücretsiz hak demekti
+    g.respecAt = bankaGun() + AGAC_SIFIR_GUN;         // hile korumalı takvim günü (Date.now DEĞİL)
+    save();
+    closeModal();
+    toast('🔄 ' + CEV('Gelişim Ağacı sıfırlandı — 🧬 +{0} geri geldi', iade) + (ilk ? '' : ' · 💠 -' + AGAC_SIFIR_IP), '', null, 0, true);
+    beep(520, .12);
+    try { renderHUD(); } catch (e) {}
+    try { refreshUnitMarkers(); } catch (e) {}
+  } finally { _agacMesgul = false; }
+  openGelisimSheet('agac');
 };
 const resTimeMin = (key, lvl) => Math.round(30 * Math.pow(10080 / 30, (lvl - 1) / (RESEARCH[key].max - 1))); // 30dk → 1 hafta
 const TYPE_OF = (kind, t) => kind === 'plant' ? PLANT_TYPES[t] : kind === 'store' ? STORE_TYPES[t] : kind === 'fueldepot' ? DEPOT_TYPES[t] : OFFICE;
@@ -5032,7 +5690,8 @@ function consumeFuel(f, tons) {
   return tons - need;
 }
 const fuelOf = u => u.t.startsWith('coal') ? 'coal' : u.t.startsWith('gas') ? 'gas' : null; // nükleer → null (direkt para)
-const tonsFor = (u, hours) => PLANT_TYPES[u.t].fuel * PLANT_TYPES[u.t].mw * hours / FUEL_TYPES[fuelOf(u)].price;
+// 🧬 AĞAÇ: yakitKat — 'Yanma Optimizasyonu' (f2) −%10, 'CCS' (f5) +%15, 'Yakıt Geri Dönüşümü' (n1) −%15
+const tonsFor = (u, hours) => PLANT_TYPES[u.t].fuel * PLANT_TYPES[u.t].mw * hours * yakitKat(PLANT_TYPES[u.t]) / FUEL_TYPES[fuelOf(u)].price;
 const maxOffices = () => OFFICE.baseLimit + ((G.research && G.research.lvl.office) || 0) * 5;
 // 📜 RUHSAT LİMİTİ (patron 18 Ağu): ofis sayısından BAĞIMSIZ, sabit 20. Limitin üstünde ruhsatı
 // olan eski oyuncu mağdur edilmez — yalnız YENİ alım engellenir.
@@ -5232,8 +5891,8 @@ window.storeLinkAsk = (aId, bId, merkezSecildi) => {
     <p class="sub">Bağlanan depoların <b>kapasitesi birleşir</b> (${groupCap(A) + groupCap(B)} MWh) ve
     enerji gruptaki boş depolara akar. Bağlantıyı sen kurduğun için <b>${unitName(A)} MERKEZ DEPO</b>,
     <b>${unitName(B)} BAĞLI DEPO</b> olur.</p>
-    <p class="sub">⚡ <b>Grup çevrim kaybı:</b> her ek üye kaybı +%${GROUP_LOSS_STEP * 100} artırır —
-    bağlantıdan sonra bu grubun kaybı <b class="neg">%${Math.round((storeLoss(A) + GROUP_LOSS_STEP) * 100)}</b> olur.
+    <p class="sub">⚡ <b>Grup çevrim kaybı:</b> her ek üye kaybı +%${grupKayipAdim() * 100} artırır —
+    bağlantıdan sonra bu grubun kaybı <b class="neg">%${Math.round((storeLoss(A) + grupKayipAdim()) * 100)}</b> olur.
     Grup en fazla ${GROUP_MAX} depo; birleştirmek kapasite kazandırır ama enerjinin bir kısmını götürür.</p>
     ${fee ? `<p>📏 ${km} km — <b>iller arası hat ücreti: <span class="neg">${fmt(fee)}</span></b>
       <br><span class="sub">Bağlantıyı kesersen hat iptal olur; yeniden bağlamak için ücret yeniden ödenir.</span></p>`
@@ -5431,7 +6090,7 @@ function freshState() {
     acil: null, acilBekle: 0, tutBanka: false, // ⚡ acil nakit kredisi — saatlik faiz, tek seferde tamamı kapanır
     leases: {}, // cellId -> bitiş ts (3 günlük imtiyaz: +%20 satış primi — YEKA tarzı alım garantisi)
     offers: {}, maintDiscount: 1, starterClaimed: false, founded: Date.now(), foundedBanka: Date.now(), saatEn: 0, saatSupheli: false, consLease: null,
-    research: { lvl: { coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0 }, active: null },
+    research: { lvl: { coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0, cellcap: 0 }, active: null },
     capLic: {}, // kapasite lisansları (patron): kategori → kademe (0=başlangıç; gaz/nükleer 0'da kilitli)
     lines: [], // ⚡ enerji nakil hatları
     showOthers: true, boughtOthers: {}, // 👥 diğer oyuncuların tesisleri (varsayılan GÖRÜNÜR — patron)
@@ -5448,6 +6107,14 @@ function freshState() {
     ip: 10, ipBoost: null, bakimAnlasma: false, // 💠 İmtiyaz Puanı (10 hediye) + aktif takviye + kalıcı bakım anlaşması
     emis: { week: '', ton: 0, stage: 0, warnUntil: 0, watch: {}, watchUntil: 0, fines: 0, muvazaa: 0 }, // 🌍 emisyon denetimi
     totalSold: 0, totalEarned: 0, demoOffsetMin: 0, spend: {}, // 💸 gider defteri (kalem kalem kasa çıkışı)
+    // 🧬 GELİŞİM AĞACI (31 Ağu): gp = Gelişim Puanı · ana = ilan edilen ANA DAL (rozet buradan)
+    // nodes = açık düğüm kimlikleri · respecUsed/respecAt = sıfırlama hakkı ve bekleme günü
+    gelisim: { gp: 0, ana: null, nodes: {}, respecUsed: 0, respecAt: 0 },
+    // 🎯 gelişim görevleri: gün/hafta anahtarı + seçili görev kimlikleri + damgalar + sayaçlar
+    gpGorev: { gun: '', ids: [], alindi: {}, temel: {}, hedef: {}, hafta: '', hid: '', halindi: false, sayac: {} },
+    // 📊 TÜR BAZLI KALICI ÜRETİM (MWh): u.lifeProd santral SATILINCA siliniyor — "güneşten X MWh
+    // üret" görevi onunla ölçülemezdi. Bu sayaç şirket ömrü boyunca hiç sıfırlanmaz.
+    prodByCat: {},
     lastSeen: Date.now(), muted: false, demo: false,
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
   };
@@ -5749,11 +6416,13 @@ setInterval(fetchWeather, 15 * 60 * 1000);
 // cutIn altı dönmez, nominal üstü tam güç, fırtına sınırında koruma kapatması
 function windCurve(v, T) {
   if (v == null) return null;
-  const cutIn = (T && T.cutIn) || 3, nom = (T && T.nom) || 12, storm = (T && T.storm) || 25;
-  if (v < cutIn) return .02;
-  if (v < nom) return Math.pow((v - cutIn) / (nom - cutIn), 1.5);
-  if (v <= storm) return 1;
-  return 0; // fırtına — türbin korumaya geçer
+  // 🌬️ AĞAÇ: 'Düşük Rüzgar Kanadı' (w2) cut-in'i 1 m/s düşürür · 'Fırtına Toleransı' (w3)
+  //    kapatma eşiğini 4 m/s yükseltir. Nominal hız DEĞİŞMEZ (eğrinin sırtı yerinde kalsın).
+  const ci0 = (T && T.cutIn) || 3, nom = (T && T.nom) || 12, st0 = (T && T.storm) || 25;
+  const cutIn = Math.max(1, ci0 - (gnd('w2') ? 1 : 0)), storm = st0 + (gnd('w3') ? 4 : 0);
+  const egri = (ci, sm) => v < ci ? .02 : v < nom ? Math.pow((v - ci) / (nom - ci), 1.5) : v <= sm ? 1 : 0;
+  // düğümsüz değerle karşılaştır: yükseltme hiçbir rüzgar hızında kayıp yazdırmasın
+  return Math.max(egri(cutIn, storm), egri(ci0, st0)); // fırtına üstü: ikisi de 0 → türbin korumada
 }
 function liveWx(cell) { return Date.now() - WX.at < 45 * 60 * 1000 ? WX.cells[cell] : null; }
 
@@ -5797,8 +6466,11 @@ window.retrySurvey = c => { if (WX.survey) delete WX.survey[c]; surveyCell(c); o
 const smoothNoise = (t, s) => (Math.sin(t * .9 + s * 7.3) + Math.sin(t * .23 + s * 3.1) * .6 + Math.sin(t * .061 + s) * .4) / 2;
 function sunFactor(q, atMin) {
   const m = atMin ?? nowMin(), h = (m / 60) % 24, ev = todayEvent();
-  if (h < 6 || h > 19.5) return 0;
-  return Math.max(0, Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) * (.8 + .2 * smoothNoise(m / 90, 2)) * q.sun * (ev.sun || 1) * (1 + .4 * newbieAid()));
+  // 🌅 pencere 'Alacakaranlık' düğümüyle (s3) 06:00–19:30 → 05:00–21:00 olur
+  // 🌙 pencere dışı: eskiden KESİN 0'dı; artık 'Gece Üretimi I' (s5) düğümü varsa taban döner
+  const bell = gunesEgrisi(h);
+  if (bell <= 0) return 0; // 🌙 gece tabanı BURADA DEĞİL — plantOutput'ta ZEMİN olarak (tek kapı)
+  return Math.max(0, bell * (.8 + .2 * smoothNoise(m / 90, 2)) * q.sun * (ev.sun || 1) * (1 + .4 * newbieAid()));
 }
 function windFactor(q, atMin) {
   const m = atMin ?? nowMin(), ev = todayEvent();
@@ -5836,6 +6508,12 @@ function priceAt(atMin) {
 const priceNow = () => priceAt(nowMin());
 
 // ── Üretim ──
+// ☀️ GÜNEŞ TABAN ÇARPANI (patron 31 Ağu dengesi): güneşin \ başına günlük getirisi
+// 0,48–0,83 bandındaydı — nükleerin (0,975) çok altı. MW ETİKETİNE DOKUNULMADI (weekTarget,
+// ölçek eşikleri ve lisans hesapları MW'den türetiliyor); yalnız ÜRETİM çarpanı ×1,25 oldu.
+// Sonuç bandı 0,78–1,13: iyi havada nükleerle yarışır, bulutta geriler, kömüre (1,81) asla
+// yaklaşmaz. ⚠️ Verim dökümü tablosunda da satır olarak GÖRÜNÜR (çarpımlar üretimi tutmalı).
+const SOLAR_TABAN = 1.25;
 function plantOutput(u, atMin) {
   if (u.kind !== 'plant' || !u.on || u.buildDone > Date.now()) return 0;
   const T = PLANT_TYPES[u.t], q = cellQuality(u.cell);
@@ -5846,17 +6524,25 @@ function plantOutput(u, atMin) {
     if (wx) {
       const h = (nowMin() / 60) % 24;
       // gündüz eğrisi: sabah/akşam düşer ama dibe vurmaz (gündüz tabanı .62 — patron: "10 MW panel 0,8 MW üretmesin")
-      let bell = (h >= 6 && h <= 19.5) ? Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) : 0;
+      let bell = gunesEgrisi(h);
       // bulut etkisi DOĞRUSAL (patron: %59 bulut → ~%41 üretim), üstüne yeni şirket takviyesi
       // ☀️ MARKA: güneş uzmanının bulut toleransı bulut kaybını azaltır (T.cloudTol > 1)
-      const cloud = (wx.cloud || 0) * (1 - NEWBIE_CLOUD * newbieAid()) / (T.cloudTol || 1);
-      f = wx.day ? bell * Math.max(.05, 1 - cloud / 100) : 0;
+      // ☁️ AĞAÇ (s2): 'Bulut Telafisi' bulutun götürdüğü payın %30 kadarını geri verir
+      const cloud = (wx.cloud || 0) * (1 - NEWBIE_CLOUD * newbieAid()) * bulutKat() / (T.cloudTol || 1);
+      // 🌙 KAPI ③ — canlı hava gece diyorsa üretim yalnız 'Gece Üretimi I' (s5) ile sürer.
+      //    Alacakaranlık düğümü kendi penceresini açar: o saatte wx.day hâlâ false olabilir.
+      // Alacakaranlık düğümü (s3) kendi penceresini açar: o saatte wx.day hâlâ false olabilir.
+      f = (wx.day || (gnd('s3') && bell > 0)) ? bell * Math.max(.05, 1 - cloud / 100) : 0;
     } else f = sunFactor(q, atMin);
+    f *= SOLAR_TABAN;              // ☀️ taban dengesi gündüz eğrisine (gece değeri zaten 0)
+    f = Math.max(f, geceTabani()); // 🌙 ZEMİN: üç ayrı "gece = 0" kapısını tek satır kapatır
   } else if (T.kind === 'wind') {
-    const wc = wx ? windCurve(wx.w + NEWBIE_WIND * newbieAid(), T) : null; // takviyeli rüzgar
+    // 🌬️ AĞAÇ: 'Yüksek Kule Kiti' (w4) her zaman, 'Gece Jeti Ayarı' (w5) yalnız gece hız ekler
+    const wc = wx ? windCurve(wx.w + NEWBIE_WIND * newbieAid() + ruzgarEk(atMin), T) : null; // takviyeli rüzgar
     f = wc != null ? wc : windFactor(q, atMin) * .55; // sim fallback nominali aşmasın
   } else if (T.kind === 'hydro') f = hydroFactor(q, atMin, u.cell);
-  else if (T.kind === 'geo') f = .95;
+  // ⚛️ 'SMR Modüler Filo' (n5) nükleerin bakım duruşunu kısaltır — jeotermal etkilenmez
+  else if (T.kind === 'geo') f = .95 * ((T.cat === 'Nükleer' && gnd('n5')) ? 1.06 : 1);
   // 🎯 SAHA ÇARPANI (rakım/kıyı/iz kaybı/keşif — ±%30 kelepçeli). Hidro kendi coğrafi
   // puanını hydroFactor içinde alıyor, ikinci kez çarpılmaz.
   if (T.kind !== 'hydro') f *= siteFactor(u);
@@ -5869,7 +6555,7 @@ function plantOutput(u, atMin) {
 }
 function co2Avg() {
   let prod = 0, emit = 0;
-  for (const u of plants()) { prod += u.lifeProd || 0; emit += (u.lifeProd || 0) * (PLANT_TYPES[u.t].em || 0); }
+  for (const u of plants()) { prod += u.lifeProd || 0; emit += (u.lifeProd || 0) * unitEm(PLANT_TYPES[u.t]); }
   return prod > .1 ? Math.round(emit / prod) : 0;
 }
 // ═══ 🌍 EMİSYON YAPTIRIM SİSTEMİ (patron tasarımı) ═══
@@ -5891,7 +6577,7 @@ const EM_QUOTA = [100, 400, 1200, 4000, 12000];   // ölçek başına HAFTALIK s
 // Kömürle salıp sonra güneşe/rüzgara geçen şirket borcunu eritebilir; hiç temizlenmeyen eritemez.
 const EM_BUDGET = [1500, 6000, 20000, 70000, 200000]; // ölçek başına ömür boyu ton bütçesi
 const EM_CLEAN_CREDIT = .4;                            // temiz MWh başına geri kazanılan ton
-const emTemizMWh = () => plants().reduce((a, u) => a + ((PLANT_TYPES[u.t].em || 0) < 300 ? (u.lifeProd || 0) : 0), 0);
+const emTemizMWh = () => plants().reduce((a, u) => a + (unitEm(PLANT_TYPES[u.t]) < 300 ? (u.lifeProd || 0) : 0), 0);
 const emButce = () => EM_BUDGET[Math.max(0, Math.min(EM_BUDGET.length - 1, G.olcek || 0))] + emTemizMWh() * EM_CLEAN_CREDIT;
 const emButceAcik = () => Math.max(0, co2TotalTon() - emButce());
 const EM_GRACE_MS = 12 * 3600e3;                 // ihtar süresi: 12 saat
@@ -5899,8 +6585,8 @@ const EM_WATCH_MS = 24 * 3600e3;                 // ihtar sonrası gözetim (muv
 const EM_TON_FINE = 50000;                       // aşım tonu başına para cezası
 const emQuota = () => EM_QUOTA[Math.max(0, Math.min(EM_QUOTA.length - 1, G.olcek || 0))];
 const emWeekTon = () => Math.max(0, (G.emis && G.emis.ton) || 0);
-const co2TotalTon = () => plants().reduce((a, u) => a + (u.lifeProd || 0) * (PLANT_TYPES[u.t].em || 0) / 1000, 0);
-const emKirli = u => u.kind === 'plant' && (PLANT_TYPES[u.t].em || 0) >= 300; // fosil sayılan santral
+const co2TotalTon = () => plants().reduce((a, u) => a + (u.lifeProd || 0) * unitEm(PLANT_TYPES[u.t]) / 1000, 0);
+const emKirli = u => u.kind === 'plant' && unitEm(PLANT_TYPES[u.t]) >= 300; // fosil sayılan santral (🧬 CCS eşiğin altına indirebilir)
 // eğitimdeki ve ilk 3 günündeki şirket denetim dışı (yeni oyuncu boğulmasın)
 const emMuaf = () => tutActive() || (Date.now() - (G.founded || Date.now())) < 3 * 864e5;
 // ⚖️ YAPTIRIM ÖLÇÜTÜ = ŞU AN ÇALIŞAN PORTFÖY (ömür ortalaması DEĞİL).
@@ -5908,9 +6594,9 @@ const emMuaf = () => tutActive() || (Date.now() - (G.founded || Date.now())) < 3
 // onunla denetim yapılsa "12 saatte tedbir al, ceza yok" sözü imkânsız olurdu (ceza kaçınılmaz).
 // Denetim gerçek hayatta da ANLIK ölçer: çalışan kurulu gücün karbon yoğunluğu ve salım hızı.
 const emPortfoy = () => { let mw = 0, g = 0;
-  for (const u of plants()) if (u.on && u.buildDone <= Date.now()) { const T = PLANT_TYPES[u.t]; mw += T.mw; g += T.mw * (T.em || 0); }
+  for (const u of plants()) if (u.on && u.buildDone <= Date.now()) { const T = PLANT_TYPES[u.t]; mw += T.mw; g += T.mw * unitEm(T); }
   return mw > .01 ? Math.round(g / mw) : 0; };
-const emRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() ? PLANT_TYPES[u.t].mw * (PLANT_TYPES[u.t].em || 0) / 1000 : 0), 0); // ton/saat (tam güçte)
+const emRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() ? PLANT_TYPES[u.t].mw * unitEm(PLANT_TYPES[u.t]) / 1000 : 0), 0); // ton/saat (tam güçte)
 // ⚖️ ADALET KURALI (patron, 21 Ağu — haklı itiraz): "3 rüzgar kurdum, yoğunluğu düşürdüm ama
 // haftalık salım ve ömür bütçesi GEÇMİŞ değerler, 12 saatte düşüremem ki — bu cezayı her türlü
 // yerim." Doğru: düzeltilemeyen ölçütle ceza kesilemez. Bu yüzden YAPTIRIM ÖLÇÜTLERİ ARTIK
@@ -5919,11 +6605,11 @@ const emRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.
 //   2) Salım HIZI        — mevcut hızla haftalık projeksiyon (geçmiş salım DEĞİL), kota ile kıyaslanır
 // Ömür bütçesi ve "bu hafta salınan" artık BİLGİ satırıdır; ceza kesmez (geçmiş geri alınamaz).
 // Kota da üretim hacmine göre ölçeklenir: temiz üretim ekleyen oyuncunun kotası büyür.
-const emTemizRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() && (PLANT_TYPES[u.t].em || 0) < 300 ? PLANT_TYPES[u.t].mw : 0), 0);
+const emTemizRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() && unitEm(PLANT_TYPES[u.t]) < 300 ? PLANT_TYPES[u.t].mw : 0), 0);
 function emDurum() {
   const yog = emPortfoy(), ton = emWeekTon(), rate = emRate();
   const hizHaftalik = rate * 168;                       // mevcut hızla bir hafta çalışsa (ton)
-  const uretimHaftalik = (emTemizRate() + plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() && (PLANT_TYPES[u.t].em || 0) >= 300 ? PLANT_TYPES[u.t].mw : 0), 0)) * 168;
+  const uretimHaftalik = (emTemizRate() + plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() && unitEm(PLANT_TYPES[u.t]) >= 300 ? PLANT_TYPES[u.t].mw : 0), 0)) * 168;
   // kota = ölçek tabanı VEYA üretim hacminin %40'ı (hangisi büyükse) — temiz kapasite kotayı BÜYÜTÜR
   const kota = Math.max(EM_QUOTA[Math.max(0, Math.min(EM_QUOTA.length - 1, G.olcek || 0))], Math.round(uretimHaftalik * .4));
   const butce = emButce(), butceAcik = emButceAcik();
@@ -6065,9 +6751,15 @@ function step(dtMin, silent, atMin) {
       produced += out;
       u.lifeProd = (u.lifeProd || 0) + out;
       const T = PLANT_TYPES[u.t];
+      // 📊 TÜR BAZLI KALICI SAYAÇ (gelişim görevleri buradan ölçülür — lifeProd santral
+      // satılınca siliniyor, "güneşten X MWh üret" görevi onunla ölçülemezdi).
+      // ⚠️ Bu satır T tanımının ALTINDA olmak zorunda: üstüne yazarsan TDZ ReferenceError.
+      if (!silent && G.prodByCat) G.prodByCat[T.cat] = (G.prodByCat[T.cat] || 0) + out;
       // 🌍 salım birikimi: MWh × (g/kWh) / 1000 = ton. Hem şirket haftalığı hem SANTRAL BAZINDA
       // (kamulaştırmada "aşımı kapatan en küçük tesis" bunun üzerinden seçilir).
-      if (T.em && G.emis) { const ton = out * T.em / 1000; G.emis.ton = (G.emis.ton || 0) + ton; u.wkTon = (u.wkTon || 0) + ton; }
+      // 🧬 unitEm: CCS (f5) fosili ×0,63, Atık Yönetimi (n4) nükleeri ×0,33 düşürür.
+      const emGkWh = unitEm(T);
+      if (emGkWh && G.emis) { const ton = out * emGkWh / 1000; G.emis.ton = (G.emis.ton || 0) + ton; u.wkTon = (u.wkTon || 0) + ton; }
       // YAKIT STOĞU: ~12 saatte biter → sabah/akşam ikmal ritüeli (yakıt İKMALDE peşin ödenir)
       if (T.fuel) {
         u.fuelH = Math.max(0, (u.fuelH || 0) - dtH);
@@ -6078,14 +6770,14 @@ function step(dtMin, silent, atMin) {
       let rem = out;
       if (st) {
         // ⚡ trafo kaybı: santralden çıkan enerjinin tamamı depoya GİRMEZ
-        const eff = storeEff(st);
+        const eff = storeEff(st, T); // 🔥 s4: güneşten depoya giden enerjinin kaybı azalır
         const put = Math.min((STORE_TYPES[st.t].cap - st.stored) / (eff || 1), rem);
         st.stored += put * eff; rem -= put;
         // 🔗 KAPASİTE BİRLEŞİMİ: bağlı depolar tek tank gibi çalışır — taşan enerji gruptaki
         // boş depolara akar. Bağlantı yoksa storeGroup tek elemanlı döner, davranış değişmez.
         if (rem > 0) for (const g2 of storeGroup(st)) {
           if (g2.id === st.id || rem <= 0) continue;
-          const e2 = storeEff(g2);
+          const e2 = storeEff(g2, T);
           const p2 = Math.min((STORE_TYPES[g2.t].cap - g2.stored) / (e2 || 1), rem);
           if (p2 > 0) { g2.stored += p2 * e2; rem -= p2; }
         }
@@ -6095,7 +6787,8 @@ function step(dtMin, silent, atMin) {
       }
       wasted += rem;
     }
-    if (u.on && u.buildDone <= Date.now()) u.cond = Math.max(25, u.cond - (6 / 1440) * dtMin * (PLANT_TYPES[u.t].decay || 1));
+    // 🧰 AĞAÇ: yıpranma çarpanı tür bazlı (s1 güneş · w1 rüzgar · f4 fosil · n3 nükleer)
+    if (u.on && u.buildDone <= Date.now()) u.cond = Math.max(25, u.cond - (6 / 1440) * dtMin * (PLANT_TYPES[u.t].decay || 1) * yipranmaKat(PLANT_TYPES[u.t]));
   }
   const price = priceAt(atMin ?? nowMin());
   return { produced, wasted, fuelCost, price };
@@ -6448,6 +7141,7 @@ window.startDischarge = (id, frac, adMult, targetCell, quiet) => {
   const amt = (isLinked(st) ? groupStored(st) : st.stored) * frac;
   if (amt < .005) return;
   grantDailyResPt();
+  gpSay('satis'); // 🎯 gelişim görevi sayacı (ayrı satış işlemi adedi)
   // 🧊 FİYATI DONDUR: boşaltma boyunca birim fiyat sabit kalır — "gördüğün = aldığın" sözü korunur
   st.disch = { left: amt, mult: adMult || 1, target: targetCell || null, sold: 0, gain: 0, full: frac >= .99,
     px: cellPriceNow(targetCell || st.cell) };
@@ -6545,7 +7239,10 @@ function restartAll() {
 }
 
 // ── Bakım: PANELLİ (patron tasarımı) — cihaz listesi + tik + toplam, onayla yap ──
-const FUEL_HOURS = 12; // yakıt stoğu: tam depoyla ~12 saat → günde 2 ikmal oturumu
+const FUEL_HOURS = 12; // yakıt stoğu TABANI: tam depoyla ~12 saat → günde 2 ikmal
+// ⚠️ Kodun geri kalanı FUEL_HOURS'u DOĞRUDAN OKUMAZ, yakitSaat() çağırır: Fosil dalının
+//    'Genişletilmiş Stok Sahası' (f1) ve 'Kesintisiz İkmal Hattı' (f3) düğümleri tavanı
+//    12 → 18 → 24 saate çıkarır. Doğrudan okursan o düğümler o noktada işlemez.
 const maintList = () => plants().filter(u => u.buildDone <= Date.now() && u.cond < 99.5);
 // 🔧 BAKIM BEDELİ (patron 25 Ağu: "bakim bedelleri az, özellikle BÜYÜK santrallerin bakımı
 // daha maliyetli olmalı"). Eski formül SABİTTİ: (100-cond)×5.000 — tesis boyutundan BAĞIMSIZ.
@@ -6554,7 +7251,9 @@ const maintList = () => plants().filter(u => u.buildDone <= Date.now() && u.cond
 const MAINT_FULL = 0.06; // tam bakım = tesis bedelinin %6'sı (75 puanlık yıpranma) — denge kolu burada
 const unitRepairCost = u => {
   const T0 = PLANT_TYPES[u.t] || TYPE_OF(u.kind, u.t) || { cost: 3e6 };
-  return Math.round((100 - u.cond) / 75 * (T0.cost || 3e6) * MAINT_FULL * (todayEvent().maint || 1) * (G.maintDiscount || 1));
+  // 🔧 AĞAÇ (n2 Uzun Devre Bakımı): nükleer santrallerin onarım bedeli %15 azalır
+  const agac = (T0.cat === 'Nükleer' && gnd('n2')) ? .85 : 1;
+  return Math.round((100 - u.cond) / 75 * (T0.cost || 3e6) * MAINT_FULL * (todayEvent().maint || 1) * (G.maintDiscount || 1) * agac);
 };
 const maintCost = () => maintList().reduce((s, u) => s + unitRepairCost(u), 0);
 function openMaintSheet() {
@@ -6591,6 +7290,7 @@ window.doMaintSel = () => {
   if (G.cash < tot) { toast('Bakım için ' + fmt(tot) + ' gerekli', 'warn'); return; }
   G.cash -= tot; gider('bakim', tot);
   sel.forEach(u => { G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + unitRepairCost(u); u.cond = 100; });
+  gpSay('onar', sel.length); // 🎯 gelişim görevi sayacı
   toast('🔧 ' + sel.length + ' cihaza bakım yapıldı — ' + fmt(tot), '');
   beep(520, .1); save(); refreshUnitMarkers(); hideSheets();
 };
@@ -6598,16 +7298,17 @@ window.doMaintSel = () => {
 window.refuelUnit = id => {
   const u = G.units.find(x => x.id === id);
   if (!u || !PLANT_TYPES[u.t].fuel) return;
-  const missH = FUEL_HOURS - (u.fuelH || 0);
+  const missH = yakitSaat() - (u.fuelH || 0);
   if (missH < .2) return;
   const f = fuelOf(u);
   if (!f) { // NÜKLEER: yakıt çubuğu değişimi — depo gerekmez, direkt para (minik gider)
-    const c = Math.round(PLANT_TYPES[u.t].fuel * PLANT_TYPES[u.t].mw * missH);
+    const c = Math.round(PLANT_TYPES[u.t].fuel * PLANT_TYPES[u.t].mw * missH * yakitKat(PLANT_TYPES[u.t]));
     if (G.cash < c) { toast('Yakıt çubuğu için ' + fmt(c) + ' gerekli', 'warn'); return; }
     G.cash -= c; gider('yakit', c);
     G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + c;
-    u.fuelH = FUEL_HOURS;
-    toast('⚛️ Yakıt çubuğu değişti — ' + FUEL_HOURS + ' saatlik stok (' + fmt(c) + ')', '');
+    u.fuelH = yakitSaat();
+    gpSay('yakit'); // 🎯 gelişim görevi sayacı
+    toast('⚛️ Yakıt çubuğu değişti — ' + yakitSaat() + ' saatlik stok (' + fmt(c) + ')', '');
     save(); refreshUnitMarkers(); openUnitSheet(id);
     return;
   }
@@ -6619,7 +7320,8 @@ window.refuelUnit = id => {
   }
   const use = Math.min(need, have);
   consumeFuel(f, use);
-  u.fuelH = Math.min(FUEL_HOURS, (u.fuelH || 0) + missH * use / need);
+  u.fuelH = Math.min(yakitSaat(), (u.fuelH || 0) + missH * use / need);
+  gpSay('yakit'); // 🎯 gelişim görevi sayacı
   toast(CEV('⛽ İkmal: {0} {1} kullanıldı — kalan stok {2} {1}', fmtN(use), F.unit + ' ' + F.nm.toLowerCase(), fmtN(fuelStock(f))), '');
   beep(560, .1);
   save(); refreshUnitMarkers(); openUnitSheet(id);
@@ -6681,7 +7383,7 @@ window.upgradeDepot = (id, n) => {
 function addUnit(kind, t, ll, buildSec) {
   let bs = buildSec ?? TYPE_OF(kind, t).build;
   if (tutActive()) bs = Math.min(bs, 4); // tutorial: kurulumlar ~anında ("zamandan muaf" — patron isteği)
-  const u = { id: G.nextId++, kind, t, ll: [+ll[0].toFixed(5), +ll[1].toFixed(5)], cell: cellId(ll), cond: 100, on: true, buildDone: Date.now() + bs * 1000, stored: 0, fuel: 0, capLvl: 0, fuelH: (kind === 'plant' && PLANT_TYPES[t].fuel) ? FUEL_HOURS : 0 };
+  const u = { id: G.nextId++, kind, t, ll: [+ll[0].toFixed(5), +ll[1].toFixed(5)], cell: cellId(ll), cond: 100, on: true, buildDone: Date.now() + bs * 1000, stored: 0, fuel: 0, capLvl: 0, fuelH: (kind === 'plant' && PLANT_TYPES[t].fuel) ? yakitSaat() : 0 };
   if (bs === 0) u._ann = true; // hediye/anlık kurulumlar "tamamlandı!" anons yağmuru yapmasın
   // 🏭 MARKA SADAKATİ: markalı ürün alındığında o markaya +12, diğerlerine -4.
   // Hatlarla aynı havuz — oyuncu tek bir tedarikçi ilişkisi yönetir.
@@ -6758,8 +7460,8 @@ window.openDetail = (t, mode) => {
     rows.push(['🔧 Günlük bakım gideri (~)', fmt(30 * (T.decay || 1) * (G && G.maintDiscount || 1))]);
     if (T.fuel) {
       const f = t.startsWith('coal') ? 'coal' : t.startsWith('gas') ? 'gas' : null;
-      rows.push(['⛽ Yakıt stoğu', FUEL_HOURS + ' saat — santral içinden elle ikmal']);
-      rows.push(f ? ['⛽ Tam ikmal', '~' + fmtN(T.fuel * T.mw * FUEL_HOURS / FUEL_TYPES[f].price) + ' ton ' + FUEL_TYPES[f].nm + ' (yakıt deponden çekilir)'] : ['⚛️ Yakıt çubuğu', fmt(T.fuel * T.mw * FUEL_HOURS) + ' / ' + FUEL_HOURS + ' saat (direkt parayla)']);
+      rows.push(['⛽ Yakıt stoğu', yakitSaat() + ' saat — santral içinden elle ikmal']);
+      rows.push(f ? ['⛽ Tam ikmal', '~' + fmtN(T.fuel * T.mw * yakitSaat() / FUEL_TYPES[f].price) + ' ton ' + FUEL_TYPES[f].nm + ' (yakıt deponden çekilir)'] : ['⚛️ Yakıt çubuğu', fmt(T.fuel * T.mw * yakitSaat()) + ' / ' + yakitSaat() + ' saat (direkt parayla)']);
     }
     if (T.kind === 'wind') { rows.push(['🌬️ Devreye girme rüzgarı', T.cutIn + ' m/s']); rows.push(['🌬️ Nominal aralık', T.nom + '–' + T.storm + ' m/s']); rows.push(['⛈️ Fırtına kapatması', '>' + T.storm + ' m/s']); }
     if (T.kind === 'sun') rows.push(['☀️ Üretim', 'gündüz, gerçek bulutluluğa göre']);
@@ -6879,7 +7581,9 @@ function placeAt(c, ll) {
   }
   const q = cellQuality(c);
   const mine = G.units.filter(u => u.cell === c && u.kind !== 'office').length;
-  if (mine >= MAX_PER_CELL) { toast('Bu karede senin limitin doldu (' + MAX_PER_CELL + ') — başka kareye dokun', 'warn'); return; }
+  if (mine >= cellCap()) { toast(cellCap() < MAX_PER_CELL + CELLCAP_MAX
+    ? 'Bu karede senin limitin doldu (' + cellCap() + ') — 🧱 Kare Yerleşim Planı araştırmasıyla limit ' + (MAX_PER_CELL + CELLCAP_MAX) + ' olur'
+    : 'Bu karede senin limitin doldu (' + cellCap() + ') — başka kareye dokun', 'warn', null, 7000); return; }
   if (kind === 'plant' && PLANT_TYPES[t].geoOnly && !q.geo) { toast('♨️ Bu karede jeotermal kaynak yok — ♨️ işaretli bir kare seç', 'warn'); return; }
   if (oyunDisiMi(ll)) { toast('Bu bölge oyuna dahil değil — başka bir konum seç', 'warn', null, 6000); return; }
   // 🌊 DENİZ KURALI (patron): denize yalnız offshore rüzgar ve yüzer güneş. Kömür/gaz/nükleer/
@@ -6944,6 +7648,7 @@ function placeAt(c, ll) {
   G.cellSpent[c] = (G.cellSpent[c] || 0) + price;
   if (PENDING.disc && PENDING.disc < 1) toast('🎬 Reklam indirimi uygulandı: ' + fmt(T.cost - price) + ' cebinde kaldı', '');
   const nu = addUnit(kind, t, ll);
+  gpSay('insa'); // 🎯 gelişim görevi sayacı
   if (tutActive()) nu.hidden = true; // eğitimde ZORUNLU kurulanlar da başkalarına görünmez (patron kuralı)
   ensureConnections(); ensureGridLinks(); // yeni santral boş slota, depo menzildeki merkeze otomatik bağlanır
   fetchWeather(); // yeni kare için canlı hava çek
@@ -6951,6 +7656,13 @@ function placeAt(c, ll) {
   beep(440, .1);
   if (kind === 'plant' && readyStores(c).length === 0 && !G.units.some(u => u.cell === c && u.kind === 'store'))
     toast('💡 Bu kareye bir de 🔋 depo kur — enerji depoya birikir, depoya dokunup satarsın', '', 'tipstore', 15000);
+  // 🔌 BOŞ BAĞLANTI NOKTASI UYARISI (13'lük karo limiti kararının şartı): karoya daha çok
+  // santral sığdıkça "kurdum ama gelir gelmiyor" tuzağı büyür — BAĞLANTISIZ santral gelir
+  // ÜRETMEZ, yakıtlıysa aktif ZARAR eder. Kilit DEĞİL uyarı (oyuncu depoyu sonra da kurabilir);
+  // ensureConnections() zaten çağrıldı, yani burada bağlanamadıysa boş slot GERÇEKTEN yok.
+  if (kind === 'plant' && G.units.some(u => u.cell === c && u.kind === 'store')
+      && !readyStores(c).some(s2 => !s2.link && connCount(s2) < STORE_TYPES[s2.t].conn))
+    toast('🔌 Bu karedeki depoların bağlantı noktaları DOLU — ' + T.nm + ' bağlanamadı, ürettiği enerji boşa gider. Daha büyük bir depo kur ya da bağlantı noktası aç.', 'warn', 'noconnbuild' + c, 14000);
   PENDING = null;
   setMode(null);
   save();
@@ -7303,9 +8015,17 @@ const LINE_OMUR = {
 const lineOmurMax = (km, hubs) => Math.max(1, Math.round(lineCost(km, hubs) / LINE_OMUR.bolen));
 // Eski kayıtlarda `omur` yok → kaydin kendi km/hubs değerinden türetilir.
 // ⚠️ `l` null gelirse patlamasın: önce nesne kontrolü.
+// ⚠️ İKİ AYRI KAPI — KARIŞTIRMA:
+//  • lineOmurTaban(l) = HAM taban. l.omur'a YAZAN her yer BUNU kullanmalı.
+//  • lineOmur(l)      = taban × ağaç çarpanı. Yalnız OKUMA / gösterim / oran hesabı içindir.
+// Çarpanlı değeri kayda geri yazmak BİLEŞİK büyüme üretir (ittifakta her senkron turunda bir
+// kat daha) → hat ölümsüzleşir ve "hattı yenile" gideri, yani end-game freni kalkar.
+const lineOmurTaban = l => !l ? 1 : (l.omur > 0 ? l.omur : lineOmurMax(l.km, l.hubs));
 function lineOmur(l) {
   if (!l) return 1;
-  return l.omur > 0 ? l.omur : lineOmurMax(l.km, l.hubs);
+  // 🔩 AĞAÇ (g1 + g4): ömür çarpanı OKUMA anında uygulanır — böylece düğüm açılınca MEVCUT
+  //    hatlar da anında uzar (l.omur kurulum anında donmuş bir sayıdır).
+  return lineOmurTaban(l) * hatOmurKat();
 }
 const lineTasinan = l => (l && l.tasinan) || 0;
 const lineOmurFrac = l => Math.min(1, lineTasinan(l) / lineOmur(l));
@@ -7449,7 +8169,8 @@ const lineWear = l => Math.max(0, 100 - (Date.now() - l.built) / 864e6 * LINE.we
 const lineReady = l => l.done <= Date.now();
 // ⚡ ÜÇ EKSEN: taban kayıp (mesafe) + marka + ZAMAN yıpranması (onarılabilir) + ÖMÜR (ONARILAMAZ).
 // Ömür dolunca 100 döner → lineUsable false olur, hat şebekeden düşer.
-const lineLoss = l => Math.max(5, Math.min(100, lineBaseLoss(l) + lineBrand(l).loss + (100 - lineWear(l)) * .5 + lineOmurKayip(l)));
+// ❄️ AĞAÇ (g5 Süperiletken Kesit): toplam hat kaybı ×0,75 (taban 5 puanlık zemin korunur)
+const lineLoss = l => Math.max(5, Math.min(100, (lineBaseLoss(l) + lineBrand(l).loss + (100 - lineWear(l)) * .5) * hatKayipKat() + lineOmurKayip(l)));
 const linesOf = cell => (G.lines || []).filter(l => l.from === cell && lineReady(l) && lineLoss(l) < 100);
 // ⚡ ŞEBEKE DÜĞÜMLERİ (patron 24 Ağu): "transfer merkezi hattın uç noktalarında ve ek noktalarında
 // görünür ve depoya bağlanabilir olmalı — 100 milyon harcadım, depolar yine bağlanmıyor."
@@ -7809,7 +8530,7 @@ window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça a
   }
   // ⚡ YENİ MERKEZ ÖMRÜ DE UZATIR: merkezin liste bedeli kadar taşıma kapasitesi eklenir (yarı değerle).
   // ⚠️ `l.km` aşağıda değişiyor — ömür tabanını ONDAN ÖNCE, ESKİ değerlerle sabitliyoruz.
-  l.omur = lineOmur(l) + Math.round((LINE.hub + LINE.permitPerHub) * (1 + LINE.laborRate) / LINE_OMUR.bolen / 2);
+  l.omur = lineOmurTaban(l) + Math.round((LINE.hub + LINE.permitPerHub) * (1 + LINE.laborRate) / LINE_OMUR.bolen / 2); // ⚠️ HAM taban (çarpanlı yazma bileşik büyür)
   l.hubs++; brandBuy(l.brand || 'voltas');
   if (ally) { allyLineWrite(l); addMail('🤝 ' + G.ally.name, 'Hatta yeni transfer merkezi', `${G.company}, ${placeName(l.from)} → ${placeName(l.to)} ittifak hattına kasadan ${fmt(c)} ödeyerek bir transfer merkezi daha ekledi. Hat kaybı düştü, yeni merkez tüm üyelere açık.`, true); }
   if (l.path && l.path.length >= 2) { // 🗼 en uzun bölümün ORTASINA yeni transfer merkezi
@@ -8062,7 +8783,7 @@ window.lineExtendOnay = () => {
   // ömür her zaman liste üzerinden hesaplanır ki marka iki kat avantaj almasın).
   // ⚠️ l.km ve l.hubs AŞAĞIDA değişiyor — tabanı ÖNCE sabitliyoruz, yoksa eski kayıtta
   //    lineOmur(l) fallback'i yeni (büyük) km üzerinden hesaplanıp ömrü bedava şişirirdi.
-  const omurTaban = lineOmur(l);
+  const omurTaban = lineOmurTaban(l); // ⚠️ HAM taban (çarpanlı yazma bileşik büyür)
   const eski = l.path ? l.path.slice() : [l.from, l.to];
   l.path = LEXT.bas ? LEXT.ek.slice().reverse().concat(eski) : eski.concat(LEXT.ek);
   l.from = l.path[0]; l.to = l.path[l.path.length - 1];
@@ -8527,7 +9248,7 @@ let ALLY_LINE_KEYS = {}; // hat no → sunucu anahtarı (KAYDEDİLMEZ, her senkr
 // yayınlanmadan bu alanlar sunucuya gitmez ve ittifak hattı senkronu sessizce durur.
 const allyLineRec = l => ({ id: l.id, from: l.from, to: l.to, km: l.km, hubs: l.hubs,
   brand: l.brand, built: l.built, done: l.done, ally: l.ally, by: l.by,
-  omur: Math.round(lineOmur(l)), tasinan: Math.round(lineTasinan(l)) });
+  omur: Math.round(lineOmurTaban(l)), tasinan: Math.round(lineTasinan(l)) }); // ⚠️ HAM taban: sunucuya çarpanlı yazarsan her senkron turunda BİLEŞİK büyür
 // 🛡️ KURAL GECİKMESİ KALKANI (20. tur): `omur` ve `tasinan` alanları güvenlik kurallarına
 // eklendi ama kuralları konsola YAPIŞTIRMAK elle yapılan bir iş. Kural yayınlanmadan önce
 // `$other: validate false` yüzünden bu iki alan TÜM yazmayı 401'e düşürürdü ve ittifak hattı
@@ -10686,6 +11407,10 @@ const NET = {
       // oyuncunun geniş şehir setiyle oynadığı görülür. Dosyayı engelleyip düşük talep/minBid
       // ile oynama girişimi bu damgayla yakalanır (minBid'i veriden ayırmak ayrı iş — E6).
       this.putSessiz('players/' + this.id + '/cdb', SEHIR_DURUM === 'tamam' ? SEHIR_SV : 0).catch(() => {});
+      // 🧬 UZMANLIK ROZETİ (ana dal): kural isString && length <= 12 istiyor — dal anahtarı
+      // sabit bir enum ('solar'/'wind'/'nuke'/'fossil'/'grid'), serbest metin DEĞİL.
+      // Ana dal yoksa null yazılır: null alanı SİLER, validate hiç çalışmaz (ally deseni).
+      this.putSessiz('players/' + this.id + '/spec', anaDal() ? String(anaDal()).slice(0, 12) : null).catch(() => {});
       // 🏛️ haftalık devlet katkısı tablosu — kapanan haftalar DEĞİŞMEZ kalır, ödüller oradan
       // hesaplanır. (Kurallara 'katki' düğümü eklenene dek bu yazım sessizce reddedilir — zararsız.)
       if (G.weekSold >= .5) this.put('katki/' + kHafta(G.week) + '/' + this.id, {
@@ -11520,7 +12245,7 @@ function botCard(i) { // bot şirketlerin karnesi: servetiyle tutarlı ve determ
   // 🧩 patron: "iki şirket kartı farklı görünüyor" — bot kartında ülke/şehir ve son çevrimiçi
   // alanları yoktu, kart yarım kalıyordu. Deterministik olarak burada da doldurulur.
   const iller = Object.values(TR_ILLER).flat();
-  return { nm: WORLD_PLAYERS[i], w, em: botEm(i), bot: true,
+  return { nm: WORLD_PLAYERS[i], w, em: botEm(i), spec: botSpec(i), bot: true,
     country: 'Türkiye', il: iller[Math.floor(hash01(i, 21, 3) * iller.length)] || 'Kocaeli',
     online: false, ts: Date.now() - Math.round((5 + hash01(i, 22, 3) * 900) * 60e3),
     off: Math.max(1, Math.round(k * .5 + hash01(i, 11, 1) * 2)),
@@ -11560,11 +12285,11 @@ window.openLeaderboard = (tab) => {
     $('overlay').classList.add('show');
   };
   if (tab === 'bireysel') {
-    const rows = (NET.on() ? NET.list().map(p => ({ raw: p.nm, w: p.worth || 0, em: p.em || 0, on: p.online })) : [])
-      .concat(WORLD_PLAYERS.map((b, i) => ({ raw: b, w: botWorth(i), em: botEm(i), bot: 1 })));
-    rows.push({ raw: G.company, w: Math.round(myWorth()), em: co2Avg(), me: true, on: true, alt: olcekBadge(G.olcek) });
+    const rows = (NET.on() ? NET.list().map(p => ({ raw: p.nm, w: p.worth || 0, em: p.em || 0, on: p.online, spec: DALLAR[p.spec] ? p.spec : null })) : [])
+      .concat(WORLD_PLAYERS.map((b, i) => ({ raw: b, w: botWorth(i), em: botEm(i), bot: 1, spec: botSpec(i) })));
+    rows.push({ raw: G.company, w: Math.round(myWorth()), em: co2Avg(), me: true, on: true, alt: olcekBadge(G.olcek), spec: anaDal() });
     rows.sort((a, b) => b.w - a.w);
-    rows.forEach(r => { r.deger = fmt(r.w); if (!r.alt && r.em !== undefined) r.alt = emBadgeHTML(r.em); });
+    rows.forEach(r => { r.deger = fmt(r.w); if (!r.alt && r.em !== undefined) r.alt = emBadgeHTML(r.em); if (r.spec) r.alt = (r.alt ? r.alt + ' · ' : '') + specBadgeHTML(r.spec); });
     const ben = rows.findIndex(r => r.me) + 1;
     cerceve('Şirket değerine göre · ● çevrimiçi · isme dokun: şirket kartı' + (ben > 20 ? ` · senin sıran: <b>#${ben}</b>` : ''),
       `<table class="ledger">${rows.slice(0, 20).map(satir).join('')}${ben > 20 ? satir(rows[ben - 1], ben - 1) : ''}</table>`);
@@ -11613,7 +12338,7 @@ window.openPlayerCard = (nm, geriSekme) => {
   const net = NET.on() ? NET.list().find(x => x.nm === nm) : null;
   const wi = WORLD_PLAYERS.indexOf(nm);
   const c = net
-    ? { nm, w: net.worth || 0, em: net.em || 0, off: net.off, lic: net.lic, pl: net.pl, st: net.st, cash: net.cash,
+    ? { nm, w: net.worth || 0, em: net.em || 0, spec: net.spec || null, off: net.off, lic: net.lic, pl: net.pl, st: net.st, cash: net.cash,
         il: net.il, country: net.country, ally: net.ally, online: net.online, since: net.since, ts: net.ts }
     : wi >= 0 ? botCard(wi) : { nm, unknown: true };
   const row = (l, v) => v === undefined || v === null ? '' : `<tr><td>${l}</td><td><b>${v}</b></td></tr>`;
@@ -11624,7 +12349,7 @@ window.openPlayerCard = (nm, geriSekme) => {
     <p class="sub" style="margin-top:0">
       ${c.online !== undefined ? `<span style="color:${c.online ? 'var(--acc)' : 'var(--dim)'}">●</span> ${c.online ? 'sahada' : 'çevrimdışı'} · ` : ''}
       ${friend ? '<span class="pos">🤝 dost şirket</span>' : c.country ? (COUNTRIES[c.country] ? COUNTRIES[c.country].flag + ' ' : '') + (c.il ? c.il + ', ' : '') + c.country : c.bot ? 'rakip şirket' : 'şirket'}${friend && c.country ? ' · ' + (COUNTRIES[c.country] ? COUNTRIES[c.country].flag + ' ' : '') + (c.il ? c.il + ', ' : '') + c.country : ''}
-      ${c.em !== undefined ? ' · ' + emBadgeHTML(c.em) : ''}</p>
+      ${c.em !== undefined ? ' · ' + emBadgeHTML(c.em) : ''}${c.spec ? ' · ' + specBadgeHTML(c.spec) : ''}</p>
     ${!c.online && c.ts ? `<p class="sub" style="margin-top:2px">🕐 Son çevrimiçi: <b>${sonGorulme(c.ts)}</b></p>` : ''}
     ${c.unknown ? '<p class="sub">Bu şirketin karnesi henüz sunucuya düşmedi.</p>' : `
     <table class="ledger">
@@ -12078,10 +12803,10 @@ function yakitIhtiyaciTL() {
   for (const u of plants()) {
     const T = PLANT_TYPES[u.t];
     if (!T || !T.fuel) continue;
-    const missH = FUEL_HOURS - (u.fuelH || 0);
+    const missH = yakitSaat() - (u.fuelH || 0);
     if (missH < .2) continue;
     const f = fuelOf(u);
-    if (!f) { nakit += Math.round(T.fuel * T.mw * missH); continue; } // nükleer: doğrudan para
+    if (!f) { nakit += Math.round(T.fuel * T.mw * missH * yakitKat(T)); continue; } // nükleer: doğrudan para
     gerek[f] += tonsFor(u, missH);
   }
   for (const f of ['coal', 'gas']) {
@@ -12273,7 +12998,7 @@ function krediUygula(tutar) {
   const ihtiyacTon = { coal: 0, gas: 0 };
   for (const u of plants()) {
     const T2 = PLANT_TYPES[u.t]; if (!T2 || !T2.fuel) continue;
-    const mh = FUEL_HOURS - (u.fuelH || 0);
+    const mh = yakitSaat() - (u.fuelH || 0);
     if (mh < .2) continue;
     const f2 = fuelOf(u);
     if (f2) ihtiyacTon[f2] += tonsFor(u, mh);
@@ -12293,22 +13018,22 @@ function krediUygula(tutar) {
   }
   for (const u of plants()) {
     const T = PLANT_TYPES[u.t]; if (!T || !T.fuel) continue;
-    const missH = FUEL_HOURS - (u.fuelH || 0);
+    const missH = yakitSaat() - (u.fuelH || 0);
     if (missH < .2) continue;
     const f = fuelOf(u);
     if (!f) {
-      const c = Math.round(T.fuel * T.mw * missH);
+      const c = Math.round(T.fuel * T.mw * missH * yakitKat(T));
       if (c > kalan) continue;
       kalan -= c; rapor.yakit += c; rapor.ikmal++;
       G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + c;
-      u.fuelH = FUEL_HOURS;
+      u.fuelH = yakitSaat();
       continue;
     }
     const need = tonsFor(u, missH), have = fuelStock(f);
     if (have < .5) continue;
     const use = Math.min(need, have);
     consumeFuel(f, use);
-    u.fuelH = Math.min(FUEL_HOURS, (u.fuelH || 0) + missH * use / need);
+    u.fuelH = Math.min(yakitSaat(), (u.fuelH || 0) + missH * use / need);
     rapor.ikmal++;
   }
   gider('yakit', rapor.yakit);
@@ -12352,7 +13077,7 @@ window.openBank = (tab) => {
     // gerekmiyor" der — oysa santralleri yakıtsız duruyordur. Sessizce çıkmaza sokmak yerine
     // sebebi söylüyoruz ve ⚡ Acil Nakit yoluna yönlendiriyoruz (o para KASAYA girer, depo kurulur).
     const deposuz = plants().some(u => { const T = PLANT_TYPES[u.t]; const f = fuelOf(u);
-      return T && T.fuel && f && (u.fuelH || 0) < FUEL_HOURS - .2 && bosDepoTonu(f) < 1 && fuelStock(f) < .5; });
+      return T && T.fuel && f && (u.fuelH || 0) < yakitSaat() - .2 && bosDepoTonu(f) < 1 && fuelStock(f) < .5; });
     h += '<p class="sub" style="margin-top:0">Tesislerinin bakımı tam ve yakıtı yerinde — <b>kredi gerekmiyor.</b></p>'
       + (deposuz ? '<p class="sub" style="color:var(--warn)">🛢️ <b>Ama yakıt deposu sorunun var.</b> Yakıtsız duran santralin var ve o yakıtı koyacak <b>boş depon yok</b>. Kurtarma kredisi yalnız <b>depoya sığan</b> yakıtı satın alabilir — bu yüzden bu masraf krediye girmiyor.<br>Yapman gereken: önce bir <b>yakıt deposu kur</b>. Nakdin yetmiyorsa ⚡ <b>Acil Nakit</b> sekmesini kullan; o para kasana girer ve depoyu kurabilirsin.</p>' : '')
       + '<p class="sub">Kurtarma kredisi yalnız <b>gerçekten sıkıştığında</b> açılır: bakım ya da yakıt masrafını karşılayamadığın anda. Parası doğrudan tamire ve ikmale gider, eline geçmez.</p>';
@@ -13785,7 +14510,16 @@ function migrate(s) {
   if (s.founded > Date.now()) s.founded = Date.now();
   if (!(s.foundedBanka > 0)) s.foundedBanka = s.founded || Date.now();
   s.research = s.research || { lvl: {}, active: null };
-  s.research.lvl = Object.assign({ coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0 }, s.research.lvl); // 📜 liccap Tur 11'de geri geldi
+  s.research.lvl = Object.assign({ coalcap: 0, gascap: 0, office: 0, range: 0, liccap: 0, cellcap: 0 }, s.research.lvl); // 📜 liccap Tur 11'de geri geldi · 🧱 cellcap 31. tur
+  // 🧬 GELİŞİM AĞACI göçü — üst düzey döngü (aşağıda) yalnız TAMAMEN eksik alanı doldurur;
+  // alan varsa içindeki YENİ alt alanlar undefined kalır ve NaN üretir (resPts dersi).
+  s.gelisim = Object.assign({ gp: 0, ana: null, nodes: {}, respecUsed: 0, respecAt: 0 }, s.gelisim);
+  if (!s.gelisim.nodes || typeof s.gelisim.nodes !== 'object') s.gelisim.nodes = {};
+  if (!(s.gelisim.gp >= 0)) s.gelisim.gp = 0;
+  s.gpGorev = Object.assign({ gun: '', ids: [], alindi: {}, temel: {}, hedef: {}, hafta: '', hid: '', halindi: false, sayac: {} }, s.gpGorev);
+  if (!Array.isArray(s.gpGorev.ids)) s.gpGorev.ids = [];
+  for (const k2 of ['alindi', 'temel', 'hedef', 'sayac']) if (!s.gpGorev[k2] || typeof s.gpGorev[k2] !== 'object') s.gpGorev[k2] = {};
+  s.prodByCat = (s.prodByCat && typeof s.prodByCat === 'object') ? s.prodByCat : {};
   s.capLic = s.capLic || {};
   s.lines = s.lines || []; s.mail = s.mail || []; s.friends = s.friends || []; s.friendReqs = s.friendReqs || [];
   // ⚡ HAT ÖMRÜ (20. tur): eski kayıtlarda omur/tasinan yok. Sayaç SIFIRDAN başlar — mevcut
@@ -14298,7 +15032,7 @@ function drawBots() {
   BOT_PLANTS.forEach(bp => {
     const T = PLANT_TYPES[bp.t];
     const m = L.marker(bp.ll, { icon: divIcon(`<div class="botm">${T.ico}</div>`, [20, 20]) }).addTo(map);
-    m.bindPopup(`<b>${BOTS[bp.b]}</b> <span style="color:#8b95a8">(rakip)</span><br>📍 ${bp.nm} — ${T.ico} ${T.nm} ×${bp.n}<br><span style="color:#8b95a8;font-size:11px">Bu kareye SEN DE kurabilirsin: kareler kimseye kapanmaz, herkesin kendi ${MAX_PER_CELL} birim hakkı var.</span>`);
+    m.bindPopup(() => `<b>${BOTS[bp.b]}</b> <span style="color:#8b95a8">(rakip)</span><br>📍 ${bp.nm} — ${T.ico} ${T.nm} ×${bp.n}<br><span style="color:#8b95a8;font-size:11px">Bu kareye SEN DE kurabilirsin: kareler kimseye kapanmaz, herkesin kendi ${cellCap()} birim hakkı var.</span>`);
     botLayer.push(m);
   });
 }
@@ -14447,7 +15181,7 @@ function drawCountryTint() {
 // bitiriyor, oyuncu tek tek haritada tesis arıyordu. Tek liste + tek tuş, ama OTOMATİK DEĞİL —
 // "oto-satış yok" ilkesinin kardeşi: kararı yine oyuncu verir, sadece yol kısalır.)
 window.refuelAll = () => {
-  const liste = plants().filter(u => PLANT_TYPES[u.t].fuel && u.buildDone <= Date.now() && (FUEL_HOURS - (u.fuelH || 0)) >= .2);
+  const liste = plants().filter(u => PLANT_TYPES[u.t].fuel && u.buildDone <= Date.now() && (yakitSaat() - (u.fuelH || 0)) >= .2);
   if (!liste.length) { toast('⛽ İkmal gerektiren santral yok', 'warn'); return; }
   const kasa0 = G.cash;
   let n = 0;
@@ -14472,21 +15206,22 @@ function renderFuelPanel() {
     return;
   }
   const acil = sant.filter(u => (u.fuelH || 0) <= 0).length, az = sant.filter(u => (u.fuelH || 0) > 0 && u.fuelH < 3).length;
-  const ikmalGerek = sant.filter(u => (FUEL_HOURS - (u.fuelH || 0)) >= .2).length;
+  const ikmalGerek = sant.filter(u => (yakitSaat() - (u.fuelH || 0)) >= .2).length;
   const satir = u => {
     const T = PLANT_TYPES[u.t], f = fuelOf(u), F = f ? FUEL_TYPES[f] : null;
-    const saat = u.fuelH || 0, pct = Math.max(0, Math.min(100, saat / FUEL_HOURS * 100));
-    const need = f ? tonsFor(u, FUEL_HOURS - saat) : 0, have = f ? fuelStock(f) : 0;
-    const yeter = f ? have >= Math.min(need, .5) : G.cash >= Math.round(T.fuel * T.mw * (FUEL_HOURS - saat));
+    // ağaç sıfırlaması yakıt tavanını düşürebilir → mevcut stok tavanın ÜSTÜNDE kalabilir
+    const saat = Math.min(u.fuelH || 0, yakitSaat()), pct = Math.max(0, Math.min(100, saat / yakitSaat() * 100));
+    const need = f ? tonsFor(u, Math.max(0, yakitSaat() - saat)) : 0, have = f ? fuelStock(f) : 0;
+    const yeter = f ? have >= Math.min(need, .5) : G.cash >= Math.round(T.fuel * T.mw * (yakitSaat() - saat) * yakitKat(T));
     return `<div class="strow">
       <div class="top">
         <span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${u.ll[0]},${u.ll[1]},11,'${(placeName(u.cell)).replace(/'/g, '')}')">${unitName(u)}</span>
         <span class="cap">${placeName(u.cell)}</span></div>
       <div class="bar"><i style="width:${pct}%;background:${saat <= 0 ? 'var(--danger)' : saat < 3 ? 'var(--warn)' : 'linear-gradient(90deg,#3ddc97,#5ab0ff)'}"></i></div>
       <div class="foot">
-        <span class="val">${saat <= 0 ? '<span class="neg">🛑 YAKIT BİTTİ — üretim durdu</span>' : saat.toFixed(1) + ' / ' + FUEL_HOURS + ' sa' + (saat < 3 ? ' <span class="neg">· azalıyor</span>' : '')}
+        <span class="val">${saat <= 0 ? '<span class="neg">🛑 YAKIT BİTTİ — üretim durdu</span>' : saat.toFixed(1) + ' / ' + yakitSaat() + ' sa' + (saat < 3 ? ' <span class="neg">· azalıyor</span>' : '')}
           ${F ? `<br><span class="sub">${F.ico} gerekli ${fmtN(Math.ceil(need))} ${F.unit} · stok ${fmtN(have)}</span>` : '<br><span class="sub">⚛️ yakıt çubuğu — doğrudan satın alınır</span>'}</span>
-        <button onclick="refuelUnit(${u.id});openNav('fuel')" ${(FUEL_HOURS - saat) < .2 || !yeter ? 'disabled' : ''}>${(FUEL_HOURS - saat) < .2 ? 'DOLU' : 'İKMAL'}</button>
+        <button onclick="refuelUnit(${u.id});openNav('fuel')" ${(yakitSaat() - saat) < .2 || !yeter ? 'disabled' : ''}>${(yakitSaat() - saat) < .2 ? 'DOLU' : 'İKMAL'}</button>
       </div></div>`;
   };
   const depSatir = u => {
@@ -14957,13 +15692,13 @@ function openCellSheet(c, ll, mode) {
       <tr><td>Bölge talebi (gerçek nüfusa göre)</td><td>${fmtN(cellDemand(c))} MWh/gün ${cellDemand(c) < 100 ? '<span class="neg">— ıssız bölge, satış zor!</span>' : ''}</td></tr>
       ${licensed ? `<tr><td>Bugün kalan talep</td><td class="${demandLeft(c) < 10 ? 'neg' : ''}">${fmtN(demandLeft(c))} MWh</td></tr>` : ''}
       <tr><td>🗺️ Zemin</td><td>${isLand(ll || cellCenter(c)) ? '🏞️ <b>Kara</b> <span class="sub">— her tür tesis kurulabilir</span>' : '🌊 <b>Deniz</b> <span class="neg">— yalnız offshore rüzgar ve yüzer güneş</span>'}</td></tr>
-      <tr><td>Maks birim <span style="color:var(--dim)">(oyuncu başına — kimse kimseyi engelleyemez)</span></td><td>${mine.length} / ${MAX_PER_CELL}</td></tr>
+      <tr><td>Maks birim <span style="color:var(--dim)">(oyuncu başına — kimse kimseyi engelleyemez)</span></td><td>${mine.length} / ${cellCap()}${cellCap() < MAX_PER_CELL + CELLCAP_MAX ? ' <span class="sub">🧱 araştırmayla ' + (MAX_PER_CELL + CELLCAP_MAX) + '</span>' : ''}</td></tr>
       <tr><td>Sahip</td><td>${licensed ? '<b class="pos">SEN 📜</b>' : 'Devlet'}</td></tr>
       ${botsHere.length ? `<tr><td>Buradaki rakipler</td><td>${botsHere.map(b => BOTS[b.b]).join(', ')}</td></tr>` : ''}
     </table>`;
   } else {
     $('cs_quality').innerHTML = '';
-    $('cs_occupancy').innerHTML = licensed ? `<span class="sub">📍 Bu karede ${mine.length}/${MAX_PER_CELL} birimin var · saha raporu ve ihale ℹ️ Bilgi ekranında</span>` : '';
+    $('cs_occupancy').innerHTML = licensed ? `<span class="sub">📍 Bu karede ${mine.length}/${cellCap()} birimin var · saha raporu ve ihale ℹ️ Bilgi ekranında</span>` : '';
   }
   let html = '';
   if (infoOnly) {
@@ -15184,7 +15919,7 @@ function openUnitSheet(id) {
     $('us_title').innerHTML = `<b>${T.cap} MWh</b> <span style="font-weight:600">${unitName(u)}</span> <span style="cursor:pointer;font-size:13px;opacity:.8" onclick="renameUnit(${u.id})" title="Yeniden isimlendir">✏️</span>`;
     $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` + adFinishBtnHTML(u) : `
       <div class="detcols">
-        <div><div class="l">⚡ ${isLinked(u) ? 'Grup dolum hızı' : 'Dolum hızı'}${T.loss ? ' <span class="sub">(⚡kayıp %' + Math.round(T.loss * 100) + ')</span>' : ''}</div><div class="v">${(inflow * (1 - (T.loss || 0))).toFixed(1)} <span style="font-size:11px">MW</span>${speedMult() > 1 ? ' 🚀' : ''}<span style="font-size:10.5px;font-weight:600">${dolumTxt((isLinked(u) ? groupCap(u) : T.cap) - (isLinked(u) ? groupStored(u) : u.stored), inflow)}</span></div></div>
+        <div><div class="l">⚡ ${isLinked(u) ? 'Grup dolum hızı' : 'Dolum hızı'}${T.loss ? ' <span class="sub">(⚡kayıp %' + Math.round(storeLoss(u) * 100) + ')</span>' : ''}</div><div class="v">${(inflow * (1 - storeLoss(u))).toFixed(1)} <span style="font-size:11px">MW</span>${speedMult() > 1 ? ' 🚀' : ''}<span style="font-size:10.5px;font-weight:600">${dolumTxt((isLinked(u) ? groupCap(u) : T.cap) - (isLinked(u) ? groupStored(u) : u.stored), inflow)}</span></div></div>
         ${isLinked(u)
           ? `<div><div class="l">🔗 Ortak depo (%${Math.round(100 * groupStored(u) / (groupCap(u) || 1))})</div><div class="v">${fmtE(groupStored(u))} <span style="font-size:11px">/ ${groupCap(u)} MWh</span></div></div>`
           : `<div><div class="l">🔋 Doluluk (%${Math.round(100 * u.stored / T.cap)})</div><div class="v">${fmtE(u.stored)} <span style="font-size:11px">/ ${T.cap} MWh</span></div></div>`}
@@ -15367,30 +16102,44 @@ function openUnitSheet(id) {
         <tr><td>Anlık üretim</td><td>${out.toFixed(1)} MW</td></tr>
         <tr><td>Kapasite</td><td>${T.mw} MW</td></tr>
         <tr><td>Ömür üretimi</td><td>${fmtN(u.lifeProd || 0)} MWh</td></tr>
-        <tr><td>Emisyon</td><td>${T.em || 0} g/kWh</td></tr>
+        <tr><td>Emisyon</td><td>${unitEm(T)} g/kWh${unitEm(T) !== (T.em || 0) ? ` <span class="pos">🧬 ${T.em} → ${unitEm(T)}</span>` : ''}</td></tr>
         <tr><td>Yıpranma</td><td class="${u.cond < 50 ? 'neg' : ''}">%${Math.round(100 - u.cond)}</td></tr>
         <tr><td>Depo bağlantısı</td><td>${sts.length ? '🔗 ' + unitName(sts[0]) : '<span class="neg">YOK — bağlantı kur!</span>'}</td></tr>
-        ${T.fuel ? `<tr><td>⛽ Yakıt stoku</td><td class="${(u.fuelH || 0) <= 0 ? 'neg' : u.fuelH < 3 ? 'neg' : ''}">${(u.fuelH || 0) <= 0 ? 'BİTTİ — üretim durdu!' : (u.fuelH).toFixed(1) + ' sa / ' + FUEL_HOURS + ' sa'}</td></tr>` : ''}
+        ${T.fuel ? `<tr><td>⛽ Yakıt stoku</td><td class="${(u.fuelH || 0) <= 0 ? 'neg' : u.fuelH < 3 ? 'neg' : ''}">${(u.fuelH || 0) <= 0 ? 'BİTTİ — üretim durdu!' : (u.fuelH).toFixed(1) + ' sa / ' + yakitSaat() + ' sa'}</td></tr>` : ''}
       </table>
       ${(() => { // 📊 VERİM DÖKÜMÜ (patron: "neden az üretiyor bilgi ekranında yazmıyor") —
         // canlı çarpanlar + saha çarpanları AYNI hesaptan; çarpımların sonucu = anlık üretim.
         const wx2 = liveWx(u.cell), ev2 = todayEvent(), q2 = cellQuality(u.cell), sv2 = SV(u.cell);
         const rows = [];
         if (T.kind === 'sun') {
+          // plantOutput ile BİREBİR aynı zincir: eğri × bulut × taban, sonra gece tabanı ZEMİN.
+          // Zemin kazandığında çarpım satırları yanıltıcı olur → tablo tek satıra iner.
+          let gunduzDeger = 0;
+          const satirlar = [];
           if (wx2) {
             const h = (nowMin() / 60) % 24;
-            const bell = (h >= 6 && h <= 19.5) ? Math.max(.62, Math.pow(Math.sin(Math.PI * (h - 6) / 13.5), .9)) : 0;
-            rows.push([wx2.day ? '☀️ Gündüz eğrisi (sabah/akşam düşer)' : '🌙 Gece — panel üretmez', '×' + (wx2.day ? bell.toFixed(2) : '0.00')]);
+            const bell = gunesEgrisi(h);
+            gunduzDeger = (wx2.day || (gnd('s3') && bell > 0)) ? bell : 0;
+            satirlar.push(['☀️ Gündüz eğrisi (sabah/akşam düşer)' + (gnd('s3') ? ' <span class="pos">🌅 alacakaranlık penceresi</span>' : ''), '×' + gunduzDeger.toFixed(2)]);
             // 🐞 [BOT-FIX ca5ae6b] plantOutput() bulutu NEWBIE_CLOUD*newbieAid() ile azaltıyor ve
             // marka bulut toleransına (T.cloudTol) BÖLÜYOR — tablo da aynı hesabı kullanmalı,
             // yoksa "çarpımların sonucu = anlık üretim" tutmaz (Günara cloudTol 1.2'de fark ediliyordu)
-            if (wx2.day) { const effCloud2 = (wx2.cloud || 0) * (1 - NEWBIE_CLOUD * newbieAid()) / (T.cloudTol || 1); rows.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0) + (newbieAid() > .01 ? ' <span class="pos">🌱 takviyeli</span>' : '') + ((T.cloudTol || 1) > 1 ? ' <span class="pos">bulut toleransı ×' + T.cloudTol.toFixed(2) + '</span>' : ''), '×' + Math.max(.05, 1 - effCloud2 / 100).toFixed(2)]); }
-          } else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + sunFactor(q2).toFixed(2)]); // 🐞 bot bulgusu: bu satır eksikti, tablo üretimi tutmuyordu
+            if (gunduzDeger > 0) { const effCloud2 = (wx2.cloud || 0) * (1 - NEWBIE_CLOUD * newbieAid()) * bulutKat() / (T.cloudTol || 1); const ck2 = Math.max(.05, 1 - effCloud2 / 100); gunduzDeger *= ck2; satirlar.push(['☁️ Bulut %' + Math.round(wx2.cloud || 0) + (newbieAid() > .01 ? ' <span class="pos">🌱 takviyeli</span>' : '') + ((T.cloudTol || 1) > 1 ? ' <span class="pos">bulut toleransı ×' + T.cloudTol.toFixed(2) + '</span>' : '') + (gnd('s2') ? ' <span class="pos">🧬 bulut telafisi</span>' : ''), '×' + ck2.toFixed(2)]); }
+          } else {
+            gunduzDeger = sunFactor(q2);
+            satirlar.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + gunduzDeger.toFixed(2)]); // 🐞 bot bulgusu: bu satır eksikti, tablo üretimi tutmuyordu
+          }
+          gunduzDeger *= SOLAR_TABAN;
+          satirlar.push(['☀️ Panel teknoloji tabanı <span class="sub">(güneş denge çarpanı)</span>', '×' + SOLAR_TABAN.toFixed(2)]);
+          if (geceTabani() > gunduzDeger) rows.push([gnd('s5') ? '🌙 Gece üretimi <span class="pos">(🧬 Gece Üretimi I)</span>' : '🌙 Gece — panel üretmez', '×' + geceTabani().toFixed(2)]);
+          else rows.push(...satirlar);
         } else if (T.kind === 'wind') {
           // 🐞 [BOT-FIX ca5ae6b] plantOutput() rüzgara NEWBIE_WIND*newbieAid() ekliyor — tablo ham wx2.w ile eğri hesaplayınca takviye görünmüyordu
-          if (wx2) { const boostedW2 = wx2.w + NEWBIE_WIND * newbieAid(); rows.push(['🌬️ Canlı rüzgar ' + wx2.w.toFixed(1) + ' m/s' + (newbieAid() > .01 ? ' <span class="pos">+' + (NEWBIE_WIND * newbieAid()).toFixed(1) + ' 🌱 takviye</span>' : '') + ' → türbin eğrisi', '×' + (windCurve(boostedW2, T) ?? 0).toFixed(2)]); }
+          if (wx2) { const boostedW2 = wx2.w + NEWBIE_WIND * newbieAid() + ruzgarEk(); rows.push(['🌬️ Canlı rüzgar ' + wx2.w.toFixed(1) + ' m/s' + (newbieAid() > .01 ? ' <span class="pos">+' + (NEWBIE_WIND * newbieAid()).toFixed(1) + ' 🌱 takviye</span>' : '') + (ruzgarEk() > 0 ? ' <span class="pos">+' + ruzgarEk().toFixed(1) + ' 🧬 ağaç</span>' : '') + ' → türbin eğrisi', '×' + (windCurve(boostedW2, T) ?? 0).toFixed(2)]); }
           else rows.push(['🛰️ Canlı hava verisi yok — simülasyon çarpanı', '×' + (windFactor(q2) * .55).toFixed(2)]); // 🐞 bot bulgusu: eksikti
-          rows.push(['⚙️ Bu modelin eğrisi', T.cutIn + ' m/s altı dönmez · ' + T.nom + ' m/s üstü tam güç · ' + T.storm + ' m/s fırtına kapatması']);
+          // eşikler windCurve ile AYNI kapıdan (w2 cut-in −1, w3 fırtına +4) — ekran eskisini göstermesin
+          const ciEf = Math.max(1, (T.cutIn || 3) - (gnd('w2') ? 1 : 0)), stEf = (T.storm || 25) + (gnd('w3') ? 4 : 0);
+          rows.push(['⚙️ Bu modelin eğrisi', ciEf + ' m/s altı dönmez' + (ciEf !== T.cutIn ? ' <span class="pos">🧬</span>' : '') + ' · ' + T.nom + ' m/s üstü tam güç · ' + stEf + ' m/s fırtına kapatması' + (stEf !== T.storm ? ' <span class="pos">🧬</span>' : '')]);
         } else if (T.kind === 'hydro') {
           rows.push(['💧 Havza puanı' + (sv2 ? ' (rakım + iklim)' : ''), '×' + hydroQGeo(u.cell, q2.hydro).toFixed(2) + (sv2 ? '' : ' <span class="sub">keşif bekleniyor — tahmini</span>')]);
           if (sv2 && sv2.elev != null) rows.push(['⛰️ Rakım ' + fmtN(sv2.elev) + ' m — düşü yüksekliği', sv2.elev >= 400 ? '<span class="pos">dağlık — güçlü düşü</span>' : sv2.elev >= 100 ? 'orta' : '<span class="neg">alçak — zayıf düşü</span>']);
@@ -15413,10 +16162,10 @@ function openUnitSheet(id) {
         return `<div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">📊 VERİM DÖKÜMÜ <span class="sub">çarpanların sonucu = anlık üretim</span></div>
           <table class="ledger">${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>`;
       })()}
-      ${T.fuel && (u.fuelH || 0) < FUEL_HOURS - .2 ? (() => {
+      ${T.fuel && (u.fuelH || 0) < yakitSaat() - .2 ? (() => {
         const f = fuelOf(u);
-        if (!f) { const c2 = Math.round(T.fuel * T.mw * (FUEL_HOURS - (u.fuelH || 0))); return `<button class="bigsell" onclick="refuelUnit(${u.id})" ${G.cash < c2 ? 'disabled' : ''}>⚛️ Yakıt Çubuğu Değişimi — ${fmt(c2)} (${FUEL_HOURS} saatlik)</button>`; }
-        const F = FUEL_TYPES[f], need = tonsFor(u, FUEL_HOURS - (u.fuelH || 0)), have = fuelStock(f);
+        if (!f) { const c2 = Math.round(T.fuel * T.mw * (yakitSaat() - (u.fuelH || 0)) * yakitKat(T)); return `<button class="bigsell" onclick="refuelUnit(${u.id})" ${G.cash < c2 ? 'disabled' : ''}>⚛️ Yakıt Çubuğu Değişimi — ${fmt(c2)} (${yakitSaat()} saatlik)</button>`; }
+        const F = FUEL_TYPES[f], need = tonsFor(u, yakitSaat() - (u.fuelH || 0)), have = fuelStock(f);
         return `<button class="bigsell" onclick="refuelUnit(${u.id})" ${have < .5 ? 'disabled' : ''}>⛽ ${F.nm} İkmali — ${fmtN(Math.min(need, have))} / ${fmtN(need)} ton (şirket stoğu: ${fmtN(have)})</button>
         ${have < .5 ? `<p style="color:var(--warn);font-size:12px">${F.ico} Stok yok — 🏗️ İnşa &gt; <b>Yakıt</b> sekmesinden <b>${f === 'coal' ? 'Kömür Deposu' : 'LNG Tankı'}</b> kur, depoya dokunup yakıt al.</p>` : ''}`;
       })() : ''}
@@ -15477,6 +16226,7 @@ window.repairUnit = id => {
   if (G.cash < c) return;
   G.cash -= c; gider('bakim', c); u.cond = 100;
   G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + c;
+  gpSay('onar'); // 🎯 gelişim görevi sayacı
   toast('🔧 Onarıldı — ' + fmt(c), '');
   save(); refreshUnitMarkers(); openUnitSheet(id);
 };
@@ -15807,7 +16557,8 @@ function openCompanySheet() {
   const lifeProd = plants().reduce((s, u) => s + (u.lifeProd || 0), 0);
   const bySrc = {};
   plants().forEach(u => { const T = PLANT_TYPES[u.t]; bySrc[T.cat] = (bySrc[T.cat] || 0) + T.mw; });
-  $('comp_title').innerHTML = '🏢 ' + G.company + ' ' + emBadgeHTML(co2Avg(), true); // rozet şirket sayfasında da (patron)
+  $('comp_title').innerHTML = '🏢 ' + G.company + ' ' + emBadgeHTML(co2Avg(), true)
+    + (anaDal() ? ' ' + specBadgeHTML(anaDal(), true) : ''); // 🌫️ emisyon + 🧬 uzmanlık rozeti (patron)
   const R = G.research;
   const resRow = key => {
     const D = RESEARCH[key], lvl = R.lvl[key] || 0;
@@ -15820,8 +16571,8 @@ function openCompanySheet() {
         <div style="font-size:12.5px"><b>${D.ico} ${D.nm}</b> — Sv${lvl} → Sv${lvl + 1} <span class="sub">⏳ ${fmtHrs(left / 36e5)} kaldı</span></div>
         <div class="rsbar"><i style="width:${Math.min(100, 100 * (1 - left / total))}%"></i></div></div>`;
     }
-    const pool = lvl < 10 ? 'daily' : 'weekly';
-    const poolTxt = lvl < 10 ? '🌞 1 günlük puan' : '📅 1 haftalık puan';
+    const pool = resPool(key, lvl);
+    const poolTxt = pool === 'daily' ? '🌞 1 günlük puan' : '📅 1 haftalık puan';
     const blocked = R.active || (G.resPts[pool] || 0) < 1;
     return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px dashed var(--line)">
       <div style="flex:1;min-width:0"><div style="font-size:12.5px"><b>${D.ico} ${D.nm}</b> — Sv${lvl}/${D.max}</div>
@@ -15849,8 +16600,8 @@ function openCompanySheet() {
       <span class="sub">Bir yanlışlık olduğunu düşünüyorsan 💡 Öneri/İstek'ten ulaş; haklı bulunursan her şey aynen iade edilir.</span>
     </div>` : `
     <div style="font-size:12px;margin:2px 0 2px">🧪 <b>ARAŞTIRMA</b> <span class="sub">tek seferde 1 araştırma yürür</span></div>
-    <p class="sub" style="margin:2px 0 4px">Puanların: <b>🌞 ${G.resPts.daily} günlük</b> · <b>📅 ${G.resPts.weekly} haftalık</b><br>Sv1-10: 1 günlük puan (günün İLK satışında +1) · Sv11+: 1 haftalık puan (📅 haftalık görev ödülüyle +1)</p>
-    ${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}${resRow('liccap')}`}
+    <p class="sub" style="margin:2px 0 4px">Puanların: <b>🌞 ${G.resPts.daily} günlük</b> · <b>📅 ${G.resPts.weekly} haftalık</b><br>Sv1-10: 1 günlük puan (günün İLK satışında +1) · Sv11+: 1 haftalık puan (📅 haftalık görev ödülüyle +1) · 🧱 Kare Yerleşim Planı: Sv1-3 günlük, Sv4-5 haftalık</p>
+    ${resRow('cellcap')}${resRow('coalcap')}${resRow('gascap')}${resRow('office')}${resRow('range')}${resRow('liccap')}`}
     <div style="height:1px;background:var(--line);margin:12px 0 2px"></div>
     <div style="font-size:12px;margin:8px 0 2px">💰 <b>MALİ DURUM</b></div>
     <table class="ledger">
@@ -16032,7 +16783,8 @@ window.startResearch = key => {
   const lvl = R.lvl[key] || 0;
   if (lvl >= D.max) return;
   // PUAN BEDELİ (patron): Sv1-10 → 1 günlük görev puanı; Sv11+ → 1 haftalık araştırma puanı
-  const pool = lvl < 10 ? 'daily' : 'weekly';
+  // (🧱 cellcap istisnası resPool içinde: son 2 kademe haftalık)
+  const pool = resPool(key, lvl);
   if ((G.resPts[pool] || 0) < 1) {
     toast(pool === 'daily' ? '🧪 Günlük görev puanın yok — günün İLK satışını yapınca +1 kazanırsın' : '🧪 Haftalık araştırma puanın yok — 📅 haftalık görevi tamamlayınca +1 kazanırsın', 'warn');
     return;
@@ -16081,6 +16833,12 @@ function renderMenu() {
   $('goalprog').textContent = fmtN(Math.min(G.weekSold, t)) + ' / ' + fmtN(t) + ' MWh';
   $('goalreward').textContent = '🎁 ' + fmt(t * 15000);
   $('claimbtn').style.display = (!G.weekClaimed && G.weekSold >= t) ? 'block' : 'none';
+  // 🧬 GELİŞİM ÖZETİ — tam sayfa sağ çekmecede; burada yalnız durum + giriş bağlantısı
+  const gpTamam = ((G.gpGorev && G.gpGorev.ids) || []).filter(id => gpBitti(id)).length;
+  $('gprow').innerHTML = `
+    <div style="font-size:12px;margin:12px 0 2px">🧬 <b>${CEV('GELİŞİM AĞACI')}</b> <span class="sub">${CEV('Ar-Ge Enstitüsü — 2030 Ufku')}</span></div>
+    <div class="qline" style="font-size:12px"><span>🧬 <b>${gpBakiye()}</b> ${CEV('Gelişim Puanı')}</span><span>🎯 ${gpTamam}/${((G.gpGorev && G.gpGorev.ids) || []).length} ${CEV('günlük görev')}</span><span>${anaDal() ? specBadgeHTML(anaDal()) : '<span class="sub">' + CEV('ana dal yok') + '</span>'}</span></div>
+    <button class="bigsell" style="margin-top:6px" onclick="openGelisim()">🧬 ${CEV('Gelişim Ağacını Aç')}</button>`;
   const w = eventWindow();
   $('mgwhen').textContent = w.open ? '🟢 AÇIK' : '🔒 ' + w.why;
   $('mgdesc').innerHTML = w.open ? `<b>${w.why}:</b> 30 sn refleks vardiyası — bantta kal, para kazan. Hak: <b>${mgAvail()}/${MG_MAX}</b>` : `Mini oyunlar ${w.why} açılır — kısa, tatlı, ekstra kazanç.`;
@@ -16089,12 +16847,12 @@ function renderMenu() {
   // liderlik: emisyon rozeti herkeste görünür (patron: "ittifaklar üyeleri ona göre seçer")
   // sunucu bağlıysa GERÇEK oyuncular listelenir
   // gerçek oyuncular + bot şirketler (botlar YAVAŞ gelişir — gerçek oyuncu hep önde olabilir)
-  const rows = (NET.on() ? NET.list().map(p => ({ nm: p.nm + (p.online ? ' ●' : ''), raw: p.nm, w: p.worth || 0, em: p.em || 0 })) : [])
-    .concat(BOTS.map((b, i) => ({ nm: '🤖 ' + b, raw: b, w: botWorth(i), em: botEm(i) })));
-  rows.push({ nm: G.company + ' (SEN)', raw: G.company, w: myWorth(), em: co2Avg(), me: true });
+  const rows = (NET.on() ? NET.list().map(p => ({ nm: p.nm + (p.online ? ' ●' : ''), raw: p.nm, w: p.worth || 0, em: p.em || 0, spec: DALLAR[p.spec] ? p.spec : null })) : [])
+    .concat(BOTS.map((b, i) => ({ nm: '🤖 ' + b, raw: b, w: botWorth(i), em: botEm(i), spec: botSpec(i) })));
+  rows.push({ nm: G.company + ' (SEN)', raw: G.company, w: myWorth(), em: co2Avg(), spec: anaDal(), me: true });
   rows.sort((a, b) => b.w - a.w);
   // Sıraya dokununca o şirketin kamuya açık karnesi açılır (patron isteği)
-  $('lb').innerHTML = rows.slice(0, 9).map((r, i) => `<div class="r ${r.me ? 'me' : ''}" style="cursor:pointer" onclick="openPlayerCard('${(r.raw || '').replace(/'/g, '')}')"><span>#${i + 1} ${r.nm} ${emBadgeHTML(r.em)}</span><span>${fmt(r.w)}</span></div>`).join('')
+  $('lb').innerHTML = rows.slice(0, 9).map((r, i) => `<div class="r ${r.me ? 'me' : ''}" style="cursor:pointer" onclick="openPlayerCard('${(r.raw || '').replace(/'/g, '')}')"><span>#${i + 1} ${r.nm} ${emBadgeHTML(r.em)}${r.spec ? ' ' + specBadgeHTML(r.spec) : ''}</span><span>${fmt(r.w)}</span></div>`).join('')
     + `<div class="r" style="cursor:pointer;justify-content:center" onclick="openLeaderboard()"><span>🏆 <b>${CEV('Tam sıralamayı gör')}</b></span></div>`; // patron: "en iyi şirketleri görelim"
   // VIP Reklamsız satırı ($10B kazanç sonrası menüde kalıcı; aylık her ay yenilenebilir)
   if (G.totalEarned >= 1e10 || adFreeActive()) {
@@ -16626,6 +17384,7 @@ document.querySelectorAll('#drawer button[data-act]').forEach(b => b.addEventLis
   else if (act === 'maint') { hideSheets(); openMaintSheet(); }
   else if (act === 'company') { hideSheets(); openCompanySheet(); }
   else if (act === 'menu') openTasks();
+  else if (act === 'gelisim') openGelisim(); // 🧬 Gelişim Ağacı (görevler + 5 dal)
   else if (act === 'rank') openLeaderboard(); // patron: Merkez kalktı, 🏆 Sıralama geldi
   else if (act === 'friends') openFriendsSheet();
   else if (act === 'ayarlar') ayarlarAc(); // patron 28 Ağu: "Sıralamanın altına, Yardım'ın üstüne"
@@ -16801,6 +17560,7 @@ function frameBody(ts) {
         if ($('companysheet').classList.contains('show')) openCompanySheet();
       }
       checkWeek(); // ⚠️ HATA AVI: yalnız menü açılınca çağrılıyordu — hafta dönümünden sonraki satışlar siliniyordu
+      gpTick();    // 🧬 gelişim görevleri: gün/hafta dönümü + tamamlananların OTOMATİK ödülü
       allyTick(); allyCallTick(); consortiumTick(); aucTick(); studyTick(); emisTick(); // 🤝 ihale · 💰 bağış · 🌍 konsorsiyum · 🔨 müzayede · 🔎 bölge araştırması
       if (G.ally) allyElectionTick(); // 🗳️ başkanlık seçimi süresi doldu mu
       // ⏫ depo kapasite inşaatı bitti mi?
