@@ -666,7 +666,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-31 17:23) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-08-31 19:23) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -830,7 +830,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-31 17:23)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-08-31 19:23)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -4636,6 +4636,29 @@ async function kiralarCek(zorla) {
       KIRA.map = r; try { refreshLicenseTiles(); } catch (e) { }
     }
   } catch (e) { }
+}
+// 🏷️ Şirket adı değişinde sicildeki KENDİ kayıtlarımın nm'sini tazele — yoksa rakiplerin
+// haritasında ve karo/satış ekranlarında ESKİ ad kalır. Kural, kendi uid'imin kaydını
+// (süresi dolmamış olsa bile) yeniden yazmama izin verir. Başarısız yazım sessizce geçilir;
+// 30 sn'lik kiralarCek turunda kendiliğinden yeniden denenir (kalıcı kuyruk gerekmez).
+async function kiraAdGuncelle() {
+  if (kiraAdGuncelle._busy || !NET.on() || NET.kilit || !G || !G.company) return;
+  const ad = nmTemizle(G.company);
+  if (!ad) return;
+  const hedefler = Object.entries(KIRA.map || {}).filter(([, k]) =>
+    k && k.uid === NET.id && k.until > Date.now() && k.nm !== ad);
+  if (!hedefler.length) return;
+  kiraAdGuncelle._busy = true;
+  try {
+    for (const [cell, k] of hedefler) {
+      const kayit = { uid: NET.id, nm: ad, until: k.until, ts: Date.now() };
+      const r = await NET.put('kiralar/' + cell, kayit);
+      if (r == null) return; // kilit sessiz yutması: sonraki turda yeniden dene
+      KIRA.map[cell] = kayit;
+    }
+    try { refreshLicenseTiles(); } catch (e) { }
+  } catch (e) { /* ağ/kural hatası: sonraki turda yeniden denenir */ }
+  finally { kiraAdGuncelle._busy = false; }
 }
 const gercekKira = cell => { const k = KIRA.map[cell]; return k && k.until > Date.now() ? k : null; };
 const gercekKiraci = cell => { const k = gercekKira(cell); return k && k.uid !== NET.id ? k : null; }; // benden BAŞKA gerçek oyuncu
@@ -10678,6 +10701,7 @@ const NET = {
       const [pl, un] = await Promise.all([this.get('players'), this.get('units')]);
       this.players = pl || {}; this.units = un || {};
       try { await kiralarCek(); } catch (e) { } // 🌐 küresel kira sicili (30 sn önbellekli)
+      try { await kiraAdGuncelle(); } catch (e) { }   // şirket adı değiştiyse sicildeki kendi kayıtlarımı tazele
       try { await kiraSicilGoc(); } catch (e) { }     // sicil öncesi ödenmiş yerel kiraların tek seferlik göçü
       try { await kiraBekleyenIsle(); } catch (e) { } // bekleyen sicil talepleri (kalıcı kuyruk — iade güvencesi)
       try { await vergiKuyrukDene(); } catch (e) { }  // gönderilemeyen karo vergileri (idempotent yeniden deneme)
@@ -14630,7 +14654,10 @@ function refreshLicenseTiles() {
 let kiraTagLayer = {};
 const htmlKacir = v => String(v).replace(/[<>&"]/g, s => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[s]));
 function kiraTagAdi(c) {
-  if (myLease(c)) { const g = gercekKira(c); return (g && g.nm) || G.company || 'SEN'; }
+  // Ünvan değişikliği (patron 31 Ağu): kendi karomda CANLI adı göster — sicildeki nm
+  // kiralama anının kopyasıdır, ad değişinceye kadar bayat kalır (rakiplerin gördüğünü
+  // kiraAdGuncelle tazeler).
+  if (myLease(c)) return nmTemizle(G.company) || 'SEN';
   return leaseOwnerOf(c) || null;
 }
 function refreshKiraTags(kareler) {
@@ -16678,6 +16705,8 @@ window.sirketAdiKaydet = async () => {
   G.renameSay = (G.renameSay || 0) + 1;
   save();
   if (typeof renderHUD === 'function') renderHUD(); // #coname anında tazelensin (NET 12 sn'de yayar)
+  try { refreshLicenseTiles(); } catch (e) { }      // 🏷️ karo filigranı (kendi karolarım) anında yeni ada dönsün
+  try { kiraAdGuncelle(); } catch (e) { }           // sicildeki kayıtlarım da tazelensin (rakipler yeni adı görsün)
   closeModal();
   toast(CEV('🏢 Şirket adın artık: {0}', v) + (ilk ? '' : ' · 💠 -' + SIRKET_AD_IP), '', null, 0, true);
   beep(700, .1);
