@@ -667,7 +667,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-02 21:34) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-02 21:44) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -838,7 +838,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-02 21:34)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-02 21:44)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -3882,67 +3882,288 @@ function nakitKademe() {
 //    Tabloyu lineer taramak mobilde tiki öldürürdü → 1°'lik kova indeksi + kare önbelleği.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 const GERCEK_SAHALAR = [
-  // ── 🌬️ RÜZGAR — TÜRKİYE (RES kurulu gücünün gerçekte yoğunlaştığı koridorlar) ──
-  [38.32, 26.42, 'w', 3, .38], // Çeşme–Karaburun (İzmir) — Türkiye'nin en güçlü rüzgar sahası
-  [39.83, 26.05, 'w', 3, .30], // Bozcaada — kesintisiz kuzey rüzgarı
-  [40.32, 27.92, 'w', 3, .38], // Bandırma–Balıkesir koridoru
-  [39.19, 27.61, 'w', 2, .35], // Soma–Kırkağaç
-  [40.38, 26.40, 'w', 2, .32], // Gelibolu–Çanakkale Boğazı
-  [36.15, 35.95, 'w', 2, .30], // Samandağ–Belen (Hatay)
-  [38.60, 27.05, 'w', 2, .28], // Aliağa–Foça
-  [37.05, 27.35, 'w', 1, .28], // Bodrum–Datça yarımadası
-  // ── 🌬️ RÜZGAR — AVRUPA ──
-  [55.50, 7.80, 'w', 3, .60], // Horns Rev (Kuzey Denizi, Danimarka)
-  [54.70, 2.20, 'w', 3, .75], // Dogger Bank (dünyanın en büyük offshore sahası)
-  [53.90, 1.80, 'w', 3, .55], // Hornsea (İngiltere)
-  [51.70, 3.10, 'w', 2, .45], // Borssele (Hollanda)
-  [54.05, 6.60, 'w', 2, .50], // Alman Kuzey Denizi kümesi
-  [65.50, 20.50, 'w', 2, .70], // Markbygden (İsveç) — Avrupa'nın en büyük kara sahası
-  [43.30, -8.20, 'w', 2, .45], // Galiçya (İspanya)
-  // ── 🌬️ RÜZGAR — AMERİKA ──
-  [32.47, -100.40, 'w', 3, .80], // Teksas Panhandle / Sweetwater
-  [42.50, -93.60, 'w', 2, .75], // Iowa rüzgar kuşağı
-  [36.40, -99.40, 'w', 2, .70], // Oklahoma
-  [41.80, -106.30, 'w', 2, .60], // Wyoming — Rocky Mountain koridoru
-  [37.73, -121.65, 'w', 2, .30], // Altamont Pass (Kaliforniya)
-  [-52.90, -70.90, 'w', 3, .70], // Macellan Boğazı (Şili) — dünyanın en rüzgarlı kuşağı
-  [-45.87, -67.50, 'w', 3, .70], // Patagonya / Comodoro Rivadavia (Arjantin)
-  [-5.20, -35.50, 'w', 2, .55], // Rio Grande do Norte (Brezilya)
-  // ── 🌬️ RÜZGAR — ASYA · AFRİKA · OKYANUSYA ──
-  [40.10, 97.50, 'w', 3, .80], // Jiuquan / Gansu (Çin) — "rüzgar üssü"
-  [41.00, 111.00, 'w', 2, .80], // İç Moğolistan
-  [8.26, 77.55, 'w', 3, .35], // Muppandal (Tamil Nadu, Hindistan)
-  [26.90, 70.90, 'w', 2, .55], // Jaisalmer (Rajasthan)
-  [29.10, 32.60, 'w', 3, .45], // Süveyş Körfezi / Zafarana (Mısır)
-  [27.94, -12.93, 'w', 3, .45], // Tarfaya (Fas)
-  [-40.70, 144.70, 'w', 2, .40], // Woolnorth (Tazmanya)
-  [-41.30, 174.80, 'w', 2, .35], // Wellington (Yeni Zelanda)
-  // ── ☀️ GÜNEŞ — TÜRKİYE ──
-  [37.72, 33.55, 's', 3, .40], // Karapınar (Konya) — Türkiye'nin YEKA güneş üssü
-  [37.16, 38.80, 's', 3, .40], // Şanlıurfa ovası
-  [37.85, 34.55, 's', 2, .32], // Niğde–Bor
-  [37.30, 36.10, 's', 2, .30], // Adana–Osmaniye
-  [37.87, 32.49, 's', 2, .35], // Konya ovası (kuzey)
-  // ── ☀️ GÜNEŞ — DÜNYA ──
-  [-24.00, -69.30, 's', 3, .90], // Atacama (Şili) — gezegenin en yüksek ışınımı
-  [30.99, -6.86, 's', 3, .45], // Ouarzazate / Noor (Fas)
-  [24.40, 32.70, 's', 3, .45], // Benban (Mısır)
-  [27.50, 71.90, 's', 3, .50], // Bhadla (Rajasthan, Hindistan) — dünyanın en büyük GES'i
-  [14.10, 77.30, 's', 2, .40], // Pavagada (Karnataka)
-  [24.00, 54.60, 's', 3, .45], // Al Dhafra (BAE)
-  [29.90, 40.20, 's', 3, .55], // Sakaka (Suudi Arabistan)
-  [37.60, 105.00, 's', 3, .60], // Tengger Çölü (Çin)
-  [36.40, 94.90, 's', 2, .60], // Golmud (Qinghai)
-  [35.57, -115.47, 's', 3, .50], // Mojave / Ivanpah (ABD)
-  [35.40, -120.10, 's', 2, .35], // Carrizo Ovası / Topaz (Kaliforniya)
-  [33.30, -112.60, 's', 2, .45], // Arizona güneş kuşağı
-  [29.10, -110.90, 's', 2, .50], // Sonora (Meksika)
-  [37.50, -5.10, 's', 2, .40], // Endülüs (İspanya)
-  [-31.90, 141.50, 's', 2, .55], // Broken Hill (Avustralya)
-  [-28.40, 21.20, 's', 3, .55], // Upington / Kuzey Cape (Güney Afrika)
-  [-22.60, 17.10, 's', 3, .55], // Namib (Namibya)
-  [38.90, 82.20, 's', 2, .70], // Taklamakan (Çin) — mevcut bot sahası
-  [26.50, 12.80, 's', 3, .90], // Sahra (Libya/Cezayir kuşağı)
+  // ⚙️ ÜRETİLDİ: 7 bölge ajanı + elle seçilen Türkiye sahaları birleştirildi; 0,45° içindeki
+  //    kopyalar elendi (güçlüsü kazandı). Her satır GERÇEK, işletmedeki bir enerji sahasıdır.
+  //    [enlem, boylam, tür(w=rüzgar·s=güneş·g=jeotermal), güç 1-3, yarıçap derece, ad]
+  //    ⚠️ Haritadaki rakip santral ikonları (BOT_PLANTS) BU TABLODAN TÜRETİLİR — iki liste
+  //       elle tutulmaz; ikonun durduğu yer, oyunda o türün en verimli olduğu yerdir.
+  [38.790, -122.750, 'g', 3, 0.35, 'ABD — The Geysers (Kaliforniya)'],
+  [2.030, 99.080, 'g', 3, 0.35, 'Endonezya — Sarulla Jeotermal Sahası (Kuze'],
+  [11.150, 124.620, 'g', 3, 0.35, 'Filipinler — Leyte (Tongonan–Malitbog) Jeo'],
+  [-0.900, 36.300, 'g', 3, 0.40, 'Kenya — Olkaria jeotermal sahası'],
+  [32.420, -115.240, 'g', 3, 0.35, 'Meksika — Cerro Prieto Jeotermal Sahası (B'],
+  [52.540, 158.200, 'g', 3, 0.30, 'Rusya — Mutnovski Jeotermal Santrali (Kamç'],
+  [-21.833, -68.167, 'g', 3, 0.35, 'Sili — Cerro Pabellon (Ollague, Antofagast'],
+  [-38.614, 176.183, 'g', 3, 0.50, 'Yeni Zelanda — Wairakei - Nga Awa Purua (T'],
+  [43.240, 10.870, 'g', 3, 0.40, 'İtalya — Larderello Jeotermal Sahası (Tosk'],
+  [64.040, -21.400, 'g', 3, 0.30, 'İzlanda — Hellisheiði Jeotermal Santrali'],
+  [39.950, -117.880, 'g', 2, 0.60, 'ABD — Dixie Valley – Great Basin (Nevada)'],
+  [33.180, -115.620, 'g', 2, 0.40, 'ABD — Salton Sea – Imperial Vadisi (Kalifo'],
+  [48.070, 11.620, 'g', 2, 0.35, 'Almanya — Münih Molasse Jeotermal Havzası'],
+  [-6.730, 106.680, 'g', 2, 0.30, 'Endonezya — Gunung Salak Jeotermal (Batı J'],
+  [14.130, 121.230, 'g', 2, 0.30, 'Filipinler — MakBan Jeotermal Kompleksi (L'],
+  [48.930, 7.880, 'g', 2, 0.30, 'Fransa — Soultz-sous-Forêts / Rittershoffe'],
+  [45.780, 17.180, 'g', 2, 0.30, 'Hırvatistan — Velika Ciglena JES (Bjelovar'],
+  [33.080, 131.180, 'g', 2, 0.30, 'Japonya — Hatchobaru–Otake Jeotermal (Oita'],
+  [-0.200, 36.070, 'g', 2, 0.35, 'Kenya — Menengai krateri'],
+  [19.790, -100.670, 'g', 2, 0.35, 'Meksika — Los Azufres (Michoacán)'],
+  [37.790, -25.340, 'g', 2, 0.30, 'Portekiz — Ribeira Grande Jeotermal (São M'],
+  [-38.080, 176.690, 'g', 2, 0.35, 'Yeni Zelanda — Kawerau (Bay of Plenty)'],
+  [10.100, 90.500, 'g', 2, 0.30, 'Çin — Yangbajing Jeotermal Sahası (Tibet)'],
+  [38.320, 47.800, 'g', 2, 0.30, 'İran — Sebelan (Meşkinşehr) Jeotermal Saha'],
+  [65.710, -16.780, 'g', 2, 0.30, 'İzlanda — Krafla Jeotermal Santrali'],
+  [63.850, -22.600, 'g', 2, 0.35, 'İzlanda — Reykjanes - Svartsengi Sahası'],
+  [19.480, -154.890, 'g', 1, 0.30, 'ABD — Puna – Kilauea Doğu Rifti (Hawaii)'],
+  [38.490, -112.850, 'g', 1, 0.30, 'ABD — Roosevelt Hot Springs – Milford (Uta'],
+  [42.290, 23.270, 'g', 1, 0.25, 'Bulgaristan — Sapareva Banya Jeotermal Sah'],
+  [7.780, 38.780, 'g', 1, 0.30, 'Etiyopya — Aluto-Langano jeotermal'],
+  [24.000, 54.600, 's', 3, 0.45, 'Al Dhafra (BAE)'],
+  [-24.000, -69.300, 's', 3, 0.90, 'Atacama (Şili) — gezegenin en yüksek ışını'],
+  [24.400, 32.700, 's', 3, 0.50, 'Benban (Mısır)'],
+  [27.500, 71.900, 's', 3, 0.50, 'Bhadla (Rajasthan, Hindistan) — dünyanın e'],
+  [37.720, 33.550, 's', 3, 0.40, 'Karapınar (Konya) — Türkiyenin YEKA güneş'],
+  [35.570, -115.470, 's', 3, 0.50, 'Mojave / Ivanpah (ABD)'],
+  [-22.600, 17.100, 's', 3, 0.55, 'Namib (Namibya)'],
+  [30.990, -6.860, 's', 3, 0.45, 'Ouarzazate / Noor (Fas)'],
+  [26.500, 12.800, 's', 3, 0.90, 'Sahra (Libya/Cezayir kuşağı)'],
+  [29.900, 40.200, 's', 3, 0.55, 'Sakaka (Suudi Arabistan)'],
+  [37.600, 105.000, 's', 3, 0.60, 'Tengger Çölü (Çin)'],
+  [-28.400, 21.200, 's', 3, 0.55, 'Upington / Kuzey Cape (Güney Afrika)'],
+  [37.160, 38.800, 's', 3, 0.40, 'Şanlıurfa ovası'],
+  [-24.095, -66.724, 's', 3, 0.40, 'Arjantin — Cauchari (Jujuy, Puna)'],
+  [20.200, 54.550, 's', 3, 0.40, 'Birleşik Arap Emirlikler — Al Dhafra Güneş'],
+  [24.750, 55.400, 's', 3, 0.45, 'Birleşik Arap Emirlikler — Muhammed bin Ra'],
+  [-27.680, 23.050, 's', 3, 0.60, 'Güney Afrika — Kathu – Postmasburg güneş k'],
+  [-22.772, -69.480, 's', 3, 0.40, 'Sili — Cerro Dominador (Maria Elena, Ataca'],
+  [20.700, 39.600, 's', 3, 0.50, 'Suudi Arabistan — Şuaybe Güneş Kompleksi'],
+  [36.150, 100.500, 's', 3, 0.70, 'Çin — Talatan Güneş Parkı (Gonghe, Qinghai'],
+  [37.300, 36.100, 's', 2, 0.30, 'Adana–Osmaniye'],
+  [33.300, -112.600, 's', 2, 0.45, 'Arizona güneş kuşağı'],
+  [-31.900, 141.500, 's', 2, 0.55, 'Broken Hill (Avustralya)'],
+  [35.400, -120.100, 's', 2, 0.35, 'Carrizo Ovası / Topaz (Kaliforniya)'],
+  [37.500, -5.100, 's', 2, 0.40, 'Endülüs (İspanya)'],
+  [36.400, 94.900, 's', 2, 0.60, 'Golmud (Qinghai)'],
+  [37.870, 32.490, 's', 2, 0.35, 'Konya ovası (kuzey)'],
+  [37.850, 34.550, 's', 2, 0.32, 'Niğde–Bor'],
+  [14.100, 77.300, 's', 2, 0.50, 'Pavagada (Karnataka)'],
+  [29.100, -110.900, 's', 2, 0.50, 'Sonora (Meksika)'],
+  [38.900, 82.200, 's', 2, 0.70, 'Taklamakan (Çin) — mevcut bot sahası'],
+  [33.830, -115.400, 's', 2, 0.40, 'ABD — Desert Sunlight – Chuckwalla Vadisi'],
+  [36.430, -114.780, 's', 2, 0.30, 'ABD — Gemini Güneş + Depolama (Nevada)'],
+  [31.250, -102.050, 's', 2, 0.50, 'ABD — Permian Havzası Güneş Kümesi (Upton,'],
+  [33.450, -95.250, 's', 2, 0.50, 'ABD — Samson Güneş Santrali (Kuzeydoğu Tek'],
+  [34.830, -118.400, 's', 2, 0.30, 'ABD — Solar Star – Kern County (Kaliforniy'],
+  [32.930, -113.250, 's', 2, 0.60, 'ABD — Yuma – Gila Bend Güneş Koridoru (Ari'],
+  [51.150, 12.420, 's', 2, 0.35, 'Almanya — Enerji Parkı Witznitz (Leipzig)'],
+  [40.930, 19.530, 's', 2, 0.35, 'Arnavutluk — Karavasta GES (Divjakë-Fier)'],
+  [-32.417, 137.833, 's', 2, 0.35, 'Avustralya — Bungala (Port Augusta, Guney'],
+  [-30.650, 151.560, 's', 2, 0.40, 'Avustralya — New England Solar (Uralla, NS'],
+  [-26.955, 150.677, 's', 2, 0.40, 'Avustralya — Western Downs (Chinchilla, Qu'],
+  [40.000, 49.350, 's', 2, 0.35, 'Azerbaycan — Qaradağ GES (Bakü)'],
+  [-17.650, -67.170, 's', 2, 0.40, 'Bolivya — Oruro / Ancotanga (Oruro)'],
+  [-15.850, -43.300, 's', 2, 0.50, 'Brezilya — Janauba Gunes Kompleksi (Minas'],
+  [27.880, -0.280, 's', 2, 0.70, 'Cezayir — Adrar Güneş Havzası'],
+  [-6.700, 107.360, 's', 2, 0.30, 'Endonezya — Cirata Yüzer Güneş Santrali (B'],
+  [44.740, -0.680, 's', 2, 0.30, 'Fransa — Cestas Güneş Santrali (Gironde)'],
+  [-30.700, 23.990, 's', 2, 0.40, 'Güney Afrika — De Aar güneş sahası'],
+  [35.800, 126.600, 's', 2, 0.40, 'Güney Kore — Saemangeum Güneş Kümesi (Guns'],
+  [30.550, 47.100, 's', 2, 0.70, 'Irak — Ratawi (Basra) Güneş Sahası'],
+  [34.630, 134.180, 's', 2, 0.35, 'Japonya — Setouchi Kirei Mega Güneş (Okaya'],
+  [50.250, -112.730, 's', 2, 0.35, 'Kanada — Travers Güneş Santrali (Alberta)'],
+  [25.280, 51.050, 's', 2, 0.35, 'Katar — El Harsaa Güneş Sahası'],
+  [-0.340, 39.600, 's', 2, 0.35, 'Kenya — Garissa güneş santrali'],
+  [9.620, -73.680, 's', 2, 0.35, 'Kolombiya — La Loma (El Paso, Cesar)'],
+  [29.200, 47.050, 's', 2, 0.50, 'Kuveyt — Şagaya Yenilenebilir Enerji Parkı'],
+  [24.180, 23.290, 's', 2, 0.70, 'Libya — Kufra Güneş Sahası'],
+  [31.350, -113.400, 's', 2, 0.40, 'Meksika — Puerto Peñasco Güneş Santrali (S'],
+  [25.500, -102.850, 's', 2, 0.40, 'Meksika — Villanueva Güneş Parkı – Viesca'],
+  [-23.653, 18.027, 's', 2, 0.35, 'Namibya — Hardap – Mariental güneş sahası'],
+  [29.310, 71.830, 's', 2, 0.40, 'Pakistan — Quaid-e-Azam Güneş Parkı (Bahaw'],
+  [-17.258, -71.193, 's', 2, 0.35, 'Peru — Rubi (Moquegua)'],
+  [37.470, -7.620, 's', 2, 0.35, 'Portekiz — Solara4 - Alcoutim (Algarve)'],
+  [16.517, -15.469, 's', 2, 0.35, 'Senegal — Bokhol güneş santrali'],
+  [25.550, 45.950, 's', 2, 0.50, 'Suudi Arabistan — Sudair Güneş Havzası'],
+  [33.920, 8.130, 's', 2, 0.40, 'Tunus — Tozeur Güneş Sahası'],
+  [23.220, 56.400, 's', 2, 0.40, 'Umman — İbri II Güneş Sahası'],
+  [11.680, 109.020, 's', 2, 0.50, 'Vietnam — Ninh Thuan (Thuan Bac) Güneş Hav'],
+  [40.420, 21.800, 's', 2, 0.45, 'Yunanistan — Kozani Güneş Santrali (Batı M'],
+  [-15.513, 28.430, 's', 2, 0.35, 'Zambiya — Lusaka Güney (Bangweulu – Ngonye'],
+  [30.200, 35.750, 's', 2, 0.50, 'Ürdün — Maan Güneş Havzası'],
+  [30.030, 57.290, 's', 2, 0.50, 'İran — Kerman (Mahan) Güneş Havzası'],
+  [37.230, -3.070, 's', 2, 0.30, 'İspanya — Andasol Güneş Yoğunlaştırma Saha'],
+  [39.600, -5.700, 's', 2, 0.35, 'İspanya — Francisco Pizarro (Cáceres, Extr'],
+  [30.990, 34.720, 's', 2, 0.40, 'İsrail — Aşalim Güneş Kompleksi (Negev)'],
+  [37.350, 14.850, 's', 2, 0.50, 'İtalya — Catania - Lentini Güneş Havzası ('],
+  [-14.440, 132.230, 's', 1, 0.35, 'Avustralya — Katherine (Kuzey Topraklari)'],
+  [25.530, 89.520, 's', 1, 0.35, 'Bangladeş — Teesta Güneş Parkı (Gaibandha)'],
+  [51.220, 5.300, 's', 1, 0.30, 'Belçika — Kristal Solar Park (Lommel)'],
+  [42.350, 24.830, 's', 1, 0.35, 'Bulgaristan — Dalgo Pole GES (Filibe)'],
+  [32.930, 3.280, 's', 1, 0.35, 'Cezayir — Hassi RMel Güneş-Gaz Sahası'],
+  [10.920, 123.300, 's', 1, 0.30, 'Filipinler — Cadiz (Helios) Güneş Santrali'],
+  [8.278, -2.236, 's', 1, 0.35, 'Gana — Bui hidro-güneş hibriti'],
+  [10.174, -2.534, 's', 1, 0.35, 'Gana — Kaleo güneş santrali'],
+  [42.880, 70.300, 's', 1, 0.35, 'Kazakistan — Burnoye GES (Jambıl)'],
+  [2.780, 101.550, 's', 1, 0.35, 'Malezya — Sepang–Kuala Langat Güneş Santra'],
+  [-14.800, 36.540, 's', 1, 0.30, 'Mozambik — Cuamba güneş santrali'],
+  [-13.078, 39.836, 's', 1, 0.35, 'Mozambik — Metoro güneş santrali'],
+  [-16.850, 36.980, 's', 1, 0.30, 'Mozambik — Mocuba güneş santrali'],
+  [49.420, 105.950, 's', 1, 0.30, 'Moğolistan — Darhan GES'],
+  [11.880, 8.480, 's', 1, 0.40, 'Nijerya — Kano – Kumbotso (Haske) güneş'],
+  [54.680, 17.850, 's', 1, 0.30, 'Polonya — Zwartowo GES (Choczewo)'],
+  [44.760, 25.030, 's', 1, 0.30, 'Romanya — Rătești GES (Argeş)'],
+  [46.300, 44.300, 's', 1, 0.45, 'Rusya — Elista GES (Kalmıkya)'],
+  [14.653, -17.103, 's', 1, 0.30, 'Senegal — Diass güneş santrali'],
+  [6.180, 81.080, 's', 1, 0.40, 'Sri Lanka — Hambantota (Buruthakanda) Güne'],
+  [-3.636, 33.702, 's', 1, 0.35, 'Tanzanya — Kishapu güneş santrali'],
+  [15.190, 105.430, 's', 1, 0.30, 'Tayland — Sirindhorn Barajı Yüzer Güneş (U'],
+  [47.630, 34.280, 's', 1, 0.40, 'Ukrayna — Nikopol GES (Dnipro)'],
+  [-12.807, 28.236, 's', 1, 0.30, 'Zambiya — Riverside (Kitwe) güneş santrali'],
+  [40.150, 65.350, 's', 1, 0.35, 'Özbekistan — Nur Navoiy GES'],
+  [29.800, 35.310, 's', 1, 0.35, 'Ürdün — Kuveyra Güneş Sahası'],
+  [54.050, 6.600, 'w', 3, 0.70, 'Alman Kuzey Denizi kümesi'],
+  [40.320, 27.920, 'w', 3, 0.38, 'Bandırma–Balıkesir koridoru'],
+  [39.830, 26.050, 'w', 3, 0.30, 'Bozcaada — kesintisiz kuzey rüzgarı'],
+  [54.700, 2.200, 'w', 3, 0.75, 'Dogger Bank (dünyanın en büyük offshore sa'],
+  [55.500, 7.800, 'w', 3, 0.60, 'Horns Rev (Kuzey Denizi, Danimarka)'],
+  [53.900, 1.800, 'w', 3, 0.60, 'Hornsea (İngiltere)'],
+  [40.100, 97.500, 'w', 3, 0.80, 'Jiuquan / Gansu (Çin) — "rüzgar üssü"'],
+  [-52.900, -70.900, 'w', 3, 0.70, 'Macellan Boğazı (Şili) — dünyanın en rüzga'],
+  [8.260, 77.550, 'w', 3, 0.50, 'Muppandal (Tamil Nadu, Hindistan)'],
+  [-45.870, -67.500, 'w', 3, 0.70, 'Patagonya / Comodoro Rivadavia (Arjantin)'],
+  [29.100, 32.600, 'w', 3, 0.45, 'Süveyş Körfezi / Zafarana (Mısır)'],
+  [27.940, -12.930, 'w', 3, 0.50, 'Tarfaya (Fas)'],
+  [32.470, -100.400, 'w', 3, 0.80, 'Teksas Panhandle / Sweetwater'],
+  [-40.700, 144.700, 'w', 3, 0.40, 'Woolnorth (Tazmanya)'],
+  [41.800, -106.300, 'w', 3, 0.60, 'Wyoming — Rocky Mountain koridoru'],
+  [38.320, 26.420, 'w', 3, 0.38, 'Çeşme–Karaburun (İzmir) — Türkiyenin en gü'],
+  [-28.339, 151.507, 'w', 3, 0.55, 'Avustralya — MacIntyre (Karara, Queensland'],
+  [-30.768, 115.643, 'w', 3, 0.40, 'Avustralya — Yandin (Dandaragan, Bati Avus'],
+  [-8.750, -41.550, 'w', 3, 0.80, 'Brezilya — Lagoa dos Ventos (Piaui)'],
+  [2.447, 36.856, 'w', 3, 0.60, 'Kenya — Turkana Gölü rüzgar sahası'],
+  [16.560, -94.850, 'w', 3, 0.60, 'Meksika — Tehuantepec Kıstağı – La Ventosa'],
+  [27.950, 33.450, 'w', 3, 0.50, 'Mısır — Cebel El Zeyt Rüzgar Sahası'],
+  [63.750, 10.200, 'w', 3, 0.55, 'Norveç — Fosen Vind (Trøndelag)'],
+  [55.000, 17.800, 'w', 3, 0.55, 'Polonya — Baltic Power Açık Deniz RES (Łeb'],
+  [24.100, 120.000, 'w', 3, 0.50, 'Tayvan — Changhua Açık Deniz Rüzgar Sahası'],
+  [-40.346, 175.780, 'w', 3, 0.40, 'Yeni Zelanda — Tararua (Manawatu)'],
+  [40.400, 96.300, 'w', 3, 0.90, 'Çin — Jiuquan (Guazhou) Rüzgar Üssü'],
+  [38.600, 27.050, 'w', 2, 0.28, 'Aliağa–Foça'],
+  [37.730, -121.650, 'w', 2, 0.30, 'Altamont Pass (Kaliforniya)'],
+  [51.700, 3.100, 'w', 2, 0.50, 'Borssele (Hollanda)'],
+  [43.300, -8.200, 'w', 2, 0.45, 'Galiçya (İspanya)'],
+  [40.380, 26.400, 'w', 2, 0.32, 'Gelibolu–Çanakkale Boğazı'],
+  [42.500, -93.600, 'w', 2, 0.75, 'Iowa rüzgar kuşağı'],
+  [26.900, 70.900, 'w', 2, 0.70, 'Jaisalmer (Rajasthan)'],
+  [65.500, 20.500, 'w', 2, 0.70, 'Markbygden (İsveç) — Avrupanın en büyük ka'],
+  [36.400, -99.400, 'w', 2, 0.70, 'Oklahoma'],
+  [-5.200, -35.500, 'w', 2, 0.55, 'Rio Grande do Norte (Brezilya)'],
+  [36.150, 35.950, 'w', 2, 0.30, 'Samandağ–Belen (Hatay)'],
+  [39.190, 27.610, 'w', 2, 0.35, 'Soma–Kırkağaç'],
+  [-41.300, 174.800, 'w', 2, 0.35, 'Wellington (Yeni Zelanda)'],
+  [41.000, 111.000, 'w', 2, 0.80, 'İç Moğolistan'],
+  [44.150, -96.300, 'w', 2, 0.60, 'ABD — Buffalo Ridge (Minnesota–Güney Dakot'],
+  [37.250, -99.800, 'w', 2, 0.50, 'ABD — Cimarron Bend – Clark County (Kansas'],
+  [42.650, -95.150, 'w', 2, 0.60, 'ABD — Kuzeybatı Iowa – Storm Lake'],
+  [35.050, -118.320, 'w', 2, 0.40, 'ABD — Tehachapi Geçidi – Alta (Kaliforniya'],
+  [35.100, -102.000, 'w', 2, 0.70, 'ABD — Teksas Panhandle (Amarillo Koridoru)'],
+  [35.750, -98.700, 'w', 2, 0.50, 'ABD — Traverse Rüzgar Santrali (Oklahoma)'],
+  [41.080, -70.500, 'w', 2, 0.35, 'ABD — Vineyard Wind 1 (Massachusetts açıkl'],
+  [54.600, 8.950, 'w', 2, 0.60, 'Almanya — Kuzey Frizya (Schleswig-Holstein'],
+  [-38.670, -62.038, 'w', 2, 0.40, 'Arjantin — Corti (Bahia Blanca, Buenos Air'],
+  [-26.550, 151.333, 'w', 2, 0.40, 'Avustralya — Coopers Gap (Queensland)'],
+  [-33.051, 138.544, 'w', 2, 0.40, 'Avustralya — Hornsdale (Guney Avustralya)'],
+  [-38.040, 142.025, 'w', 2, 0.40, 'Avustralya — Macarthur (Victoria)'],
+  [-40.780, 147.984, 'w', 2, 0.40, 'Avustralya — Musselroe (Tasmanya)'],
+  [-29.781, 151.574, 'w', 2, 0.40, 'Avustralya — Sapphire (New England, NSW)'],
+  [-31.794, 141.258, 'w', 2, 0.40, 'Avustralya — Silverton (Broken Hill, NSW)'],
+  [-37.536, 143.251, 'w', 2, 0.40, 'Avustralya — Stockyard Hill (Victoria)'],
+  [47.870, 16.850, 'w', 2, 0.40, 'Avusturya — Parndorf Platosu (Burgenland)'],
+  [40.630, 49.400, 'w', 2, 0.45, 'Azerbaycan — Xızı-Abşeron RES'],
+  [-14.070, -42.480, 'w', 2, 0.60, 'Brezilya — Caetite / Alto Sertao (Bahia)'],
+  [-5.180, -37.030, 'w', 2, 0.60, 'Brezilya — Serra do Mel (Rio Grande do Nor'],
+  [55.000, 13.000, 'w', 2, 0.40, 'Danimarka — Kriegers Flak (Baltık)'],
+  [57.050, 8.900, 'w', 2, 0.45, 'Danimarka — Thy - Batı Jutland Kıyısı'],
+  [8.550, 39.250, 'w', 2, 0.40, 'Etiyopya — Adama II rüzgar santrali'],
+  [10.750, 42.570, 'w', 2, 0.45, 'Etiyopya — Ayşa (Aysha) rüzgar sahası'],
+  [28.100, -12.050, 'w', 2, 0.40, 'Fas — Ahfennir Rüzgar Sahası'],
+  [35.650, -5.600, 'w', 2, 0.50, 'Fas — Tanca-Tetuan Rüzgar Sahası'],
+  [18.500, 120.650, 'w', 2, 0.35, 'Filipinler — Burgos Rüzgar Sahası (Ilocos'],
+  [64.150, 26.720, 'w', 2, 0.40, 'Finlandiya — Piiparinmäki Rüzgar Santrali'],
+  [43.150, 2.850, 'w', 2, 0.50, 'Fransa — Aude - Narbonne Tramontana Korido'],
+  [47.150, -2.550, 'w', 2, 0.35, 'Fransa — Saint-Nazaire Açık Deniz (Banc de'],
+  [-33.980, 24.870, 'w', 2, 0.40, 'Güney Afrika — Jeffreys Bay – Kouga rüzgar'],
+  [-30.900, 19.520, 'w', 2, 0.45, 'Güney Afrika — Loeriesfontein – Khobab'],
+  [33.330, 126.180, 'w', 2, 0.40, 'Güney Kore — Jeju Hangyeong–Tamra Açık Den'],
+  [52.300, 4.100, 'w', 2, 0.40, 'Hollanda — Hollandse Kust Zuid'],
+  [52.370, 5.500, 'w', 2, 0.40, 'Hollanda — Windpark Zeewolde (Flevoland)'],
+  [44.100, 16.150, 'w', 2, 0.40, 'Hırvatistan — Krš-Pađene RES (Knin)'],
+  [39.980, 140.020, 'w', 2, 0.50, 'Japonya — Akita–Noshiro Açık Deniz Rüzgarı'],
+  [40.930, 141.350, 'w', 2, 0.50, 'Japonya — Rokkasho–Shimokita Rüzgar Sahası'],
+  [50.300, -112.850, 'w', 2, 0.50, 'Kanada — Buffalo Plains – Vulcan County (A'],
+  [48.900, -66.600, 'w', 2, 0.80, 'Kanada — Gaspésie Yarımadası (Québec)'],
+  [49.500, -113.930, 'w', 2, 0.40, 'Kanada — Pincher Creek – Cowley Ridge (Alb'],
+  [43.570, 69.740, 'w', 2, 0.40, 'Kazakistan — Janatas RES (Jambıl)'],
+  [12.216, -72.072, 'w', 2, 0.50, 'Kolombiya — Guajira I (Uribia, La Guajira)'],
+  [26.050, -98.400, 'w', 2, 0.50, 'Meksika — Reynosa Rüzgar Kümesi (Tamaulipa'],
+  [43.620, 104.500, 'w', 2, 0.50, 'Moğolistan — Tsetsii RES (Gobi, Ömnögovi)'],
+  [28.300, 33.050, 'w', 2, 0.40, 'Mısır — Res Gharib Rüzgar Sahası'],
+  [-26.650, 15.200, 'w', 2, 0.40, 'Namibya — Lüderitz (Ombepo) rüzgar sahası'],
+  [61.330, 2.280, 'w', 2, 0.30, 'Norveç — Hywind Tampen Yüzer Rüzgar Santra'],
+  [24.980, 68.000, 'w', 2, 0.60, 'Pakistan — Jhimpir–Gharo Rüzgar Koridoru ('],
+  [-15.052, -75.054, 'w', 2, 0.55, 'Peru — Marcona / Wayra I (Ica)'],
+  [42.030, -8.390, 'w', 2, 0.40, 'Portekiz — Alto Minho Rüzgar Santrali'],
+  [44.650, 28.550, 'w', 2, 0.60, 'Romanya — Fântânele-Cogealac RES (Dobruca)'],
+  [44.400, 41.830, 'w', 2, 0.40, 'Rusya — Kubuçeyev RES (Stavropol)'],
+  [15.049, -16.881, 'w', 2, 0.40, 'Senegal — Taiba NDiaye rüzgar santrali'],
+  [-28.950, -71.445, 'w', 2, 0.45, 'Sili — Cabo Leones (Freirina, Huasco)'],
+  [9.050, 79.790, 'w', 2, 0.40, 'Sri Lanka — Mannar Adası (Thambapavani) Rü'],
+  [29.780, 39.780, 'w', 2, 0.60, 'Suudi Arabistan — Dumat Al Jandal Rüzgar S'],
+  [44.950, 20.900, 'w', 2, 0.40, 'Sırbistan — Čibuk 1 RES (Mramorak, Banat)'],
+  [37.160, 10.050, 'w', 2, 0.50, 'Tunus — Bizerte (Metline-Kchabta) Rüzgar S'],
+  [46.630, 35.630, 'w', 2, 0.40, 'Ukrayna — Botievo RES (Azak kıyısı)'],
+  [17.990, 54.660, 'w', 2, 0.35, 'Umman — Dofar (Harweel) Rüzgar Sahası'],
+  [-32.220, -56.200, 'w', 2, 0.50, 'Uruguay — Pampa (Tacuarembo)'],
+  [38.450, 23.600, 'w', 2, 0.50, 'Yunanistan — Evia (Eğriboz) Sırtları'],
+  [32.550, 121.550, 'w', 2, 0.50, 'Çin — Rudong Açık Deniz Rüzgar Kümesi (Jia'],
+  [40.660, 64.670, 'w', 2, 0.45, 'Özbekistan — Bash RES (Buhara-Kızılkum)'],
+  [41.600, 64.250, 'w', 2, 0.50, 'Özbekistan — Zerefşan RES (Navoiy)'],
+  [30.830, 35.620, 'w', 2, 0.40, 'Ürdün — Tafile Rüzgar Sahası'],
+  [55.680, -4.270, 'w', 2, 0.35, 'İngiltere — Whitelee Rüzgar Santrali (İsko'],
+  [36.730, 49.420, 'w', 2, 0.50, 'İran — Mencil-Rudbar Rüzgar Koridoru'],
+  [54.100, -9.500, 'w', 2, 0.40, 'İrlanda — Oweninny - Bellacorick (Mayo)'],
+  [41.420, -1.150, 'w', 2, 0.55, 'İspanya — Ebro Vadisi - Aragon (Cierzo)'],
+  [41.350, 15.350, 'w', 2, 0.50, 'İtalya — Foggia Yaylası (Puglia)'],
+  [37.050, 27.350, 'w', 1, 0.28, 'Bodrum–Datça yarımadası'],
+  [39.050, -102.450, 'w', 1, 0.60, 'ABD — Cheyenne Ridge – Doğu Colorado Ovala'],
+  [41.000, -71.150, 'w', 1, 0.30, 'ABD — South Fork Wind (Montauk açıkları)'],
+  [21.470, 91.980, 'w', 1, 0.35, 'Bangladeş — Khurushkul Rüzgar Sahası (Coxs'],
+  [-18.800, -63.300, 'w', 1, 0.50, 'Bolivya — El Dorado (Cabezas, Santa Cruz)'],
+  [43.620, 17.280, 'w', 1, 0.35, 'Bosna-Hersek — Mesihovina RES (Tomislavgra'],
+  [43.420, 28.260, 'w', 1, 0.30, 'Bulgaristan — Sveti Nikola RES (Kavarna)'],
+  [28.460, -0.060, 'w', 1, 0.40, 'Cezayir — Kabertene Rüzgar Sahası'],
+  [-3.920, 119.800, 'w', 1, 0.30, 'Endonezya — Sidrap Rüzgar Sahası (Güney Su'],
+  [41.980, 44.050, 'w', 1, 0.35, 'Gürcistan — Kartli RES (Gori-Kareli)'],
+  [43.850, -81.600, 'w', 1, 0.50, 'Kanada — Huron Gölü Kıyısı – K2 Wind (Onta'],
+  [42.880, 19.050, 'w', 1, 0.35, 'Karadağ — Krnovo RES'],
+  [41.980, 19.190, 'w', 1, 0.30, 'Karadağ — Možura RES (Bar-Ulcinj)'],
+  [51.620, 73.100, 'w', 1, 0.40, 'Kazakistan — Ereymentau RES (Akmola)'],
+  [50.250, 58.440, 'w', 1, 0.40, 'Kazakistan — Hromtau RES (Aktöbe)'],
+  [42.950, 20.930, 'w', 1, 0.35, 'Kosova — Selac (Bajgora) RES'],
+  [29.260, 47.120, 'w', 1, 0.40, 'Kuveyt — Şagaya Rüzgar Alanı'],
+  [41.200, 22.570, 'w', 1, 0.30, 'Kuzey Makedonya — Bogdanci RES (Vardar Vad'],
+  [47.380, 107.320, 'w', 1, 0.30, 'Moğolistan — Salhit RES (Töv)'],
+  [44.900, 110.100, 'w', 1, 0.40, 'Moğolistan — Saynşand RES (Dornogovi)'],
+  [12.980, 7.670, 'w', 1, 0.35, 'Nijerya — Lambar Rimi (Katsina) rüzgar'],
+  [54.380, 17.350, 'w', 1, 0.40, 'Polonya — Potęgowo RES (Pomeranya)'],
+  [44.850, 40.150, 'w', 1, 0.40, 'Rusya — Adıge RES'],
+  [8.230, 79.750, 'w', 1, 0.40, 'Sri Lanka — Kalpitiya–Puttalam Rüzgar Kori'],
+  [15.280, 101.700, 'w', 1, 0.40, 'Tayland — Huay Bong Rüzgar Sahası (Nakhon'],
+  [37.000, 10.900, 'w', 1, 0.30, 'Tunus — Sidi Daud Rüzgar Sahası'],
+  [46.850, 31.420, 'w', 1, 0.40, 'Ukrayna — Tiligul RES (Mykolayiv)'],
+  [9.210, 105.780, 'w', 1, 0.35, 'Vietnam — Bac Lieu Kıyı Rüzgar Sahası'],
+  [36.350, 58.880, 'w', 1, 0.35, 'İran — Binalud Rüzgar Sahası'],
+  [52.800, -5.980, 'w', 1, 0.30, 'İrlanda — Arklow Bank Açık Deniz (Wicklow)'],
+  [47.180, 7.050, 'w', 1, 0.30, 'İsviçre — Mont-Crosin / Mont-Soleil (Jura)'],
 ];
 // 1°'lik kova indeksi — lineer tarama yerine O(1) arama (cellQuality sıcak yolda)
 const SAHA_KOVA = (() => {
@@ -3959,7 +4180,7 @@ const SAHA_KOVA = (() => {
 // Bir koordinat için saha gücü: {w, s} → 0 (yok) .. 1 (dünya klasmanı, merkezde)
 function sahaGucu(lat, lon) {
   const liste = SAHA_KOVA[Math.floor(lat) + '|' + Math.floor(lon)];
-  const out = { w: 0, s: 0 };
+  const out = { w: 0, s: 0, g: 0 };
   if (!liste) return out;
   const kf = Math.max(.2, Math.cos(lat * Math.PI / 180)); // boylamda enlem düzeltmesi
   for (const s of liste) {
@@ -4006,7 +4227,9 @@ function cellQuality(id) {
   const sa = sahaGucu(c[0], c[1]);
   if (sa.w > 0) wind = Math.max(wind, .70 + .75 * (.70 + .30 * sa.w));
   if (sa.s > 0) sun = Math.max(sun, .50 + .95 * (.70 + .30 * sa.s));
-  const geo = GEO_SPOTS.some(g => Math.abs(g[0] - c[0]) < .35 && Math.abs(g[1] - c[1]) < .45) || hash01(cy, cx, 4) > .985;
+  // ♨️ jeotermal: elle yazılan GEO_SPOTS + saha tablosundaki gerçek jeotermal alanlar
+  //    (+ %1,5'lik hash payı — katalogdaki geo santralleri ölü içeriğe dönmesin)
+  const geo = sa.g > 0 || GEO_SPOTS.some(g => Math.abs(g[0] - c[0]) < .35 && Math.abs(g[1] - c[1]) < .45) || hash01(cy, cx, 4) > .985;
   const q = { sun, wind, hydro, geo };
   if (CQ_CACHE.size > 20000) CQ_CACHE.clear(); // sınırsız büyümesin (dünya dolaşan oyuncu)
   CQ_CACHE.set(id, q);
@@ -14994,70 +15217,32 @@ setInterval(() => { yatIsle(); notTazele(); acilIsle(); }, 60000);
 // ⚠️ b = BOTS indisi, 0-7 ARALIĞI ŞART (BOTS = WORLD_PLAYERS.slice(0,8)); dışına çıkarsan
 //    popup'ta "undefined" yazar. t, PLANT_TYPES'ta VAR OLAN bir anahtar olmalı yoksa
 //    drawBots komple düşer (guvenli() yutar, hiçbir ikon çizilmez).
-const BOT_PLANTS = [
-  // ── 🇹🇷 TÜRKİYE ──
-  { b: 2, nm: 'Çeşme–Karaburun RES', ll: [38.32, 26.42], t: 'wind_2', n: 5 },
-  { b: 2, nm: 'Bandırma RES', ll: [40.32, 27.92], t: 'wind_2', n: 4 },
-  { b: 4, nm: 'Bozcaada RES', ll: [39.83, 26.05], t: 'wind_2', n: 2 },
-  { b: 0, nm: 'Soma RES', ll: [39.19, 27.61], t: 'wind_2', n: 3 },
-  { b: 5, nm: 'Karapınar GES (Konya)', ll: [37.72, 33.55], t: 'solar_2', n: 6 },
-  { b: 4, nm: 'Şanlıurfa GES', ll: [37.16, 38.80], t: 'solar_2', n: 4 },
-  { b: 6, nm: 'Kızıldere JES (Denizli)', ll: [37.77, 29.09], t: 'geo_1', n: 3 },
-  { b: 6, nm: 'Germencik JES (Aydın)', ll: [37.85, 27.85], t: 'geo_1', n: 2 },
-  { b: 7, nm: 'Deriner HES (Artvin)', ll: [41.10, 41.90], t: 'hydro_2', n: 2 },
-  { b: 7, nm: 'Atatürk Barajı', ll: [37.49, 38.32], t: 'hydro_2', n: 3 },
-  { b: 1, nm: 'Afşin-Elbistan Termik', ll: [38.25, 36.90], t: 'coal_2', n: 2 },
-  { b: 1, nm: 'Akkuyu NGS (Mersin)', ll: [36.14, 33.54], t: 'nuke_1', n: 1 },
-  // ── 🇪🇺 AVRUPA ──
-  { b: 5, nm: 'Dogger Bank OSW', ll: [54.70, 2.20], t: 'wind_2', n: 6 },
-  { b: 5, nm: 'Hornsea OSW', ll: [53.90, 1.80], t: 'wind_2', n: 5 },
-  { b: 0, nm: 'Horns Rev (Danimarka)', ll: [55.50, 7.80], t: 'wind_2', n: 4 },
-  { b: 0, nm: 'Markbygden (İsveç)', ll: [65.50, 20.50], t: 'wind_2', n: 4 },
-  { b: 3, nm: 'Borssele (Hollanda)', ll: [51.70, 3.10], t: 'wind_2', n: 3 },
-  { b: 4, nm: 'Endülüs GES (İspanya)', ll: [37.50, -5.10], t: 'solar_2', n: 3 },
-  { b: 6, nm: 'Larderello JES (İtalya)', ll: [43.24, 10.87], t: 'geo_1', n: 2 },
-  { b: 6, nm: 'Hellisheiði JES (İzlanda)', ll: [64.10, -21.60], t: 'geo_1', n: 3 },
-  { b: 1, nm: 'Gravelines NGS (Fransa)', ll: [50.99, 2.14], t: 'nuke_1', n: 2 },
-  { b: 7, nm: 'Rogun / Alpler HES', ll: [46.60, 8.40], t: 'hydro_2', n: 2 },
-  // ── 🌎 AMERİKA ──
-  { b: 5, nm: 'Teksas Panhandle RES', ll: [32.47, -100.40], t: 'wind_2', n: 6 },
-  { b: 5, nm: 'Iowa RES', ll: [42.50, -93.60], t: 'wind_2', n: 4 },
-  { b: 3, nm: 'Altamont Pass RES', ll: [37.73, -121.65], t: 'wind_2', n: 3 },
-  { b: 4, nm: 'Ivanpah CSP (Mojave)', ll: [35.57, -115.47], t: 'solar_2', n: 4 },
-  { b: 4, nm: 'Topaz GES (Kaliforniya)', ll: [35.40, -120.10], t: 'solar_2', n: 3 },
-  { b: 6, nm: 'The Geysers JES', ll: [38.79, -122.75], t: 'geo_1', n: 3 },
-  { b: 7, nm: 'Grand Coulee HES', ll: [47.96, -118.98], t: 'hydro_2', n: 3 },
-  { b: 0, nm: 'Atacama GES (Şili)', ll: [-24.00, -69.30], t: 'solar_2', n: 5 },
-  { b: 2, nm: 'Patagonya RES (Arjantin)', ll: [-45.87, -67.50], t: 'wind_2', n: 4 },
-  { b: 2, nm: 'Macellan RES (Şili)', ll: [-52.90, -70.90], t: 'wind_2', n: 3 },
-  { b: 7, nm: 'Itaipu HES (Brezilya)', ll: [-25.41, -54.59], t: 'hydro_2', n: 4 },
-  { b: 3, nm: 'Rio Grande do Norte RES', ll: [-5.20, -35.50], t: 'wind_2', n: 3 },
-  { b: 6, nm: 'Cerro Prieto JES (Meksika)', ll: [32.42, -115.24], t: 'geo_1', n: 2 },
-  // ── 🌏 ASYA ──
-  { b: 3, nm: 'Taklamakan GES', ll: [38.90, 82.20], t: 'solar_2', n: 4 },
-  { b: 4, nm: 'Tengger Çölü GES (Çin)', ll: [37.60, 105.00], t: 'solar_2', n: 5 },
-  { b: 5, nm: 'Gansu RES (Çin)', ll: [40.10, 97.50], t: 'wind_2', n: 6 },
-  { b: 0, nm: 'İç Moğolistan RES', ll: [41.00, 111.00], t: 'wind_2', n: 4 },
-  { b: 7, nm: 'Üç Boğaz HES (Çin)', ll: [30.82, 111.00], t: 'hydro_2', n: 5 },
-  { b: 4, nm: 'Bhadla GES (Hindistan)', ll: [27.50, 71.90], t: 'solar_2', n: 6 },
-  { b: 2, nm: 'Muppandal RES (Hindistan)', ll: [8.26, 77.55], t: 'wind_2', n: 4 },
-  { b: 1, nm: 'Kashiwazaki NGS (Japonya)', ll: [37.43, 138.60], t: 'nuke_1', n: 1 },
-  { b: 6, nm: 'Kyushu JES (Japonya)', ll: [33.59, 130.40], t: 'geo_1', n: 2 },
-  { b: 6, nm: 'Kamojang JES (Endonezya)', ll: [-7.14, 107.80], t: 'geo_1', n: 2 },
-  { b: 4, nm: 'Al Dhafra GES (BAE)', ll: [24.00, 54.60], t: 'solar_2', n: 4 },
-  { b: 4, nm: 'Sakaka GES (S. Arabistan)', ll: [29.90, 40.20], t: 'solar_2', n: 4 },
-  // ── 🌍 AFRİKA · OKYANUSYA ──
-  { b: 3, nm: 'Sahra GES', ll: [26.50, 12.80], t: 'solar_2', n: 6 },
-  { b: 5, nm: 'Noor CSP (Fas)', ll: [30.99, -6.86], t: 'solar_2', n: 4 },
-  { b: 2, nm: 'Tarfaya RES (Fas)', ll: [27.94, -12.93], t: 'wind_2', n: 3 },
-  { b: 0, nm: 'Benban GES (Mısır)', ll: [24.40, 32.70], t: 'solar_2', n: 5 },
-  { b: 2, nm: 'Zafarana RES (Mısır)', ll: [29.10, 32.60], t: 'wind_2', n: 3 },
-  { b: 6, nm: 'Olkaria JES (Kenya)', ll: [-0.90, 36.29], t: 'geo_1', n: 3 },
-  { b: 4, nm: 'Upington GES (G. Afrika)', ll: [-28.40, 21.20], t: 'solar_2', n: 4 },
-  { b: 3, nm: 'Broken Hill GES (Avustralya)', ll: [-31.90, 141.50], t: 'solar_2', n: 3 },
-  { b: 5, nm: 'Woolnorth RES (Tazmanya)', ll: [-40.70, 144.70], t: 'wind_2', n: 3 },
-  { b: 6, nm: 'Wairakei JES (Y. Zelanda)', ll: [-38.62, 176.10], t: 'geo_1', n: 2 },
-];
+// 🌍 RAKİP SANTRALLER — haritadaki ☀️/🌬️/♨️ ikonları. Artık ELLE TUTULMUYOR: doğrudan
+// GERCEK_SAHALAR tablosundan türetiliyor, böylece ikonun durduğu yer ile oyunun o karede
+// verdiği verim HER ZAMAN aynı yerdir (ikisi ayrı listeyken kaçınılmaz olarak ayrışıyordu).
+// ⚠️ ZOOM SÜZGECİ ŞART: 277 emoji dünya görünümüne sığmaz. Düşük zoomda yalnız DÜNYA
+//    KLASMANI (güç 3) sahalar çizilir; yakınlaştırdıkça gerisi açılır (drawBots içinde).
+const BOT_PLANTS = (() => {
+  const TIP = {
+    w: ['wind_2__ortac', 'wind_6__yelkora', 'wind_9__yelkora'],
+    s: ['solar_2__ortac', 'solar_5__gunara', 'solar_8__gunara'],
+    g: ['geo_1__ortac', 'geo_2__ortac', 'geo_4__meridan'],
+  };
+  return GERCEK_SAHALAR.map((sa, i) => {
+    const kad = Math.max(0, Math.min(2, sa[3] - 1));
+    const aday = TIP[sa[2]] || TIP.w;
+    // katalogda olmayan marka/anahtar gelirse markasız tabana düş (drawBots komple düşmesin)
+    let t = aday[kad];
+    if (!PLANT_TYPES[t]) t = baseTypeOf(t);
+    if (!PLANT_TYPES[t]) t = sa[2] === 's' ? 'solar_2' : sa[2] === 'g' ? 'geo_1' : 'wind_2';
+    return {
+      b: Math.floor(hash01(i, 3, 17) * 8) % 8,   // 0-7: BOTS dizisinin sınırı
+      nm: sa[5] || 'Enerji sahası',
+      ll: [sa[0], sa[1]], t, n: 1 + sa[3] * 2,   // güç 3 → ×7 ünite
+      guc: sa[3],
+    };
+  });
+})();
 
 // ── Çevrimdışı ilerleme ──
 function offlineProgress() {
@@ -15738,9 +15923,16 @@ function drawConnections() {
       : { color: '#3ddc97', weight: 2.4, dashArray: '4 4', opacity: .8, renderer: VEC || undefined }).addTo(map));
   }
 }
+let botZoom = -1;
 function drawBots() {
+  const z = zoomNow();
+  // 🔎 ZOOM KADEMESİ: dünya görünümünde yalnız güç 3 (dünya klasmanı), z>=4'te güç 2+,
+  //    z>=6'da hepsi. 277 ikonun tamamı düşük zoomda haritayı okunmaz yapardı.
+  const esik = z >= 6 ? 1 : z >= 4 ? 2 : 3;
+  botZoom = esik;
   botLayer.forEach(m => m.remove()); botLayer = [];
   BOT_PLANTS.forEach(bp => {
+    if ((bp.guc || 3) < esik) return;
     const T = PLANT_TYPES[bp.t];
     const m = L.marker(bp.ll, { icon: divIcon(`<div class="botm">${T.ico}</div>`, [20, 20]) }).addTo(map);
     m.bindPopup(() => `<b>${BOTS[bp.b]}</b> <span style="color:#8b95a8">(rakip)</span><br>📍 ${bp.nm} — ${T.ico} ${T.nm} ×${bp.n}<br><span style="color:#8b95a8;font-size:11px">Bu kareye SEN DE kurabilirsin: kareler kimseye kapanmaz, herkesin kendi ${cellCap()} birim hakkı var.</span>`);
@@ -18018,6 +18210,8 @@ function startGame(resumed) {
   G._started = true;
   guvenli('unitMarkers', () => { for (const u of G.units) addUnitMarker(u); });
   guvenli('drawBots', drawBots);
+  // 🔎 zoom kademesi değişince ikonları yeniden çiz (eskiden yalnız açılışta çiziliyordu)
+  map.on('zoomend', () => { const z = zoomNow(); const e = z >= 6 ? 1 : z >= 4 ? 2 : 3; if (e !== botZoom) guvenli('drawBots', drawBots); });
   guvenli('refreshUnitMarkers', refreshUnitMarkers);
   guvenli('refreshLicenseTiles', refreshLicenseTiles);
   guvenli('drawOthers', drawOthers);
