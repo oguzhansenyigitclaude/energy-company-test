@@ -667,7 +667,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-08-31 23:17) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-02 19:56) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -838,7 +838,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-08-31 23:17)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-02 19:56)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -1057,6 +1057,57 @@ en: {
   'Gelişim Puanı': 'Development Points',
   'GELİŞİM AĞACI': 'DEVELOPMENT TREE',
   '🧬 GELİŞİM AĞACI': '🧬 DEVELOPMENT TREE',
+  // 📥 ittifak başvuru sistemi
+  'Önce mevcut ittifakından ayrılmalısın': 'You must leave your current alliance first',
+  '🌐 Başvuru için çevrimiçi olmalısın': '🌐 You must be online to apply',
+  'Bu ittifak simülasyon listesinden — başvuru yapılamaz': 'This alliance is from the simulated list — you cannot apply',
+  'İttifağa Başvur': 'Apply to Alliance',
+  '{0} ittifakına katılma başvurusu göndereceksin. Başkan ya da yardımcısı onaylayınca ittifağa katılırsın.': 'You are about to apply to join {0}. Once the president or a deputy approves, you join the alliance.',
+  'Aynı anda tek başvuru yapabilirsin. Cevap gelmezse 7 gün sonra başvuru kendiliğinden düşer.': 'You can have one application at a time. If there is no answer, it expires by itself after 7 days.',
+  'Başvuruyu Gönder': 'Send Application',
+  '🌐 Başvuru gönderilemedi — bağlantını kontrol et': '🌐 Application could not be sent — check your connection',
+  'Başvurun gönderildi: {0} — başkan onaylayınca haber vereceğiz': 'Application sent to {0} — we will let you know when the president approves',
+  '📥 Başvurun geri çekildi': '📥 Application withdrawn',
+  'Başvurun kabul edildi': 'Your application was accepted',
+  '{0} ittifakına katıldın. Ortak kasa, ittifak hattı ve acil ihaleler artık sana da açık.': 'You joined {0}. The shared treasury, alliance line and emergency tenders are now open to you.',
+  'Başvurun KABUL EDİLDİ — {0} ittifakındasın!': 'Your application was ACCEPTED — you are in {0}!',
+  'Başvurun reddedildi': 'Your application was rejected',
+  '{0} ittifakı başvurunu kabul etmedi. Başka bir ittifağa başvurabilir ya da kendi ittifakını kurabilirsin.': '{0} did not accept your application. You can apply to another alliance or found your own.',
+  '📥 {0} başvurunu reddetti': '📥 {0} rejected your application',
+  '👑 Başvuru onayı yalnız başkan ve yardımcısında': '👑 Only the president and deputies can approve applications',
+  '👥 Üye tavanı dolu ({0}) — ittifak puanıyla artar': '👥 Member cap reached ({0}) — it grows with alliance points',
+  '🌐 Onay yazılamadı — tekrar dene': '🌐 Approval could not be saved — try again',
+  '{0} ittifağa alındı': '{0} has been admitted to the alliance',
+  '🌐 İşlem yazılamadı — tekrar dene': '🌐 Action could not be saved — try again',
+  '✖️ {0} başvurusu reddedildi': '✖️ {0}\'s application was rejected',
+  'Geri': 'Back',
+  'İTTİFAĞA KATIL': 'JOIN AN ALLIANCE',
+  'Yenile': 'Refresh',
+  'BAŞVURUN İNCELEMEDE': 'YOUR APPLICATION IS PENDING',
+  'başkanın onayı bekleniyor': 'waiting for the president to approve',
+  'Başvuruyu Geri Çek': 'Withdraw Application',
+  'Liste yükleniyor…': 'Loading list…',
+  'Şu an katılabileceğin açık bir ittifak yok. Kendi ittifakını kurabilirsin — kurmak ücretsiz.': 'There is no open alliance to join right now. You can found your own — it is free.',
+  'İttifak Kur (ücretsiz)': 'Found an Alliance (free)',
+  'üye': 'members',
+  'puan': 'points',
+  'başvuruldu': 'applied',
+  'kadro dolu': 'roster full',
+  'Başvur': 'Apply',
+  'İttifağa Katıl': 'Join an Alliance',
+  'listeden seç, başvur': 'pick from the list and apply',
+  'BEKLEYEN İSTEKLER': 'PENDING REQUESTS',
+  'önce': 'ago',
+  'Bekleyen başvuru yok. Oyuncular 🔎 İttifağa Katıl ekranından sana başvurabilir.': 'No pending applications. Players can apply to you from the 🔎 Join an Alliance screen.',
+  'İttifak': 'Alliance',
+  // 🎒 çanta (hediye envanteri)
+  'Hediye': 'Gift',
+  'Yerleştir': 'Place',
+  'çantanda ×{0}': '×{0} in your bag',
+  '🎒 Bu üründen çantanda kalmadı': '🎒 None of this item left in your bag',
+  '🎁 {0} elinde — kurmak istediğin kareye dokun': '🎁 You are holding {0} — tap the cell where you want to build it',
+  '🎁 {0} aktif! Hediyeler 🎒 ÇANTANDA — 🏗️ İnşa ekranından istediğin kareye yerleştir.': '🎁 {0} is active! The gifts are in your 🎒 BAG — place them wherever you like from the 🏗️ Build screen.',
+  '🎁 {0} aktif!': '🎁 {0} is active!',
   // 🎯 gelişim görev şablonları — CEV(g.t, ...) ile ÇALIŞMA ANINDA çağrılıyor, statik
   //    tarayıcı bunları yakalayamaz; elle eklendi (eksik kalırsa sekme İngilizcede Türkçe kalır)
   '{0} MWh enerji sat': 'Sell {0} MWh of energy',
@@ -1193,6 +1244,7 @@ en: {
   'Amorf çekirdek trafo: depoya giren enerjinin trafo kaybı %15 azalır.': 'Amorphous-core transformer: transformer loss on energy entering storage drops 15%.',
   'Yedekli iletim: nakil hatlarının ömrü %25 daha uzar (toplam ~%56).': 'Redundant transmission: line lifespan grows another 25% (~56% in total).',
   'Kriyojenik soğutmalı iletken: nakil hattı kaybı %25 azalır.': 'Cryogenically cooled conductor: transmission line loss drops 25%.',
+  // ── 🧬 GELİŞİM AĞACI (31 Ağu) ──
 },
 // DIL-OTOMATIK-BASLA — tools/dil-entegre.js üretti (19 dil, dil başına bir ajan); elle düzenleme buraya DEĞİL, ajana/betiğe
 de: {
@@ -5986,11 +6038,32 @@ window.connectUnitTo = (id, stId) => {
 // Onun yerine: depo dolunca 🔔 bildirim + dolu depo satışında 🎬 reklam bonusu (aktifliğin ödülü).
 const CAT_GRAD = { 'Güneş': 'linear-gradient(135deg,#ff9d2f,#ffd166)', 'Rüzgar': 'linear-gradient(135deg,#2bc0e4,#4ea8ff)', 'Kömür': 'linear-gradient(135deg,#5a6274,#2e3546)', 'Gaz': 'linear-gradient(135deg,#ff7043,#8d3b2f)', 'Hidro': 'linear-gradient(135deg,#4ea8ff,#7fd8ff)', 'Jeotermal': 'linear-gradient(135deg,#8a5cff,#c98fff)', 'Nükleer': 'linear-gradient(135deg,#b8d94a,#5ab0ff)', 'Depo': 'linear-gradient(135deg,#3f6fb5,#8ec9ff)', 'Yakıt': 'linear-gradient(135deg,#8d6e63,#4e342e)' };
 
+// ── 🎒 ÇANTA: hediye envanteri (tek kapı) ──
+// Oyuncu hediyeyi İnşa ekranından kendi seçtiği kareye kurar; ödeme alınmaz, adet düşer.
+// ⚠️ ANAHTAR = TABAN TİP. Katalog markalı anahtar kullanır ('wind_2__ortac'); çanta markasız
+// tabanla ('wind_2') eşleşir, böylece hediye HER marka kartında görünür ve oyuncu markayı
+// kendi seçer. Markalı anahtarla saklasaydık hediye katalogda hiç görünmezdi.
+const cantaAdet = t => Math.max(0, Math.floor((G && G.canta && G.canta[baseTypeOf(t)]) || 0));
+const cantaToplam = () => (G && G.canta) ? Object.values(G.canta).reduce((a, b) => a + Math.max(0, Math.floor(b || 0)), 0) : 0;
+function cantaEkle(t, n) {
+  if (!G || !(n > 0)) return;
+  G.canta = G.canta || {};
+  G.canta[baseTypeOf(t)] = cantaAdet(t) + Math.floor(n);
+}
+function cantaDus(t) {
+  if (!G || !G.canta || cantaAdet(t) < 1) return false;
+  const b = baseTypeOf(t);
+  G.canta[b] = cantaAdet(t) - 1;
+  if (G.canta[b] <= 0) delete G.canta[b];
+  return true;
+}
 // ── Kampanyalar: düşük çıta (₺50/$2), 24 saat, sonra gider ──
 const OFFERS = [
   { id: 'm1', at: 1e9, price: '₺50 / $2', title: 'İlk Milyon Kampanyası',
     perks: ['🔧 Bakım SONSUZA DEK %50 indirimli', '🌬️ 2× Rüzgar Türbini hediye', '🔋 100 MWh Mega Depo hediye'],
-    grant() { const c = homeCell(); addUnit('plant', 'wind_2', jitter(cellCenter(c)), 0); addUnit('plant', 'wind_2', jitter(cellCenter(c)), 0); addUnit('store', 'mega', jitter(cellCenter(c)), 0); G.maintDiscount = .5; } },
+    // 🎒 Hediyeler ÇANTAYA girer — haritaya rastgele BASILMAZ (patron 1 Eyl). Oyuncu İnşa
+    // ekranından istediği kareye kurar; kart sol üstünde ×N rozeti, düğme "Yerleştir" olur.
+    grant() { cantaEkle('wind_2', 2); cantaEkle('mega', 1); G.maintDiscount = .5; } },
   { id: 'm2', at: 1e10, adfree: true, title: 'Reklamları Kapat — VIP',
     perks: ['🚫 Reklam butonları reklam İZLETMEDEN ödülünü verir (+%15 satış bonusu direkt uygulanır)', '📅 Aylık ₺100 — her ay yeniden satın alınabilir', '♾️ Ömür Boyu ₺500 — SINIRLI SAYIDA'] },
 ];
@@ -6097,7 +6170,7 @@ function freshState() {
     hideLines: false, // 🙈 enerji kablolarını haritada gizle (Görünüm ekranından)
     mail: [], friends: [], friendReqs: [], chat: {}, chatSeen: 0, // 💬 sosyal katman
     auctionsMkt: [], // 🔨 müzayede ilanları
-    ally: null, allyId: null, allyBuffUntil: 0, // 🤝 ittifak (sunucuda ORTAK kayıt; çevrimdışıysa bot simülasyonu) + %50 alım bonusu penceresi
+    ally: null, allyId: null, allyBuffUntil: 0, allyBasvuru: null, // 📥 bekleyen ittifak başvurum {aid,nm,ts} // 🤝 ittifak (sunucuda ORTAK kayıt; çevrimdışıysa bot simülasyonu) + %50 alım bonusu penceresi
     resPts: { daily: 1, weekly: 0, dailyKey: '' }, // araştırma puanları (patron): Sv1-10 günlük, Sv11+ haftalık puan ister; 1 başlangıç hediyesi
     countryStudy: {}, countryStudyActive: null, // 🔎 bölge araştırması: ülke başına BİR KEZ, kalıcı
     cellEarned: {}, cellSpent: {}, // ofis bölge raporu için kare bazlı kazanç/harcama
@@ -6115,6 +6188,9 @@ function freshState() {
     // 📊 TÜR BAZLI KALICI ÜRETİM (MWh): u.lifeProd santral SATILINCA siliniyor — "güneşten X MWh
     // üret" görevi onunla ölçülemezdi. Bu sayaç şirket ömrü boyunca hiç sıfırlanmaz.
     prodByCat: {},
+    // 🎒 ÇANTA: kampanya/ödül hediyeleri. tip → adet. Oyuncu İnşa ekranından İSTEDİĞİ yere
+    // yerleştirir (eskiden hediyeler ev karosuna rastgele basılıyordu — patron: "çok saçma").
+    canta: {},
     lastSeen: Date.now(), muted: false, demo: false,
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
   };
@@ -6287,9 +6363,51 @@ function beep(f, dur, vol) {
   if (!G || G.muted) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume(); // 📱 WebView/iOS: bağlam ilk dokunuşa kadar askıda
     const o = AC.createOscillator(), g = AC.createGain();
     o.frequency.value = f; o.type = 'triangle'; g.gain.value = vol || .04;
     o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + (dur || .08));
+  } catch (e) {}
+}
+// ═══ 💰 YAZARKASA "KA-CHİNG" (patron 1 Eyl: "sat tuşuna bastığında bu ses çalsın") ═══
+// ⚠️ SES DOSYASI YOK, SENTEZ VAR — bilerek: (a) YouTube'dan ses çıkarıp oyuna koymak TELİF
+//    ihlalidir ve Play incelemesinde risktir, (b) dosya APK'yı şişirir ve çevrimdışı yüklenmez,
+//    (c) burada zaten WebAudio var. Ses üç katmandan kuruluyor:
+//      ① mekanik "ça" — 35 ms bant geçiren beyaz gürültü (çekmece/kol sesi)
+//      ② alt zil — ÇAN gibi UYUMSUZ (inharmonik) kısmi tonlar, üstel sönüm
+//      ③ üst zil — 90 ms sonra bir oktav üstü: klasik iki notalı "ka-CHİNG"
+// Envelop ŞART: beep()'teki gibi sert start/stop verilirse hoparlörde "klik" duyulur.
+let _kachingAt = 0;
+function kaching(vol) {
+  if (!G || G.muted) return;
+  if (performance.now() - _kachingAt < 120) return; // toplu satışta üst üste binmesin
+  _kachingAt = performance.now();
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const t0 = AC.currentTime, V = (vol == null ? 1 : vol) * .5;
+    const cik = AC.createGain(); cik.gain.value = V; cik.connect(AC.destination);
+    // ① mekanik çekmece sesi: kısa gürültü patlaması, bant geçiren süzgeçten
+    const n = Math.floor(AC.sampleRate * .05), buf = AC.createBuffer(1, n, AC.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    const src = AC.createBufferSource(); src.buffer = buf;
+    const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = .8;
+    const ng = AC.createGain(); ng.gain.setValueAtTime(.5, t0); ng.gain.exponentialRampToValueAtTime(.001, t0 + .05);
+    src.connect(bp); bp.connect(ng); ng.connect(cik); src.start(t0); src.stop(t0 + .06);
+    // ②③ iki zil vuruşu — çan tınısı UYUMSUZ kısmi tonlardan doğar (tam harmonik olsa org gibi olurdu)
+    const zil = (bas, gecikme, guc) => {
+      [[1, 1], [2.02, .55], [2.98, .32], [4.16, .18], [5.43, .1]].forEach(([kat, ag]) => {
+        const o = AC.createOscillator(), g = AC.createGain();
+        o.type = 'sine'; o.frequency.value = bas * kat;
+        const t = t0 + gecikme, son = .34 + (kat > 3 ? -.14 : 0); // üst kısmi tonlar daha çabuk söner
+        g.gain.setValueAtTime(.0001, t);
+        g.gain.exponentialRampToValueAtTime(ag * guc, t + .006); // hızlı atak (tokmak vuruşu)
+        g.gain.exponentialRampToValueAtTime(.0001, t + son);     // üstel sönüm (metal)
+        o.connect(g); g.connect(cik); o.start(t); o.stop(t + son + .02);
+      });
+    };
+    zil(1180, 0, .30);    // "ka"
+    zil(1770, .09, .26);  // "CHİNG" — bir buçuk oktav üstü, 90 ms sonra
   } catch (e) {}
 }
 function toast(msg, cls, key, cd, sticky) {
@@ -7150,7 +7268,7 @@ window.startDischarge = (id, frac, adMult, targetCell, quiet) => {
   plants().forEach(p => { if (p.st === st.id && p.on) { p.on = false; p._autoOff = true; } });
   const T = STORE_TYPES[st.t];
   if (!quiet) toast('⚡ Boşaltma başladı: ' + fmtE(amt) + ' MWh — ~' + Math.max(1, Math.ceil(dischSecOf(T) * amt / T.cap)) + ' sn' + (targetCell ? ' · 🔁 ' + cellCode(targetCell) + ' pazarına (-%10 aktarım)' : ''), '');
-  beep(600, .08);
+  if (quiet) beep(600, .08); else kaching(); // 💰 SAT tuşuna basınca yazarkasa (toplu satış tek sefer çalar)
   save(); refreshUnitMarkers();
   if ($('unitsheet').classList.contains('show') && window.__lastUnit === id) openUnitSheet(id);
 };
@@ -7219,7 +7337,7 @@ function sellAll(frac) {
   // bağlı uydu doğrudan seçilince startDischarge onu reddediyor ama sayaca giriyordu (yanıltıcı toast).
   for (const st of stores())
     if (!st.disch && !st.link && st.buildDone <= Date.now() && st.stored * frac >= .005) { startDischarge(st.id, frac, null, null, true); n++; }
-  if (n) { toast('⚡ ' + n + ' depo boşaltılıyor — para satış aktıkça hesabına geçer', ''); beep(600, .08); }
+  if (n) { toast('⚡ ' + n + ' depo boşaltılıyor — para satış aktıkça hesabına geçer', ''); kaching(); } // 💰 kaç depo olursa olsun TEK yazarkasa
   else toast('Boşaltılacak dolu depo yok', 'warn');
 }
 function restartAll() {
@@ -7560,6 +7678,18 @@ window.buildHere = (kind, t) => {
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 };
+// 🎒 ÇANTADAN YERLEŞTİR: satın alma onayı yok (ürün zaten oyuncunun), doğrudan harita moduna.
+// Adet DÜŞÜLMEZ burada — yerleştirme gerçekten olunca placeAt içinde düşer (iptal edilirse yanmaz).
+window.cantaYerlestir = (kind, t) => {
+  if (cantaAdet(t) < 1) { toast(CEV('🎒 Bu üründen çantanda kalmadı'), 'warn'); return; }
+  if (kind === 'plant' && capBlocked(t)) { buyCapLic(TYPE_OF(kind, t).cat); return; } // lisans şartı hediyede de geçerli
+  PENDING = { kind, t, disc: 1, canta: true };
+  hideSheets();
+  setMode('build');
+  toast(CEV('🎁 {0} elinde — kurmak istediğin kareye dokun', TYPE_OF(kind, t).nm), '', null, 6000);
+  // NOT: hediye TABAN tipe sayılır — oyuncu markayı kendi seçer, hangi marka kartından
+  //      yerleştirirse o marka kurulur (fiyat farkı ödenmez, hediye ücretsizdir).
+};
 window.doBuild = (kind, t, disc) => { // katalog onayı: ürünü eline al, yerleştirme moduna geç
   PENDING = { kind, t, disc: disc || 1 }; // disc: 🎬 reklam indirimi (ödeme yerleştirmede bu çarpanla)
   hideSheets();
@@ -7642,17 +7772,20 @@ function placeAt(c, ll) {
       return;                                          // PENDING KORUNUR — para gitmedi, ürün elinde
     }
   }
-  const price = Math.round(T.cost * (PENDING.disc || 1)); // 🎬 reklam indirimi burada uygulanır
-  if (G.cash < price) { toast(CEV('Yetersiz bakiye — {0} gerekli', fmt(price)), 'warn'); PENDING = null; setMode(null); return; }
-  G.cash -= price; gider('yatirim', price);
-  G.cellSpent[c] = (G.cellSpent[c] || 0) + price;
+  // 🎒 ÇANTADAN gelen ürün ücretsizdir; adet TAM BU NOKTADA düşer (yukarıdaki ruhsat/limit/
+  // deniz kontrollerinden döndüyse hediye YANMAZ — hepsi bu satırın ÜSTÜNDE).
+  const cantadan = !!PENDING.canta;
+  if (cantadan && !cantaDus(t)) { toast(CEV('🎒 Bu üründen çantanda kalmadı'), 'warn'); PENDING = null; setMode(null); return; }
+  const price = cantadan ? 0 : Math.round(T.cost * (PENDING.disc || 1)); // 🎬 reklam indirimi burada uygulanır
+  if (!cantadan && G.cash < price) { toast(CEV('Yetersiz bakiye — {0} gerekli', fmt(price)), 'warn'); PENDING = null; setMode(null); return; }
+  if (price > 0) { G.cash -= price; gider('yatirim', price); G.cellSpent[c] = (G.cellSpent[c] || 0) + price; }
   if (PENDING.disc && PENDING.disc < 1) toast('🎬 Reklam indirimi uygulandı: ' + fmt(T.cost - price) + ' cebinde kaldı', '');
   const nu = addUnit(kind, t, ll);
   gpSay('insa'); // 🎯 gelişim görevi sayacı
   if (tutActive()) nu.hidden = true; // eğitimde ZORUNLU kurulanlar da başkalarına görünmez (patron kuralı)
   ensureConnections(); ensureGridLinks(); // yeni santral boş slota, depo menzildeki merkeze otomatik bağlanır
   fetchWeather(); // yeni kare için canlı hava çek
-  toast(T.ico + ' ' + T.nm + ' inşaatı başladı — ' + (tutActive() ? 'saniyeler içinde hazır 🎓' : T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn'), '');
+  toast((cantadan ? '🎁 ' : '') + T.ico + ' ' + T.nm + ' inşaatı başladı — ' + (tutActive() ? 'saniyeler içinde hazır 🎓' : T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn') + (cantadan && cantaAdet(t) ? ' · 🎒 ×' + cantaAdet(t) + ' kaldı' : ''), '');
   beep(440, .1);
   if (kind === 'plant' && readyStores(c).length === 0 && !G.units.some(u => u.cell === c && u.kind === 'store'))
     toast('💡 Bu kareye bir de 🔋 depo kur — enerji depoya birikir, depoya dokunup satarsın', '', 'tipstore', 15000);
@@ -7897,7 +8030,7 @@ window.buyOffer = id => {
   G.offers[id].bought = true;
   o.grant();
   closeModal();
-  toast('🎁 ' + o.title + ' aktif! Hediyeler haritanda.', '', null, 0, true);
+  toast(cantaToplam() ? CEV('🎁 {0} aktif! Hediyeler 🎒 ÇANTANDA — 🏗️ İnşa ekranından istediğin kareye yerleştir.', o.title) : CEV('🎁 {0} aktif!', o.title), '', null, 0, true);
   beep(880, .12); setTimeout(() => beep(1320, .15), 140);
   save(); refreshUnitMarkers();
 };
@@ -9307,6 +9440,7 @@ function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
   a.friends = rec.meta.friends || [];
   a.foes = rec.meta.foes || [];
   a.election = rec.meta.election || null;
+  a.basvurular = rec.basvuru || {}; // 📥 bekleyen katılma başvuruları (aynı GET ile geldi, ek istek yok)
   // kasa = defterin toplamı (tek yazılan sayı değil → eşzamanlı bağışlar birbirini silmez)
   // 🏦 İTTİFAK KREDİSİ: durum hiçbir yere YAZILMAZ, defterden TÜRETİLİR (meta yazma yarışı yok).
   const _l = allyLoanFromLedger(led);
@@ -10227,6 +10361,151 @@ function allyTick() { // 2 sn'lik ana tikten çağrılır: bot katkısı + sonu�
 }
 // ═══ 🤝 AÇIKLAMA · TOPLU MESAJ · DOST/DÜŞMAN · KONSORSİYUM · BAŞKANLIK SEÇİMİ (patron tasarımı) ═══
 let ALLYVIEW = 'main', ALLYTAB = 'dost';
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// 📥 İTTİFAK BAŞVURU SİSTEMİ (patron 2 Eyl: "İttifağa katıl butonu ve oyuncular başvuru
+//    yapabilsin; başkan veya yardımcıları bekleyen istekler kısmından onaylasın/reddetsin")
+// ÖNCEKİ DURUM: ittifağa katılmanın TEK yolu başkanın davetiydi. Daveti gelmeyen oyuncu
+// ittifak listesini bile göremiyordu (allyOthersHTML `G.ally` şartına kilitli).
+// ⚠️ POSTA KANALI KULLANILMADI (arkadaşlık isteğinin yolu): posta 60 kayıt tavanına takılınca
+//    onay butonuyla birlikte kayboluyor ve sunucudaki kopya okunur okunmaz siliniyor.
+//    Başvuru SUNUCUDA kalıcı bir düğümde durur: allies/<aid>/basvuru/<uid>.
+// 🔑 KİMLİK = UID (şirket adı DEĞİL). Arkadaşlık sistemi adı anahtar yaptığı için ad
+//    değişince cevap hiç ulaşmıyordu — aynı hatayı tekrarlamıyoruz.
+// ═══════════════════════════════════════════════════════════════════════════════════════
+const BASVURU_TAVAN = 30;        // bir ittifakta aynı anda en fazla bekleyen başvuru
+const BASVURU_OMUR = 7 * 864e5;  // 7 gün sonra kendiliğinden düşer (ölü başvuru birikmesin)
+// Başvuruyu onaylama/reddetme yetkisi: başkan VE yardımcı (patron şartı)
+const canAllyBasvuru = () => myAllyRole() === 'lider' || myAllyRole() === 'yardimci';
+// Bekleyen başvurular — allySync her turda allies/<aid> tamamını çektiği için ek istek YOK
+const allyBasvurular = () => {
+  if (!G.ally || !G.ally.basvurular) return [];
+  return Object.entries(G.ally.basvurular)
+    .map(([uid, b]) => ({ uid, nm: nmTemizle(b && b.nm), mw: Math.max(0, +(b && b.mw) || 0), worth: Math.max(0, +(b && b.worth) || 0), ts: +(b && b.ts) || 0 }))
+    .filter(b => b.nm && Date.now() - b.ts < BASVURU_OMUR)
+    .sort((a, b) => a.ts - b.ts);
+};
+const allyBasvuruSayi = () => canAllyBasvuru() ? allyBasvurular().length : 0;
+// ── BAŞVURU GÖNDER ──
+window.allyBasvurAsk = (aid, nm) => {
+  if (G.ally || G.allyId) { toast(CEV('Önce mevcut ittifakından ayrılmalısın'), 'warn'); return; }
+  if (!NET.on()) { toast(CEV('🌐 Başvuru için çevrimiçi olmalısın'), 'warn'); return; }
+  if (!aid || /^sim\d+$/.test(aid)) { toast(CEV('Bu ittifak simülasyon listesinden — başvuru yapılamaz'), 'warn', null, 6000); return; }
+  const ad = esc(nm) || 'İttifak';
+  $('modal').innerHTML = `
+    <h2>📥 ${CEV('İttifağa Başvur')}</h2>
+    <p>${CEV('{0} ittifakına katılma başvurusu göndereceksin. Başkan ya da yardımcısı onaylayınca ittifağa katılırsın.', '<b>' + ad + '</b>')}</p>
+    <p class="sub">${CEV('Aynı anda tek başvuru yapabilirsin. Cevap gelmezse 7 gün sonra başvuru kendiliğinden düşer.')}</p>
+    <button class="primary" onclick="closeModal();allyBasvur('${jsStr(aid)}','${jsStr(ad)}')">📥 ${CEV('Başvuruyu Gönder')}</button>
+    <button class="primary ghostbtn" onclick="closeModal()">${CEV('Vazgeç')}</button>`;
+  $('overlay').classList.add('show');
+};
+window.allyBasvur = async (aid, nm) => {
+  if (G.ally || G.allyId || !NET.on()) return;
+  try {
+    const r = await NET.allyBasvuruYaz(aid, { nm: nmTemizle(G.company), mw: Math.round(installedMW()), worth: Math.round(myWorth()), ts: Date.now() });
+    if (r == null) { toast(CEV('🌐 Başvuru gönderilemedi — bağlantını kontrol et'), 'warn'); return; } // NET.kilit sessiz null döndürür
+    G.allyBasvuru = { aid, nm: esc(nm), ts: Date.now() };
+    save();
+    toast('📥 ' + CEV('Başvurun gönderildi: {0} — başkan onaylayınca haber vereceğiz', esc(nm)), '', null, 0, true);
+    beep(660, .1);
+  } catch (e) { toast(CEV('🌐 Başvuru gönderilemedi — bağlantını kontrol et'), 'warn'); }
+  refreshAllyUI();
+};
+window.allyBasvuruGeriCek = async () => {
+  const b = G.allyBasvuru;
+  if (!b) return;
+  try { await NET.allyBasvuruSil(b.aid, NET.id); } catch (e) {}
+  G.allyBasvuru = null; save();
+  toast(CEV('📥 Başvurun geri çekildi'), '');
+  refreshAllyUI();
+};
+// ── BAŞVURU DURUMU YOKLAMASI (başvuran taraf) ──
+// allySync yalnız G.allyId varken çalışır; başvuran oyuncunun allyId'si YOK, dolayısıyla
+// kabul edildiğini kendisi öğrenemezdi. NET.loop turunda üyeliğini yokluyoruz.
+async function allyBasvuruYokla() {
+  const b = G && G.allyBasvuru;
+  if (!b || !NET.on() || NET.kilit || G.allyId || G.ally) return;
+  if (Date.now() - b.ts > BASVURU_OMUR) { G.allyBasvuru = null; save(); return; } // süresi doldu
+  let uye = null, hala = null;
+  try { uye = await NET.get('allies/' + b.aid + '/members/' + NET.id); } catch (e) { return; } // ağ hatası: bir sonraki turda
+  if (uye && uye.nm !== undefined) {                       // ✅ ONAYLANDI
+    G.allyBasvuru = null;
+    G.allyId = b.aid;
+    await allySync();
+    ALLYVIEW = 'main';
+    addMail('🤝 ' + (G.ally ? G.ally.name : b.nm), CEV('Başvurun kabul edildi'), CEV('{0} ittifakına katıldın. Ortak kasa, ittifak hattı ve acil ihaleler artık sana da açık.', (G.ally ? G.ally.name : b.nm)), true);
+    toast('🤝 ' + CEV('Başvurun KABUL EDİLDİ — {0} ittifakındasın!', (G.ally ? G.ally.name : b.nm)), '', null, 0, true);
+    beep(880, .12); setTimeout(() => beep(1320, .15), 140);
+    save(); refreshAllyUI();
+    return;
+  }
+  try { hala = await NET.get('allies/' + b.aid + '/basvuru/' + NET.id); } catch (e) { return; }
+  if (!hala) {                                             // ✖️ başvuru silinmiş, üye de değilim → RED
+    G.allyBasvuru = null;
+    addMail('🤝 ' + b.nm, CEV('Başvurun reddedildi'), CEV('{0} ittifakı başvurunu kabul etmedi. Başka bir ittifağa başvurabilir ya da kendi ittifakını kurabilirsin.', b.nm), true);
+    toast(CEV('📥 {0} başvurunu reddetti', b.nm), 'warn', null, 0, true);
+    save(); refreshAllyUI();
+  }
+}
+// ── ONAY / RET (başkan · yardımcı) ──
+window.allyBasvuruOnayla = async (uid) => {
+  if (!canAllyBasvuru()) { toast(CEV('👑 Başvuru onayı yalnız başkan ve yardımcısında'), 'warn'); return; }
+  const b = allyBasvurular().find(x => x.uid === uid);
+  if (!b) return;
+  // ⚠️ TAVAN KONTROLÜ ONAYLAYANDA: davet yolunda vardı, katılma yolunda YOKTU (kadro taşıyordu)
+  if (allyRoster().length >= allyCap()) { toast(CEV('👥 Üye tavanı dolu ({0}) — ittifak puanıyla artar', allyCap()), 'warn', null, 0, true); return; }
+  try {
+    // ÖNCE üyeliği yaz, BAŞARIDA başvuruyu düş (ters sıra veri kaybı olurdu — acceptAllyInvite'ın hatası)
+    const r = await NET.allyUyeYaz(G.allyId, uid, { nm: b.nm, role: 'uye', since: Date.now() });
+    if (r == null) { toast(CEV('🌐 Onay yazılamadı — tekrar dene'), 'warn'); return; }
+    await NET.allyBasvuruSil(G.allyId, uid).catch(() => {});
+    if (G.ally.basvurular) delete G.ally.basvurular[uid];
+    toast('✅ ' + CEV('{0} ittifağa alındı', b.nm), '', null, 0, true);
+    beep(880, .12);
+    await allySync();
+  } catch (e) { toast(CEV('🌐 Onay yazılamadı — tekrar dene'), 'warn'); }
+  save(); refreshAllyUI();
+};
+window.allyBasvuruReddet = async (uid) => {
+  if (!canAllyBasvuru()) { toast(CEV('👑 Başvuru onayı yalnız başkan ve yardımcısında'), 'warn'); return; }
+  const b = allyBasvurular().find(x => x.uid === uid);
+  if (!b) return;
+  try { await NET.allyBasvuruSil(G.allyId, uid); } catch (e) { toast(CEV('🌐 İşlem yazılamadı — tekrar dene'), 'warn'); return; }
+  if (G.ally.basvurular) delete G.ally.basvurular[uid];
+  toast(CEV('✖️ {0} başvurusu reddedildi', b.nm), '');
+  save(); refreshAllyUI();
+};
+// ── İTTİFAK ARAMA EKRANI (ittifaksız oyuncu) ──
+window.allyKatilAc = () => { ALLYVIEW = 'katil'; refreshAllyUI(); if (!$('allysheet').classList.contains('show')) openAllySheet(); };
+function allyKatilHTML() {
+  let h = `<div class="qline" style="margin-bottom:6px"><span class="lnk" style="cursor:pointer;color:var(--acc2);text-decoration:underline" onclick="allyView('main')">‹ ${CEV('Geri')}</span></div>
+    <div style="font-size:12px;margin:4px 0 2px">🔎 <b>${CEV('İTTİFAĞA KATIL')}</b>
+      <span class="lnk" style="float:right;cursor:pointer;text-decoration:underline;color:var(--acc2)" onclick="allyDirRefresh()">↻ ${CEV('Yenile')}</span></div>`;
+  const b = G.allyBasvuru;
+  if (b) {
+    h += `<div style="border:1px solid var(--gold);border-radius:10px;padding:9px 11px;margin:6px 0">
+      <div style="font-size:12.5px;font-weight:800;color:var(--gold)">⏳ ${CEV('BAŞVURUN İNCELEMEDE')}</div>
+      <div class="sub">🏰 <b>${b.nm}</b> · ${CEV('başkanın onayı bekleniyor')}</div>
+      <button class="bigsell half" style="margin-top:6px;color:var(--danger)" onclick="allyBasvuruGeriCek()">✖️ ${CEV('Başvuruyu Geri Çek')}</button></div>`;
+  }
+  if (!ALLYDIR) { loadAllyDir().then(() => refreshAllyUI()); return h + '<p class="sub">' + CEV('Liste yükleniyor…') + '</p>'; }
+  // ⚠️ SİMÜLASYON KAYITLARI (aid 'sim0..sim19') ELENİR: var olmayan bir düğüme başvuru yazılamaz
+  const ger = ALLYDIR.filter(d => d.aid && !/^sim\d+$/.test(d.aid));
+  if (!ger.length) return h + `<p class="sub">${CEV('Şu an katılabileceğin açık bir ittifak yok. Kendi ittifakını kurabilirsin — kurmak ücretsiz.')}</p>
+    <button class="bigsell half" onclick="foundAllyAsk()">🤝 ${CEV('İttifak Kur (ücretsiz)')}</button>`;
+  h += ger.slice(0, 20).map(d => {
+    const dolu = (d.members || 1) >= Math.min(50, 10 + Math.floor((d.pts || 0) / 3) * 5);
+    const bende = b && b.aid === d.aid;
+    return `<div class="mrow"><span class="mid">
+      <div>🏰 ${esc(d.name)}</div>
+      <div class="d">👥 ${d.members || 1} ${CEV('üye')} · ⭐ ${d.pts || 0} ${CEV('puan')} · 🏆 ${d.wins || 0}</div></span>
+      ${bende ? `<span class="sub">⏳ ${CEV('başvuruldu')}</span>`
+        : dolu ? `<span class="sub">${CEV('kadro dolu')}</span>`
+        : `<button onclick="allyBasvurAsk('${jsStr(d.aid)}','${jsStr(esc(d.name))}')" style="padding:7px 10px;border-radius:8px;border:none;background:var(--acc2);color:#071018;font-weight:800;font-size:11.5px;cursor:pointer">📥 ${CEV('Başvur')}</button>`}
+    </div>`;
+  }).join('');
+  return h;
+}
 window.allyView = v => { ALLYVIEW = v; refreshAllyUI(); };
 window.allyTab = t => { ALLYTAB = t; refreshAllyUI(); };
 const allyFriends = () => (G.ally && G.ally.friends) || [];
@@ -10556,10 +10835,18 @@ function allyOthersHTML() {
   return h;
 }
 function allyHTML() {
+  if (ALLYVIEW === 'katil') return allyKatilHTML(); // 🔎 ittifak arama — ittifaksız oyuncuya da açık
   if (G.ally && ALLYVIEW === 'others') return allyOthersHTML();
   let h = '<p class="sub">Prototip: bot üyelerle simülasyon — gerçek çok oyunculu tam sürümde.</p>';
   if (!G.ally) {
-    h += `<p class="sub">Birlik ol, devletin ACİL İHALELERİNİ birlikte teslim et: tüm üyelere <b>24 saat +%50 alım fiyatı</b> + ittifak puanı. Üye tavanı 10 → puanla 50.</p>
+    h += `<p class="sub">Birlik ol, devletin ACİL İHALELERİNİ birlikte teslim et: tüm üyelere <b>24 saat +%50 alım fiyatı</b> + ittifak puanı. Üye tavanı 10 → puanla 50.</p>`;
+    // 📥 KATILMA YOLU (patron 2 Eyl): eskiden ittifağa girmenin TEK yolu başkanın davetiydi;
+    //    davet gelmeyen oyuncu ittifak listesini bile göremiyordu.
+    const bv = G.allyBasvuru;
+    if (bv) h += `<div style="border:1px solid var(--gold);border-radius:10px;padding:9px 11px;margin:6px 0">
+      <div style="font-size:12.5px;font-weight:800;color:var(--gold)">⏳ ${CEV('BAŞVURUN İNCELEMEDE')}</div>
+      <div class="sub">🏰 <b>${esc(bv.nm)}</b> · ${CEV('başkanın onayı bekleniyor')}</div></div>`;
+    h += `<button class="bigsell half" style="background:var(--acc2);color:#071018" onclick="allyKatilAc()">🔎 ${CEV('İttifağa Katıl')} <span class="sub" style="color:#071018">— ${CEV('listeden seç, başvur')}</span></button>
     <button class="bigsell half" onclick="foundAllyAsk()">🤝 İttifak Kur (ücretsiz)</button>`;
   } else {
     const t = G.ally.tender;
@@ -10641,6 +10928,19 @@ function allyHTML() {
     }
     // üye bağış listesi (patron: "herkesin haftalık ve toplam bağışı isminin yanında")
     // ── 👥 ÜYE LİSTESİ + RÜTBELER (patron isteği) ──
+    // 📥 BEKLEYEN BAŞVURULAR — yalnız başkan ve yardımcı görür/yanıtlar (patron şartı)
+    if (canAllyBasvuru()) {
+      const bvs = allyBasvurular();
+      h += `<div style="font-size:12px;margin:12px 0 2px">📥 <b>${CEV('BEKLEYEN İSTEKLER')}</b> <span class="sub">${bvs.length}</span></div>`;
+      h += bvs.length ? bvs.map(b => `<div class="mrow"><span class="mid">
+          <div>🏢 ${b.nm}</div>
+          <div class="d">⚡ ${fmtN(b.mw)} MW · 💼 ${fmt(b.worth)} · ${fmtHrs((Date.now() - b.ts) / 36e5)} ${CEV('önce')}</div></span>
+          <span style="display:flex;gap:5px" onclick="event.stopPropagation()">
+            <button onclick="allyBasvuruOnayla('${jsStr(b.uid)}')" style="padding:7px 9px;border-radius:8px;border:none;background:var(--acc);color:#071018;font-weight:800;font-size:11.5px;cursor:pointer">✅</button>
+            <button onclick="allyBasvuruReddet('${jsStr(b.uid)}')" style="padding:7px 9px;border-radius:8px;border:none;background:var(--danger);color:#fff;font-weight:800;font-size:11.5px;cursor:pointer">✖️</button>
+          </span></div>`).join('')
+        : `<p class="sub">${CEV('Bekleyen başvuru yok. Oyuncular 🔎 İttifağa Katıl ekranından sana başvurabilir.')}</p>`;
+    }
     const ros = allyRoster().slice().sort((a, b) => ALLY_ROLES[b.role].r - ALLY_ROLES[a.role].r || a.nm.localeCompare(b.nm, 'tr'));
     if (isAllyBoss()) h += `<button class="bigsell half" onclick="allyBroadcastAsk()">📣 Üyelere Toplu Mesaj</button>`;
     h += `<div style="font-size:12px;margin:12px 0 2px">👥 <b>ÜYELER</b> <span class="sub">${ros.length}/${allyCap()}</span>
@@ -11459,6 +11759,7 @@ const NET = {
         save();
       }
       if (G.allyId) await allySync(); // 🤝 ortak ittifak kaydı: üyeler, rütbeler, kasa, hatlar
+      try { await allyBasvuruYokla(); } catch (e) {} // 📥 başvurum kabul/ret edildi mi (allySync allyId'siz çalışmaz)
       othersDrawn = ''; drawOthers();
     } catch (e) {}
     setTimeout(() => this.loop(), 12000);
@@ -11516,6 +11817,11 @@ const NET = {
   allyAll() { return this.get('allies'); },
   allyCreate(aid, name) { return this.put('allies/' + aid + '/meta', { name, founder: this.id, created: Date.now() }); },
   allyJoin(aid, role) { return this.put('allies/' + aid + '/members/' + this.id, { nm: G.company, role: role || 'uye', since: Date.now() }); },
+  // 📥 BAŞVURU: allies/<aid>/basvuru/<uid> — kalıcı düğüm (posta kanalı 60 kayıt tavanına takılıyordu)
+  allyBasvuruYaz(aid, rec) { return this.put('allies/' + aid + '/basvuru/' + this.id, rec); },
+  allyBasvuruSil(aid, uid) { return this.req('allies/' + aid + '/basvuru/' + uid, 'DELETE'); },
+  // başkan/yardımcı BAŞKASININ üyeliğini yazar (allyJoin yalnız kendini yazabilir)
+  allyUyeYaz(aid, pid, rec) { return this.put('allies/' + aid + '/members/' + pid, rec); },
   allyLeave(aid) { return this.req('allies/' + aid + '/members/' + this.id, 'DELETE'); },
   allyRoleSet(aid, pid, role) { return this.put('allies/' + aid + '/members/' + pid + '/role', role); },
   allyRemove(aid, pid) { return this.req('allies/' + aid + '/members/' + pid, 'DELETE'); },
@@ -13458,10 +13764,14 @@ const yatLimit = () => {
   return Math.max(0, Math.floor(myWorth() * KREDI_LIMIT * k.carpan));
 };
 // Bugün ödenebilecek taksit ADEDİ: geciken taksitler + BUGÜNKÜ taksit. İleriye ödeme YOK.
+// 📅 patron 2 Eyl: "krediyi çektiğimiz gün değil BİR SONRAKİ GÜN başlasın ödemeler" —
+// kota `bankaGun() - K.bas`: çekim gününde (fark 0) taksit YOK, ertesi gün 1. taksit doğar.
+// Kredi ÖMRÜ değişmez: eskiden de çekim günü ödemek oyuncuyu öne geçirmiyordu (ertesi günün
+// taksitini yiyordu), o yüzden krediBekle (bas + vade + 1) ve son taksit günü aynı kalır.
 const yatOdenebilir = () => {
   if (!yatVar()) return 0;
   const K = G.kredi;
-  return Math.max(0, Math.min(K.vade, yatGereken(K) + 1) - K.odenenAdet);
+  return Math.max(0, Math.min(K.vade, bankaGun() - K.bas) - K.odenenAdet);
 };
 // Ödenmesi GEREKEN taksit adedi. İlk tam gün ödemesiz (gerçek kredilerdeki ödemesiz dönem):
 // krediyi gece 23:00'te alan oyuncu 1 saat sonra temerrüde düşmesin.
@@ -13572,7 +13882,9 @@ window.yatOde = (adet) => {
   if (!yatVar()) return;
   const K = G.kredi;
   const olabilir = yatOdenebilir();
-  if (olabilir <= 0) { toast('🏗️ Bugünkü taksitini ödedin — yarın yine bekleriz.', '', null, 5000); return; }
+  if (olabilir <= 0) { toast(bankaGun() === K.bas
+    ? '📅 Bugün taksit yok — ödemeler kredinin ERTESİ GÜNÜ başlar.'
+    : '🏗️ Bugünkü taksitini ödedin — yarın yine bekleriz.', '', null, 5000); return; }
   const n = Math.max(1, Math.min(adet || 1, olabilir));
   // ⚠️ taksit = Math.round(borc/vade) AŞAĞI yuvarlayabildiği için vade×taksit < borç kalıyordu
   // ve kredi taksitle HİÇ kapanmıyordu. SON taksit kalan borcun tamamını kapatır.
@@ -13876,7 +14188,9 @@ function yatPanel() {
         + '💵 ' + (gec ? 'Geciken + bugünkü taksiti öde' : 'Bugünkü taksiti öde') + ' — ' + fmt(tutar) + '</button>';
       if (G.cash < tutar) h += '<p class="sub neg">Kasanda yetmiyor — enerji sat, sonra öde.</p>';
     } else {
-      h += '<p class="sub pos">✅ <b>Bugünkü taksitini ödedin.</b> Yarın 00:00\'a kadar bir sonraki taksit var — yarın yine bekleriz.</p>';
+      h += bankaGun() === K.bas
+        ? '<p class="sub pos">📅 <b>Bugün taksit yok.</b> Ödemeler kredinin ERTESİ GÜNÜ başlar — ilk taksit yarın.</p>'
+        : '<p class="sub pos">✅ <b>Bugünkü taksitini ödedin.</b> Yarın 00:00\'a kadar bir sonraki taksit var — yarın yine bekleriz.</p>';
     }
     h += '<button class="primary ghostbtn" onclick="yatErkenKapat()" ' + (G.cash >= K.borc ? '' : 'disabled') + '>'
       + '🔓 Krediyi Erken Kapat — ' + fmt(K.borc) + '</button>'
@@ -14520,6 +14834,8 @@ function migrate(s) {
   if (!Array.isArray(s.gpGorev.ids)) s.gpGorev.ids = [];
   for (const k2 of ['alindi', 'temel', 'hedef', 'sayac']) if (!s.gpGorev[k2] || typeof s.gpGorev[k2] !== 'object') s.gpGorev[k2] = {};
   s.prodByCat = (s.prodByCat && typeof s.prodByCat === 'object') ? s.prodByCat : {};
+  s.canta = (s.canta && typeof s.canta === 'object') ? s.canta : {}; // 🎒 hediye envanteri
+  if (s.allyBasvuru !== null && (!s.allyBasvuru || !s.allyBasvuru.aid)) s.allyBasvuru = null; // 📥 bozuk başvuru kaydı
   s.capLic = s.capLic || {};
   s.lines = s.lines || []; s.mail = s.mail || []; s.friends = s.friends || []; s.friendReqs = s.friendReqs || [];
   // ⚡ HAT ÖMRÜ (20. tur): eski kayıtlarda omur/tasinan yok. Sayaç SIFIRDAN başlar — mevcut
@@ -15788,7 +16104,8 @@ function openBuildSheet() {
     const tutPick = tutGuideOn && t === tutPickT;   // hedef kart eğitim bitene kadar parlar
     const tutOff = tutLock && t !== tutPickT;        // diğerlerini karartma yalnız ilk 60 dk
     const capLock = mode === 'plant' && capBlocked(t);
-    const disabled = G.cash < T.cost || tutOff;
+    const cn = cantaAdet(t);                       // 🎒 çantadaki adet (varsa ücretsiz yerleştirme)
+    const disabled = (cn > 0 ? false : G.cash < T.cost) || tutOff;
     const btTxt = T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn';
     // 🏷️ Rakip tarzı ETİKETLİ SATIRLAR (patron 29 Ağu): yatay çipler yerine her özellik ayrı satır
     const prow = (ik, et, deger) => `<div class="prow"><span class="pl">${ik} ${et}</span><b>${deger}</b></div>`;
@@ -15820,14 +16137,16 @@ function openBuildSheet() {
         <div class="pimg" style="background:${CAT_GRAD[isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat]};position:relative;overflow:hidden" onclick="openDetail('${t}','${mode}')">
           <img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
           ${T.ico}
-          <span style="position:absolute;left:4px;top:4px;background:#0b1220cc;border-radius:7px;padding:2px 7px;font-size:10px;font-weight:800;z-index:1">${CEV(isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat)}</span>
+          ${cn > 0 ? `<span style="position:absolute;left:4px;top:4px;background:var(--gold);color:#131313;border-radius:7px;padding:2px 8px;font-size:12px;font-weight:900;z-index:2;box-shadow:0 1px 6px #000a">×${cn}</span>` : ''}
+          <span style="position:absolute;left:4px;top:${cn > 0 ? 26 : 4}px;background:#0b1220cc;border-radius:7px;padding:2px 7px;font-size:10px;font-weight:800;z-index:1">${CEV(isDepot ? 'Yakıt' : isStore ? 'Depo' : T.cat)}</span>
           ${T.brand && BRAND_ARCH[T.brand] ? `<span style="position:absolute;top:4px;right:4px;background:#0b1220e6;border-radius:6px;padding:2px;line-height:0;box-shadow:0 1px 4px #000a">${brandLogoHTML(T.brand, 18)}</span>` : ''}
         </div>
       </div>
       <div class="pdesc">${T.d}</div>
       <div class="pbuy">
-        <div class="pprice">${fmt(T.cost)}</div>
+        <div class="pprice">${cn > 0 ? `<span style="color:var(--gold)">🎁 ${CEV('Hediye')}</span> <span class="sub">${CEV('çantanda ×{0}', cn)}</span>` : fmt(T.cost)}</div>
         ${capLock ? `<button onclick="buyCapLic('${T.cat}')" style="background:var(--gold);color:#131313">🔒 Lisans</button>`
+          : cn > 0 ? `<button onclick="cantaYerlestir('${kind}','${t}')" ${tutOff ? 'disabled' : ''} style="background:var(--gold);color:#131313">🎁 ${CEV('Yerleştir')}</button>`
           : `<button onclick="buildHere('${kind}','${t}')" ${disabled ? 'disabled' : ''} ${tutOff ? '' : `data-cost="${T.cost}"`}>${(tutPick ? '👉 ' : '') + CEV('Satın al')}</button>`}
       </div>
     </div>`;
@@ -16910,7 +17229,9 @@ function renderHUD() {
   // 🔧 Çekmece daraldı (62px): bakım tutarı kısa biçimde — "$47.664" yerine "$48K". Milyon üstünü fmt zaten kısaltır.
   // Tam tutar butona basınca açılan bakım penceresinde yazıyor, bilgi kaybı yok.
   if ($('drawermaint')) $('drawermaint').textContent = mc >= 1 ? (mc >= 1e6 || mc < 1000 ? fmt(mc) : '$' + Math.round(mc / 1000) + 'K') : 'Bakım';
-  $('allybtn').style.color = (G.ally && G.ally.tender) ? 'var(--danger)' : (allyBuffOn() ? 'var(--gold)' : '');
+  const bvN = allyBasvuruSayi(); // 📥 bekleyen katılma başvurusu (yalnız başkan/yardımcı görür)
+  $('allybtn').style.color = (G.ally && G.ally.tender) ? 'var(--danger)' : bvN ? 'var(--acc)' : (allyBuffOn() ? 'var(--gold)' : '');
+  $('allybtn').textContent = bvN ? '🤝 ' + CEV('İttifak') + ' (' + bvN + ')' : CEV('🤝 İttifak');
   const um = unreadMail();
   $('mailbtn').classList.toggle('unread', um > 0);
   $('mailbtn').textContent = um > 0 ? '📬 ' + um : CEV('📬 Posta');
