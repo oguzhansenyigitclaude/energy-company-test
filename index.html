@@ -667,7 +667,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-02 22:05) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-06 21:08) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -838,7 +838,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-02 22:05)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-06 21:08)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -5352,7 +5352,7 @@ async function kiraAdGuncelle() {
   kiraAdGuncelle._busy = true;
   try {
     for (const [cell, k] of hedefler) {
-      const kayit = { uid: NET.id, nm: ad, until: k.until, ts: Date.now() };
+      const kayit = { uid: NET.id, nm: ad, until: k.until, ts: NET.zaman() };
       const r = await NET.put('kiralar/' + cell, kayit);
       if (r == null) return; // kilit sessiz yutması: sonraki turda yeniden dene
       KIRA.map[cell] = kayit;
@@ -5372,7 +5372,7 @@ async function kiraTalepEt(cell, until) {
   try {
     await kiralarCek(true);
     if (gercekKiraci(cell)) return false;
-    const kayit = { uid: NET.id, nm: nmTemizle(G.company), until, ts: Date.now() };
+    const kayit = { uid: NET.id, nm: nmTemizle(G.company), until, ts: NET.zaman() };
     // ⚠️ NET.kilit AWAIT SIRASINDA dolarsa put sessizce null döner (throw etmez) — null = BAŞARISIZ.
     const r = await NET.put('kiralar/' + cell, kayit);
     if (r == null) return false;
@@ -5477,7 +5477,7 @@ async function vergiKuyrukDene() {
       const k = G.vergiKuyruk[0];
       if (!k || !(k.tutar >= 1) || !k.uid || Date.now() - k.ts > 7 * 864e5) { G.vergiKuyruk.shift(); continue; }
       try {
-        const r = await NET.put('vergi/' + k.uid + '/' + k.id, { from: nmTemizle(G.company), cell: k.cell, tutar: k.tutar, ts: Date.now() });
+        const r = await NET.put('vergi/' + k.uid + '/' + k.id, { from: nmTemizle(G.company), cell: k.cell, tutar: k.tutar, ts: NET.zaman() });
         if (r == null) return; // kilit sessiz yutması: kuyrukta kalsın
         G.vergiKuyruk.shift();
       } catch (e) {
@@ -5510,7 +5510,23 @@ function vergiFlush(st) {
 }
 // ── HER KARE FARKLI FİYATTAN ALIR (patron tasarımı): bölge alım çarpanı 0.80–1.30 (kare karakteri, sabit).
 // İmtiyaz kazananın avantajı artık ALIM FİYATINA +%20 (ek prim kalemine değil — patron düzeltmesi).
-const cellPriceFactor = c => { const [cy, cx] = c.split('_').map(Number); return .8 + hash01(cy, cx, 77) * .5; };
+const FIYAT_TAVAN = 1.30, FIYAT_TABAN = 0.35, FIYAT_REF = 32000; // ref: İstanbul ölçeği
+const CPF_CACHE = new Map();
+const cellPriceFactor = c => {
+  const onb = CPF_CACHE.get(c);
+  if (onb !== undefined) return onb;
+  const [cy, cx] = c.split('_').map(Number);
+  // 🏙️ MERKEZİLİK = TALEP (nüfus). Devlet, elektriğin TÜKETİLECEĞİ yerde pahalı alır;
+  //    kimsenin olmadığı yerde şebekeye enerji koymanın değeri düşüktür.
+  const d = Math.max(1, cellDemand(c));
+  const t = Math.pow(Math.min(1, d / FIYAT_REF), .32);      // 0..1 — logaritmik yayılım
+  const taban = Math.max(FIYAT_TABAN, FIYAT_TAVAN * t);
+  // komşu kareler birbirinin tıpatıp aynısı olmasın diye küçük, deterministik sapma
+  const v = Math.max(FIYAT_TABAN, Math.min(FIYAT_TAVAN, taban + (hash01(cy, cx, 77) - .5) * .07));
+  if (CPF_CACHE.size > 20000) CPF_CACHE.clear();
+  CPF_CACHE.set(c, v);
+  return v;
+};
 const cellPriceNow = c => priceNow() * cellPriceFactor(c) * (myLease(c) ? 1 + LEASE_PRIM : 1) * (G.allyBuffUntil > Date.now() ? 1.5 : 1); // 🤝 ittifak zaferi: +%50 alım fiyatı
 const TRANSFER_FEE = 0.30; // (komşu pazar kalktı — yalnız genel yolda emniyet kemeri olarak duruyor)
 // ⚡ KAYIP-KAÇAK BEDELİ (gerçek elektrik faturasındaki kalem): şebekeye verilen enerjinin
@@ -5745,7 +5761,8 @@ const AGAC_GP = [10, 20, 35, 55, 80];      // düğüm başına GP bedeli (kadem
 const AGAC_PARA = [0, 0, 0, 0, 2e9];       // 5. düğüm ayrıca MİLYARLIK para ister (para batağı)
 const AGAC_SERBEST = 2;                    // ilk kaç düğüm ana dal şartı olmadan alınır
 const AGAC_SIFIR_IP = 200, AGAC_SIFIR_GUN = 7; // 1. sıfırlama ücretsiz; sonrası 200💠 + 7 gün
-const AGAC_OLCEK = 1;                      // düğüm açma Küçük ölçekten (5.000 MWh) itibaren
+// 📏 Düğüm başına HAFTALIK ÜRETİM eşiği (MWh) — kademe kademe açılır (patron 3 Eyl).
+const AGAC_URETIM = [5000, 10000, 20000, 40000, 80000];
 const DALLAR = {
   solar: { nm: 'Güneş Ar-Ge', ico: '☀️', rozet: 'Solar Takımı', col: '#ffc24a',
     d: 'Panelin gününü uzatır, sonunda geceye taşır.', dugum: [
@@ -5801,15 +5818,18 @@ const gpBakiye = () => { const g = gelDurum(); return Math.max(0, Math.floor((g 
 const anaDal = () => { const g = gelDurum(); return (g && g.ana && DALLAR[g.ana]) ? g.ana : null; };
 const dalAcikSayi = dk => { const g = gelDurum(); if (!g || !g.nodes) return 0; return DALLAR[dk].dugum.filter(n => g.nodes[n.id]).length; };
 const agacAcikSayi = () => DAL_KEYS.reduce((s, dk) => s + dalAcikSayi(dk), 0);
-// Ağaç sayfası Küçük ölçekten (haftalık 5.000 MWh) önce TANITIM modunda: görevler işler ve GP
-// birikir, ama düğüm AÇILAMAZ. Yeni oyuncu ilk saatinde beş sistemle birden boğuşmasın.
-const agacAcik = () => !!(G && (G.olcek || 0) >= AGAC_OLCEK);
+// Görülen en yüksek haftalık üretim — ağaç kademelerinin ölçütü. Bir kez ulaşıldıysa
+// geri gitmez: GP/para ödenerek açılmış düğüm ertesi hafta kilitlenmemeli.
+const enUretim = () => Math.max(0, (G && G.enUretim) || 0, (G && G.weekProd) || 0);
+// Ağaç sayfası ilk eşikten (haftalık 5.000 MWh üretim) önce TANITIM modunda: görevler işler
+// ve GP birikir, ama düğüm AÇILAMAZ. Yeni oyuncu ilk saatinde beş sistemle boğuşmasın.
+const agacAcik = () => enUretim() >= AGAC_URETIM[0];
 // Bir düğüm şu an alınabilir mi? Boş dize = alınabilir, dolu dize = engel sebebi.
 function agacNedenOlmaz(id) {
   const N = AGAC_NODE[id]; if (!N) return 'yok';
   const g = gelDurum(); if (!g) return 'yok';
   if (g.nodes && g.nodes[id]) return 'zaten';
-  if (!agacAcik()) return 'olcek';
+  if (enUretim() < (AGAC_URETIM[N.i] || 0)) return 'uretim'; // kademe: 5k/10k/20k/40k/80k
   if (N.i > 0 && !(g.nodes && g.nodes[DALLAR[N.dal].dugum[N.i - 1].id])) return 'sira';
   if (N.i >= AGAC_SERBEST && anaDal() && anaDal() !== N.dal) return 'baskaDal';
   if (gpBakiye() < N.gp) return 'gp';
@@ -6036,7 +6056,7 @@ let _agacMesgul = false;   // çift tıklama kilidi (sirketAdiKaydet'te olmayan,
 const AGAC_ENGEL = {
   yok: 'Bu düğüm bulunamadı',
   zaten: 'Bu düğüm zaten açık',
-  olcek: '🔒 Gelişim düğümleri Küçük İşletme ölçeğinden itibaren açılır (haftalık 5.000 MWh şebeke satışı)',
+  uretim: '🔒 Bu kademe için haftalık üretimin yetmiyor',
   sira: '🔒 Önce bu dalın bir önceki düğümünü aç',
   baskaDal: '🔒 Ana dalın başka: 3. düğümden itibaren yalnız ANA DALINDA ilerleyebilirsin (sıfırlama ile değiştirilir)',
   gp: '🧬 Yeterli Gelişim Puanın yok — günlük ve haftalık gelişim görevlerinden kazanılır',
@@ -6069,7 +6089,7 @@ function agacDugumHTML(dk, n, i) {
     <div style="flex:1;min-width:0">
       <div style="font-size:12.5px"><b style="${acik ? 'color:var(--acc)' : ''}">${CEV(n.nm)}</b> <span class="sub">${i + 1}/5</span></div>
       <div class="sub">${CEV(n.d)}</div>
-      ${acik ? '' : `<div class="sub" style="margin-top:2px">🧬 ${N.gp} ${CEV('GP')}${paraTxt}${engel && engel !== 'gp' && engel !== 'para' && engel !== 'olcek' ? ' · ' + CEV(AGAC_ENGEL[engel]) : ''}</div>`}
+      ${acik ? '' : `<div class="sub" style="margin-top:2px">🧬 ${N.gp} ${CEV('GP')}${paraTxt} · ⚡ ${fmtN(AGAC_URETIM[i])} ${CEV('MWh/hafta üretim')}${engel && engel !== 'gp' && engel !== 'para' && engel !== 'uretim' ? ' · ' + CEV(AGAC_ENGEL[engel]) : ''}</div>`}
     </div>
     ${acik ? '<b class="pos" style="font-size:11px;white-space:nowrap">AÇIK ✓</b>'
       : `<button onclick="agacAl('${n.id}')" ${alinabilir ? '' : 'disabled'} style="padding:8px 10px;border-radius:8px;border:none;background:${alinabilir ? 'var(--acc2)' : '#2a3346'};color:${alinabilir ? '#071018' : 'var(--dim)'};font-weight:800;font-size:11.5px;cursor:pointer;white-space:nowrap">${alinabilir ? '🧬 ' + CEV('Aç') : '🔒'}</button>`}
@@ -6098,7 +6118,9 @@ function openGelisimSheet(sekme) {
       ${Q.hid ? gpSatirHTML(Q.hid, true) : ''}
       <p class="sub" style="margin-top:10px">${CEV('Ödüller otomatik verilir — düğmeye basman gerekmez. Görevler her gün gece yarısı (TSİ) yenilenir.')}</p>`;
   } else {
-    if (!agacAcik()) html += `<div style="border:1px solid var(--warn);border-radius:10px;padding:9px 11px;margin:2px 0 10px;font-size:12px;color:var(--warn)">🔒 <b>${CEV('Tanıtım modu')}</b> — ${CEV('düğümler Küçük İşletme ölçeğinden itibaren açılır (haftalık 5.000 MWh şebeke satışı). Puanların birikmeye şimdiden başladı.')}</div>`;
+    html += `<div style="border:1px solid ${agacAcik() ? 'var(--line)' : 'var(--warn)'};border-radius:10px;padding:9px 11px;margin:2px 0 10px;font-size:12px;color:${agacAcik() ? 'var(--dim)' : 'var(--warn)'}">
+      ⚡ <b>${CEV('Haftalık üretimin')}: ${fmtN(Math.round(G.weekProd || 0))} MWh</b> <span class="sub">(${CEV('en yüksek')}: ${fmtN(Math.round(enUretim()))})</span><br>
+      ${CEV('Her kademe daha yüksek üretim ister: 5.000 → 10.000 → 20.000 → 40.000 → 80.000 MWh/hafta. Ulaştığın kademe bir daha kilitlenmez.')}</div>`;
     html += `<p class="sub" style="margin:0 0 6px">${CEV('Her dalın ilk 2 düğümü serbesttir. 3. düğümü açtığın dal ANA DALIN olur ve adının yanında uzmanlık rozetin görünür — o andan sonra yalnız o dalda ilerlersin.')}</p>`;
     for (const dk of DAL_KEYS) {
       const D = DALLAR[dk], acikN = dalAcikSayi(dk);
@@ -6665,6 +6687,10 @@ function freshState() {
     cellEarned: {}, cellSpent: {}, // ofis bölge raporu için kare bazlı kazanç/harcama
     adFreeUntil: 0, adFreeLife: false,
     week: isoWeek(), weekSold: 0, weekClaimed: false,
+    // ⚡ HAFTALIK ÜRETİM (MWh): ölçek ve Gelişim Ağacı kademeleri buradan okunur.
+    // enUretim = görülen EN YÜKSEK haftalık üretim — ağaç düğümü bir kez açılınca
+    // ertesi hafta üretim düşse bile KİLİTLENMEZ (parayla/GP ile alınmış hak geri gitmez).
+    weekProd: 0, enUretim: 0,
     olcek: 0, katkiOdenen: '', // 🏛️ resmî şirket ölçeği (Mikro→Holding) + son ödenen katkı haftası
     ip: 10, ipBoost: null, bakimAnlasma: false, // 💠 İmtiyaz Puanı (10 hediye) + aktif takviye + kalıcı bakım anlaşması
     emis: { week: '', ton: 0, stage: 0, warnUntil: 0, watch: {}, watchUntil: 0, fines: 0, muvazaa: 0 }, // 🌍 emisyon denetimi
@@ -7364,6 +7390,10 @@ function step(dtMin, silent, atMin) {
       // satılınca siliniyor, "güneşten X MWh üret" görevi onunla ölçülemezdi).
       // ⚠️ Bu satır T tanımının ALTINDA olmak zorunda: üstüne yazarsan TDZ ReferenceError.
       if (!silent && G.prodByCat) G.prodByCat[T.cat] = (G.prodByCat[T.cat] || 0) + out;
+      // ⚡ haftalık üretim: ölçek ve ağaç kademeleri bunu okur. Çevrimdışı telafi de sayılır —
+      //    o da gerçekten üretilmiş enerjidir (satış sayacı weekSold de aynı şekilde sayıyor).
+      G.weekProd = (G.weekProd || 0) + out;
+      if (G.weekProd > (G.enUretim || 0)) G.enUretim = G.weekProd;
       // 🌍 salım birikimi: MWh × (g/kWh) / 1000 = ton. Hem şirket haftalığı hem SANTRAL BAZINDA
       // (kamulaştırmada "aşımı kapatan en küçük tesis" bunun üzerinden seçilir).
       // 🧬 unitEm: CCS (f5) fosili ×0,63, Atık Yönetimi (n4) nükleeri ×0,33 düşürür.
@@ -8366,7 +8396,7 @@ const OLCEK_TESVIK = 7000;
 // ⚖️ Eşikler (patron, 29 Ağu): Holding 100k · Büyük 20k · Orta 10k · Küçük 5k · altı Mikro.
 const OLCEK = [
   { nm: 'Mikro İşletme', ico: '🏠', esik: 0 },
-  { nm: 'Küçük İşletme', ico: '🏢', esik: 5000 },      // esik: bir ÜST ölçeğe geçmek için haftalık katkı (MWh)
+  { nm: 'Küçük İşletme', ico: '🏢', esik: 5000 },      // esik: bir ÜST ölçeğe geçmek için haftalık ÜRETİM (MWh)
   { nm: 'Orta Ölçekli İşletme', ico: '🏬', esik: 10000 },
   { nm: 'Büyük Ölçekli İşletme', ico: '🏭', esik: 20000 },
   { nm: 'Enerji Holdingi', ico: '👑', esik: 100000 },
@@ -8377,15 +8407,18 @@ const kHafta = w => 'h' + String(w || isoWeek()).replace(/[^0-9]/g, '-'); // '20
 function checkWeek() {
   const w = isoWeek();
   if (G.week !== w) {
-    katkiHaftaKapat(G.week, G.weekSold); // hafta kapanışı: ölçek değerlendirmesi + devlet ödülleri
-    G.week = w; G.weekSold = 0; G.weekClaimed = false;
+    katkiHaftaKapat(G.week, G.weekSold, G.weekProd); // ölçek ÜRETİMDEN, katkı ödülü SATIŞTAN
+    G.week = w; G.weekSold = 0; G.weekProd = 0; G.weekClaimed = false;
     if (G.emis) { G.emis.ton = 0; G.emis.week = w; } // 🌍 haftalık salım kotası sıfırlanır
     for (const u of G.units) if (u.wkTon) u.wkTon = 0;
   }
 }
-function katkiHaftaKapat(eskiHafta, katki) {
+function katkiHaftaKapat(eskiHafta, katki, uretim) {
   const eski = G.olcek || 0;
-  if (eski < OLCEK.length - 1 && katki >= OLCEK[eski + 1].esik) {
+  // 📏 ÖLÇEK ÖLÇÜTÜ = HAFTALIK ÜRETİM (patron 3 Eyl). Eski kayıtlarda uretim gelmezse
+  //    satışa düşer — ölçek bir hafta yanlış hesaplanacağına eski davranışı sürdürsün.
+  const ol = (uretim == null) ? katki : uretim;
+  if (eski < OLCEK.length - 1 && ol >= OLCEK[eski + 1].esik) {
     // ⬆️ TERFİ: geçen haftaki katkı üst ölçeğin eşiğini aştı — resmî sınıf değişir, teşvik yatar
     G.olcek = eski + 1;
     // 📈 TERFİ ÖDÜLÜ de ölçeğe göre (patron 26 Ağu): "Ölçek terfisinde küçük-ortada
@@ -8397,7 +8430,7 @@ function katkiHaftaKapat(eskiHafta, katki) {
     const ipOdul = terfiPara ? 0 : (G.olcek === OLCEK.length - 1 ? 100 : 50);
     G.cash += odul;
     G.ip = (G.ip || 0) + ipOdul; // 💠 terfi ödülü
-    addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta şebekeye ${fmtN(katki)} MWh katkı sağladınız. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki: <b>${terfiPara ? fmt(odul) : '💠 ' + ipOdul + ' İmtiyaz Puanı'}</b>. Tebrikler!`, true);
+    addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta ${fmtN(ol)} MWh enerji ÜRETTİNİZ. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki: <b>${terfiPara ? fmt(odul) : '💠 ' + ipOdul + ' İmtiyaz Puanı'}</b>. Tebrikler!`, true);
     toast(y.ico + ' Şirketin artık ' + y.nm + '! Teşvik: ' + (terfiPara ? '+' + fmt(odul) : '💠 +' + ipOdul), '', null, 0, true);
     // 👑 EN ÜST LİG AYRICALIĞI duyurusu — reklamsızlık adFreeActive() içinde ölçekten okunur,
     // burada gün eklenmez: holding'likten düşen ayrıcalığı da kaybeder (patron tasarımı).
@@ -8405,11 +8438,11 @@ function katkiHaftaKapat(eskiHafta, katki) {
       addMail('🏛️ Enerji Bakanlığı', '👑 Enerji Holdingi — REKLAMSIZ ayrıcalık', 'Sektörün zirvesindesiniz: holding statünüz sürdüğü müddetçe oyun REKLAMSIZ. Statüyü korumak için haftalık şebeke katkınızı yüksek tutun.', true);
       toast('👑 Enerji Holdingi — holding kaldıkça REKLAMSIZ oynarsın!', '', null, 0, true);
     }
-  } else if (eski > 0 && katki < OLCEK[eski].esik * .25) {
+  } else if (eski > 0 && ol < OLCEK[eski].esik * .25) {
     // ⬇️ KADEME KORUMA: mevcut ölçeğin eşiğinin çeyreğinin altında kalan hafta ölçeği bir düşürür
     G.olcek = eski - 1;
     const y = OLCEK[G.olcek];
-    addMail('🏛️ Enerji Bakanlığı', 'Ölçek güncellemesi: ' + y.nm, `Geçen hafta şebeke katkınız ${fmtN(katki)} MWh ile ölçeğinizin gerektirdiği düzeyin altında kaldı. Şirketiniz "${y.nm}" ${y.ico} olarak yeniden sınıflandırıldı. Katkınızı artırınca yeniden yükselirsiniz.`, true);
+    addMail('🏛️ Enerji Bakanlığı', 'Ölçek güncellemesi: ' + y.nm, `Geçen hafta üretiminiz ${fmtN(ol)} MWh ile ölçeğinizin gerektirdiği düzeyin altında kaldı. Şirketiniz "${y.nm}" ${y.ico} olarak yeniden sınıflandırıldı. Katkınızı artırınca yeniden yükselirsiniz.`, true);
     toast('🏛️ Ölçek düştü: ' + y.nm + ' — katkını artır, geri yüksel', 'warn', null, 0, true);
   }
   // 🏆 GEÇEN HAFTANIN SIRALAMA ÖDÜLÜ: kapanan haftanın katki/ tablosu DEĞİŞMEZ — herkes aynı
@@ -8636,7 +8669,7 @@ const LINE_OMUR = {
   // yani %50 ile %100 arası iade AYNI kalıyordu ve rasyonel oyuncu hattı hep erken yeniliyordu —
   // "ölü hat" hiç görülmezdi. .05 ile taban ancak %83'te dolar; erken yenilemenin getirisi yok.
 };
-const lineOmurMax = (km, hubs) => Math.max(1, Math.round(lineCost(km, hubs) / LINE_OMUR.bolen));
+const lineOmurMax = (km, hubs, kat) => Math.max(1, Math.round(lineCost(km, hubs, kat) / LINE_OMUR.bolen));
 // Eski kayıtlarda `omur` yok → kaydin kendi km/hubs değerinden türetilir.
 // ⚠️ `l` null gelirse patlamasın: önce nesne kontrolü.
 // ⚠️ İKİ AYRI KAPI — KARIŞTIRMA:
@@ -8644,7 +8677,7 @@ const lineOmurMax = (km, hubs) => Math.max(1, Math.round(lineCost(km, hubs) / LI
 //  • lineOmur(l)      = taban × ağaç çarpanı. Yalnız OKUMA / gösterim / oran hesabı içindir.
 // Çarpanlı değeri kayda geri yazmak BİLEŞİK büyüme üretir (ittifakta her senkron turunda bir
 // kat daha) → hat ölümsüzleşir ve "hattı yenile" gideri, yani end-game freni kalkar.
-const lineOmurTaban = l => !l ? 1 : (l.omur > 0 ? l.omur : lineOmurMax(l.km, l.hubs));
+const lineOmurTaban = l => !l ? 1 : (l.omur > 0 ? l.omur : lineOmurMax(l.km, l.hubs, lineKat(l)));
 function lineOmur(l) {
   if (!l) return 1;
   // 🔩 AĞAÇ (g1 + g4): ömür çarpanı OKUMA anında uygulanır — böylece düğüm açılınca MEVCUT
@@ -8781,11 +8814,40 @@ function lineNodes(l) {
 // 🗼 MERKEZ SAYISI: iki UÇ her zaman birer transfer merkezidir (minimum 2), aralara eklenenler
 // kaybı düşürür. hubs = ARA merkez sayısı; toplam = hubs + 2.
 const hubTotal = hubs => (hubs || 0) + 2;
-function lineCost(km, hubs) {
+// ═══ 🌍 SINIR AŞIM ÇARPANI (patron 3 Eyl) ═══════════════════════════════════════
+// PATRON: "kıtalar arası ve ülkeler arası için olan fiyatları ciddi arttır çünkü bak tek başıma
+//   oynuyorum, ülkeler arası da kıtalar arası da hat çekebiliyorum, ittifağa ihtiyaç bile
+//   duymuyorum para için. Ve ben oyunu daha 2 hafta oynamadım bile."
+// ÖLÇÜLDÜ: 2.000 km Türkiye→Almanya hattı 481 M$, 9.000 km kıtalararası 1,95 milyar. Günlük
+//   geliri 2,3 milyar olan tek oyuncu ikisini de aynı gün ödüyordu; ittifak gereksizdi.
+// ÇÖZÜM: ülke sınırı ×4, kıta geçişi ×12. Bu bir SERMAYE BARİYERİDİR, kâr kesintisi değil:
+//   hat ömrü de maliyetten türediği için (lineOmurMax) pahalı hat orantılı olarak daha çok
+//   MWh taşır — amorti oranı SABİT kalır. Yani hat hâlâ kârlı, ama girişi tek cebe sığmıyor.
+//   Yeni rakamlar: TR→Almanya 1,93 milyar · kıtalararası 23,4 milyar (→ konsorsiyum şart).
+const HAT_KAT_ULKE = 4, HAT_KAT_KITA = 12;
+const HAT_KAT_CACHE = new Map();
+function lineKatCells(a, b, km) {
+  if (!a || !b) return 1;
+  const k = a + '>' + b;
+  const v = HAT_KAT_CACHE.get(k);
+  if (v !== undefined) return v;
+  const A = countryOfCell(a), B = countryOfCell(b);
+  if (!A || !B) return 1;   // ⚠️ ÖNBELLEĞE YAZMA: LAND_BOX daha yüklenmemiş olabilir, sonra düzelir
+  const kat = A.iso === B.iso ? 1
+    : (isKitaArasi(A, B, km > 0 ? km : kmDist(cellCenter(a), cellCenter(b))) ? HAT_KAT_KITA : HAT_KAT_ULKE);
+  if (HAT_KAT_CACHE.size > 4000) HAT_KAT_CACHE.clear();
+  HAT_KAT_CACHE.set(k, kat);
+  return kat;
+}
+// Kayıtlı hattın çarpanı UÇLARINDAN türetilir — kayda yazılmaz. Böylece söküm/yenileme/ömür
+// hesabı her zaman kurulum fiyatıyla AYNI çarpanı kullanır; eski kayıtlar da doğru hesaplanır.
+const lineKat = l => (l && l.from && l.to) ? lineKatCells(l.from, l.to, l.km) : 1;
+const lineKatAd = kat => kat >= HAT_KAT_KITA ? 'kıtalar arası' : kat > 1 ? 'ülkeler arası' : 'yurt içi';
+function lineCost(km, hubs, kat) {
   const cable = km * LINE.cableKm;
   const merkez = LINE.transformer * 2 + (hubs || 0) * LINE.hub; // 2 uç merkezi + ara merkezler
   const permit = hubTotal(hubs) * LINE.permitPerHub;            // 📜 her merkez ayrı inşaat sahası = ayrı ruhsat
-  return Math.round((cable + merkez + permit) * (1 + LINE.laborRate));
+  return Math.round((cable + merkez + permit) * (1 + LINE.laborRate) * (kat > 0 ? kat : 1));
 }
 const lineBuildSec = km => Math.min(86400, Math.round(60 + km * 6)); // en fazla 1 gün (kıtalararası tam sürümde 3 gün)
 const lineBrand = l => BRANDS[brandKey(l && l.brand)] || BRANDS.ortac;
@@ -9043,6 +9105,7 @@ function lineConfirm(toCell) {
     if (isKitaArasi(A, B, km) || !LINE_ALLY) { LINE_ALLY = false; lineBlockedInfo(A, B, km); return; }
   }
   if (km < 20) { toast('Çok yakın — hat gerekmez, doğrudan satabilirsin', 'warn'); return; }
+  const kat = lineKatCells(LINE_SRC, toCell, km); // 🌍 sınır aşım çarpanı (1 · 4 · 12)
   const need = Math.max(0, Math.ceil(km / 300) - 1); // %100 kaybı önleyen asgari merkez
   const opt = Math.max(0, Math.ceil(km / 100) - 1);  // en iyi (%10) için gereken merkez
   const rows = [need, Math.ceil((need + opt) / 2), opt].filter((v, i, a) => a.indexOf(v) === i);
@@ -9056,23 +9119,24 @@ function lineConfirm(toCell) {
       <tr><td>🔌 Kablo (${fmtN(km)} km × ${fmt(LINE.cableKm)})</td><td>${fmt(km * LINE.cableKm)}</td></tr>
       <tr><td>⚙️ Trafo (2 uç)</td><td>${fmt(LINE.transformer * 2)}</td></tr>
       <tr><td>📜 Transfer merkezi ruhsatı <span class="sub">(merkez başına ${fmt(LINE.permitPerHub)})</span></td><td>seçime göre</td></tr>
-      <tr><td>👷 İşçilik (%${LINE.laborRate * 100})</td><td>~${fmt(lineCost(km, 0) - (km * LINE.cableKm + LINE.transformer * 2))}</td></tr>
+      <tr><td>👷 İşçilik (%${LINE.laborRate * 100})</td><td>~${fmt(lineCost(km, 0, 1) - (km * LINE.cableKm + LINE.transformer * 2))}</td></tr>
+      ${kat > 1 ? `<tr><td>🌍 <b>${lineKatAd(kat)} geçiş bedeli</b> <span class="sub">(gümrük · transit · şebeke uyum)</span></td><td><b class="neg">× ${kat}</b></td></tr>` : ''}
       <tr><td>⏱ Kurulum süresi</td><td>${fmtHrs(lineBuildSec(km) / 3600)}</td></tr>
     </table>
     <div style="font-size:11px;color:var(--acc2);margin:8px 0 2px">TRANSFER MERKEZİ SEÇ <span class="sub">(her biri ${fmt(LINE.hub)} — kaybı düşürür)</span></div>
     ${rows.map(h => {
-      const loss = lineLossPct(km, h), cost = lineCost(km, h);
+      const loss = lineLossPct(km, h), cost = lineCost(km, h, kat);
       const net = cellPriceNow(toCell) * (1 - loss / 100);
       const kasa = linePurse(); // ittifak hattıysa kasa, değilse kendi paran
       return `<button class="bigsell ${loss <= 10 ? '' : 'half'}" onclick="closeModal();pickBrand('${toCell}',${km},${h})" ${kasa < cost ? 'disabled' : ''}>
-        ${h} merkez · kayıp %${loss} · net ${fmt(net)}/MWh — ~${fmt(cost)}${kasa < cost ? (LINE_ALLY ? ' (kasa yetersiz)' : ' (bakiye yetersiz)') : ''}</button>`;
+        ${h} merkez · kayıp %${loss} · net ${fmt(net)}/MWh — ~${fmt(cost)}${kat > 1 ? ' 🌍' : ''}${kasa < cost ? (LINE_ALLY ? ' (kasa yetersiz)' : ' (bakiye yetersiz)') : ''}</button>`;
     }).join('')}
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 }
 // ⚙️ MARKA SEÇİMİ (patron): aynı trafo 4 markadan alınabilir — fiyat, kayıp, süre, dayanıklılık farkı
 window.pickBrand = (toCell, km, hubs) => {
-  const base = lineCost(km, hubs);
+  const base = lineCost(km, hubs, lineKatCells(LINE_SRC, toCell, km));
   $('modal').innerHTML = `
     <h2>⚙️ Trafo Markası Seç</h2>
     <p class="sub">Ortalama piyasa fiyatı: <b>${fmt(base)}</b>. Aynı markadan almaya devam edersen ilişkin artar ve <b>%25'e varan iskonto</b> kazanırsın — ama başka markaya kayarsan o ilişki düşer.</p>
@@ -9084,7 +9148,8 @@ window.buildLine = (toCell, km, hubs, brand) => {
   if (krediKilidi('hat çekme')) return;
   if (!LINE_SRC || !toCell) { toast('Hat başlangıcı seçilmedi', 'warn'); return; } // bozuk hat kaydı oluşmasın
   brand = brand || 'voltas';
-  const cost = brandPrice(brand, lineCost(km, hubs));
+  const hkat = lineKatCells(LINE_SRC, toCell, km);
+  const cost = brandPrice(brand, lineCost(km, hubs, hkat));
   const viaAlly = LINE_ALLY && G.ally && canAllyLine(); // 🤝 ittifak hattı → kasadan
   if (viaAlly) {
     if ((G.ally.treasury || 0) < cost) { toast('💰 İttifak kasasında ' + fmt(cost) + ' yok — 📣 bağış çağrısı aç', 'warn'); return; }
@@ -9097,7 +9162,7 @@ window.buildLine = (toCell, km, hubs, brand) => {
   brandBuy(brand); // sadakat/ilişki güncellenir
   const secs = lineBuildSec(km) * BRANDS[brand].build;
   const rec = { id: G.nextId++, from: LINE_SRC, to: toCell, km, hubs, brand, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1),
-    omur: lineOmurMax(km, hubs), tasinan: 0 };   // ⚡ hat ömrü — liste maliyetinden türetilir
+    omur: lineOmurMax(km, hubs, hkat), tasinan: 0 };   // ⚡ hat ömrü — liste maliyetinden türetilir
   if (viaAlly) {
     // İttifak hattı ORTAK MALDIR: kişisel G.lines'a değil ittifağın defterine yazılır.
     // Böylece hattı kuran başkan ayrılsa/atılsa bile hat ittifakta kalır, üyeler kullanmaya devam eder.
@@ -9205,7 +9270,7 @@ window.demolishLine = id => {
   const l0 = G.lines[i];
   const oran = lineHurdaOran(l0);
   // 🏗️ Hurda bedeli VARLIK GELİRİ kapısından geçer — borçluyken haczin payı burada da kesilir.
-  const hurda = Math.round(lineCost(l0.km, l0.hubs) * oran);
+  const hurda = Math.round(lineCost(l0.km, l0.hubs, lineKat(l0)) * oran);
   const hKes = varlikKesinti(hurda);
   varlikGeliri(hurda);
   G.lines.splice(i, 1);
@@ -9219,7 +9284,7 @@ window.demolishAllyLine = id => {
   if (!l || !G.ally) return;
   if (!canAllyLine()) { toast('🤝 İttifak hattını yalnız başkan veya yardımcısı sökebilir', 'warn'); return; }
   const oran = lineHurdaOran(l);
-  const hurda = Math.round(lineCost(l.km, l.hubs) * oran);
+  const hurda = Math.round(lineCost(l.km, l.hubs, lineKat(l)) * oran);
   G.ally.lines = allyLines().filter(x => x.id !== id);
   G.ally.treasury = (G.ally.treasury || 0) + hurda;
   delete HAT_PEND[id];
@@ -9243,8 +9308,8 @@ window.rebuildLine = id => {
   const l = (G.lines || []).find(x => x.id === id);
   if (!l) return;
   const brand = brandKey(l.brand);
-  const maliyet = brandPrice(brand, lineCost(l.km, l.hubs));
-  const iade = Math.round(lineCost(l.km, l.hubs) * lineHurdaOran(l));
+  const maliyet = brandPrice(brand, lineCost(l.km, l.hubs, lineKat(l)));
+  const iade = Math.round(lineCost(l.km, l.hubs, lineKat(l)) * lineHurdaOran(l));
   const net = Math.max(0, maliyet - iade);
   $('modal').innerHTML = '<h2>♻️ Hattı Yenile</h2>'
     + '<p><b>' + lineRota(l) + '</b><br>' + fmtN(l.km) + ' km · 🗼 ' + hubTotal(l.hubs) + ' merkez · ' + BRANDS[brand].ico + ' ' + BRANDS[brand].nm + '</p>'
@@ -9263,8 +9328,8 @@ window.rebuildLineDo = id => {
   if (!l) return;
   if (aucListed('line', id)) { toast('🔨 Bu hat açık artırmada — önce ilanı bekle', 'warn'); return; }
   const brand = brandKey(l.brand);
-  const maliyet = brandPrice(brand, lineCost(l.km, l.hubs));
-  const iade = Math.round(lineCost(l.km, l.hubs) * lineHurdaOran(l));
+  const maliyet = brandPrice(brand, lineCost(l.km, l.hubs, lineKat(l)));
+  const iade = Math.round(lineCost(l.km, l.hubs, lineKat(l)) * lineHurdaOran(l));
   const net = Math.max(0, maliyet - iade);
   if (G.cash < net) { toast('Kasanda yetmiyor', 'warn'); return; }
   G.cash -= net; gider('altyapi', net);
@@ -9272,7 +9337,7 @@ window.rebuildLineDo = id => {
   const secs = lineBuildSec(l.km) * BRANDS[brand].build;
   l.built = Date.now();
   l.done = Date.now() + secs * 1000 / (G.demo ? 60 : 1);
-  l.omur = lineOmurMax(l.km, l.hubs);
+  l.omur = lineOmurMax(l.km, l.hubs, lineKat(l));
   l.tasinan = 0;
   ensureGridLinks();
   toast('♻️ Hat yenilendi — ' + fmtHrs(secs / 3600) + ' sonra devrede', '', null, 0, true);
@@ -9465,6 +9530,10 @@ function lineDrawAdd(cell) {
   } else {
     const C0 = countryOfCell(LDRAW.cells[0]);
     if (LAND_BOX && C0 && C && C0.iso !== C.iso) { toast('🌍 Bireysel hat yalnız ÜLKE İÇİNDE kalır — sınır aşan hat 🤝 ittifak işidir', 'warn', null, 0, true); return; }
+    // 🌍 kıta kapısı çizim yolunda da: ülke denetimi ISO'ya bakar, kıta geçişi konsorsiyum ister
+    if (C0 && C && isKitaArasi(C0, C, kmDist(cellCenter(LDRAW.cells[0]), cellCenter(cell)))) {
+      toast('🌍 Kıtalar arası hat ' + CONS_MIN_ALLIES + ' ittifaklı KONSORSİYUM ister', 'warn', null, 0, true); return;
+    }
     const seg = kmDist(cellCenter(LDRAW.cells[n - 1]), cellCenter(cell));
     if (seg < 20) { toast('✏️ Çok yakın (' + Math.round(seg) + ' km) — en az 20 km uzağa dokun', 'warn'); return; }
     // 300 km'den uzun bölüm taşınamaz → ZORUNLU transfer merkezi otomatik eklenir (bedeli maliyete girer)
@@ -9505,7 +9574,7 @@ function drawBarUpdate() {
   const yol = n >= 2 ? expandPath(LDRAW.cells) : [];
   const km = n >= 2 ? Math.round(pathKm(yol)) : 0;
   const hubs = Math.max(0, yol.length - 2);
-  const cost = n >= 2 ? lineCost(km, hubs) : 0;
+  const cost = n >= 2 ? lineCost(km, hubs, lineKatCells(LDRAW.cells[0], LDRAW.cells[n - 1], km)) : 0;
   $('drawtxt').innerHTML = n === 0
     ? '✏️ <b>İLK NOKTA</b> — depolu bölgene dokun (hat oradan başlar)'
     : n === 1
@@ -9522,11 +9591,13 @@ window.lineDrawCost = brand => {
   const km = Math.round(pathKm(cells)), hubs = cells.length - 2;
   const zorunlu = cells.length - secilen.length;
   const b = brandKey(brand || G._lastBrand || bestBrand());
-  const base = lineCost(km, hubs);
+  const dkat = lineKatCells(secilen[0], secilen[secilen.length - 1], km); // 🌍 sınır aşım çarpanı
+  const ham = lineCost(km, hubs, 1);          // çarpansız liste bedeli — kalem dökümü bunun üzerinden
+  const base = lineCost(km, hubs, dkat);
   const price = brandPrice(b, base);
   const cable = km * LINE.cableKm, permit = hubTotal(hubs) * LINE.permitPerHub;
   const trafo = LINE.transformer * 2, hubC = hubs * LINE.hub;
-  const iscilik = base - (cable + permit + trafo + hubC);
+  const iscilik = ham - (cable + permit + trafo + hubC);
   const loss = Math.max(5, Math.min(100, lineBaseLoss({ path: cells, km, hubs }) + BRANDS[b].loss));
   const hedef = cells[cells.length - 1];
   const secs = lineBuildSec(km) * BRANDS[b].build;
@@ -9540,6 +9611,7 @@ window.lineDrawCost = brand => {
       ${hubs ? `<tr><td>🗼 Ara transfer merkezi × ${hubs}${zorunlu ? ' <span class="sub">(' + (hubs - zorunlu) + ' senin + ' + zorunlu + ' zorunlu)</span>' : ''}</td><td>${fmt(hubC)}</td></tr>` : ''}
       <tr><td>📜 Transfer merkezi ruhsatı (${hubTotal(hubs)} inşaat × ${fmt(LINE.permitPerHub)})</td><td>${fmt(permit)}</td></tr>
       <tr><td>👷 İşçilik (%${LINE.laborRate * 100})</td><td>${fmt(iscilik)}</td></tr>
+      ${dkat > 1 ? `<tr><td>🌍 <b>${lineKatAd(dkat)} geçiş bedeli</b> <span class="sub">(gümrük · transit · şebeke uyum · ×${dkat})</span></td><td><b class="neg">+${fmt(base - ham)}</b></td></tr>` : ''}
       <tr><td><b>TOPLAM</b> <span class="sub">${brandLogoHTML(b, 14)} ${BRANDS[b].nm}${brandRel(b) > 0 ? ' · -%' + Math.round(25 * brandRel(b) / 100) + ' sadakat' : ''}</span></td><td><b class="${G.cash < price ? 'neg' : 'pos'}">${fmt(price)}</b></td></tr>
       <tr><td>Hat kaybı · kurulum süresi</td><td>%${Math.round(loss)} · ${fmtHrs(secs / 3600)}</td></tr>
     </table>
@@ -9558,7 +9630,8 @@ window.lineDrawBuild = brand => {
   const cells = expandPath(secilen);
   const km = Math.round(pathKm(cells)), hubs = cells.length - 2;
   const b = brandKey(brand);
-  const cost = brandPrice(b, lineCost(km, hubs));
+  const bkat = lineKatCells(secilen[0], secilen[secilen.length - 1], km);
+  const cost = brandPrice(b, lineCost(km, hubs, bkat));
   if (G.cash < cost) { toast('Hat için ' + fmt(cost) + ' gerekli', 'warn'); return; }
   G.cash -= cost; gider('altyapi', cost);
   G.cellSpent = G.cellSpent || {};
@@ -9567,7 +9640,7 @@ window.lineDrawBuild = brand => {
   const secs = lineBuildSec(km) * BRANDS[b].build;
   G.lines = G.lines || [];
   G.lines.push({ id: G.nextId++, from: cells[0], to: cells[cells.length - 1], path: cells, km, hubs, brand: b, built: Date.now(), done: Date.now() + secs * 1000 / (G.demo ? 60 : 1),
-    omur: lineOmurMax(km, hubs), tasinan: 0 });   // ⚡ hat ömrü
+    omur: lineOmurMax(km, hubs, bkat), tasinan: 0 });   // ⚡ hat ömrü
   LDRAW = null; ldrawClear(); $('drawbar').classList.remove('show'); setMode(null);
   toast('⚡ ' + BRANDS[b].ico + ' ' + secilen.map(c => placeName(c)).join(' → ') + ' — ' + fmtN(km) + ' km · 🗼 ' + hubTotal(hubs) + ' merkez · ' + fmtHrs(secs / 3600) + ' sonra devrede', '', null, 0, true);
   beep(500, .12);
@@ -9908,12 +9981,23 @@ const allyLineWrite = l => { // hattı ORİJİNAL anahtarına yaz (kopya kayıt 
     });
 };
 function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
-  if (!rec || !rec.meta) return;
+  if (!rec || !rec.meta) {
+    // 🧹 İTTİFAK SUNUCUDA YOK (dağıtılmış / hiç yazılamamış). Eskiden burada sessizce
+    // dönülüyordu: G.allyId elde kalıyor, allySeen her 12 saniyede 401 alıyordu.
+    if (rec === null && G.allyId) {
+      const nm = (G.ally && G.ally.name) || '';
+      G.allyId = null; G.ally = null; G.allyBuffUntil = 0;
+      ALLYDIR_PUSH = 0;                        // 📇 yeni ittifak dizine ANINDA yazılabilsin
+      toast('🤝 ' + (nm ? nm + ' ittifakı' : 'İttifakın') + ' artık sunucuda yok — kaydın temizlendi', 'warn', null, 0, true);
+      save(); refreshAllyUI(); renderMenu();
+    }
+    return;
+  }
   const mem = rec.members || {};
   const me = mem[NET.id];
   if (!me) { // üyeliğin sunucuda yok → çıkarılmışsın
     const nm = (G.ally && G.ally.name) || rec.meta.name;
-    G.allyId = null; G.ally = null;
+    G.allyId = null; G.ally = null; ALLYDIR_PUSH = 0;
     toast('🚪 ' + nm + ' ittifakından çıkarıldın', 'warn', null, 0, true);
     addMail('🤝 ' + nm, 'İttifaktan çıkarıldın', 'Artık bu ittifakın üyesi değilsin. Ortak hat ve avantajlar kapandı. ⚖️ Konsorsiyum hissen varsa o hakkın devam eder.', true);
     save(); refreshAllyUI(); renderMenu();
@@ -9986,9 +10070,15 @@ function allyApply(rec) { // sunucudaki ortak kaydı yerel görünüme yansıt
 }
 async function allySync() {
   if (!allyOnline()) return;
-  // 👁️ "son görülme" damgası: başkanlık seçimi (1 ay yokluk) bu damgaya bakıyor
-  NET.allySeen(G.allyId).catch(() => {});
-  try { allyApply(await NET.allyGet(G.allyId)); } catch (e) {}
+  // ⚠️ SIRA ÖNEMLİ: ÖNCE sunucudan oku. Üyeliğin düşmüşse allyApply G.allyId'yi temizler ve
+  // aşağıdaki damga hiç denenmez. Eski sırada damga önce gidiyordu → her turda 401.
+  // ⚠️ getVar: ağ hatasıyla 'ittifak yok' AYRI şeyler. Ayırmazsak kopan bağlantı oyuncunun
+  //    ittifakını yerelde silerdi.
+  const rr = await NET.getVar('allies/' + G.allyId);
+  if (!rr.ok) return;                          // istek başarısız — hiçbir şeye dokunma
+  try { allyApply(rr.val); } catch (e) {}
+  if (!G.allyId) return;                       // üyelik düştü → yazacak bir şey yok
+  NET.allySeen(G.allyId).catch(() => {});      // 👁️ son görülme (başkanlık seçimi buna bakar)
   allyDirPush();
 }
 // 📇 İttifak rehberine küçük özet yaz — "en iyi 20" listesi bunu okur (tüm allies düğümünü
@@ -9997,7 +10087,7 @@ let ALLYDIR_PUSH = 0;
 function allyDirPush() {
   if (!allyOnline() || !G.ally || Date.now() - ALLYDIR_PUSH < 3e5) return; // 5 dk'da bir yeter
   ALLYDIR_PUSH = Date.now();
-  NET.allyDirSet(G.allyId, { name: G.ally.name, pts: G.ally.pts || 0, members: G.ally.members || 1, wins: G.ally.wins || 0, ts: Date.now() }).catch(() => {});
+  NET.allyDirSet(G.allyId, { name: G.ally.name, pts: G.ally.pts || 0, members: G.ally.members || 1, wins: G.ally.wins || 0, ts: NET.zaman() }).catch(() => {});
 }
 // Davet POSTA ile gider (ayrı bir tarama gerekmez, güvenlik kuralı da değişmez)
 function allyInviteMail(aid, name) { return ALLY_INV_TAG + aid + '|' + name; }
@@ -10766,6 +10856,7 @@ window.leaveAlly = async () => {
   G.allyId = null;
   G.ally = null;
   G.allyBuffUntil = 0; // ittifak avantajları anında biter
+  ALLYDIR_PUSH = 0;    // 📇 hemen sonra yeni ittifak kurulabilir — dizin yazması BEKLEMESİN
   toast('🚪 ' + nm + ' ittifakından ayrıldın — ortak hat ve avantajlar kapandı', 'warn', null, 0, true);
   save(); refreshAllyUI(); renderMenu();
 };
@@ -10794,7 +10885,8 @@ window.foundAlly = async () => {
     const aid = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     try {
       await NET.allyCreate(aid, nm);
-      await NET.allyJoin(aid, 'lider');
+      await NET.allyJoin(aid, 'lider'); // ⚠️ bu yazma şart: kural başkanlığı BU kayıttan okur
+      ALLYDIR_PUSH = 0;                 // 📇 dizine hemen yazılsın (5 dk gecikme yok)
       G.allyId = aid;
       await allySync();
       toast('🤝 "' + nm + '" ittifakı kuruldu — sen 👑 başkansın. Üye davet et!', '', null, 0, true);
@@ -10893,9 +10985,9 @@ window.allyBasvurAsk = (aid, nm) => {
 window.allyBasvur = async (aid, nm) => {
   if (G.ally || G.allyId || !NET.on()) return;
   try {
-    const r = await NET.allyBasvuruYaz(aid, { nm: nmTemizle(G.company), mw: Math.round(installedMW()), worth: Math.round(myWorth()), ts: Date.now() });
+    const r = await NET.allyBasvuruYaz(aid, { nm: nmTemizle(G.company), mw: Math.round(installedMW()), worth: Math.round(myWorth()), ts: NET.zaman() });
     if (r == null) { toast(CEV('🌐 Başvuru gönderilemedi — bağlantını kontrol et'), 'warn'); return; } // NET.kilit sessiz null döndürür
-    G.allyBasvuru = { aid, nm: esc(nm), ts: Date.now() };
+    G.allyBasvuru = { aid, nm: esc(nm), ts: NET.zaman() };
     save();
     toast('📥 ' + CEV('Başvurun gönderildi: {0} — başkan onaylayınca haber vereceğiz', esc(nm)), '', null, 0, true);
     beep(660, .1);
@@ -10947,7 +11039,15 @@ window.allyBasvuruOnayla = async (uid) => {
   if (allyRoster().length >= allyCap()) { toast(CEV('👥 Üye tavanı dolu ({0}) — ittifak puanıyla artar', allyCap()), 'warn', null, 0, true); return; }
   try {
     // ÖNCE üyeliği yaz, BAŞARIDA başvuruyu düş (ters sıra veri kaybı olurdu — acceptAllyInvite'ın hatası)
-    const r = await NET.allyUyeYaz(G.allyId, uid, { nm: b.nm, role: 'uye', since: Date.now() });
+    let r;
+    try {
+      r = await NET.allyUyeYaz(G.allyId, uid, { nm: b.nm, role: 'uye', since: NET.zaman() });
+    } catch (e) {
+      // 🔧 KENDİNİ ONARMA: sunucudaki KENDİ üye kaydın eksikse (kuruluşta allyJoin ağ hatası
+      // aldıysa) kural seni başkan saymaz ve onay 401 döner. Kaydı tazeleyip BİR KEZ dene.
+      try { await NET.allyJoin(G.allyId, myAllyRole() || 'lider'); } catch (e2) {}
+      r = await NET.allyUyeYaz(G.allyId, uid, { nm: b.nm, role: 'uye', since: NET.zaman() });
+    }
     if (r == null) { toast(CEV('🌐 Onay yazılamadı — tekrar dene'), 'warn'); return; }
     await NET.allyBasvuruSil(G.allyId, uid).catch(() => {});
     if (G.ally.basvurular) delete G.ally.basvurular[uid];
@@ -10967,7 +11067,13 @@ window.allyBasvuruReddet = async (uid) => {
   save(); refreshAllyUI();
 };
 // ── İTTİFAK ARAMA EKRANI (ittifaksız oyuncu) ──
-window.allyKatilAc = () => { ALLYVIEW = 'katil'; refreshAllyUI(); if (!$('allysheet').classList.contains('show')) openAllySheet(); };
+window.allyKatilAc = () => {
+  ALLYVIEW = 'katil'; refreshAllyUI();
+  if (!$('allysheet').classList.contains('show')) openAllySheet();
+  // 📇 60 sn'lik önbellek yüzünden YENİ KURULAN ittifak listede görünmüyordu — ekran her
+  // açılışta taze liste ister (patron: "önce ittifak sayfasında görünmedi, 3-5 kez çık gir").
+  loadAllyDir(true).then(() => { if (ALLYVIEW === 'katil') refreshAllyUI(); }).catch(() => {});
+};
 function allyKatilHTML() {
   let h = `<div class="qline" style="margin-bottom:6px"><span class="lnk" style="cursor:pointer;color:var(--acc2);text-decoration:underline" onclick="allyView('main')">‹ ${CEV('Geri')}</span></div>
     <div style="font-size:12px;margin:4px 0 2px">🔎 <b>${CEV('İTTİFAĞA KATIL')}</b>
@@ -11183,7 +11289,7 @@ window.allyRun = () => {
   let e = allyElection();
   const ilk = !e;
   if (!e) e = { started: Date.now(), until: Date.now() + ALLY_VOTE_MS, cands: [], votes: {} };
-  e.cands.push({ nm: G.company, pid: NET.id || G.company, at: Date.now() });
+  e.cands.push({ nm: G.company, pid: NET.id || G.company, at: NET.zaman() });
   allySaveMeta('election', e);
   if (ilk) {
     toast('🗳️ Adaylığın açıldı — 12 saat içinde başka aday çıkmazsa başkan olursun', '', null, 0, true);
@@ -12065,7 +12171,7 @@ const NET = {
     this.cloudAt = Date.now();
     const { _tcd, _aucT, _started, ...s } = G;
     s.units = G.units.map(({ _lastIcon, ...u }) => u);
-    s._sv = Date.now();
+    s._sv = this.zaman();   // 🕐 kural: _sv <= now+60sn (SUNUCU saati; cihaz saati ileriyse 401)
     // 💾 KAPANIŞ FLUSH'I (4 bağımsız bot bulgusu + patron onayı): sekme kapanırken normal fetch
     // iptal ediliyordu, son ≤20 sn'lik oynanış (satış, onarım, satın alma) buluta HİÇ yazılmıyordu.
     // keepalive:true ile istek sayfa kapansa da tamamlanır (tarayıcı sınırı 64KB — büyük kayıtta
@@ -12171,6 +12277,19 @@ const NET = {
     return r.ok ? r.json() : null;
   },
   get(p) { return this.req(p, 'GET'); },
+  // {ok, val}: ok=false ise İSTEK başarısız (ağ/sunucu) — veri hakkında hiçbir şey söylemez.
+  // ok=true && val===null ise düğüm GERÇEKTEN yok. Yerel kayıt silmeden önce bu ayrım şart.
+  async getVar(p) {
+    try {
+      const tok = await this.token();
+      const r = await fetch(this.db + '/' + p + '.json' + (tok ? '?auth=' + encodeURIComponent(tok) : ''), { cache: 'no-store' });
+      if (!r.ok) return { ok: false, val: null };
+      return { ok: true, val: await r.json() };
+    } catch (e) { return { ok: false, val: null }; }
+  },
+  // 🕐 SUNUCUYA YAZILACAK ZAMAN DAMGASI — cihaz saati değil, SUNUCU saati.
+  // Kurallar `<= now + 60000` diyor; ileri giden telefon aksi hâlde her yazmada 401 alır.
+  zaman() { const f = this._saatFark; return Date.now() + (isFinite(f) ? f : 0); },
   put(p, v, kapanis) { return this.req(p, 'PUT', v, kapanis); },
   // 🔇 SESSİZ YAZMA: kuralı henüz yayınlanmamış alanlar için. Reddedilirse oyuncuya
   // "SUNUCUYA YAZILAMIYOR" korkutması GÖSTERİLMEZ — çünkü ana kayıt zaten sağlam.
@@ -12197,7 +12316,7 @@ const NET = {
         country: String(G.country || '').slice(0, 32),
         worth: Math.max(0, Math.min(1e15, Math.round(myWorth()) || 0)),
         em: Math.max(0, Math.min(2000, co2Avg() || 0)), mw: Math.max(0, Math.min(5e6, installedMW() || 0)),
-        ally: G.ally ? String(G.ally.name).slice(0, 40) : null, ts: Date.now(),
+        ally: G.ally ? String(G.ally.name).slice(0, 40) : null, ts: this.zaman(),
         // 🏢 KAMUYA AÇIK KARNE (şirket kartı için). Kasa, ciro, stok ve araştırma
         // BİLEREK paylaşılmaz — rakibin nakit durumunu görmek oyunu bozar.
         off: offices().length, lic: Object.keys(G.licenses).length,
@@ -12220,7 +12339,7 @@ const NET = {
       // 🏛️ haftalık devlet katkısı tablosu — kapanan haftalar DEĞİŞMEZ kalır, ödüller oradan
       // hesaplanır. (Kurallara 'katki' düğümü eklenene dek bu yazım sessizce reddedilir — zararsız.)
       if (G.weekSold >= .5) this.put('katki/' + kHafta(G.week) + '/' + this.id, {
-        nm: String(G.company || '?').slice(0, 28), mwh: Math.round(G.weekSold), olcek: G.olcek || 0, ts: Date.now(),
+        nm: String(G.company || '?').slice(0, 28), mwh: Math.round(G.weekSold), olcek: G.olcek || 0, ts: this.zaman(),
       }).catch(() => {});
       // kendi tesislerini paylaş (harita üzerinde diğerleri görsün)
       // PAYLAŞIM KURALI (patron): hediye/eğitim birimleri DİĞER oyunculara görünmez —
@@ -12266,7 +12385,7 @@ const NET = {
       }
       if (G.allyId) await allySync(); // 🤝 ortak ittifak kaydı: üyeler, rütbeler, kasa, hatlar
       try { await allyBasvuruYokla(); } catch (e) {} // 📥 başvurum kabul/ret edildi mi (allySync allyId'siz çalışmaz)
-      if (this._tur === 1 || this._tur % 5 === 0) {   // 💰 teklif kutuları: 60 sn'de bir yeter
+      if (this._tur === 1 || this._tur % 2 === 0) {   // 💰 teklif kutuları: 24 sn (60 sn "ölü" hissettiriyordu)
         try { await teklifGelenYokla(); } catch (e) {}
         try { await teklifSonucYokla(); } catch (e) {}
       }
@@ -12325,8 +12444,8 @@ const NET = {
   // ayrı ve DEĞİŞTİRİLEMEZ bir satır, kasa = satırların toplamı. Yarış koşulu imkânsız.
   allyGet(aid) { return this.get('allies/' + aid); },
   allyAll() { return this.get('allies'); },
-  allyCreate(aid, name) { return this.put('allies/' + aid + '/meta', { name, founder: this.id, created: Date.now() }); },
-  allyJoin(aid, role) { return this.put('allies/' + aid + '/members/' + this.id, { nm: G.company, role: role || 'uye', since: Date.now() }); },
+  allyCreate(aid, name) { return this.put('allies/' + aid + '/meta', { name, founder: this.id, created: this.zaman() }); },
+  allyJoin(aid, role) { return this.put('allies/' + aid + '/members/' + this.id, { nm: G.company, role: role || 'uye', since: this.zaman() }); },
   // 📥 BAŞVURU: allies/<aid>/basvuru/<uid> — kalıcı düğüm (posta kanalı 60 kayıt tavanına takılıyordu)
   allyBasvuruYaz(aid, rec) { return this.put('allies/' + aid + '/basvuru/' + this.id, rec); },
   allyBasvuruSil(aid, uid) { return this.req('allies/' + aid + '/basvuru/' + uid, 'DELETE'); },
@@ -12335,15 +12454,17 @@ const NET = {
   allyLeave(aid) { return this.req('allies/' + aid + '/members/' + this.id, 'DELETE'); },
   allyRoleSet(aid, pid, role) { return this.put('allies/' + aid + '/members/' + pid + '/role', role); },
   allyRemove(aid, pid) { return this.req('allies/' + aid + '/members/' + pid, 'DELETE'); },
-  allyLedger(aid, amt, note) { return this.push('allies/' + aid + '/ledger', { pid: this.id, nm: G.company, amt: Math.round(amt), note: (note || '').slice(0, 40), ts: Date.now() }); },
+  allyLedger(aid, amt, note) { return this.push('allies/' + aid + '/ledger', { pid: this.id, nm: G.company, amt: Math.round(amt), note: (note || '').slice(0, 40), ts: this.zaman() }); },
   // 📜 açıklama · 🤝 dost/düşman listeleri: meta altında → TÜM üyeler aynı şeyi görür
   allyMetaSet(aid, key, val) { return this.put('allies/' + aid + '/meta/' + key, val); },
-  allySeen(aid) { return this.put('allies/' + aid + '/members/' + this.id + '/seen', Date.now()); },
+  // 🔇 SESSİZ: bu yalnız 'son görülme' damgasıdır; üyelik düşmüşse reddedilir ve oyuncuyu
+  // "SUNUCUYA YAZILAMIYOR" diye korkutmasının hiçbir anlamı yoktur (ana kayıt sağlam).
+  allySeen(aid) { return this.putSessiz('allies/' + aid + '/members/' + this.id + '/seen', this.zaman()); },
   // 📇 İTTİFAK REHBERİ: "en iyi 20" için tüm allies düğümünü çekmek pahalı (üyeler+defter
   // birlikte iner, Blaze'de kotayı yer). Bunun yerine küçük bir dizin düğümü tutuluyor.
   allyDirSet(aid, rec) { return this.put('allydir/' + aid, rec); },
   allyDirList() { return this.get('allydir'); },
-  allyConsReq(aid, from, fromName, msg) { return this.push('allies/' + aid + '/consreq', { aid: from, nm: fromName, msg: (msg || '').slice(0, 140), ts: Date.now() }); },
+  allyConsReq(aid, from, fromName, msg) { return this.push('allies/' + aid + '/consreq', { aid: from, nm: fromName, msg: (msg || '').slice(0, 140), ts: this.zaman() }); },
   // ⚠️ HATA AVI (yüksek): anahtar yerel G.nextId'den geliyordu; iki üyenin sayacı çakışınca
   // biri diğerinin hattını SESSİZCE eziyordu. Oyuncu kimliğiyle önekleyip benzersiz yapıyoruz.
   // Ek fayda: anahtar sayısal olmaktan çıkınca Firebase düğümü diziye çevirmiyor (null delik yok).
@@ -12352,7 +12473,7 @@ const NET = {
   // 🗑️ Hattı ORTAK kayıttan SİL — ömrünü dolduran ittifak hattını sökmenin tek yolu.
   // Yalnız yerelde silmek yetmez: allyApply 12 saniyede bir sunucudan komple okuyup hattı geri getirir.
   allyLineDel(aid, key) { return this.req('allies/' + aid + '/lines/' + key, 'DELETE'); },
-  sendMail(toId, subj, body) { return this.push('mail/' + toId, { from: G.company, subj, body, ts: Date.now() }); },
+  sendMail(toId, subj, body) { return this.push('mail/' + toId, { from: G.company, subj, body, ts: this.zaman() }); },
   // ⚠️ HATA AVI (yüksek): oda anahtarı kapsamsızdı — DÜNYADAKİ TÜM ittifaklar aynı 'ally'
   // düğümünü, tüm ülkeler aynı 'country' düğümünü paylaşıyordu. Anahtarı kapsamla üretiyoruz.
   chatKey(room) {
@@ -12361,7 +12482,7 @@ const NET = {
     if (room === 'city') return 'city_' + (G.il || 'x').replace(/[^A-Za-z0-9]/g, '');
     return 'world';
   },
-  sendChat(room, txt) { const k = this.chatKey(room); return k ? this.push('chat/' + k, { who: G.company, txt, ts: Date.now() }) : Promise.resolve(); },
+  sendChat(room, txt) { const k = this.chatKey(room); return k ? this.push('chat/' + k, { who: G.company, txt, ts: this.zaman() }) : Promise.resolve(); },
   async pullChat(room) { const k = this.chatKey(room); if (!k) return []; const c = await this.get('chat/' + k); return c ? Object.values(c).slice(-40) : []; },
 };
 
@@ -12575,7 +12696,7 @@ window.teklifGonder = async oid => {
   try {
     const r = await NET.put('teklif/' + o.netOwner + '/' + id, {
       from: NET.id, nm: nmTemizle(G.company), oid, kind: o.kind, t: o.t,
-      cell: o.cell, ll: [+o.ll[0], +o.ll[1]], tutar: v, ts: Date.now(),
+      cell: o.cell, ll: [+o.ll[0], +o.ll[1]], tutar: v, ts: NET.zaman(),
     });
     if (r == null) { toast(CEV('🌐 Teklif gönderilemedi — tekrar dene'), 'warn'); return; }
   } catch (e) { toast(CEV('🌐 Teklif gönderilemedi — tekrar dene'), 'warn'); return; }
@@ -12617,7 +12738,7 @@ window.teklifYanitla = async (id, kabul) => {
   if (kabul && u.hq) { toast(CEV('🏢 Merkez ofis satılamaz'), 'warn'); return; }
   if (kabul && aucListed(u.kind === 'store' ? 'store' : 'unit', u.id)) { toast(CEV('🔨 Bu tesis açık artırmada — önce ilanı çek'), 'warn'); return; }
   try {
-    const r = await NET.put('teklifSonuc/' + t.from + '/' + id, { ok: kabul ? 1 : 0, tutar: t.tutar, oid: t.oid, ts: Date.now() });
+    const r = await NET.put('teklifSonuc/' + t.from + '/' + id, { ok: kabul ? 1 : 0, tutar: t.tutar, oid: t.oid, ts: NET.zaman() });
     if (r == null) { toast(CEV('🌐 Yanıt yazılamadı — tekrar dene'), 'warn'); return; }
   } catch (e) { toast(CEV('🌐 Yanıt yazılamadı — tekrar dene'), 'warn'); return; }
   await NET.req('teklif/' + NET.id + '/' + id, 'DELETE').catch(() => {});
@@ -12712,7 +12833,7 @@ function aucAssets() { // satılabilir varlıkların listesi
     out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, loc: placeName(u.cell) + ' · ' + cellCode(u.cell), cell: u.cell, ll: u.ll, note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? T.mw + ' MW' : '' });
   }
   for (const l of (G.lines || [])) if (lineReady(l) && !aucListed('line', l.id))
-    out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs) * .5 * (1 - lineOmurFrac(l)) + lineCost(l.km, l.hubs) * .05), loc: placeName(l.from) + ' → ' + placeName(l.to), note: fmtN(l.km) + ' km' });
+    out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs, lineKat(l)) * .5 * (1 - lineOmurFrac(l)) + lineCost(l.km, l.hubs, lineKat(l)) * .05), loc: placeName(l.from) + ' → ' + placeName(l.to), note: fmtN(l.km) + ' km' });
   (G.consRights || []).forEach((r, i) => { if (aucListed('share', i)) return;
     void r; });   // ⚖️ HİSSE MÜZAYEDEDE SATILMAZ — iki sebeple (denetimde bulundu):
   // (1) aucGrantAsset hisseyi ALICIYA hiç yazmıyordu (`assetKind !== 'unit'` erken dönüyor),
@@ -13411,7 +13532,7 @@ window.suggestSend = async () => {
     if (NET.adminId) await NET.sendMail(NET.adminId, ('Öneri: ' + G.company).slice(0, 60), tx.slice(0, 550));
     NET.push('suggestions', {
       from: String(G.company || '?').slice(0, 28), fromId: String(NET.id || '').slice(0, 48),
-      txt: tx.slice(0, 500), ts: Date.now(),
+      txt: tx.slice(0, 500), ts: NET.zaman(),
     }).catch(() => {}); // suggestions düğümü yedek kayıt — posta ve e-posta asıl kanallar
     // 📧 E-POSTA KANALI (patron: "istekler mail adresime gelsin"): formsubmit.co ücretsiz
     // 25 Ağu: adres oyunun resmî hesabına çevrildi (kişisel adres mağazada/kodda durmasın).
@@ -13439,7 +13560,7 @@ window.reportPlayerDo = async (nm, kind) => {
     await NET.push('reports', {
       from: String(G.company || '?').slice(0, 28), fromId: String(NET.id || '').slice(0, 48),
       target: String(nm).slice(0, 28), targetId: p ? String(p.id).slice(0, 48) : undefined,
-      reason: ((REASONS[kind] || kind) + (det ? ' — ' + det : '')).slice(0, 200), ts: Date.now(),
+      reason: ((REASONS[kind] || kind) + (det ? ' — ' + det : '')).slice(0, 200), ts: NET.zaman(),
     });
     G._reported[nm] = Date.now(); save();
     toast('🚩 Şikayetin Devlete iletildi — teşekkürler, incelenecek', '', null, 0, true);
@@ -15506,6 +15627,8 @@ function migrate(s) {
   for (const k2 of ['alindi', 'temel', 'hedef', 'sayac']) if (!s.gpGorev[k2] || typeof s.gpGorev[k2] !== 'object') s.gpGorev[k2] = {};
   s.prodByCat = (s.prodByCat && typeof s.prodByCat === 'object') ? s.prodByCat : {};
   s.canta = (s.canta && typeof s.canta === 'object') ? s.canta : {}; // 🎒 hediye envanteri
+  if (!(s.weekProd >= 0)) s.weekProd = 0;   // ⚡ üretim tabanlı ölçek (3 Eyl) — eski kayıtta yok
+  if (!(s.enUretim >= 0)) s.enUretim = 0;
   for (const k3 of ['teklifBekleyen', 'teklifGelen']) if (!s[k3] || typeof s[k3] !== 'object') s[k3] = {}; // 💰 teklif kutuları
   if (s.allyBasvuru !== null && (!s.allyBasvuru || !s.allyBasvuru.aid)) s.allyBasvuru = null; // 📥 bozuk başvuru kaydı
   s.capLic = s.capLic || {};
@@ -15513,9 +15636,9 @@ function migrate(s) {
   // ⚡ HAT ÖMRÜ (20. tur): eski kayıtlarda omur/tasinan yok. Sayaç SIFIRDAN başlar — mevcut
   // oyunculara geçmişte taşıdıkları enerji yazılmaz (hat başına geçmiş veri zaten tutulmuyor;
   // G.totalSold şirket toplamıdır, hangi hattan geçtiği bilinmiyor). Bilerek verilen bir hediye.
-  for (const l of s.lines) { if (!(l.omur > 0)) l.omur = lineOmurMax(l.km, l.hubs); if (!(l.tasinan >= 0)) l.tasinan = 0; }
+  for (const l of s.lines) { if (!(l.omur > 0)) l.omur = lineOmurMax(l.km, l.hubs, lineKat(l)); if (!(l.tasinan >= 0)) l.tasinan = 0; }
   if (s.ally && Array.isArray(s.ally.lines))
-    for (const l of s.ally.lines) { if (l && !(l.omur > 0)) l.omur = lineOmurMax(l.km, l.hubs); if (l && !(l.tasinan >= 0)) l.tasinan = 0; }
+    for (const l of s.ally.lines) { if (l && !(l.omur > 0)) l.omur = lineOmurMax(l.km, l.hubs, lineKat(l)); if (l && !(l.tasinan >= 0)) l.tasinan = 0; }
   s.chat = s.chat || {}; s.boughtOthers = s.boughtOthers || {}; s.auctionsMkt = s.auctionsMkt || [];
   s.countryStudy = s.countryStudy || {}; // 🔎 bölge araştırması sonradan geldi — eski kayıtlar boş başlar
   if (s.countryStudyActive === undefined) s.countryStudyActive = null;
