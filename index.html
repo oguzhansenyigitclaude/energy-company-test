@@ -667,7 +667,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-06 21:08) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-06 21:19) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -838,7 +838,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-06 21:08)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-06 21:19)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -5103,8 +5103,9 @@ function placeName(id) {
   const ct = countryAt(c);
   return ct ? ct.nm : '🌊 Açık deniz';
 }
-// Yerel piyasa (ŞEFFAF, parça parça): bugünkü talebin İÇİNDE kalan MWh tam fiyat,
-// talebi AŞAN kısım ×0.15 "yok pahasına" gider. Çöle kurarsan ilk satıştan itibaren hissedersin.
+// Yerel piyasa (ŞEFFAF, parça parça): günlük talebin İLK %20'si tam fiyat, sonraki dilimler
+// giderek ucuzlar (bkz. DOYGUN_MERDIVEN), talebi AŞAN kısım ×0.15 "yok pahasına" gider.
+// Çöle kurarsan ilk satıştan itibaren hissedersin.
 const DUMP_RATE = 0.15;
 // ⚡ TRAFO/ÇEVRİM KAYBI (patron onayı, 21 Ağu — oyun süresi freni A): depoya giren enerjinin bir
 // kısmı çevrimde kaybolur. Gerçek hayatta da öyle: pil ~%10-15, hidrojen çevrimi daha verimsiz
@@ -5541,19 +5542,45 @@ const LOSS_LEAK = 0.03;
 // tarihsel referansı olarak duruyor. Geri açmak istersen: transferAllowed() sonundaki `return false`.
 const NEIGHBOR_KM = 60;
 // Aynı karede DAHA ÖNCE satılmış varsayılan miktarı hesaba katan sürüm (toplu satış tahmini için)
-// 📉 TALEP DOYGUNLUĞU (patron onayı, fren D): bir karenin günlük talebinin YARISINI aştıktan
-// sonra fiyat kademeli düşer — tek karede oturup pompalamak yerine coğrafi yayılma gerekir.
-// Doygun kısım tam fiyatın %70'inden satılır; talebin tamamı aşılınca zaten DUMP_RATE devreye girer.
-const SATURATE_AT = .5, SATURATE_RATE = .7;
+// ═══ 📉 KADEMELİ TALEP DOYGUNLUĞU (patron 6 Eyl) ═══════════════════════════════════
+// PATRON: "2 hafta olmadan gelirim anlık 2,5 milyarı buldu, bu çok fazla. Normalde 1 ayda
+//   bu seviyeye gelmem gerek."  ÖLÇÜM: oyundaki HER santral 0,8-3 GÜNDE kendini ödüyordu
+//   (kömür K-22: 31 M$ kurulum / 34 M$ günlük net = 0,90 gün) → sermaye her gün ikiye
+//   katlanıyordu. Tycoon eğrisinde bu sayı 10-20 gün olmalı.
+//
+// ⚠️ TABAN FİYATI TOPLUCA DÜŞÜRMEK ÇÖZÜM DEĞİL: 23 Ağustos'ta denendi (120K→40K) ve canlı
+//   testte GERİ ALINDI (ba8cabc) — yeni oyuncu ilk kömür santralini alamıyordu. O yüzden
+//   fren ÖLÇEĞE BAĞLI olmalı: küçük oyuncuya dokunmayan, büyüğü yavaşlatan bir eğri.
+//
+// ÇÖZÜM — VERGİ DİLİMİ MANTIĞI: bir karonun GÜNLÜK talebinin ilk %20'si tam fiyattan alınır,
+//   sonraki dilimler giderek ucuzlar. Her dilim KENDİ oranından ödenir (marjinal), yani
+//   "1 MWh fazla sattım, tüm gelirim düştü" uçurumu yoktur.
+//   · yeni oyuncu (talebin %4'ünü satar) → TAM fiyat, hiçbir değişiklik yok
+//   · patron senaryosu (12.681 talepli Kocaeli'ye 9.500 MWh) → çarpan 0,90'dan 0,48'e
+//   Sonuç: tek metropole yığmak biter; yayılmak, ruhsat almak ve HAT ÇEKMEK kârlı hale gelir.
+const DOYGUN_MERDIVEN = [[.20, 1], [.40, .45], [.70, .22], [1, .15]]; // [talep yüzdesi, fiyat oranı]
+const SATURATE_AT = DOYGUN_MERDIVEN[0][0];   // "tam fiyat" dilimi — bilgi ekranları bunu gösterir
+// [bas, bas+mwh] aralığının ORTALAMA fiyat oranı. bas = bugün bu kareye zaten satılmış miktar.
+function doygunAgirlik(gunluk, bas, mwh) {
+  let kalan = mwh, alt = Math.max(0, bas), toplam = 0;
+  for (const [ust, oran] of DOYGUN_MERDIVEN) {
+    if (kalan <= 0) break;
+    const tavan = gunluk * ust;
+    if (alt >= tavan) continue;
+    const dilim = Math.min(kalan, tavan - alt);
+    toplam += dilim * oran; alt += dilim; kalan -= dilim;
+  }
+  if (kalan > 0) toplam += kalan * DUMP_RATE; // talebin tamamı aşıldıysa zaten döküm fiyatı
+  return toplam / (mwh || 1);
+}
 function doygunGelir(cell, mwh, oncekiMwh) {
   const gunluk = cellDemand(cell) || 1;
   const kalan = Math.max(0, demandLeft(cell) - (oncekiMwh || 0));
   const satilan = (gunluk - demandLeft(cell)) + (oncekiMwh || 0); // bugün bu kareye satılan toplam
   const inD = Math.min(mwh, kalan), excess = mwh - inD;
-  const esik = gunluk * SATURATE_AT;
-  const tazeKota = Math.max(0, esik - satilan);        // hâlâ tam fiyattan satılabilir miktar
-  const tam = Math.min(inD, tazeKota), doygun = inD - tam;
-  return { inD, excess, kalan, carpan: (tam + doygun * SATURATE_RATE) / (inD || 1), doygunMwh: doygun };
+  const tazeKota = Math.max(0, gunluk * SATURATE_AT - satilan);   // hâlâ TAM fiyattan satılabilir
+  const doygun = Math.max(0, inD - tazeKota);                     // indirimli dilimlere düşen kısım
+  return { inD, excess, kalan, carpan: doygunAgirlik(gunluk, satilan, inD), doygunMwh: doygun };
 }
 function sellRevenueAfter(cell, mwh, oncekiMwh, sabitFiyat) {
   const base = sabitFiyat || cellPriceNow(cell);
@@ -5575,7 +5602,8 @@ function sellRevenue(cell, mwh, sabitFiyat) {
   const dg = doygunGelir(cell, mwh, 0);
   const ham = (inD * base * dg.carpan + excess * base * DUMP_RATE) * gb * ipSatBoost() * (1 - LOSS_LEAK);
   const vRate = leaseTaxRate(cell), vergi = ham * vRate; // 🏛️ garanti sahibine giden pay
-  return { gain: ham - vergi, inD, excess, remaining, price: base, green: gb - 1, leaseTax: vergi, leaseTaxRate: vRate, leaseOwner: vRate ? leaseOwnerOf(cell) : null };
+  return { gain: ham - vergi, inD, excess, remaining, price: base, green: gb - 1, leaseTax: vergi, leaseTaxRate: vRate,
+    doygun: dg.doygunMwh, doygunCarpan: dg.carpan, leaseOwner: vRate ? leaseOwnerOf(cell) : null };
 }
 // 🔁 ALTERNATİF PAZAR BUTONLARI (patron: "butonda MWh fiyatı değil KAZANILACAK TUTAR yazsın,
 // parantezden sonra da yerel satışa göre '%25 daha kârlı' / '%15 zarar' desin").
@@ -16678,7 +16706,9 @@ window.sellAllStoresAsk = () => {
     <h2>💰 Hepsini Sat</h2>
     <p><b>${sts.length} depo</b> · ${fmtE(mwh)} MWh · tahmini <b class="pos">${fmt(toplam)}</b></p>
     <p class="sub">Boşaltma süresince her depoya bağlı santraller duracak, bitince kendiliğinden açılır.
-    Bölge talebini aşan kısım yok pahasına gider — panelde "talep aşımı" yazan depolar için bekle.</p>
+    Bölge talebini aşan kısım yok pahasına gider — panelde "talep aşımı" yazan depolar için bekle.<br>
+    📉 <b>Doygunluk:</b> bir karonun günlük talebinin ilk %${Math.round(SATURATE_AT * 100)}'si tam fiyattan alınır, sonraki dilimler ucuzlar.
+    Hepsini tek bölgeye boşaltmak yerine ⚡ hatla farklı şehirlere dağıtmak çok daha kârlıdır.</p>
     ${sts.some(s => leaseTaxRate(s.cell)) ? `<p class="sub neg">🏛️ Alım garantisi rakipte olan karolardaki satışlardan <b>%${LEASE_PRIM * 100} karo vergisi</b> düşülür (tutara işlenmiştir, karo sahibine ödenir).</p>` : ''}
     <button class="primary" onclick="closeModal();sellAllStores()">💰 Evet, ${sts.length} Depoyu Sat</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
@@ -17138,11 +17168,12 @@ function openUnitSheet(id) {
           <tr><td>Bölge alım çarpanı</td><td>×${cellPriceFactor(u.cell).toFixed(2)}${myLease(u.cell) ? ' <span class="pos">· 🏛️ alım garantisi: fiyat +%20</span>' : ''}</td></tr>
           <tr><td>Bölgede bugün kalan talep</td><td class="${left < satMwh ? 'neg' : ''}">${fmtN(left)} / ${fmtN(D)} MWh</td></tr>
           <tr><td>→ Talep içinde satılacak</td><td class="pos">${fmtE(rAll.inD)} MWh × ${fmt(base)}</td></tr>
+          ${rAll.doygun > .5 ? `<tr><td>→ 📉 Doygunluk indirimi <span class="sub">(talebin %${Math.round(SATURATE_AT * 100)}'sinden sonrası)</span></td><td class="neg">${fmtN(rAll.doygun)} MWh düşük fiyattan — ort. ×${(rAll.doygunCarpan || 1).toFixed(2)}</td></tr>` : ''}
           ${rAll.excess > .5 ? `<tr><td>→ Talebi aşan kısım</td><td class="neg">${fmtN(rAll.excess)} MWh × ${fmt(base * DUMP_RATE)} (yok pahasına)</td></tr>` : ''}
           ${rAll.leaseTax > .5 ? `<tr><td>→ 🏛️ Karo vergisi (%${LEASE_PRIM * 100})</td><td class="neg">−${fmt(rAll.leaseTax)} → ${rAll.leaseOwner || 'karo sahibi'}</td></tr>` : ''}
           <tr><td><b>Tümünü satarsan</b></td><td><b>${fmt(rAll.gain)}</b></td></tr>
         </table>
-        <p class="sub" style="margin-top:6px">${rAll.leaseTaxRate ? 'Şeffaf kural: gördüğün = hesabına geçen — tek kesinti, tutara işlenmiş <b>%' + LEASE_PRIM * 100 + ' karo vergisi</b> (alım garantisi ' + (rAll.leaseOwner || 'rakipte') + ').' : 'Şeffaf kural: gördüğün = hesabına geçen. Trafo kaybı YOK, sürpriz kesinti yok.'}${rAll.excess > .5 ? ' 💡 Fazlan yok pahasına gidiyor: kalabalık şehir yakınına depo kur ya da yarını bekle.' : ''}</p>
+        <p class="sub" style="margin-top:6px">${rAll.leaseTaxRate ? 'Şeffaf kural: gördüğün = hesabına geçen — tek kesinti, tutara işlenmiş <b>%' + LEASE_PRIM * 100 + ' karo vergisi</b> (alım garantisi ' + (rAll.leaseOwner || 'rakipte') + ').' : 'Şeffaf kural: gördüğün = hesabına geçen. Trafo kaybı YOK, sürpriz kesinti yok.'}${rAll.excess > .5 ? ' 💡 Fazlan yok pahasına gidiyor: kalabalık şehir yakınına depo kur ya da yarını bekle.' : ''}${rAll.doygun > .5 ? ' 📉 Bir karonun günlük talebinin ilk %' + Math.round(SATURATE_AT * 100) + '\'si tam fiyattan alınır, sonrası ucuzlar. Aynı enerjiyi BAŞKA şehirlere dağıtırsan çok daha fazla kazanırsın — ⚡ nakil hattı tam da bunun içindir.' : ''}</p>
       </details>
       ${(() => { // 🗑️ VARLIK SATIŞI (patron 29 Ağu: "Sat butonu ayrıntıların içinden çıksın,
         // direkt en altta kırmızı buton olsun") — 🔗 GRUP KİLİDİ korunur: bağlantılı depo
@@ -18763,6 +18794,7 @@ const BOOT_TIPS = [
   'Aynı trafo markasına sadık kalırsan iskonto %25\'e kadar çıkar.',
   'Ülke sınırını aşan hat ittifak işidir; kıtalar arası için konsorsiyum gerekir.',
   'Denize yalnız offshore rüzgâr ve yüzer güneş kurulur — gerçek dünyadaki gibi.',
+  'Bir karonun günlük talebinin ilk %20\'si tam fiyattan alınır; gerisi ucuzlar. Aynı enerjiyi farklı şehirlere dağıt.',
   'Bölge talebini aşan enerji yok pahasına gider. Kalabalık şehre yakın depola.',
   'Oto-satış yok: satış anı senin kararın. Oyun seni ekrana kilitlemek için tasarlanmadı.',
   'Haftalık Pazar ihalesini kazanan, o karede bir hafta +%20 primli satar.',
