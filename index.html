@@ -692,7 +692,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-11 10:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-11 10:27) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -863,7 +863,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-11 10:26)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-11 10:27)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -16965,6 +16965,10 @@ function dolumTxt(kalanMWh, inflowMW) {
 }
 // ═══ 🏙️ ŞEHİR KATMANI (patron: "yakınlaşınca görünsün yoksa uzaktan tüm yazılar iç içe geçer") ═══
 function drawCityLabels() {
+  // 🏙️ KURAL (patron 11 Eyl): şehir etiketleri ve KARO ÇERÇEVELERİ YALNIZCA
+  //    şehir görünümünde çizilir. Bugün tek çağıran drawOverlay'in MAPVIEW==='city' dalı,
+  //    ama bu bir çağırı yeri tesadüfü olmaktan çıkıp KURAL olsun diye kapı burada da duruyor.
+  if (MAPVIEW !== 'city') return;
   const z = zoomNow(), b = map.getBounds();
   // zoom'a göre nüfus eşiği: uzakta yalnız metropoller, yaklaştıkça küçük şehirler
   // ⚡ 35.000 şehir: her yeniden çizimde filter+sort yerine ÖN SIRALI kademe dizileri.
