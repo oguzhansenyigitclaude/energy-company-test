@@ -667,7 +667,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-06 21:19) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-11 07:39) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -838,7 +838,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-06 21:19)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-11 07:39)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -3760,6 +3760,11 @@ Object.assign(CNAME_TR, CNAME_TR_TAM);
 const ISO_FIX = { 'France': 'FR', 'Norway': 'NO', 'Kosovo': 'XK', 'Somaliland': 'XS',
   'Northern Cyprus': 'XN', 'Indian Ocean Territories': 'XI', 'Ashmore and Cartier Islands': 'XA',
   'Siachen Glacier': 'XG' };
+// 🌍 Natural Earth Türkiye'yi tamamen ASYA'ya koyar; oyunda TR→Almanya bu yüzden
+// "kıtalar arası" sayılıyordu (konsorsiyum + ×12 hat bedeli). Patron 6 Eyl: Avrupa olsun.
+// ⚠️ RUSYA BİLEREK EKLENMEDİ: Avrupa'ya alsaydık Rusya→Çin / Rusya→Kazakistan gibi
+// KARA SINIRI komşuları "kıtalar arası" (×12) olurdu — düzelttiğinden fazlasını bozardı.
+const KITA_DUZELT = { TR: 'Europe' };
 const KITA_TR = { 'Europe': 'Avrupa', 'Asia': 'Asya', 'Africa': 'Afrika', 'North America': 'Kuzey Amerika',
   'South America': 'Güney Amerika', 'Oceania': 'Okyanusya', 'Antarctica': 'Antarktika', 'Seven seas (open ocean)': 'Açık deniz' };
 // 🔁 Türkçe ad → ISO ters dizini (yalnız YEDEK harita için — bir kez kurulur).
@@ -3801,7 +3806,10 @@ function landIndex(gj) { // kaba sınır kutuları: her dokunuşta bütün düny
     // (CNAME_TR / CNAME_TR_TAM) → ISO (COUNTRY_ADD). Yedek moda düşen oyuncu 7 ülke yerine
     // ~50 ülkede doğru künye görür. Ana yolda (world50m) bu dal HİÇ çalışmaz.
     let iso = pr.ISO_A2 && pr.ISO_A2 !== '-99' ? pr.ISO_A2 : (ISO_FIX[en] || isoAddan(en));
-    const m = { en, nm: CNAME_TR[en] || en, iso, kita: KITA_TR[pr.CONTINENT] || pr.CONTINENT || '', kitaEn: pr.CONTINENT || '' };
+    // 🌍 KITA DÜZELTMESİ: harita verisi kıtalar arası ülkeleri tek kıtaya sıkıştırıyor.
+    // Oyun açısından önemli olan hattın hangi sınıfa gireceği (×1 / ×4 / ×12).
+    const kitaEn = KITA_DUZELT[iso] || pr.CONTINENT || '';
+    const m = { en, nm: CNAME_TR[en] || en, iso, kita: KITA_TR[kitaEn] || kitaEn || '', kitaEn };
     const polys = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : [];
     for (const p of polys) {
       let x0 = 180, y0 = 90, x1 = -180, y1 = -90;
@@ -8424,7 +8432,7 @@ const OLCEK_TESVIK = 7000;
 // ⚖️ Eşikler (patron, 29 Ağu): Holding 100k · Büyük 20k · Orta 10k · Küçük 5k · altı Mikro.
 const OLCEK = [
   { nm: 'Mikro İşletme', ico: '🏠', esik: 0 },
-  { nm: 'Küçük İşletme', ico: '🏢', esik: 5000 },      // esik: bir ÜST ölçeğe geçmek için haftalık ÜRETİM (MWh)
+  { nm: 'Küçük İşletme', ico: '🏢', esik: 5000 },      // esik: üst ölçek için √(hafta üretimi × hafta satışı)
   { nm: 'Orta Ölçekli İşletme', ico: '🏬', esik: 10000 },
   { nm: 'Büyük Ölçekli İşletme', ico: '🏭', esik: 20000 },
   { nm: 'Enerji Holdingi', ico: '👑', esik: 100000 },
@@ -8441,11 +8449,13 @@ function checkWeek() {
     for (const u of G.units) if (u.wkTon) u.wkTon = 0;
   }
 }
+// 📏 ÖLÇEK ÖLÇÜTÜ: üretim ile satışın GEOMETRİK ORTALAMASI (bkz. üstteki gerekçe).
+// Biri sıfırsa sonuç sıfırdır — ne stokçu ne de üretmeden alıp satan büyüyebilir.
+const olcekOlcut = (uretim, satis) => Math.sqrt(Math.max(0, uretim || 0) * Math.max(0, satis || 0));
 function katkiHaftaKapat(eskiHafta, katki, uretim) {
   const eski = G.olcek || 0;
-  // 📏 ÖLÇEK ÖLÇÜTÜ = HAFTALIK ÜRETİM (patron 3 Eyl). Eski kayıtlarda uretim gelmezse
-  //    satışa düşer — ölçek bir hafta yanlış hesaplanacağına eski davranışı sürdürsün.
-  const ol = (uretim == null) ? katki : uretim;
+  // Eski kayıtlarda uretim gelmezse salt satışa düşer (eski davranış korunur).
+  const ol = (uretim == null) ? katki : olcekOlcut(uretim, katki);
   if (eski < OLCEK.length - 1 && ol >= OLCEK[eski + 1].esik) {
     // ⬆️ TERFİ: geçen haftaki katkı üst ölçeğin eşiğini aştı — resmî sınıf değişir, teşvik yatar
     G.olcek = eski + 1;
@@ -8458,7 +8468,7 @@ function katkiHaftaKapat(eskiHafta, katki, uretim) {
     const ipOdul = terfiPara ? 0 : (G.olcek === OLCEK.length - 1 ? 100 : 50);
     G.cash += odul;
     G.ip = (G.ip || 0) + ipOdul; // 💠 terfi ödülü
-    addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta ${fmtN(ol)} MWh enerji ÜRETTİNİZ. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki: <b>${terfiPara ? fmt(odul) : '💠 ' + ipOdul + ' İmtiyaz Puanı'}</b>. Tebrikler!`, true);
+    addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta <b>${fmtN(uretim == null ? katki : uretim)} MWh ürettiniz</b> ve <b>${fmtN(katki)} MWh şebekeye sattınız</b> — ölçek dengeniz <b>${fmtN(ol)} MWh</b>. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki: <b>${terfiPara ? fmt(odul) : '💠 ' + ipOdul + ' İmtiyaz Puanı'}</b>. Tebrikler!`, true);
     toast(y.ico + ' Şirketin artık ' + y.nm + '! Teşvik: ' + (terfiPara ? '+' + fmt(odul) : '💠 +' + ipOdul), '', null, 0, true);
     // 👑 EN ÜST LİG AYRICALIĞI duyurusu — reklamsızlık adFreeActive() içinde ölçekten okunur,
     // burada gün eklenmez: holding'likten düşen ayrıcalığı da kaybeder (patron tasarımı).
@@ -8470,8 +8480,8 @@ function katkiHaftaKapat(eskiHafta, katki, uretim) {
     // ⬇️ KADEME KORUMA: mevcut ölçeğin eşiğinin çeyreğinin altında kalan hafta ölçeği bir düşürür
     G.olcek = eski - 1;
     const y = OLCEK[G.olcek];
-    addMail('🏛️ Enerji Bakanlığı', 'Ölçek güncellemesi: ' + y.nm, `Geçen hafta üretiminiz ${fmtN(ol)} MWh ile ölçeğinizin gerektirdiği düzeyin altında kaldı. Şirketiniz "${y.nm}" ${y.ico} olarak yeniden sınıflandırıldı. Katkınızı artırınca yeniden yükselirsiniz.`, true);
-    toast('🏛️ Ölçek düştü: ' + y.nm + ' — katkını artır, geri yüksel', 'warn', null, 0, true);
+    addMail('🏛️ Enerji Bakanlığı', 'Ölçek güncellemesi: ' + y.nm, `Geçen hafta <b>${fmtN(uretim == null ? katki : uretim)} MWh üretim</b> · <b>${fmtN(katki)} MWh satış</b> yaptınız — ölçek dengeniz ${fmtN(ol)} MWh, ölçeğinizin gerektirdiği düzeyin altında kaldı. Şirketiniz "${y.nm}" ${y.ico} olarak yeniden sınıflandırıldı.<br><br><span style="opacity:.8">Ölçek, ÜRETİM ile SATIŞIN dengesine bakar: yalnız üretip satmamak da, üretmeden büyümek de ölçeği düşürür.</span>`, true);
+    toast('🏛️ Ölçek düştü: ' + y.nm + ' — üretim ve satışı birlikte artır', 'warn', null, 0, true);
   }
   // 🏆 GEÇEN HAFTANIN SIRALAMA ÖDÜLÜ: kapanan haftanın katki/ tablosu DEĞİŞMEZ — herkes aynı
   // tabloya bakar, aynı sıralamayı görür, ödül adil dağılır (istemci saat farkı sorun olmaz).
@@ -9522,7 +9532,10 @@ window.lineExtendOnay = () => {
 // sonra Urfa. Önce YEŞİL ön izleme, altta maliyet ve iptal. Onaylayınca kablo KIRMIZI olsun ve
 // transfer merkezleriyle birlikte haritada görünsün." Her ARA nokta = 1 Enerji Transfer Merkezi.
 let LDRAW = null, ldrawLayer = [];
-const LDRAW_MAX = 8; // en fazla 8 nokta (7 bölüm) — maliyet ekranı okunaklı kalsın
+// 🗼 Nokta tavanı: oyuncu yan yana kurduğu HER deposunun karesine dokunmak zorunda
+// (depo yalnız kendi karesindeki merkeze bağlanır). 8 depo + varış = 9 nokta ederdi;
+// eski 8'lik tavan patronun tam senaryosunu engelliyordu (6 Eyl).
+const LDRAW_MAX = 16;
 const bestBrand = () => Object.keys(BRANDS).reduce((a, b) => brandRel(b) > brandRel(a) ? b : a, 'ortac');
 window.openLinePanel = () => {
   if (!G || !G._started) return;
@@ -9563,7 +9576,10 @@ function lineDrawAdd(cell) {
       toast('🌍 Kıtalar arası hat ' + CONS_MIN_ALLIES + ' ittifaklı KONSORSİYUM ister', 'warn', null, 0, true); return;
     }
     const seg = kmDist(cellCenter(LDRAW.cells[n - 1]), cellCenter(cell));
-    if (seg < 20) { toast('✏️ Çok yakın (' + Math.round(seg) + ' km) — en az 20 km uzağa dokun', 'warn'); return; }
+    // ⚠️ ASGARİ MESAFE YOK (patron 6 Eyl hata bildirimi): bir kare ~11 km, eski 20 km şartı
+    //    KOMŞU karona dokunmanı imkânsız kılıyordu — oysa deponun hatta girmesi için o
+    //    karede transfer merkezi ŞART. Yan yana karolarına hat çekmek artık serbest;
+    //    freni mesafe değil, merkez başına ödenen bedeldir. GERİ KOYMA.
     // 300 km'den uzun bölüm taşınamaz → ZORUNLU transfer merkezi otomatik eklenir (bedeli maliyete girer)
     if (seg > 300) toast('🗼 Bu bölüm ' + Math.round(seg) + ' km — ' + (Math.ceil(seg / 300) - 1) + ' zorunlu transfer merkezi otomatik eklendi', '', null, 0, true);
   }
@@ -9603,11 +9619,18 @@ function drawBarUpdate() {
   const km = n >= 2 ? Math.round(pathKm(yol)) : 0;
   const hubs = Math.max(0, yol.length - 2);
   const cost = n >= 2 ? lineCost(km, hubs, lineKatCells(LDRAW.cells[0], LDRAW.cells[n - 1], km)) : 0;
+  // 🔌 Bu rota KAÇ deponu bağlar? Depo yalnız KENDİ karesindeki merkeze girer; rotanın
+  // (zorunlu ara merkezler dâhil) dokunduğu kareleri sayıyoruz.
+  const yolKare = n >= 2 ? new Set(yol) : new Set(LDRAW.cells);
+  const baglanan = stores().filter(st => yolKare.has(st.cell)).length;
+  const toplamDepo = stores().length;
   $('drawtxt').innerHTML = n === 0
     ? '✏️ <b>İLK NOKTA</b> — depolu bölgene dokun (hat oradan başlar)'
     : n === 1
       ? '✏️ <b>' + placeName(LDRAW.cells[0]) + '</b> seçildi — şimdi <b>varış noktasına</b> dokun. Aralara dokunursan oraya transfer merkezi kurulur.'
-      : '⚡ ' + LDRAW.cells.map(c => placeName(c)).join(' → ') + '<br><span class="sub">' + fmtN(km) + ' km · 🗼 ' + hubTotal(hubs) + ' transfer merkezi · kayıp %' + Math.round(lineBaseLoss({ path: yol, km, hubs })) + '</span>';
+      : '⚡ ' + LDRAW.cells.map(c => placeName(c)).join(' → ') + '<br><span class="sub">' + fmtN(km) + ' km · 🗼 ' + hubTotal(hubs) + ' transfer merkezi · kayıp %' + Math.round(lineBaseLoss({ path: yol, km, hubs }))
+        + ' · 🔌 <b>' + baglanan + '/' + toplamDepo + ' depon bağlanır</b>'
+        + (baglanan < toplamDepo ? ' <span style="color:var(--warn)">— bağlanmayan deponun karesine de dokun</span>' : '') + '</span>';
   $('drawcost').disabled = n < 2;
   $('drawcost').textContent = n < 2 ? '💰 Maliyet' : '💰 Maliyet — ' + fmt(cost);
 }
@@ -13410,8 +13433,13 @@ window.openLeaderboard = (tab) => {
     // 🏛️ DEVLET KATKISI: bu haftanın (pazardan pazara) şebekeye satış tablosu + ölçek merdiveni
     const benim = olcekOf(G.olcek);
     const merdiven = OLCEK.map((o, i) => `${i === (G.olcek || 0) ? '<b>' : ''}${o.ico} ${CEV(o.nm)}${i > 0 ? ' <span class="sub">(' + fmtN(o.esik) + '+ MWh/' + CEV('hafta') + ')</span>' : ''}${i === (G.olcek || 0) ? '</b>' : ''}`).join(' → ');
-    cerceve(`Pazardan pazara şebekeye sattığın her MWh <b>devlet katkısıdır</b>. Hafta kapanınca 🏛️ Bakanlık sıralamaya göre ödül öder; eşiği aşan şirket <b>ölçek atlar</b>, çok altında kalan geriler.<br>
-      <span style="font-size:11px">${merdiven}</span><br>Senin bu hafta: <b>${fmtN(G.weekSold)} MWh</b> · ölçeğin: <b>${benim.ico} ${benim.nm}</b>`,
+    const olcut = olcekOlcut(G.weekProd, G.weekSold);
+    const sonraki = (G.olcek || 0) < OLCEK.length - 1 ? OLCEK[(G.olcek || 0) + 1] : null;
+    cerceve(`Pazardan pazara şebekeye sattığın her MWh <b>devlet katkısıdır</b> — sıralama ve ödüller SATIŞA bakar.<br>
+      <b>Ölçek</b> ise ÜRETİM ile SATIŞIN <b>dengesine</b> bakar: yalnız üretip satmayan da, hiç üretmeyen de ölçek atlayamaz.<br>
+      <span style="font-size:11px">${merdiven}</span><br>
+      Bu hafta: ⚡ <b>${fmtN(Math.round(G.weekProd || 0))} MWh üretim</b> · 💰 <b>${fmtN(Math.round(G.weekSold || 0))} MWh satış</b> → 📏 denge <b>${fmtN(Math.round(olcut))} MWh</b><br>
+      Ölçeğin: <b>${benim.ico} ${benim.nm}</b>${sonraki ? ` · sonraki için gereken: <b>${fmtN(sonraki.esik)}</b>` : ' · 👑 zirvedesin'}`,
       '<p class="sub">🏛️ Katkı tablosu yükleniyor...</p>');
     (NET.on() ? NET.get('katki/' + kHafta(G.week)) : Promise.resolve(null)).then(t => {
       const el = $('lbicerik');
