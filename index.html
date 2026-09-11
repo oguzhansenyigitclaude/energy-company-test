@@ -690,7 +690,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-11 17:36) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-11 17:38) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -861,7 +861,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-11 17:36)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-11 17:38)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -7259,21 +7259,35 @@ function windCurve(v, T) {
 function liveWx(cell) { return Date.now() - WX.at < 45 * 60 * 1000 ? WX.cells[cell] : null; }
 
 // ── SAHA KEŞFİ: kareye tıklayınca rakım + 7 günlük rüzgar/güneş ortalaması (santral yeri seçiminin kalbi) ──
+// 🌦️ SAHA KEŞFİ SÜRÜMÜ: yağış/sıcaklık alanları 11 Eyl'de eklendi. Eski önbellek kaydı
+//    (v'siz) BİR KEZ yeniden çekilir; 'loading'/'err' damgaları korunduğu için döngü olmaz.
+const SURVEY_SV = 2;
 async function surveyCell(cell) {
   WX.survey = WX.survey || {};
+  const _v = WX.survey[cell];
+  if (_v && (_v === 'loading' || _v.err || _v.v === SURVEY_SV)) return;
+  if (_v && _v.ok && _v.v !== SURVEY_SV) delete WX.survey[cell]; // sürüm atlandı: bir kez tazele
   if (WX.survey[cell]) return;
   WX.survey[cell] = 'loading';
   const [la, lo] = cellCenter(cell);
   try {
     const [er, fr] = await Promise.all([
       fetch(`https://api.open-meteo.com/v1/elevation?latitude=${la.toFixed(3)}&longitude=${lo.toFixed(3)}`).then(r => r.json()),
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${la.toFixed(3)}&longitude=${lo.toFixed(3)}&hourly=wind_speed_100m&daily=sunshine_duration&forecast_days=7&wind_speed_unit=ms&timezone=auto`).then(r => r.json()),
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${la.toFixed(3)}&longitude=${lo.toFixed(3)}&hourly=wind_speed_100m&daily=sunshine_duration,precipitation_sum,precipitation_hours,temperature_2m_mean&forecast_days=7&wind_speed_unit=ms&timezone=auto`).then(r => r.json()),
     ]);
     const winds = (fr.hourly && fr.hourly.wind_speed_100m) || [];
     const wAvg = winds.length ? winds.reduce((a, b) => a + (b || 0), 0) / winds.length : null;
     const sund = (fr.daily && fr.daily.sunshine_duration) || [];
     const sunH = sund.length ? sund.reduce((a, b) => a + (b || 0), 0) / sund.length / 3600 : null;
-    WX.survey[cell] = { ok: 1, elev: er && er.elevation ? Math.round(er.elevation[0]) : null, wAvg, sunH };
+    // 🌦️ İKLİM (11 Eyl): yağış toplamı, yağışlı saat ve ortalama sıcaklık — AYNI istekten,
+    //    ek HTTP maliyeti YOK. Şehir kartında hem bilgi hem yatırım kararı olarak kullanılır.
+    const yag = (fr.daily && fr.daily.precipitation_sum) || [];
+    const yagS = (fr.daily && fr.daily.precipitation_hours) || [];
+    const sic = (fr.daily && fr.daily.temperature_2m_mean) || [];
+    const top = a => a.length ? a.reduce((x, y) => x + (y || 0), 0) : null;
+    WX.survey[cell] = { ok: 1, v: SURVEY_SV, elev: er && er.elevation ? Math.round(er.elevation[0]) : null, wAvg, sunH,
+      yagisMm: top(yag), yagisSaat: top(yagS), sicaklik: sic.length ? top(sic) / sic.length : null,
+      yagisGun: yag.length ? yag.filter(x => (x || 0) >= 1).length : null };
   } catch (e) {
     // BUGFIX: önbelleği SİLMEK sonsuz fetch döngüsü yaratıyordu (ağ kopunca panel titriyor, telefon ısınıyordu).
     // Hatayı İŞARETLE: 964'teki koruma devreye girer, oyuncu "Tekrar dene" ile elle yeniler.
@@ -7285,6 +7299,11 @@ async function surveyCell(cell) {
   // anlık üretim" sözü ilk dakika boyunca tutmuyordu. Keşif KALICI bir gerçek: önbelleği hemen kır.
   for (const u2 of G.units) if (u2.cell === cell) u2._sfAt = 0;
   if (SEL.cell === cell && $('cellsheet').classList.contains('show')) openCellSheet(cell, SEL.ll);
+  // 🌦️ Açık ŞEHİR KARTI bu karoya aitse yeniden çiz — iklim satırları "yükleniyor"da kalmasın.
+  if (CITY_CARD && $('overlay').classList.contains('show')) {
+    const _c = cityList().find(x => x[0] === CITY_CARD);
+    if (_c && cellId([_c[1], _c[2]]) === cell) openCityCard(CITY_CARD);
+  }
   // açık birim sayfası bu karedeyse tazele (ikinci el değeri keşifle netleşir)
   if ($('unitsheet').classList.contains('show') && window.__lastUnit) {
     const lu = G.units.find(x => x.id === window.__lastUnit);
@@ -16850,7 +16869,7 @@ function highlightCell(c) {
   selRect = L.rectangle(cellBounds(c), { color: '#4ea8ff', weight: 1.5, fillOpacity: .06, dashArray: '4 4' }).addTo(map);
 }
 // ═══ 🗺️ HARİTA GÖRÜNÜMLERİ (patron isteği): normal · rüzgar verimliliği · güneş verimliliği · nakil hattı ═══
-let MAPVIEW = 'normal', overlayLayer = [];
+let MAPVIEW = 'normal', overlayLayer = [], CITY_CARD = null; // CITY_CARD: açık şehir kartı (iklim verisi gelince tazelenir)
 // 🗺️ İDARİ SINIR KATMANI (patron 11 Eyl: "şehir görünümünde şehir sınırları görünür olsun").
 // ⚠️ Bu çizgiler ZATEN vardı (tr-iller.geo.json) ama opacity .5 / weight .8 ile yeşil
 //    zeminde pratikte görünmüyordu. Sorun veri eksikliği değil GÖRÜNÜRLÜKTİ.
@@ -17152,6 +17171,9 @@ window.openCityCard = nm => {
   const yakin = offices().reduce((m, o) => Math.min(m, kmDist(o.ll, [la, lo])), Infinity);
   const not = CITY_NOTE[ad];
   const d = cellDemand(cell);
+  surveyCell(cell); // 🌦️ iklim verisi yoksa çekilsin — gelince kart yeniden çizilir (bkz. surveyCell sonu)
+  const sv = WX.survey && WX.survey[cell];
+  CITY_CARD = ad; // açık kart hangi şehir — veri gelince doğru kartı tazelemek için
   $('modal').innerHTML = `
     <h2 style="margin-bottom:2px">🏙️ ${ad}</h2>
     <p class="sub" style="margin-top:0">${ct ? (COUNTRIES[ct.nm] ? COUNTRIES[ct.nm].flag + ' ' : '') + ct.nm + ' · ' + ct.kita : ''}</p>
@@ -17162,6 +17184,7 @@ window.openCityCard = nm => {
       <tr><td>📍 En yakın ofisine</td><td>${isFinite(yakin) ? fmtN(Math.round(yakin)) + ' km' : '— ofisin yok'}</td></tr>
       <tr><td>🗺️ Kare</td><td>${cellCode(cell)}</td></tr>
     </table>
+    ${sv && sv.ok ? iklimSatirlari(sv) : sv === 'loading' || !sv ? '<p class="sub" style="margin-top:8px">🌦️ İklim verisi yükleniyor...</p>' : '<p class="sub" style="margin-top:8px">🌦️ İklim verisi alınamadı (çevrimdışı olabilirsin)</p>'}
     ${not ? `<p style="font-size:12px;margin-top:8px;padding:8px 10px;border-left:3px solid var(--gold);background:#1a2438;border-radius:0 8px 8px 0">💡 ${not}</p>` : ''}
     <button class="bigsell" onclick="closeModal();flyToPlace(${la},${lo},10,'${ad.replace(/'/g, '')}')">🗺️ Haritada Göster</button>
     <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
@@ -17269,6 +17292,35 @@ function refreshKiraTags(kareler) {
 // arama birebir eşleşmediği için kart hiç açılmıyordu. Silmek yerine KAÇIRIYORUZ.
 const jsStr = v => String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 const popTxt = p => p >= 1000 ? (p / 1000).toFixed(p >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'M' : p + 'K';
+// ═══ 🌦️ ŞEHRİN İKLİMİ — BİLGİ + OYUNDAKİ KARŞILIĞI (patron 11 Eyl) ═══
+// "Londra'nın yılın çoğu yağışlı olduğunu filmlerden biliriz — oyuna böyle ufak bilgiler
+//  koysak oyuncuya bir şeyler katmış oluruz."
+// ⚠️ İLKE: bilgi SÜS OLMASIN, KARAR VERDİRSİN. Yağış bu oyunda trivia değil — HES
+//    verimini besleyen havzayı ve güneş üretimini doğrudan açıklar. Oyuncu gerçek
+//    coğrafya öğrenirken aynı bilgiyle yatırım kararı da versin.
+// 7 GÜNLÜK ÖLÇÜM: mevsimlik bir kesit, iklim ortalaması değil — metinde bu açıkça yazılır.
+function iklimSatirlari(sv) {
+  if (!sv || !sv.ok) return '';
+  const r = [];
+  if (sv.yagisMm != null) {
+    const g = sv.yagisGun || 0;
+    const h = g >= 5 ? 'çok yağışlı ☔' : g >= 3 ? 'yağışlı' : g >= 1 ? 'az yağışlı' : 'kurak ☀️';
+    const oyun = g >= 3 ? 'HES havzası güçlü, güneş paneli zayıf kalır'
+      : g >= 1 ? 'dengeli' : 'güneş paneli için ideal, HES zayıf';
+    r.push('<tr><td>☔ Yağış <span class="sub">(7 gün)</span></td><td class="' + (g >= 3 ? 'pos' : g === 0 ? 'neg' : '') + '">'
+      + sv.yagisMm.toFixed(1) + ' mm · ' + g + '/7 gün — <b>' + h + '</b><br><span class="sub">' + oyun + '</span></td></tr>');
+  }
+  if (sv.sicaklik != null) {
+    const t = sv.sicaklik;
+    const h = t >= 28 ? 'çok sıcak 🔥' : t >= 18 ? 'ılık' : t >= 8 ? 'serin' : t >= 0 ? 'soğuk ❄️' : 'dondurucu 🧊';
+    r.push('<tr><td>🌡️ Ortalama sıcaklık</td><td>' + t.toFixed(1) + '°C — <b>' + h + '</b>'
+      + (t >= 28 ? '<br><span class="sub">sıcak hava panel verimini düşürür</span>' : '') + '</td></tr>');
+  }
+  if (sv.wAvg != null) r.push('<tr><td>🌬️ Rüzgar <span class="sub">(100 m)</span></td><td class="' + (sv.wAvg >= 6 ? 'pos' : sv.wAvg < 4 ? 'neg' : '') + '">' + sv.wAvg.toFixed(1) + ' m/s — <b>' + havaNotu('w', sv.wAvg) + '</b></td></tr>');
+  if (sv.sunH != null) r.push('<tr><td>☀️ Güneşlenme</td><td class="' + (sv.sunH >= 7 ? 'pos' : sv.sunH < 5 ? 'neg' : '') + '">' + sv.sunH.toFixed(1) + ' saat/gün — <b>' + havaNotu('s', sv.sunH) + '</b></td></tr>');
+  if (sv.elev != null) r.push('<tr><td>⛰️ Rakım</td><td>' + fmtN(sv.elev) + ' m</td></tr>');
+  return r.length ? '<div style="font-size:11px;color:var(--acc2);font-weight:800;margin:10px 0 3px">🌦️ İKLİM — son 7 günün gerçek ölçümü</div><table class="ledger">' + r.join('') + '</table>' : '';
+}
 let flyPing = [];
 function clearPing() { flyPing.forEach(m => m.remove()); flyPing = []; }
 function pingAt(ll, label) {
