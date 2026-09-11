@@ -690,7 +690,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-11 17:29) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-11 17:36) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -861,7 +861,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-11 17:29)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-11 17:36)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -6045,6 +6045,18 @@ const bulutKat = () => gnd('s2') ? .70 : 1;
 const geceMi = atMin => { const h = ((atMin == null ? nowMin() : atMin) / 60) % 24; return h < 6 || h > 19.5; };
 const ruzgarEk = atMin => (gnd('w4') ? .8 : 0) + ((gnd('w5') && geceMi(atMin)) ? 1.5 : 0);
 // 🧰 yıpranma çarpanı — tür bazlı (nükleer 'kind' ile değil 'cat' ile ayrılır: kind'i 'geo')
+// ═══ 🆕 YENİ CİHAZ YIPRANMA MUAFİYETİ (patron 11 Eyl) ═══
+// "Yeni kurulan cihazlar ilk 24 saat yıpranmasın — hat veya santral, her şey için."
+// ⚠️ OYUNDA İKİ AYRI YIPRANMA SİSTEMİ VAR ve ikisi de BURADAN okur:
+//    (1) birimler: step() içinde u.cond azalması   (2) hatlar: lineWear(l)
+//    Sabit tek yerde; biri değişip diğeri geride kalmasın.
+// ⚠️ İKİNCİ EL MUAF DEĞİL: müzayededen devralınan tesis buildDone'ı sıfırlıyor ama
+//    cond'u 75 gibi geliyor — ona muafiyet vermek "kullanılmış ekipman sıfır sayılsın"
+//    demek olurdu. Devir anında `ikinciEl` damgası basılır ve buradan elenir.
+const YIPRANMA_MUAF_MS = 24 * 3600e3;
+const yeniCihazMuaf = u => !!u && !u.ikinciEl && u.buildDone > 0 && (Date.now() - u.buildDone) < YIPRANMA_MUAF_MS;
+// Muafiyet bitene kadar geçen SÜRE sayılmaz — hat yıpranması bu ölçüden hesaplanır.
+const muafiyetSonrasi = (bas) => Math.max(0, Date.now() - (bas || 0) - YIPRANMA_MUAF_MS);
 const yipranmaKat = T => {
   if (!T) return 1;
   let k = 1;
@@ -7642,7 +7654,8 @@ function step(dtMin, silent, atMin) {
       wasted += rem;
     }
     // 🧰 AĞAÇ: yıpranma çarpanı tür bazlı (s1 güneş · w1 rüzgar · f4 fosil · n3 nükleer)
-    if (u.on && u.buildDone <= Date.now()) u.cond = Math.max(25, u.cond - (6 / 1440) * dtMin * (PLANT_TYPES[u.t].decay || 1) * yipranmaKat(PLANT_TYPES[u.t]));
+    // 🆕 İlk 24 saat yıpranma YOK (patron 11 Eyl) — bkz. yeniCihazMuaf. İkinci el hariç.
+    if (u.on && u.buildDone <= Date.now() && !yeniCihazMuaf(u)) u.cond = Math.max(25, u.cond - (6 / 1440) * dtMin * (PLANT_TYPES[u.t].decay || 1) * yipranmaKat(PLANT_TYPES[u.t]));
   }
   const price = priceAt(atMin ?? nowMin());
   return { produced, wasted, fuelCost, price };
@@ -9186,24 +9199,32 @@ function lineBaseLoss(l) {
 const HUB_TABAN_KM = 100; // bu uzunluğun altındaki bölüm zaten en düşük kademede
 function hubFayda(l) {
   const yol = (l && l.path && l.path.length >= 2) ? l.path : null;
-  if (!yol) return { duser: true, sebep: '', enUzun: 0, simdi: Math.round(lineBaseLoss(l)), sonra: null };
-  const seg = pathMaxSeg(yol);
-  // ⚠️ 300 km ÜSTÜ BÖLÜM = HAT ÖLÜ (%100) — lineBaseLoss'taki kuralın AYNISI burada da
-  //    olmak zorunda, yoksa ölü hatta "taban kayıp %40" gibi YANLIŞ bir sayı gösterirdik
-  //    ve oyuncu hattı DİRİLTECEK olan merkezin değerini göremezdi (%100 → %20).
-  const simdi = seg > 300 ? 100 : Math.min(90, 10 * Math.ceil(seg / 100));
-  // Yeni merkez EN UZUN bölümü ikiye böler → yeni en uzun bölüm en fazla seg/2 olur,
-  // ama ikinci en uzun bölüm daha büyükse O belirler. Gerçek sonucu hesaplayalım.
-  let ikinci = 0;
+  if (!yol) return { duser: true, sebep: '', enUzun: 0, simdi: Math.round(lineBaseLoss(l)), sonra: null, gereken: 1 };
+  let seg = 0, gereken = 0, ikinci = 0;
+  const uzunluk = [];
   for (let i = 1; i < yol.length; i++) {
     const k = kmDist(cellCenter(yol[i - 1]), cellCenter(yol[i]));
-    if (k < seg - 0.001 && k > ikinci) ikinci = k;
+    uzunluk.push(k);
+    if (k > seg) { ikinci = seg; seg = k; } else if (k > ikinci) { ikinci = k; }
+    // bu bolumu 100 km altina indirmek icin kac BOLME gerekir
+    gereken += Math.max(0, Math.ceil(k / HUB_TABAN_KM) - 1);
   }
+  // ⚠️ 300 km ÜSTÜ BÖLÜM = HAT ÖLÜ (%100) — lineBaseLoss'taki kuralın AYNISI.
+  const simdi = seg > 300 ? 100 : Math.min(90, 10 * Math.ceil(seg / 100));
   const yeniSeg = Math.max(seg / 2, ikinci);
   const sonra = yeniSeg > 300 ? 100 : Math.min(90, 10 * Math.ceil(yeniSeg / 100));
-  return { duser: sonra < simdi, enUzun: seg, simdi, sonra,
-    sebep: sonra < simdi ? '' : 'En uzun bölüm ' + (seg < 1 ? '1 km altı' : Math.round(seg) + ' km') + ' — taban kayıp zaten en düşük kademede (%' + simdi + '). Merkez eklemek bunu DÜŞÜRMEZ.' };
+  // 🛑 LİMİT KURALI (patron): "kayıp %10'a DÜŞTÜĞİNDE daha fazla merkez insaatina izin verme".
+  //    Ölçüt TEK merkezin etkisi DEĞİL, TABANIN dolup dolmadigi. Aksi halde 15 bölümü de
+  //    166 km olan bir hatta ilk merkezi engellerdik — oysa 15 merkez alınca kayıp gerçekten
+  //    düşer. Meşru bir stratejiyi kapatmak limit değil, hatadır.
+  const duser = seg > HUB_TABAN_KM;
+  // Tek merkez sayıyı hemen oynatmıyorsa oyuncu KAÇ merkez gerektiğini bilmeli —
+  //    "para alıyor ama bir şey değişmiyor" hissi tam buradan doğuyordu.
+  return { duser, enUzun: seg, simdi, sonra, gereken,
+    hemenDuser: sonra < simdi,
+    sebep: duser ? '' : 'En uzun bölüm ' + (seg < 1 ? '1 km altı' : Math.round(seg) + ' km') + ' — taban kayıp zaten en düşük kademede (%' + simdi + '). Merkez eklemek bunu DÜŞÜRMEZ.' };
 }
+
 // hattın haritadaki düğümleri: uçlar + transfer merkezleri (path varsa gerçek dokunulan noktalar)
 function lineNodes(l) {
   if (l.path && l.path.length >= 2) return l.path.map(c => cellCenter(c));
@@ -9252,12 +9273,34 @@ function lineCost(km, hubs, kat) {
 }
 const lineBuildSec = km => Math.min(86400, Math.round(60 + km * 6)); // en fazla 1 gün (kıtalararası tam sürümde 3 gün)
 const lineBrand = l => BRANDS[brandKey(l && l.brand)] || BRANDS.ortac;
-const lineWear = l => Math.max(0, 100 - (Date.now() - l.built) / 864e6 * LINE.wearPer10d * 10 * lineBrand(l).wear); // marka dayanıklılığı
+// 🆕 İlk 24 saat yıpranma YOK (patron 11 Eyl): geçen süre muafiyet düşülerek ölçülür.
+//    Bakım sonrası da geçerli (repairLine l.built'i tazeliyor) — bilinçli: bakım gören hat
+//    "yeni servis görmüş" sayılır. İstismar yok: taze hatta bakım bedeli 0 çıkıp engelleniyor.
+const lineWear = l => Math.max(0, 100 - muafiyetSonrasi(l.built) / 864e6 * LINE.wearPer10d * 10 * lineBrand(l).wear); // marka dayanıklılığı
 const lineReady = l => l.done <= Date.now();
 // ⚡ ÜÇ EKSEN: taban kayıp (mesafe) + marka + ZAMAN yıpranması (onarılabilir) + ÖMÜR (ONARILAMAZ).
 // Ömür dolunca 100 döner → lineUsable false olur, hat şebekeden düşer.
 // ❄️ AĞAÇ (g5 Süperiletken Kesit): toplam hat kaybı ×0,75 (taban 5 puanlık zemin korunur)
 const lineLoss = l => Math.max(5, Math.min(100, (lineBaseLoss(l) + lineBrand(l).loss + (100 - lineWear(l)) * .5) * hatKayipKat() + lineOmurKayip(l)));
+// 🔎 KAYIP DÖKÜMÜ (patron 11 Eyl): "görünen kayıp = taban + marka + yıpranma/2 — transfer
+//    merkezi inşa etmek için tek kayıp TABAN üzerinden gelmeliydi."
+//    Panelde tek birleşik sayı vardı ve oyuncu %15 görüp "daha %10 olmadı" diye merkez
+//    almaya devam etti — oysa taban zaten %10'du, kalan yıpranmadan geliyordu.
+//    ⚠️ lineLoss ile AYNI sırayla hesaplanır; toplamları birbirini tutmak ZORUNDA.
+function kayipDokum(l) {
+  const kat = hatKayipKat();
+  const taban = lineBaseLoss(l), marka = lineBrand(l).loss, yip = (100 - lineWear(l)) * .5;
+  const omur = lineOmurKayip(l);
+  const ham = (taban + marka + yip) * kat + omur;
+  return { taban: taban * kat, marka: marka * kat, yip: yip * kat, omur,
+    toplam: Math.max(5, Math.min(100, ham)), kirpildi: ham < 5 || ham > 100 };
+}
+const kayipDokumHTML = l => { const d = kayipDokum(l); const y = n => Math.round(n);
+  return '<div class="sub">Kayıp <b class="' + (d.toplam >= 50 ? 'neg' : 'pos') + '">%' + Math.round(d.toplam) + '</b>'
+    + ' <span style="opacity:.8">= taban %' + y(d.taban) + (d.marka ? ' + marka %' + y(d.marka) : '')
+    + ' + yıpranma %' + y(d.yip) + (d.omur ? ' + ömür %' + y(d.omur) : '') + '</span>'
+    + (d.yip >= 3 ? ' <span style="color:var(--warn)">🔧 bakım bunu sıfırlar</span>' : '') + '</div>';
+};
 const linesOf = cell => (G.lines || []).filter(l => l.from === cell && lineReady(l) && lineLoss(l) < 100);
 // ⚡ ŞEBEKE DÜĞÜMLERİ (patron 24 Ağu): "transfer merkezi hattın uç noktalarında ve ek noktalarında
 // görünür ve depoya bağlanabilir olmalı — 100 milyon harcadım, depolar yine bağlanmıyor."
@@ -9635,6 +9678,16 @@ window.addHub = id => { // sonradan merkez ekle (patron: "zamanla kazandıkça a
   // ⚡ YENİ MERKEZ ÖMRÜ DE UZATIR: merkezin liste bedeli kadar taşıma kapasitesi eklenir (yarı değerle).
   // ⚠️ `l.km` aşağıda değişiyor — ömür tabanını ONDAN ÖNCE, ESKİ değerlerle sabitliyoruz.
   l.omur = lineOmurTaban(l) + Math.round((LINE.hub + LINE.permitPerHub) * (1 + LINE.laborRate) / LINE_OMUR.bolen / 2); // ⚠️ HAM taban (çarpanlı yazma bileşik büyür)
+  // 🔧 YENİ EKİPMAN YAŞ ORTALAMASINI DÜŞÜRÜR (patron 11 Eyl: "0 cihaz inşatı yapılırken
+  //    yıpranma olmaz, daha cihaz 0"). Eskiden addHub l.built'e HİÇ dokunmuyordu; yepyeni
+  //    bir transfer merkezi hattın biriktirdiği yıpranmayı doğduğu anda üstleniyordu.
+  //    Hat bir EKİPMAN PORTFÖYÜ: yeni ekipman ortalamayı kendi PAYI kadar gençleştirir.
+  //    ⚠️ İSTİSMAR YOK: aynı hatta bakım (100-yıpranma)×km×900 ile TAM sıfırlama ~$3M,
+  //    merkez ise ~$29M ve yalnız payı kadar (61 merkezli hatta ~%1,6) etki ediyor —
+  //    yıpranmayı merkezle temizlemek hiçbir koşulda mantıklı değil.
+  const _eskiDeger = lineCost(l.km, l.hubs, lineKat(l)), _yeniDeger = c;
+  const _pay = _yeniDeger / Math.max(1, _eskiDeger + _yeniDeger);
+  if (l.built && l.built < Date.now()) l.built = Math.round(l.built + (Date.now() - l.built) * _pay);
   l.hubs++; brandBuy(l.brand || 'voltas');
   if (ally) { allyLineWrite(l); addMail('🤝 ' + G.ally.name, 'Hatta yeni transfer merkezi', `${G.company}, ${placeName(l.from)} → ${placeName(l.to)} ittifak hattına kasadan ${fmt(c)} ödeyerek bir transfer merkezi daha ekledi. Hat kaybı düştü, yeni merkez tüm üyelere açık.`, true); }
   if (l.path && l.path.length >= 2) { // 🗼 en uzun bölümün ORTASINA yeni transfer merkezi
@@ -10335,13 +10388,13 @@ function gridPanelHTML() {
       <summary>${hatOzetHTML(l, false)}</summary><div class="govde">
       <div class="sub" style="margin:0 0 4px">${lineRota(l)}</div>
       <div class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</div>
-      ${rdy ? `<div class="sub">🗼 ${hubTotal(l.hubs)} transfer merkezi${(() => { const f = hubFayda(l); return f.enUzun ? ' · en uzun bölüm <b>' + (f.enUzun < 1 ? '<1' : Math.round(f.enUzun)) + ' km</b> <span style="opacity:.7">(taban kayıp bunu 100 km\'lik kademelere böler)</span>' : ''; })()}</div>
+      ${rdy ? `${kayipDokumHTML(l)}<div class="sub">🗼 ${hubTotal(l.hubs)} transfer merkezi${(() => { const f = hubFayda(l); return f.enUzun ? ' · en uzun bölüm <b>' + (f.enUzun < 1 ? '<1' : Math.round(f.enUzun)) + ' km</b> <span style="opacity:.7">(taban kayıp bunu 100 km\'lik kademelere böler)</span>' : ''; })()}</div>
       ${lineOmurHTML(l)}
       ${olu ? '' : lineErisimHTML(l)}
       ${olu ? '' : (() => { // 🛑 MADDE 15: faydasızsa SATMA, sebebini yaz (bkz. hubFayda)
         const f = hubFayda(l);
         return f.duser
-          ? `<button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))} <span class="sub">(taban kayıp %${f.simdi} → %${f.sonra})</span></button>`
+          ? `<button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))} <span class="sub">${f.hemenDuser ? '(taban kayıp %' + f.simdi + ' → %' + f.sonra + ')' : '(taban kayıp için ' + f.gereken + ' merkez daha gerekiyor)'}</span></button>`
           : `<div class="sub" style="color:var(--warn);margin:6px 0">🛑 ${f.sebep}<br><span style="opacity:.85">Kaybı şuradan düşürürsün: 🔧 Hat Bakımı (yıpranma) · marka yükseltmesi · 🧬 Süperiletken Kesit düğümü.</span></div>`;
       })()}
       ${!olu && wear > 5 ? `<button class="bigsell half" onclick="repairLine(${l.id})">🔧 Hat Bakımı — ${fmt(Math.round(wear * l.km * 900))}</button>` : ''}
@@ -10367,7 +10420,7 @@ function gridPanelHTML() {
       return `<details class="hatk ally"${HAT_ACIK.has(k) ? ' open' : ''} ontoggle="hatAkordiyon('${k}',this.open)">
         <summary>${hatOzetHTML(l, true)}</summary><div class="govde">
         <div class="sub" style="margin:0 0 4px">${placeName(l.from)} → ${placeName(l.to)} · ${fmtN(l.km)} km · ${l.by || '—'} kurdu</div>
-        ${rdy ? `<div class="sub">🗼 ${hubTotal(l.hubs)} transfer merkezi · yıpranma %${100 - wear}</div>
+        ${rdy ? `${kayipDokumHTML(l)}<div class="sub">🗼 ${hubTotal(l.hubs)} transfer merkezi</div>
           <div class="sub">🎯 Açtığı pazarlar: ${ad.join(', ')} <span class="sub">— her üye iki yönde de satabilir</span></div>
           <div class="sub ${yakin ? 'pos' : 'neg'}">${yakin ? '✅ Deponun bu hatta erişimi var — satış ekranında görünür' : '⚠️ Deponun uzak: hattın ucuna ya da bir transfer merkezine ' + ALLY_ACCESS_KM + ' km içinde depo kur'}</div>
           ${lineOmurHTML(l)}
@@ -13760,6 +13813,7 @@ function aucGrantAsset(a) {
   const nu = addUnit(kind, t, ll);
   nu.cond = a.assetCond || 75; // "ikinci el" — sağlamlık ilandaki değerle gelir
   nu.buildDone = Date.now();   // devir anında hazır, yeniden inşa yok
+  nu.ikinciEl = true;          // 🆕 24 saatlik YENİ CİHAZ muafiyeti dışında (kullanılmış ekipman)
   // 📜🏢 DEVİR MASRAFI (patron): bölgede ruhsat yoksa ruhsat, ofis menzili dışındaysa bölge ofisi
   // OTOMATİK alınır — bedeli teklif onayında gösterildi. Para YETMİYORSA bedava verilmez:
   // tesis kurulum eksikliğiyle DEVRE DIŞI devralınır (patron kuralı, aşağıda).
@@ -17909,7 +17963,7 @@ function openUnitSheet(id) {
         <tr><td>Kapasite</td><td>${T.mw} MW</td></tr>
         <tr><td>Ömür üretimi</td><td>${fmtN(u.lifeProd || 0)} MWh</td></tr>
         <tr><td>Emisyon</td><td>${unitEm(T)} g/kWh${unitEm(T) !== (T.em || 0) ? ` <span class="pos">🧬 ${T.em} → ${unitEm(T)}</span>` : ''}</td></tr>
-        <tr><td>Yıpranma</td><td class="${u.cond < 50 ? 'neg' : ''}">%${Math.round(100 - u.cond)}</td></tr>
+        <tr><td>Yıpranma</td><td class="${u.cond < 50 ? 'neg' : ''}">%${Math.round(100 - u.cond)}${yeniCihazMuaf(u) ? ' <span class="pos">🆕 yeni cihaz — ' + fmtHrs((u.buildDone + YIPRANMA_MUAF_MS - Date.now()) / 36e5) + ' yıpranmaz</span>' : ''}</td></tr>
         <tr><td>Depo bağlantısı</td><td>${sts.length ? '🔗 ' + unitName(sts[0]) : '<span class="neg">YOK — bağlantı kur!</span>'}</td></tr>
         ${T.fuel ? `<tr><td>⛽ Yakıt stoku</td><td class="${(u.fuelH || 0) <= 0 ? 'neg' : u.fuelH < 3 ? 'neg' : ''}">${(u.fuelH || 0) <= 0 ? 'BİTTİ — üretim durdu!' : (u.fuelH).toFixed(1) + ' sa / ' + yakitSaat() + ' sa'}</td></tr>` : ''}
       </table>
