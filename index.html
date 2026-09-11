@@ -10371,6 +10371,7 @@ function gridPanelHTML() {
           <div class="sub">🎯 Açtığı pazarlar: ${ad.join(', ')} <span class="sub">— her üye iki yönde de satabilir</span></div>
           <div class="sub ${yakin ? 'pos' : 'neg'}">${yakin ? '✅ Deponun bu hatta erişimi var — satış ekranında görünür' : '⚠️ Deponun uzak: hattın ucuna ya da bir transfer merkezine ' + ALLY_ACCESS_KM + ' km içinde depo kur'}</div>
           ${lineOmurHTML(l)}
+          ${(() => { const f = hubFayda(l); return f.duser ? '' : `<div class="sub" style="color:var(--warn);margin:4px 0">🛑 ${f.sebep}</div>`; })()}
           ${yetki ? `<div style="display:flex;gap:5px;margin-top:6px">
             ${lineOlu(l) || !hubFayda(l).duser ? '' : `<button class="bigsell half" style="margin:0" onclick="addHub(${l.id})">🗼 Merkez Ekle <span class="sub">${fmt(hubC)} kasadan · kayıp %${hubFayda(l).simdi} → %${hubFayda(l).sonra}</span></button>`}
             ${!lineOlu(l) && bakimC > 0 ? `<button class="bigsell half" style="margin:0" onclick="repairLine(${l.id})">🔧 Bakım <span class="sub">${fmt(bakimC)} kasadan</span></button>` : ''}
