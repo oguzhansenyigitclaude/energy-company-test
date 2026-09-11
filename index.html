@@ -36,6 +36,7 @@
   #coname{font-weight:800;font-size:14px;cursor:pointer}
   #coname::after{content:' ▾';color:var(--dim);font-size:10px;font-weight:400}
   @keyframes conamepulse{50%{color:var(--gold);text-shadow:0 0 8px #ffd16688}}
+  #coname.arastir{animation:conamepulse 1.2s infinite}
   #coname.attn{animation:conamepulse 1.2s infinite}
   #coloc{font-size:10.5px;color:var(--dim)}
   #cash{font-size:16px;font-weight:800;color:var(--cream);font-variant-numeric:tabular-nums}
@@ -125,7 +126,31 @@
   #linepanel.open{transform:none}
   #linehead{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;font-size:13px;font-weight:800;color:var(--cream)}
   #linehead .x{cursor:pointer;font-size:17px;color:var(--dim);padding:0 4px}
-  #linebody{flex:1;overflow-y:auto;padding:8px 10px 14px}
+  /* 🏙️ MADDE 14: şehir görünümünde şehrin KAROSU (patron 11 Eyl) */
+  .citylbl.odak{outline:2px solid #ffd166;outline-offset:1px}
+  #linebody{flex:1;overflow-y:auto;padding:0 10px 14px}
+  /* MADDE 7 (patron 11 Eyl): yapışkan "yeni hat" başlığı + akordiyon hat kartları.
+     ⚠️ padding-top 8 → 0: yapışkan bar o 8px'lik şeritte içeriğin altından geçmesin;
+     dolgu barın kendisine taşındı (#lineTop padding + negatif margin ile tam genişlik). */
+  #lineTop{position:sticky;top:0;z-index:3;margin:0 -10px 6px;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
+  #lineTop .cap{font-size:10.5px;color:var(--acc2);font-weight:800;letter-spacing:.3px;margin-bottom:4px}
+  #lineTop .bigsell{margin-top:0}
+  #linebody details.hatk{border:1px solid var(--line);border-radius:10px;padding:0;margin:6px 0;overflow:hidden}
+  #linebody details.hatk.olu{border-color:var(--danger)}
+  #linebody details.hatk.ally{border-color:#1f7a5a}
+  /* summary'ye display:flex VERME — eski Android WebView'da işaretçi tuhaflaşıyor.
+     block bırakılıp flex içteki sarmalayıcıya konuyor. min-height:44px = dokunma hedefi. */
+  #linebody details.hatk>summary{display:block;list-style:none;cursor:pointer;padding:9px 10px;min-height:44px;font-size:12.5px;font-weight:700}
+  #linebody details.hatk>summary::-webkit-details-marker{display:none}
+  #linebody details.hatk>summary::marker{content:''}
+  #linebody details.hatk>summary:active{background:#24304a}
+  #linebody details.hatk .oz{flex:1;min-width:0}
+  #linebody details.hatk .rota{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #linebody details.hatk .ok{flex:0 0 auto;font-size:12px;color:var(--dim);transition:transform .15s}
+  #linebody details.hatk[open] .ok{transform:rotate(180deg)}
+  #linebody details.hatk .govde{padding:8px 10px 9px;border-top:1px dashed var(--line)}
+  #linebody details.hatyardim{border:none;padding:0;margin:6px 0 8px}
+  #linebody details.hatyardim>summary{list-style-position:inside;font-size:11px;color:var(--acc2);font-weight:700;padding:6px 0;cursor:pointer}
   /* çizim sürerken alttaki maliyet/iptal çubuğu */
   #drawbar{position:absolute;left:8px;right:8px;bottom:8px;z-index:1160;display:none;flex-direction:column;gap:6px;background:#0b2038f2;border:1px solid #3ddc97;border-radius:14px;padding:9px 11px;box-shadow:0 4px 18px #000a}
   #drawbar.show{display:flex}
@@ -667,7 +692,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-11 07:39) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-11 10:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -838,7 +863,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-11 07:39)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-11 10:26)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -4341,6 +4366,17 @@ function cellQuality(id) {
 // testteki hiçbir oyuncunun dengesi altüst olmaz. Ekrandaki döküm ile üretim AYNI fonksiyondan
 // beslenir: gördüğün çarpımların sonucu = gerçek üretim.
 const clampF = (a, b, x) => Math.max(a, Math.min(b, x));
+const clamp01 = x => Math.max(0, Math.min(1, x));
+// 🌬️☀️ ORTAK HÜKÜM (11 Eyl — madde 8'in kökü): karo bilgi ekranı ile ülke raporu AYNI
+// eşiklerden konuşsun. Eskiden karo ekranı "3,1 m/s — zayıf, türbin verimsiz!" derken
+// rapor AYNI kare için "kaynak %84" diyordu; çünkü ikisi FARKLI veriye bakıyordu
+// (biri gerçek Open-Meteo, diğeri saf hash). Bir daha ayrışmasınlar diye tek kapı.
+const havaNotu = (tur, v) => v == null ? '—'
+  : tur === 'w' ? (v >= 8 ? 'mükemmel 🌟' : v >= 6 ? 'iyi' : v >= 4 ? 'orta' : 'zayıf — türbin verimsiz!')
+  : tur === 's' ? (v >= 9 ? 'mükemmel 🌟' : v >= 7 ? 'iyi' : v >= 5 ? 'orta' : 'zayıf')
+  : (v >= 1.1 ? 'güçlü havza 🌟' : v >= .9 ? 'iyi' : v >= .75 ? 'orta' : 'zayıf — HES verimsiz');
+// Oyunun kendi ölçüleri: rüzgar = resaleValue'nun siteP'si · güneş = saha keşfi bandı.
+const sahaP = (tur, v) => v == null ? null : tur === 'w' ? clamp01((v - 2) / 7) : clamp01((v - 2) / 9);
 const SV = c => { const s = WX.survey && WX.survey[c]; return (s && s.ok) ? s : null; };
 const OFFSHORE_WIND = { wind_9: 1, wind_10: 1, wind_11: 1, wind_12: 1 }; // OS modelleri (taban tür)
 const COAST_CACHE = {};
@@ -4667,33 +4703,55 @@ function citiesOfCountry(iso) {
 // Amaç: oyuncu körlemesine kurmasın. "Rüzgar mükemmel ama nüfus yok" tuzağını ÖNCEDEN görsün.
 const STUDY_COST = 1e5, STUDY_SEC = 30;
 const studyOf = iso => (G.countryStudy || {})[iso] || null;
-function countryReport(iso) {
+// 🔴 11 EYL — MADDE 8 DÜZELTMESİ (patron: "Stuttgart'ta rüzgar tavsiye ediyor ama
+// Stuttgart'ta rüzgar yok, araştırma yanlış yönlendiriyor"). PATRON HAKLIYDI.
+// KÖK NEDEN: bu rapor SAF HASH'ten (cellQuality) üretiliyordu; karo bilgi ekranı ise
+// GERÇEK Open-Meteo verisinden. Stuttgart 487_91: hash q.wind = 1,329 → "kaynak %84";
+// ölçülen rüzgar 3,34 m/s → türbin eğrisi 0,009. Kapasite faktörü farkı 26-59 KAT.
+// ⚠️ VE ÇEVRİMİÇİ ÜRETİM GERÇEK HAVAYI KULLANIYOR (plantOutput ~7199 çatalı: atMin yoksa
+//    wx = liveWx(cell) ve q.wind HİÇ okunmaz) — yani yanlış olan RAPORDU, karo ekranı değil.
+// ÇÖZÜM: rapor da gerçek veriden konuşsun. Motora TEK SATIR dokunulmadı → kurulu hiçbir
+// santral değer kaybetmez ("gerçek veri hash'i ezmesin" ilkesi korunur).
+// Gerçek veri yoksa (çevrimdışı) eski hash listesi kalır ama rapor "TAHMİNİ" damgalanır ve
+// bağlanınca studyTazele ile ÜCRETSİZ yenilenir (ödeme tarihi korunur).
+function countryReport(iso, ger) {
   const cs = citiesOfCountry(iso).slice(0, 12);
   if (!cs.length) return null;
   let yillikMWh = 0;
   const adaylar = [];
-  for (const [nm, la, lo, pop] of cs) {
+  for (let ci = 0; ci < cs.length; ci++) {
+    const [nm, la, lo, pop] = cs[ci];
     const cell = cellId([la, lo]);
     const q = cellQuality(cell), d = cellDemand(cell), fiyat = cellPriceNow(cell);
     yillikMWh += d * 365;
     // Her şehir için en güçlü kaynak: 0..1 aralığına normalize edilmiş potansiyel
-    const kaynaklar = [
-      { tur: 'Güneş', ico: '☀️', p: Math.max(0, Math.min(1, (q.sun - .5) / .95)) },
-      { tur: 'Rüzgar', ico: '🌬️', p: Math.max(0, Math.min(1, (q.wind - .7) / .75)) },
-      { tur: 'Hidro', ico: '💧', p: Math.max(0, Math.min(1, (q.hydro - .55) / .9)) },
+    const g = ger && ger[ci];
+    const hq = hydroQGeo(cell, q.hydro); // rakım + iklim — üretimin kullandığı ölçünün ta kendisi
+    const kaynaklar = g ? [
+      // ✅ GERÇEK VERİ: ölçüler oyunun kendi ölçüleriyle aynı kapıdan (sahaP / havaNotu)
+      { tur: 'Güneş', ico: '☀️', p: sahaP('s', g.sunH), br: g.sunH.toFixed(1) + ' sa/gün', not: havaNotu('s', g.sunH) },
+      { tur: 'Rüzgar', ico: '🌬️', p: sahaP('w', g.wAvg), br: g.wAvg.toFixed(1) + ' m/s', not: havaNotu('w', g.wAvg) },
+      { tur: 'Hidro', ico: '💧', p: clamp01((hq - .55) / .9), br: '×' + hq.toFixed(2), not: havaNotu('h', hq) },
+    ] : [
+      // ⚠️ TAHMİNİ (çevrimdışı): eski hash davranışı — rapor açıkça "tahmini" damgalanır
+      { tur: 'Güneş', ico: '☀️', p: clamp01((q.sun - .5) / .95) },
+      { tur: 'Rüzgar', ico: '🌬️', p: clamp01((q.wind - .7) / .75) },
+      { tur: 'Hidro', ico: '💧', p: clamp01((hq - .55) / .9) },
     ];
-    if (q.geo) kaynaklar.push({ tur: 'Jeotermal', ico: '♨️', p: .95 }); // nadir ve sabit üretim
+    if (q.geo) kaynaklar.push({ tur: 'Jeotermal', ico: '♨️', p: .95, br: '', not: 'sabit üretim' }); // nadir ve sabit
     kaynaklar.sort((a, b) => b.p - a.p);
     const en = kaynaklar[0];
     // Puan = kaynak kalitesi × talebin logaritması × bölge fiyat çarpanı.
     // Logaritma bilinçli: dev şehir küçük şehri tamamen ezmesin, kaynak kalitesi de sayılsın.
     const puan = en.p * Math.log10(Math.max(10, d)) * cellPriceFactor(cell);
     adaylar.push({ sehir: nm, ll: [la, lo], tur: en.tur, ico: en.ico,
-      kalite: Math.round(en.p * 100), talep: Math.round(d), carpan: +cellPriceFactor(cell).toFixed(2), puan });
+      kalite: Math.round(en.p * 100), br: en.br || '', not: en.not || '',
+      talep: Math.round(d), carpan: +cellPriceFactor(cell).toFixed(2), puan });
   }
   adaylar.sort((a, b) => b.puan - a.puan);
   return {
     ts: Date.now(),
+    veri: ger ? 'gercek' : 'tahmini', // 📡 gerçek ölçümle mi üretildi, hash tahminiyle mi
     sv: typeof SEHIR_SV !== 'undefined' && SEHIR_DURUM === 'tamam' ? SEHIR_SV : 0, // hangi şehir setiyle üretildi
     yillik: Math.round(yillikMWh),
     sehirler: cs.slice(0, 6).map(([nm, la, lo, pop]) => ({ nm, ll: [la, lo], pop })),
@@ -4703,14 +4761,31 @@ function countryReport(iso) {
 // 🔄 E5: rapor DONMUŞ veridir ($100.000 ödendi, tekrarı yok) ama şehir seti büyüyünce
 // bayatlar. Silinmez — geniş set yüklüyse BİR KEZ, ÜCRETSİZ yeniden üretilir (ts korunur,
 // oyuncu ödediği tarihi görmeye devam eder).
+// ⚠️ ASENKRON OLDU (11 Eyl): gerçek saha verisi ağdan geliyor. Bu fonksiyon MEVCUT raporu
+// hemen döndürür (studyBlockHTML senkron), yenilemeyi arka planda tetikler ve sonuç gelince
+// açık paneli yeniden çizer — surveyCell'in "gelince tazele" kalıbının aynısı.
+const _tazeleniyor = {};
 function studyTazele(iso) {
   const r = (G && G.countryStudy || {})[iso];
-  if (!r || SEHIR_DURUM !== 'tamam' || (r.sv || 0) >= SEHIR_SV) return r;
-  const yeni = countryReport(iso);
-  if (!yeni) return r;
-  yeni.ts = r.ts;
-  yeni.tazelendi = Date.now(); // rapor kartında "veri güncellendi" notu için
-  return G.countryStudy[iso] = yeni;
+  if (!r) return r;
+  const sehirBayat = SEHIR_DURUM === 'tamam' && (r.sv || 0) < SEHIR_SV;
+  const veriBayat = r.veri !== 'gercek';   // 📡 hash tahminiyle üretilmiş eski rapor
+  if (!sehirBayat && !veriBayat) return r;
+  if (_tazeleniyor[iso]) return r;
+  _tazeleniyor[iso] = 1;
+  const sehirler = citiesOfCountry(iso).slice(0, 12);
+  surveyMany(sehirler.map(c => [c[1], c[2]])).then(ger => {
+    _tazeleniyor[iso] = 0;
+    if (!ger && !sehirBayat) return;        // ağ yok + tek sorun veriyse: bir dahaki açılışta dene
+    const yeni = countryReport(iso, ger);
+    if (!yeni) return;
+    yeni.ts = r.ts;                         // 💰 ödeme tarihi KORUNUR — oyuncu parasını kaybetmiş hissetmesin
+    yeni.tazelendi = Date.now();
+    G.countryStudy[iso] = yeni;
+    save();
+    if ($('unitsheet').classList.contains('show') && window.__lastUnit) openUnitSheet(window.__lastUnit);
+  }).catch(() => { _tazeleniyor[iso] = 0; });
+  return r;
 }
 window.startCountryStudy = (iso, ad) => {
   if (krediKilidi('araştırma başlatma')) return;
@@ -4750,7 +4825,8 @@ function studyBlockHTML(ct) {
   const yillikTxt = gwh >= 1000 ? (gwh / 1000).toFixed(1) + ' TWh' : gwh >= 1 ? Math.round(gwh) + ' GWh' : Math.round(r.yillik) + ' MWh';
   return `<div style="border:1px solid var(--acc);border-radius:10px;padding:9px 11px;margin:8px 0;background:#0e1c33">
     <div style="font-size:12.5px;font-weight:800;color:var(--acc)">✅ Bölge araştırıldı
-      <span class="sub" style="font-weight:600">· ${new Date(r.ts).toLocaleDateString(LOCALE)}</span>${r.tazelendi ? ' <span class="sub" style="font-weight:600;color:var(--acc2)">· 🔄 şehir verisi güncellendi, rapor ücretsiz yenilendi</span>' : ''}</div>
+      <span class="sub" style="font-weight:600">· ${new Date(r.ts).toLocaleDateString(LOCALE)}</span>${r.tazelendi ? ' <span class="sub" style="font-weight:600;color:var(--acc2)">· 🔄 veri güncellendi, rapor ücretsiz yenilendi</span>' : ''}</div>
+    ${r.veri !== 'gercek' ? '<div class="sub" style="color:var(--warn);margin:4px 0">⚠️ <b>TAHMİNİ RAPOR</b> — saha ekibi canlı ölçüme ulaşamadı. Bağlanınca <b>ücretsiz</b> güncellenecek; o zamana kadar bu sayılar karo ekranındaki gerçek ölçümle örtüşmeyebilir.</div>' : ''}
     <table class="ledger" style="margin:6px 0 2px">
       <tr><td>⚡ Ülkenin yıllık enerji ihtiyacı</td><td><b>${yillikTxt}</b></td></tr>
       <tr><td>🏙️ Talep merkezi</td><td>${r.sehirler.length} büyük şehir</td></tr>
@@ -4760,10 +4836,11 @@ function studyBlockHTML(ct) {
       ${r.oneriler.map((o, i) => `<tr>
         <td><b>${i + 1}.</b> ${o.ico} <b>${o.tur}</b> —
           <span class="lnk" style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${o.ll[0]},${o.ll[1]},10,'${jsStr(o.sehir)}')">${o.sehir}</span></td>
-        <td><span class="${o.kalite >= 70 ? 'pos' : o.kalite < 40 ? 'neg' : ''}">kaynak %${o.kalite}</span>
-          <span class="sub"> · talep ${fmtN(o.talep)} · fiyat ×${o.carpan}</span></td></tr>`).join('')}
+        <td><span class="${o.kalite >= 70 ? 'pos' : o.kalite < 40 ? 'neg' : ''}">${o.br || ('kaynak %' + o.kalite)}</span>
+          <span class="sub">${o.not ? ' · ' + o.not : ''} · talep ${fmtN(o.talep)} · fiyat ×${o.carpan}</span></td></tr>`).join('')}
     </table>
-    <p class="sub" style="margin-top:4px">Sıralama kaynak kalitesi × talep × bölge fiyatına göre. Şehir adına dokun → harita oraya uçar.</p>` : ''}
+    <p class="sub" style="margin-top:4px">Sıralama <b>ölçülen kaynak × talep × bölge fiyatına</b> göre. Şehir adına dokun → harita oraya uçar.
+    ${r.veri === 'gercek' ? '<br>📡 Rüzgar ve güneş değerleri <b>7 günlük gerçek ölçümdür</b> — karoya dokunduğunda göreceğin sayıların aynısı.' : ''}</p>` : ''}
   </div>`;
 }
 function studyTick() { // ana tikten çağrılır — süre dolunca raporu üret ve sakla
@@ -4780,13 +4857,21 @@ function studyTick() { // ana tikten çağrılır — süre dolunca raporu üret
     }
     return;
   }
-  G.countryStudy = G.countryStudy || {};
-  G.countryStudy[a.iso] = countryReport(a.iso) || { ts: Date.now(), yillik: 0, sehirler: [], oneriler: [] };
-  G.countryStudyActive = null;
-  toast('🔎 ' + a.ad + ' araştırması tamamlandı — ofis ekranından raporu gör', '', null, 0, true);
-  beep(880, .12);
-  save();
-  if ($('unitsheet').classList.contains('show') && window.__lastUnit) openUnitSheet(window.__lastUnit);
+  if (a._uretiliyor) return;            // ⚠️ asenkron: tik 2 sn'de bir geliyor, iki kez üretme
+  a._uretiliyor = true;
+  // 📡 GERÇEK SAHA VERİSİ ÖNCE (11 Eyl): rapor artık ölçümden konuşuyor. Ağ yoksa null döner
+  //    ve rapor TAHMİNİ damgasıyla üretilir — studyTazele bağlanınca ücretsiz yeniler.
+  const sehirler = citiesOfCountry(a.iso).slice(0, 12);
+  surveyMany(sehirler.map(c => [c[1], c[2]])).then(ger => {
+    G.countryStudy = G.countryStudy || {};
+    G.countryStudy[a.iso] = countryReport(a.iso, ger) || { ts: Date.now(), veri: 'tahmini', yillik: 0, sehirler: [], oneriler: [] };
+    G.countryStudyActive = null;
+    toast('🔎 ' + a.ad + ' araştırması tamamlandı — ofis ekranından raporu gör'
+      + (ger ? '' : ' (⚠️ tahmini: canlı veriye ulaşılamadı)'), '', null, 0, true);
+    beep(880, .12);
+    save();
+    if ($('unitsheet').classList.contains('show') && window.__lastUnit) openUnitSheet(window.__lastUnit);
+  });
 }
 
 // ═══ 🌍 KURULUŞ ÜLKELERİ GENİŞLETİLDİ (patron: "diğer ülkeleri de sisteme ekle, ülke konusunda zengin olalım") ═══
@@ -4940,18 +5025,34 @@ const COUNTRY_ADD = {
   WS: ['Samoa', '🇼🇸', [-13.6, -172.5], 7],
   YE: ['Yemen', '🇾🇪', [15.8, 47.9], 5],
 };
-(() => {
+// 🔴 11 EYL — MADDE 12 (patron: "Rusya niye boş, İsveç'te boş, bazı ülkelerdeki iller ve
+// eyaletler yok gibi duruyor"). KÖK NEDEN: bu döngü citiesOfCountryTEMEL kullanıyordu,
+// yani sehirler.json'daki 38.359 şehir kuruluş sihirbazına HİÇ girmiyordu. Ölçüldü:
+//   Rusya 8 bölge (gerçekte 1401 şehir) · İsveç 4 (140) · Kazakistan 3 · Norveç 4
+// Eski gerekçe "sihirbaz listesi şişmemeli" DOĞRUYDU ama çözümü yanlıştı: tavan koymak
+// yerine geniş set tamamen dışlanmıştı. Artık geniş setten TAVANLI alıyoruz.
+const BOLGE_MAX = 40;   // sihirbazda bir ülke için en fazla kaç bölge listelensin
+// ⚠️ 5. eleman 0 = "gölge" kayıt (metropolün içindeki yerleşim, talebe girmez) — bölge
+//    olarak sunulmaz, yoksa oyuncu aynı metropolü iki ayrı ad altında seçebilirdi.
+const bolgeListesi = iso => citiesOfCountry(iso).filter(c => c[4] !== 0).slice(0, BOLGE_MAX);
+// ⚠️ İKİ KEZ ÇAĞRILIR: (1) açılışta — sehirler.json henüz gelmediği için yalnız temel set,
+//    (2) sehirleriYukle bitince — geniş set geldiğinde liste YENİDEN kurulur. Bu şart:
+//    dosya asenkron yükleniyor ve ilk çağrıda CITY_EK boş.
+function ulkeBolgeleriKur() {
   for (const [iso, [nm, flag, ll, z]] of Object.entries(COUNTRY_ADD)) {
-    const cs = citiesOfCountryTemel(iso); // ⚠️ TEMEL: sihirbaz listesi sehirler.json ile ŞİŞMEMELİ
-    if (!cs.length || COUNTRIES[nm]) continue;
+    const cs = bolgeListesi(iso);
+    if (!cs.length) continue;
+    // Elle yazılı 6 TEMEL ülke COUNTRY_ADD'de YOK, dolayısıyla buraya hiç girmez —
+    // eski kayıtlardaki 'Teksas' / 'Bavyera' gibi değerler GÜVENDE.
     COUNTRIES[nm] = { flag, note: cs.length + ' şehir', states: cs.map(c => c[0]), iso };
-    COUNTRY_VIEW[nm] = [ll, z];
+    COUNTRY_VIEW[nm] = COUNTRY_VIEW[nm] || [ll, z];
     for (const [cn, la, lo, pop] of cs) {
       if (!IL_COORD[cn]) IL_COORD[cn] = [la, lo];   // mevcut eyalet adlarının üstüne YAZMA
       if (!STATE_POP[cn]) STATE_POP[cn] = pop;
     }
   }
-})();
+}
+ulkeBolgeleriKur();
 let CITY_LIST = null;
 function cityList() {
   if (CITY_LIST) return CITY_LIST;
@@ -5055,6 +5156,9 @@ async function sehirleriYukle() {
   for (const k in NEAR_MEMO) delete NEAR_MEMO[k];
   for (const k in COC_CACHE) delete COC_CACHE[k];
   SEHIR_DURUM = n ? 'tamam' : 'hata';
+  // 🌍 MADDE 12: kuruluş bölgeleri geniş setle YENİDEN kurulur. Açılışta yalnız temel set
+  //    vardı (Rusya 8 bölge); dosya gelince Rusya 40, İsveç 40 bölgeye çıkar.
+  if (SEHIR_DURUM === 'tamam') { try { ulkeBolgeleriKur(); } catch (e) {} }
   return SEHIR_DURUM === 'tamam';
 }
 // Kare talebi (MWh/gün): yakın şehir nüfuslarının mesafeyle sönümlenmiş toplamı. 150 km ötesi katkı vermez.
@@ -5332,7 +5436,10 @@ const KIRA = { map: {}, at: 0 };
 const nmTemizle = v => String(v == null ? '' : v).replace(/[<>&"']/g, '').slice(0, 28);
 async function kiralarCek(zorla) {
   if (!NET.on() || NET.kilit) return;
-  if (!zorla && Date.now() - KIRA.at < 30000) return; // 30 sn önbellek (12 sn'lik loop'ta her turda çekme)
+  // ⚡ ÖLÇEK S1: 30 sn → 120 sn. `kiralar` KÜRESEL bir düğüm ve TAMAMI iniyor; sicil
+  //    dolduğunda tek başına aylık binlerce dolarlık kalem oluyor (denetim ölçümü).
+  //    Kira dönemleri PAZAR 00:00'da bitiyor — 2 dakikalık bayatlık hiçbir kararı bozmaz.
+  if (!zorla && Date.now() - KIRA.at < 120000) return; // 120 sn önbellek (ölçek freni)
   KIRA.at = Date.now();
   try {
     const r = await NET.get('kiralar');
@@ -5775,6 +5882,43 @@ const RESEARCH = {
 // 🧪 PUAN HAVUZU: kural Sv1-10 günlük / Sv11+ haftalık. 5 kademelik cellcap bu kurala
 // girseydi tamamı günlük puanla açılırdı — son 2 kademesi haftalığa bağlandı (patron şartı).
 const resPool = (key, lvl) => (key === 'cellcap' ? lvl >= 3 : lvl >= 10) ? 'weekly' : 'daily';
+// ═══ 🧪 BOŞTA ARAŞTIRMA HATIRLATICISI (patron 11 Eyl) ═══
+// "Araştırma yapılmazken ve araştırma puanı varsa şirket adını turuncu yakıp söndür ve
+//  bildirim at: araştırma yap patron, zaman paradan daha değerli."
+// ⚠️ "Puanın var" YETMEZ, "BAŞLATABİLECEĞİN bir düğüm var" olmalı: puan İKİ havuzludur
+//    (🌞 günlük / 📅 haftalık) ve düğüm MAKS olabilir. Yalnız puana bakarsak, elinde günlük
+//    puan varken tüm günlük düğümleri bitirmiş oyuncuya YALAN söyleriz ve isim sonsuza
+//    kadar yanıp söner. Bu yüzden ekrandaki 'blocked' ölçütünün (resRow) aynısını kullanıyoruz.
+function arastirmaHazir() {
+  const R = G && G.research;
+  if (!R || R.active) return false;                 // tek seferde 1 araştırma yürür
+  for (const key of Object.keys(RESEARCH)) {
+    const D = RESEARCH[key], lvl = R.lvl[key] || 0;
+    if (!D || lvl >= D.max) continue;
+    if ((G.resPts[resPool(key, lvl)] || 0) >= 1) return true;
+  }
+  return false;
+}
+// Ana tikten çağrılır. İki iş yapar: (a) şirket adını yakıp söndürür, (b) DURUM DEĞİŞİMİNDE
+// bir kez bildirim atar — her tikte değil (12 sn'de bir bildirim işkence olurdu).
+function arastirmaYokla() {
+  if (!G || !G._started) return;
+  const el = $('coname'); if (!el) return;
+  // 🎓 Eğitim sürerken KAPALI: eğitimin kendi 'arastirma' görevi zaten aynı ismi yakıyor
+  //    (STARTER_TASKS el:'coname'), ikisi üst üste binmesin.
+  const hazir = arastirmaHazir() && !tutGuide();
+  el.classList.toggle('arastir', hazir);
+  if (!hazir) { arastirmaYokla._duyuruldu = false; return; }   // araştırma başlayınca yeniden kurulur
+  if (arastirmaYokla._duyuruldu) return;
+  arastirmaYokla._duyuruldu = true;
+  toast('🧪 Boşta araştırma puanın var — <b>araştırma yap patron, zaman paradan daha değerlidir!</b> Şirket adına dokun.', '', 'arahatir', 0, true);
+  // 📲 Oyuncu başka ekrandaysa telefonuna da düşsün (depo bildirimiyle aynı yol).
+  try {
+    if (G.notifOn && typeof document !== 'undefined' && document.hidden && typeof Notification !== 'undefined') {
+      new Notification('🧪 Araştırma boşta bekliyor', { body: 'Araştırma yap patron — zaman paradan daha değerlidir! ⚡' });
+    }
+  } catch (e) {}
+}
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // 🧬 GELİŞİM AĞACI — "Ar-Ge Enstitüsü · 2030 Ufku"  (tasarım: docs/gelisim-agaci-onerisi.md)
 // Patron 30-31 Ağu: "görevler + Gelişim Puanı + tek dal uzmanlaşma + 1 kez tam sıfırlama;
@@ -6693,7 +6837,14 @@ window.etkinlikAc = () => {
     <button class="primary ghostbtn" onclick="closeModal()">${CEV('Kapat')}</button>`;
   $('overlay').classList.add('show');
 };
-const isoWeek = () => { const d = new Date(), t = new Date(d.getFullYear(), 0, 1); return d.getFullYear() + '-' + Math.ceil(((d - t) / 864e5 + t.getDay() + 1) / 7); };
+// ⏰ HAFTA ANAHTARI HİLE KORUMALI SAATTEN (11 Eyl — denetimde bulundu, GERİ ALMA).
+// Eskiden ham `new Date()` idi. Projenin kendi yorumu bunu zaten uyarıyordu (~6053:
+// "haftalık anahtar da HİLE KORUMALI saatten — isoWeek ham cihaz saatidir") ama yalnız
+// görev sistemi bankaGun()'e taşınmıştı; oyunun EN BÜYÜK nakit ödülü korumasız kalmıştı.
+// Telefon saatini 7 gün ileri alan oyuncu her sıçramada yeni bir hafta anahtarı üretip
+// hafta kapanışını (ve ödülünü) tekrar tekrar tetikleyebiliyordu.
+// bankaZaman(): sunucu Date başlığı esas · çevrimdışı monotonluk · 400 günlük akıl sınırı.
+const isoWeek = () => { const d = new Date((typeof bankaZaman === 'function' && typeof G !== 'undefined' && G) ? bankaZaman() : Date.now()), t = new Date(d.getFullYear(), 0, 1); return d.getFullYear() + '-' + Math.ceil(((d - t) / 864e5 + t.getDay() + 1) / 7); };
 
 // ── Durum ──
 const SAVE_KEY = 'enerjioyunu_proto_v8';
@@ -6727,7 +6878,7 @@ function freshState() {
     // enUretim = görülen EN YÜKSEK haftalık üretim — ağaç düğümü bir kez açılınca
     // ertesi hafta üretim düşse bile KİLİTLENMEZ (parayla/GP ile alınmış hak geri gitmez).
     weekProd: 0, enUretim: 0,
-    olcek: 0, katkiOdenen: '', // 🏛️ resmî şirket ölçeği (Mikro→Holding) + son ödenen katkı haftası
+    olcek: 0, olcekMax: 0, katkiOdenen: '', // 🏛️ resmî ölçek + görülen EN YÜKSEK ölçek (terfi teşviki bir kez) + son ödenen katkı haftası
     ip: 10, ipBoost: null, bakimAnlasma: false, // 💠 İmtiyaz Puanı (10 hediye) + aktif takviye + kalıcı bakım anlaşması
     emis: { week: '', ton: 0, stage: 0, warnUntil: 0, watch: {}, watchUntil: 0, fines: 0, muvazaa: 0 }, // 🌍 emisyon denetimi
     totalSold: 0, totalEarned: 0, demoOffsetMin: 0, spend: {}, // 💸 gider defteri (kalem kalem kasa çıkışı)
@@ -7133,6 +7284,33 @@ async function surveyCell(cell) {
 
 window.retrySurvey = c => { if (WX.survey) delete WX.survey[c]; surveyCell(c); openCellSheet(c, SEL.ll); };
 
+// 🔎 RAPOR İÇİN TOPLU SAHA KEŞFİ (11 Eyl) — fetchWeather'daki çoklu-koordinat biçimi:
+// 12 şehir = 12 istek DEĞİL, 2 istek. Başarısızsa null döner ve rapor "TAHMİNİ" damgasıyla
+// üretilir (yarım rapor YOK: biri eksikse hepsi tahminî sayılır).
+async function surveyMany(lls) {
+  if (!lls || !lls.length) return null;
+  const lats = lls.map(p => (+p[0]).toFixed(3)).join(','), lons = lls.map(p => (+p[1]).toFixed(3)).join(',');
+  try {
+    const [fr, er] = await Promise.all([
+      fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lats + '&longitude=' + lons
+        + '&hourly=wind_speed_100m&daily=sunshine_duration&forecast_days=7&wind_speed_unit=ms&timezone=auto').then(r => r.json()),
+      fetch('https://api.open-meteo.com/v1/elevation?latitude=' + lats + '&longitude=' + lons).then(r => r.json()).catch(() => null),
+    ]);
+    const arr = Array.isArray(fr) ? fr : [fr];
+    if (arr.length !== lls.length) return null;
+    const out = arr.map((d, i) => {
+      const w = (d && d.hourly && d.hourly.wind_speed_100m) || [], su = (d && d.daily && d.daily.sunshine_duration) || [];
+      if (!w.length || !su.length) return null;
+      return {
+        wAvg: w.reduce((a, b) => a + (b || 0), 0) / w.length,
+        sunH: su.reduce((a, b) => a + (b || 0), 0) / su.length / 3600,
+        elev: er && er.elevation ? Math.round(er.elevation[i]) : null,
+      };
+    });
+    return out.some(x => !x) ? null : out;
+  } catch (e) { return null; }
+}
+
 // ── Simüle hava (canlı veri yoksa / çevrimdışı hesap için) & piyasa ──
 const smoothNoise = (t, s) => (Math.sin(t * .9 + s * 7.3) + Math.sin(t * .23 + s * 3.1) * .6 + Math.sin(t * .061 + s) * .4) / 2;
 function sunFactor(q, atMin) {
@@ -7425,7 +7603,10 @@ function step(dtMin, silent, atMin) {
       // 📊 TÜR BAZLI KALICI SAYAÇ (gelişim görevleri buradan ölçülür — lifeProd santral
       // satılınca siliniyor, "güneşten X MWh üret" görevi onunla ölçülemezdi).
       // ⚠️ Bu satır T tanımının ALTINDA olmak zorunda: üstüne yazarsan TDZ ReferenceError.
-      if (!silent && G.prodByCat) G.prodByCat[T.cat] = (G.prodByCat[T.cat] || 0) + out;
+      // 🔴 11 EYL — "!silent" KALDIRILDI (çevrimdışı denetimi): çevrimdışı telafide üretilen
+      //    MWh emisyon cezasına SAYILIYOR ama gelişim görevi sayacına SAYILMIYORDU.
+      //    Yani aynı enerji cezayı doğuruyor, ödülü doğurmuyordu. Tek yönlü muhasebe.
+      if (G.prodByCat) G.prodByCat[T.cat] = (G.prodByCat[T.cat] || 0) + out;
       // ⚡ haftalık üretim: ölçek ve ağaç kademeleri bunu okur. Çevrimdışı telafi de sayılır —
       //    o da gerçekten üretilmiş enerjidir (satış sayacı weekSold de aynı şekilde sayıyor).
       G.weekProd = (G.weekProd || 0) + out;
@@ -8186,6 +8367,100 @@ window.buyLicense = () => {
   if (PENDING) { hideSheets(); setMode('build'); toast('🏗️ Şimdi kurulacak yere dokun', ''); } // yerleştirme bekliyordu — devam
   else openCellSheet(c, SEL.ll);
 };
+// ═══ 🚪 BÖLGEYİ TERK ET / RUHSAT BIRAKMA (patron 11 Eyl: "ruhsat iptali seçeneği") ═══
+// G.licenses için kodda HİÇBİR silme yolu yoktu — ruhsat tek yönlüydü ve limit (20→60) bir
+// CEZA'ydı: erken oyunda kapatılan kötü karolarla sonuna kadar yaşamak gerekiyordu.
+// Bırakma gelince limit bir PORTFÖY kısıtına dönüşür: "bu slotu burada mı tutayım, yoksa
+// kalabalık bir şehre mi taşıyayım?" — ve karar GERİ ALINAMAZ olduğu için gerçekten tartılır.
+//
+// ⚠️ ÜÇ KURAL, ÜÇÜ DE KODDAN TÜREDİ — GERİ GEVŞETME:
+// (1) ÖNCE TASFİYE. Ruhsat kaybı hiçbir tesisi durdurmaz: aucSetupEksik YALNIZ müzayededen
+//     devralınmış ve henüz aktifleşmemiş birime bakar; plantOutput/startDischarge/sellGrid'de
+//     ruhsat kontrolü YOKTUR. Serbest bırakılsaydı "ruhsatı bırak, üretim devam etsin" en ucuz
+//     strateji olur ve limit sistemi bir anda anlamsızlaşırdı.
+// (2) İADE YOK. Ruhsat devlete ödenen bir HARÇTIR (licenseFee sabit $100K — patron kararı).
+//     İade verilseydi G.cellSpent geriye düşürülmeli ve varlıkKesinti kapısından geçirilmeliydi;
+//     üstelik al-bırak döngüsü açılırdı. Bırakmanın gerçek bedeli harç değil, tesisleri
+//     zararına tasfiye etmektir — bu yüzden ayrıca bekleme süresine de gerek yok.
+// (3) TESİSLER SATILIR, TAŞINMAZ. Taşıma = tesisi tam bedelle başka karoya ışınlamak demektir;
+//     yer seçimi (rüzgar/güneş/talep/rakım) oyunun ANA kararıdır, ışınlanabilir tesis onu yok eder.
+//
+// 🏛️ KİRA (G.leases / "Alım Garantisi") AYRI BİR HAKTIR ve DOKUNULMAZ: ihaleye girmek ruhsat
+//    istemez, kira vergisi ruhsata değil kiraya bağlıdır. Bölgeyi fiziken terk edip alım
+//    garantisini elde tutmak geçerli bir strateji ("toprak ağası") — onay ekranı bunu yazar.
+const hqCell = () => {
+  const h = G.units.find(u => u.kind === 'office' && u.hq);
+  return h ? h.cell : (Object.keys(G.licenses || {})[0] || null);
+};
+// Ofis BİLEREK dışarıda: ofis ruhsatın ÖN ŞARTI ve menzili birden çok karoya hizmet eder.
+const cellAssets = c => G.units.filter(u => u.cell === c && u.kind !== 'office');
+// Satışı şu an imkânsız kılan birimler (demolishDo'nun kendi korumalarının aynası)
+function cellAssetBlocks(c) {
+  const out = [];
+  for (const u of cellAssets(c)) {
+    if (aucListed('unit', u.id)) out.push(unitName(u) + ' — 🔨 açık artırmada, önce ilanı çek');
+    else if (u.kind === 'store' && isLinked(u)) out.push(unitName(u) + ' — 🔗 bileşik depo grubuna bağlı, önce 🔌 bağlantıyı kes');
+  }
+  return out;
+}
+window.dropLicenseAsk = cell => {
+  const c = cell || SEL.cell;
+  if (!c || !G.licenses[c]) return;
+  // 🎓 Eğitim sırasında KAPALI: STARTER_TASKS 'ruhsat' görevi licenses sayısıyla tamamlanır ve
+  //    tutCellTarget/tutCellTarget4/tutT2AyniKarede çıpası Object.keys(G.licenses)[0]'dır —
+  //    bırakma serbest olsaydı tamamlanmış görev geri döner, oyuncu kilitli arayüze düşerdi.
+  if (tutGuide()) { toast('🎓 Eğitim sürerken bölge terk edilemez — önce 8 görevi bitir', 'warn', null, 0, true); return; }
+  const blok = cellAssetBlocks(c);
+  if (blok.length) {
+    $('modal').innerHTML = '<h2>🔒 Önce şunları çöz</h2>'
+      + '<p>' + (placeName(c) || cellCode(c)) + ' bölgesini terk etmeden önce:</p>'
+      + '<table class="ledger">' + blok.map(b => '<tr><td>' + b + '</td></tr>').join('') + '</table>'
+      + '<button class="primary ghostbtn" onclick="closeModal()">Tamam</button>';
+    $('overlay').classList.add('show'); return;
+  }
+  const varlik = cellAssets(c);
+  const iade = varlik.reduce((s2, u) => s2 + resaleValue(u).value, 0);
+  const kesinti = varlikKesinti(iade);
+  const enerji = varlik.reduce((s2, u) => s2 + (u.kind === 'store' ? (u.stored || 0) : 0), 0);
+  const hatlar = (G.lines || []).filter(l => lineUsable(l) && lineTouches(l, c));
+  const n = Object.keys(G.licenses).length;
+  $('modal').innerHTML = '<h2>🚪 Bölgeyi Terk Et — Emin misin?</h2>'
+    + '<p><b>' + (placeName(c) || cellCode(c)) + '</b> <span class="sub">' + cellCode(c) + '</span></p>'
+    + '<p>📜 Ruhsat hakkın: <b>' + n + '/' + licCap() + '</b> → <b class="pos">' + (n - 1) + '/' + licCap() + '</b> — açılan yeri başka bir bölgede kullanabilirsin.</p>'
+    + '<p style="color:var(--warn)">💸 <b>Harç iade edilmez.</b> Buraya geri dönmek istersen yeniden <b>' + fmt(licenseFee(c)) + '</b> ödersin.</p>'
+    + (varlik.length
+      ? '<p style="color:var(--danger)">🗑️ Buradaki <b>' + varlik.length + ' tesisin SATILACAK</b> — eline geçecek: <b>' + fmt(iade - kesinti) + '</b>'
+        + (kesinti > 0 ? ' <span class="sub">(🏦 bankaya ' + fmt(kesinti) + ')</span>' : '') + '</p>'
+        + '<table class="ledger">' + varlik.map(u => { const r = resaleValue(u); return '<tr><td>' + unitName(u) + '</td><td>' + fmt(r.value) + ' <span class="sub">(%' + (100 - r.pct) + ' zarar)</span></td></tr>'; }).join('') + '</table>'
+        + (enerji > .5 ? '<p style="color:var(--warn)">⚠️ Depolardaki <b>' + fmtE(enerji) + ' MWh</b> enerji SİLİNİR — önce satmayı düşün!</p>' : '')
+      : '<p class="sub">Bu karoda tesisin yok — temiz çıkış.</p>')
+    + (hatlar.length ? '<p style="color:var(--warn)">⚡ Bu karodan <b>' + hatlar.length + ' nakil hattın</b> geçiyor. Hat SÖKÜLMEZ ve bu bölgenin pazarına satmaya devam edebilirsin — ama ruhsatsız karoda yeni depo kuramazsın, yani buradaki transfer merkezine <b>bir daha depo bağlayamazsın</b>.</p>' : '')
+    + (myLease(c) ? '<p class="pos">🏛️ <b>Alım Garantin (kira) AYRI bir haktır — sende kalıyor.</b> Dönem bitene kadar bu karoda satış yapan rakiplerden %' + (LEASE_PRIM * 100) + ' vergi toplamaya devam edersin.</p>' : '')
+    + (officeCovers(c) ? '<p class="sub">🏢 Ofisin yerinde kalıyor (menzili başka karolara da hizmet ediyor). Ofisi de kapatmak istersen ofise dokunup "🗑️ Ofisi Kapat" de.</p>' : '')
+    + '<button class="primary" style="background:var(--danger);color:#fff" onclick="closeModal();dropLicenseDo(\'' + c + '\')">✅ Evet, ' + (varlik.length ? varlik.length + ' TESİSİMİ SAT ve ' : '') + 'Bölgeyi Terk Et' + (varlik.length ? ' — ' + fmt(iade - kesinti) : '') + '</button>'
+    + '<button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>';
+  $('overlay').classList.add('show');
+};
+window.dropLicenseDo = cell => {
+  const c = cell;
+  if (!c || !G.licenses[c]) return;
+  if (tutGuide()) return;                     // konsoldan doğrudan çağrıya karşı aynı kapı
+  if (cellAssetBlocks(c).length) return;      // yarışta durum değiştiyse sessizce çık
+  // ⚠️ demolishDo her çağrıda kendi banka kesintisini/muhasebesini yapar ve hideSheets()
+  //    çalıştırır — dizinin KOPYASI üzerinde dön.
+  const silinecek = cellAssets(c).map(u => u.id);
+  for (const id of silinecek) demolishDo(id);
+  delete G.licenses[c];
+  // 🔄 Ruhsatlı karo katmanı + simüle rakip çizimi tazelensin (kendi ruhsatlı karonda
+  //    simülasyon rakibi çizilmiyordu — bırakınca görünür olmalı).
+  refreshLicenseTiles(); drawOverlay();
+  if (typeof othersDrawn !== 'undefined') { try { othersDrawn = ''; drawOthers(); } catch (e) {} }
+  hideSheets(); closeModal();
+  toast('🚪 ' + (placeName(c) || cellCode(c)) + ' bölgesi terk edildi — ruhsat hakkın: '
+    + Object.keys(G.licenses).length + '/' + licCap(), '', null, 0, true);
+  save(); renderMenu();
+};
+
 // ── KAPASİTE LİSANSLARI (patron tasarımı): güneş/rüzgar/kömür (ve hidro/jeo) 50 MW'a kadar LİSANSSIZ;
 // üstü kademeli lisans ister: 100 MW → 500 MW → 5 GW → 50 GW. Gaz ve nükleer BAŞTAN kilitli:
 // Gaz ilk lisans $100M, Nükleer $200M ("sabit üretim oyunu kolaylaştırıyor" — patron dengesi).
@@ -8406,7 +8681,35 @@ const weekTarget = () => 150 + installedMW() * 25;
 // 🏛️ HAFTA KAPANIŞ ÖDÜLLERİ (patron 23 Ağu — fiyat 1/3'e inince ölçeklendi):
 // #1 / #2 / #3 / ilk10 üçte bire indi (eski 30/20/12/5 M$), KATILIM yalnız yarıya (eski 2 M$)
 // çünkü o, geride kalan küçük oyuncunun can simidi. Ekrandaki liste de bu diziden okunur.
-const KATKI_ODUL = [1e7, 7e6, 4e6, 17e5, 1e6];
+// 🔴 11 EYL DÜZELTMESİ — UNUTULMUŞ BİR GERİ ALMA. Bu dizi 23 Ağustos'ta PRICE_BASE
+// 120.000 → 40.000 indiği için bilerek 1/3'e çekilmişti (eski değerler TAM OLARAK
+// 30/20/12/5/2 M$). PRICE_BASE 27 Ağustos'ta 120.000'e GERİ ALINDI (satır ~7160) ama ödül
+// tablosu geri alınmadı — bir aydır ekonomiye göre üçte bir düzeyde duruyordu.
+// Patronun "Mikro en az 30M" demesi tesadüf değil: oyunun eski dengesini hatırlıyor.
+//
+// 📊 ARTIK LİGE GÖRE: her ligde #1 ödülü = o ligin "bir sonraki büyük yatırımı"nın fiyatı.
+//   Mikro  $30M = Kömür K-22 (22 MW, $30,8M) — oyuncunun ilk gerçek baz yük santrali
+//   Küçük  $50M = USK-42 ($58,8M) ile RES OS-220 Offshore ($40,3M) arası
+//   Orta  $100M = Mega Baraj MB-35 ($91M) / RES OS-500 ($112,5M) arası
+// Kademe oranları TEK ve sabit: #1 = 1,00 · #2 = 0,70 · #3 = 0,40 · ilk10 = 0,17 · katılım = 0,07
+// (eski 30/20/12/5/2 tablosundan türetildi). Değişen yalnız ligin TABANI.
+// ⚠️ TAVAN İLKESİ: haftalık #1 ödülü, o ligde tipik oyuncunun BİR GÜNLÜK net gelirini aşmasın —
+//    aşarsa oyuncu her gün oynamak yerine hafta kapanışını optimize etmeye başlar.
+//    Mikro ~$34M/gün · Küçük ~$64M/gün · Orta ~$110M/gün → 30/50/100 tam tavanda oturuyor.
+const KATKI_ODUL = [
+  [3e7,  2e7,  12e6, 5e6,  2e6 ],  // 0 🏠 Mikro İşletme        → #1 $30,00M
+  [5e7,  35e6, 2e7,  85e5, 35e5],  // 1 🏢 Küçük İşletme        → #1 $50,00M
+  [1e8,  7e7,  4e7,  17e6, 7e6 ],  // 2 🏬 Orta Ölçekli İşletme → #1 $100,0M
+];
+// Sıraya göre para ödülü — katkiIpFor'un birebir ikizi (aynı kademe mantığı).
+const katkiOdulFor = (lig, sira) => {
+  const t = KATKI_ODUL[Math.max(0, Math.min(KATKI_PARA_LIG, lig | 0))] || KATKI_ODUL[0];
+  return sira === 0 ? t[0] : sira === 1 ? t[1] : sira === 2 ? t[2] : sira < 10 ? t[3] : t[4];
+};
+// 🛡️ REKABET ŞARTI: üst kademeler GERÇEK rakip ister. Tek başına oynayan oyuncu her hafta
+// koşulsuz birincilik ödülü almasın (tablo inceyken #1 = bedava haftalık maaş olurdu).
+// 3+ rakip → #1 mümkün · 2 rakip → en iyi #2 · 1 kişi → yalnız "ilk 10" kademesi.
+const katkiEtkinSira = (ben, rakip) => Math.max(ben, rakip >= 3 ? 0 : rakip >= 2 ? 1 : 3);
 // 🏆 SIRALAMA ÖDÜLÜ ÖLÇEĞE GÖRE AYRIŞIR (patron 26 Ağu):
 // "Küçük ve orta işletmeye PARA ödülü ver, bunun üstünde İMTİYAZ PUANI ödülü ayarla."
 // Gerekçesi sağlam: alt liglerde para kıt ve büyümeyi hızlandırır; üst liglerde para bol,
@@ -8464,12 +8767,23 @@ function katkiHaftaKapat(eskiHafta, katki, uretim) {
     // Büyük Ölçekli'ye terfi → 50 puan · Enerji Holdingi'ne terfi → 100 puan (para yok).
     const y = OLCEK[G.olcek];
     const terfiPara = G.olcek <= KATKI_PARA_LIG;
-    const odul = terfiPara ? y.esik * OLCEK_TESVIK : 0;
-    const ipOdul = terfiPara ? 0 : (G.olcek === OLCEK.length - 1 ? 100 : 50);
+    // 🛡️ ÖLÇEK SALINIMI KAPATILDI (11 Eyl — denetimde bulundu, GERİ ALMA).
+    //    Terfi ikramiyesinde hiçbir "daha önce aldın mı" bayrağı YOKTU. Düşüş ise BEDAVA
+    //    tetiklenebiliyordu: ölçüt √(üretim × satış) olduğu için bir hafta hiç satmamak
+    //    ol = 0 yapıyor ve kademe kesin düşüyordu. Dolayısıyla düş → çık → düş → çık
+    //    döngüsü ikramiyeyi SONSUZ tekrar ödüyordu; üst uçta ödül PREMIUM PARA (50/100 💠)
+    //    olduğu için bu doğrudan "GÜÇ SATILMAZ" ilkesinin ihlaliydi (1 💠 = 0,50 TL).
+    //    Artık ikramiye KADEME BAŞINA BİR KEZ: G.olcekMax görülen en yüksek ölçeği tutar.
+    //    Terfi/düşüş ve haftalık sıralama ödülü aynen çalışmaya devam eder — yalnız
+    //    TEK SEFERLİK teşvik tekrar ödenmez.
+    const ilkKez = G.olcek > (G.olcekMax || 0);
+    const odul = (terfiPara && ilkKez) ? y.esik * OLCEK_TESVIK : 0;
+    const ipOdul = (!terfiPara && ilkKez) ? (G.olcek === OLCEK.length - 1 ? 100 : 50) : 0;
+    G.olcekMax = Math.max(G.olcekMax || 0, G.olcek);
     G.cash += odul;
-    G.ip = (G.ip || 0) + ipOdul; // 💠 terfi ödülü
-    addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta <b>${fmtN(uretim == null ? katki : uretim)} MWh ürettiniz</b> ve <b>${fmtN(katki)} MWh şebekeye sattınız</b> — ölçek dengeniz <b>${fmtN(ol)} MWh</b>. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki: <b>${terfiPara ? fmt(odul) : '💠 ' + ipOdul + ' İmtiyaz Puanı'}</b>. Tebrikler!`, true);
-    toast(y.ico + ' Şirketin artık ' + y.nm + '! Teşvik: ' + (terfiPara ? '+' + fmt(odul) : '💠 +' + ipOdul), '', null, 0, true);
+    G.ip = (G.ip || 0) + ipOdul; // 💠 terfi ödülü (yalnız İLK kez)
+    addMail('🏛️ Enerji Bakanlığı', 'Ölçek terfisi: ' + y.nm, `Geçen hafta <b>${fmtN(uretim == null ? katki : uretim)} MWh ürettiniz</b> ve <b>${fmtN(katki)} MWh şebekeye sattınız</b> — ölçek dengeniz <b>${fmtN(ol)} MWh</b>. Şirketiniz resmî kayıtlarda artık "${y.nm}" ${y.ico} olarak sınıflandırılmıştır. Ölçek teşviki: <b>${ilkKez ? (terfiPara ? fmt(odul) : '💠 ' + ipOdul + ' İmtiyaz Puanı') : 'ödenmedi — bu kademeye daha önce ulaşmıştınız, teşvik ömürde BİR KEZ ödenir'}</b>. Tebrikler!`, true);
+    toast(y.ico + ' Şirketin artık ' + y.nm + '!' + (ilkKez ? ' Teşvik: ' + (terfiPara ? '+' + fmt(odul) : '💠 +' + ipOdul) : ' (teşvik bir kez ödenir)'), '', null, 0, true);
     // 👑 EN ÜST LİG AYRICALIĞI duyurusu — reklamsızlık adFreeActive() içinde ölçekten okunur,
     // burada gün eklenmez: holding'likten düşen ayrıcalığı da kaybeder (patron tasarımı).
     if (G.olcek === OLCEK.length - 1) {
@@ -8489,20 +8803,39 @@ function katkiHaftaKapat(eskiHafta, katki, uretim) {
     G.katkiOdenen = eskiHafta;
     NET.get('katki/' + kHafta(eskiHafta)).then(t => {
       if (!t) return;
-      const sira = Object.entries(t).map(([uid, v]) => ({ uid, mwh: (v && v.mwh) || 0 })).sort((a, b) => b.mwh - a.mwh);
+      // 🏅 LİG İÇİ SIRALAMA (11 Eyl düzeltmesi). ESKİDEN sıralama KÜRESELDİ ama ödül tablosu
+      //    LİGE bağlıydı: aktif bir Büyük/Holding oyuncu masadayken Mikro/Küçük oyuncu #1/#2/#3
+      //    kademesine YAPISAL OLARAK hiç ulaşamıyor, eline yalnız "ilk 10" ya da katılım geçiyordu.
+      //    Yani ödül rakamını büyütmek TEK BAŞINA hiçbir şey değiştirmezdi. `olcek` alanı zaten
+      //    sunucuda yazılı (NET yoklaması, ~12434) → yeni alan ve kural değişikliği GEREKMEZ.
+      const hepsi = Object.entries(t).map(([uid, v]) => ({ uid, mwh: (v && v.mwh) || 0,
+        olcek: Math.max(0, Math.min(OLCEK.length - 1, (v && v.olcek) | 0)) }));
+      const benKayit = hepsi.find(x => x.uid === NET.id);
+      const sira = hepsi.filter(x => x.olcek === (benKayit ? benKayit.olcek : eski)).sort((a, b) => b.mwh - a.mwh);
       const ben = sira.findIndex(x => x.uid === NET.id);
       if (ben < 0 || sira[ben].mwh < 1) return;
+      const etkinSira = katkiEtkinSira(ben, sira.length); // 🛡️ rekabet şartı (bkz. katkiEtkinSira)
       // 🏆 ÖDÜL TÜRÜ ÖLÇEĞE BAĞLI: alt ligler PARA, üst ligler PUAN alır (patron kararı).
-      const lig = G.olcek || 0;
+      // ⚠️ LİG `eski`DEN OKUNUR — G.olcek DEĞİL (11 Eyl). G.olcek bu fonksiyonun BAŞINDA terfi
+      //    (~8461) ya da düşüş (~8481) ile ZATEN değişmiş oluyor; ödül ise GEÇEN HAFTANIN
+      //    yarışının karşılığıdır. Tablo lige bağlanınca bu iki gizli hataya yol açıyordu:
+      //    (a) düşen oyuncu önce kademe kaybediyor, sonra AYNI hafta ödülü de yarılanıyordu
+      //        (100M → 50M) ve hiçbir ekranda bu bağlantı yazmıyordu — görünmez çifte ceza;
+      //    (b) terfi eden oyuncu hem terfi ikramiyesini hem ÜST ligin haftalık ödülünü alıyordu.
+      //    Tek cümlelik kural: "ödül, o hafta içinde bulunduğun ligin ödülüdür."
+      const lig = benKayit ? benKayit.olcek : eski;
       const paraLigi = lig <= KATKI_PARA_LIG;
-      const odul = paraLigi
-        ? (ben === 0 ? KATKI_ODUL[0] : ben === 1 ? KATKI_ODUL[1] : ben === 2 ? KATKI_ODUL[2] : ben < 10 ? KATKI_ODUL[3] : KATKI_ODUL[4])
-        : 0;
-      const ipOdul = paraLigi ? 0 : katkiIpFor(lig, ben);
+      const odul = paraLigi ? katkiOdulFor(lig, etkinSira) : 0;
+      const ipOdul = paraLigi ? 0 : katkiIpFor(lig, etkinSira);
       G.cash += odul;
       G.ip = (G.ip || 0) + ipOdul;
       const odulYazi = paraLigi ? fmt(odul) : '💠 ' + ipOdul + ' İmtiyaz Puanı';
-      addMail('🏛️ Enerji Bakanlığı', 'Haftalık katkı ödülü — #' + (ben + 1), `Geçen haftanın devlet katkı sıralamasında ${sira.length} şirket arasında #${ben + 1} oldunuz (${fmtN(sira[ben].mwh)} MWh).<br><br>Ödülünüz: <b>${odulYazi}</b><br><br><span style="opacity:.8">${paraLigi ? olcekOf(lig).ico + ' ' + olcekOf(lig).nm + ' liginde ödüller NAKİT ödenir — büyümen için sermaye. Büyük Ölçekli lige çıkınca ödüller İmtiyaz Puanına döner.' : olcekOf(lig).ico + ' ' + olcekOf(lig).nm + ' liginde ödüller İMTİYAZ PUANI olarak ödenir — bu ligde para bol, kıt olan puandır.'}</span>`, true);
+      // ⚠️ REKABET ŞARTI GÖRÜNÜR OLSUN — ödeme kademesi sıradan düşükse sebebini yaz.
+      //    Oyuncunun göremeyeceği kural bırakmıyoruz (bu projenin tekrar eden hatası).
+      const kisikNot = etkinSira > ben
+        ? `<br><br><span style="color:#f0a500">🛡️ Bu hafta liginde yalnız <b>${sira.length}</b> şirket yarıştı — birincilik ödülü en az <b>3 rakip</b> ister. Bu yüzden bir alt kademeden ödendi.</span>`
+        : '';
+      addMail('🏛️ Enerji Bakanlığı', 'Haftalık katkı ödülü — #' + (ben + 1), `Geçen haftanın devlet katkı sıralamasında <b>${olcekOf(lig).ico} ${olcekOf(lig).nm}</b> liginde ${sira.length} şirket arasında <b>#${ben + 1}</b> oldunuz (${fmtN(sira[ben].mwh)} MWh).<br><br>Ödülünüz: <b>${odulYazi}</b>${kisikNot}<br><br><span style="opacity:.8">${paraLigi ? olcekOf(lig).ico + ' ' + olcekOf(lig).nm + ' liginde ödüller NAKİT ödenir — büyümen için sermaye. Birincilik ödülü ' + fmt(KATKI_ODUL[Math.min(KATKI_PARA_LIG, lig)][0]) + '. Büyük Ölçekli lige çıkınca ödüller İmtiyaz Puanına döner.' : olcekOf(lig).ico + ' ' + olcekOf(lig).nm + ' liginde ödüller İMTİYAZ PUANI olarak ödenir — bu ligde para bol, kıt olan puandır.'}<br>Sıralama KENDİ liginde yapılır: her şirket kendi ölçeğindeki rakipleriyle yarışır.</span>`, true);
       toast('🏛️ Haftalık katkı sıralaması #' + (ben + 1) + ' — ' + (paraLigi ? '+' + fmt(odul) : '💠 +' + ipOdul), '', null, 0, true);
       save();
     }).catch(() => {});
@@ -9142,7 +9475,14 @@ function lineConfirm(toCell) {
     // 🤝 ülkeler arası: yalnız ittifak hattı modunda (başkan/yardımcı) geçilir
     if (isKitaArasi(A, B, km) || !LINE_ALLY) { LINE_ALLY = false; lineBlockedInfo(A, B, km); return; }
   }
-  if (km < 20) { toast('Çok yakın — hat gerekmez, doğrudan satabilirsin', 'warn'); return; }
+  // ⚠️ ESKİ "km < 20" ŞARTI KALDIRILDI (11 Eyl). İki sebep: (1) metni YANLIŞTI —
+  //    25 Ağustos'ta komşu pazar tamamen kaldırıldı (bkz. 5545), depo yalnız KENDİ karosunda
+  //    satar; 9 km ötedeki karoya hat olmadan "doğrudan satmak" diye bir şey yok. (2) lineConfirm'e
+  //    artık yalnız startAllyLine üzerinden geliniyor, yani kural SADECE ittifak hattını
+  //    cezalandırıyordu — oysa sınır geçişi doğası gereği kısadır (Edirne-Kapıkule komşu
+  //    karolardır) ve 9 km'lik sınır ötesi hat kat=4 ile zaten ~186 M$ tutuyor.
+  //    ZORUNLU: yerine aynı-karo koruması. Yoksa from===to olan 0 km'lik ÖLÜ hat kurulabilirdi.
+  if (LINE_SRC === toCell) { toast('⚡ Varış noktası başlangıçla AYNI karo — başka bir bölgeye dokun', 'warn'); return; }
   const kat = lineKatCells(LINE_SRC, toCell, km); // 🌍 sınır aşım çarpanı (1 · 4 · 12)
   const need = Math.max(0, Math.ceil(km / 300) - 1); // %100 kaybı önleyen asgari merkez
   const opt = Math.max(0, Math.ceil(km / 100) - 1);  // en iyi (%10) için gereken merkez
@@ -9455,7 +9795,7 @@ function lineExtendTap(cell) {
     }
     LEXT.uc = cell; LEXT.bas = (i === 0);
     lextRender();
-    toast('📏 <b>' + placeName(cell) + '</b> seçildi — şimdi hattın <b>uzayacağı bölgeye</b> dokun', '', null, 0, true);
+    toast('📏 <b>' + placeName(cell) + '</b> seçildi — şimdi hattın <b>uzayacağı bölgeye</b> dokun. <b>Komşu karo da olur</b>: hizmet edeceğin her deponun karosuna ayrı ayrı uzatman gerekir.', '', null, 0, true);
     return;
   }
 
@@ -9465,7 +9805,16 @@ function lineExtendTap(cell) {
   if (LAND_BOX && !C) { toast('🌊 Hat yalnız KARADAN geçer — karaya dokun', 'warn'); return; }
   if (LAND_BOX && C0 && C && C0.iso !== C.iso) { toast('🌍 Bireysel hat yalnız ÜLKE İÇİNDE kalır — sınır aşan hat 🤝 ittifak işidir', 'warn', null, 0, true); return; }
   const seg = kmDist(cellCenter(LEXT.uc), cellCenter(cell));
-  if (seg < 20) { toast('📏 Çok yakın (' + Math.round(seg) + ' km) — en az 20 km uzağa dokun', 'warn'); return; }
+  // ⚠️ ASGARİ MESAFE YOK (patron 11 Eyl: "çok yakın sorunu devam ediyor hatlarda").
+  //    Çizim yolundaki (lineDrawAdd) aynı şart 6 Eylül'de kaldırılmıştı, UZATMA yolu unutuldu.
+  //    Bir karo ~8,5-11 km (CELL=0.1°) ve depo YALNIZ kendi karosundaki merkeze bağlanır
+  //    (LINE_ACCESS_KM=0) → 20 km şartı "her deponun karosuna dokun" kuralıyla DOĞRUDAN
+  //    çelişiyordu: komşu karodaki depoyu hatta almanın hiçbir yolu kalmıyordu.
+  //    Fren mesafe değil, uç trafosu + ruhsat bedelidir: bir atlama en az 23,7 M$.
+  //    Aynı kareye iki kez dokunma yukarıdaki n.indexOf(cell) >= 0 ile zaten engelli. GERİ KOYMA.
+  const mevcutDugum = lineNodeCells(l).length; // ⚠️ path'siz eski hatta da doğru sayar
+  if (mevcutDugum >= LEXT_MAX_NODES) { toast('📏 Bu hat ' + mevcutDugum + ' merkeze ulaştı — bir hat en fazla ' + LEXT_MAX_NODES + ' merkez taşır. Yeni bölge için ✏️ ikinci bir hat çek.', 'warn', null, 0, true); return; }
+  if (seg > 300) toast('🗼 Bu bölüm ' + Math.round(seg) + ' km — ' + (Math.ceil(seg / 300) - 1) + ' zorunlu transfer merkezi otomatik eklenecek', '', null, 0, true);
   lextRender(cell);
 
   const yeni = expandPath([LEXT.uc, cell]);   // 300 km üstü bölümlere zorunlu merkez ekler
@@ -9474,9 +9823,19 @@ function lineExtendTap(cell) {
   const ekKm = Math.round(pathKm(yeni));
   const b = l.brand || 'voltas';
   const maliyet = brandPrice(b, lineExtendCost(ekKm, araHub));
-  const yeniYol = LEXT.bas ? ek.slice().reverse().concat(l.path || [l.from, l.to]) : (l.path || [l.from, l.to]).concat(ek);
+  // 🛡️ ESKİ KAYIT KALKANI (11 Eyl): buildLine (9202) hatları `path`SIZ kurulur.
+  //    [l.from, l.to] alınırsa lineNodeCells'in ÜRETTİĞİ ara merkezler çöpe gider → maliyet
+  //    ekranı gerçek sonucu göstermez. lineNodeCells mevcut hub'ları doğru karolara koyar.
+  const eskiYol = (l.path && l.path.length >= 2) ? l.path : lineNodeCells(l);
+  const yeniYol = LEXT.bas ? ek.slice().reverse().concat(eskiYol) : eskiYol.concat(ek);
   const yeniKm = Math.round(pathKm(yeniYol));
   const yeniKayip = Math.round(lineBaseLoss({ path: yeniYol, km: yeniKm, hubs: yeniYol.length - 2 }));
+  // 🔌 Bu uzatma KAÇ deponu hatta sokar? Sayım çizim yolundaki drawBarUpdate ile
+  //    BİREBİR AYNI olsun ki iki ekran farklı sayı göstermesin.
+  const yolKare = new Set(yeniYol), ekKare = new Set(ek);
+  const baglanan = stores().filter(st => yolKare.has(st.cell)).length;
+  const toplamDepo = stores().length;
+  const yeniDepo = stores().filter(st => ekKare.has(st.cell)).length;
   LEXT.hedef = cell; LEXT.ek = ek; LEXT.maliyet = maliyet; LEXT.ekKm = ekKm; LEXT.araHub = araHub;
 
   // 💰 MALİYET EKRANI (patron: "maliyet ekranı ve onay sonrası o hat uzasın")
@@ -9487,11 +9846,15 @@ function lineExtendTap(cell) {
     + '<tr><td>Yeni transfer merkezi</td><td>' + (araHub > 0 ? araHub + ' ara + 1 uç' : '1 uç') + '</td></tr>'
     + '<tr><td>Hattın yeni uzunluğu</td><td>' + fmtN(l.km) + ' → <b>' + fmtN(yeniKm) + ' km</b></td></tr>'
     + '<tr><td>Hat kaybı</td><td>%' + Math.round(lineBaseLoss(l)) + ' → <b class="' + (yeniKayip > lineBaseLoss(l) ? 'neg' : 'pos') + '">%' + yeniKayip + '</b></td></tr>'
+    + '<tr><td>🔌 Bağlanan depo</td><td><b>' + baglanan + '/' + toplamDepo + '</b>'
+      + (yeniDepo > 0 ? ' <span class="pos">(+' + yeniDepo + ' yeni)</span>' : ' <span style="color:var(--warn)">— bu karoda depon yok</span>') + '</td></tr>'
     + '<tr><td><b>Maliyet</b></td><td><b class="neg">' + fmt(maliyet) + '</b></td></tr>'
     + '</table>'
+    + (yeniDepo === 0 ? '<p class="sub" style="color:var(--warn)">⚠️ Bu karoda depon yok: uzatma yeni bir PAZAR açar ama oradan satmak için ya buraya depo kurmalısın ya da uzatmayı depolu karonun üstünden geçirmelisin.</p>' : '')
+    + (yeniKayip >= 100 ? '<p class="sub neg">⛔ Bu uzatma hattın en uzun bölümünü 300 km üstünde bırakıyor — hat KULLANILAMAZ hale gelir ve bağlı depoların kopar. Önce 🗼 ara merkez ekle.</p>' : '')
     + '<p class="sub">💡 Yeni hat çekseydin <b>ikinci bir uç trafosu</b> daha öderdin. Uzatma tek trafo ister — '
     + 've en önemlisi <b>tek hat</b> olarak kalır: depoların bu zincirin <b>bütün pazarlarını</b> görür.</p>'
-    + '<button class="primary" onclick="lineExtendOnay()" ' + (G.cash >= maliyet ? '' : 'disabled') + '>📏 Onayla — ' + fmt(maliyet) + '</button>'
+    + '<button class="primary" onclick="lineExtendOnay()" ' + (G.cash >= maliyet && yeniKayip < 100 ? '' : 'disabled') + '>📏 Onayla — ' + fmt(maliyet) + '</button>'
     + (G.cash < maliyet ? '<p class="sub neg">Kasanda yetmiyor.</p>' : '')
     + '<button class="primary ghostbtn" onclick="closeModal();lineExtendCancel()">Vazgeç</button>';
   $('overlay').classList.add('show');
@@ -9511,7 +9874,13 @@ window.lineExtendOnay = () => {
   // ⚠️ l.km ve l.hubs AŞAĞIDA değişiyor — tabanı ÖNCE sabitliyoruz, yoksa eski kayıtta
   //    lineOmur(l) fallback'i yeni (büyük) km üzerinden hesaplanıp ömrü bedava şişirirdi.
   const omurTaban = lineOmurTaban(l); // ⚠️ HAM taban (çarpanlı yazma bileşik büyür)
-  const eski = l.path ? l.path.slice() : [l.from, l.to];
+  // 🛡️ ESKİ KAYIT KALKANI (11 Eyl) — bu satır KRİTİK. `path`siz eski hatta
+  //    [l.from, l.to] alınırsa: (a) l.hubs = path.length-2 ile 5 → 1 düşer, 139 M$'lık ödenmiş
+  //    ara merkez BUHARLAŞIR, (b) lineBaseLoss pathMaxSeg'e geçip %20 → %100 fırlar,
+  //    (c) lineUsable false olur ve aşağıdaki ensureGridLinks o hattaki HER deponun
+  //    st.grid'ini null'lar — oyuncu 23,7 M$ ödeyip bütün satış ağını kaybeder.
+  //    lineNodeCells mevcut hub'ları doğru karolara yerleştirir → hepsi korunur.
+  const eski = (l.path && l.path.length >= 2) ? l.path.slice() : lineNodeCells(l);
   l.path = LEXT.bas ? LEXT.ek.slice().reverse().concat(eski) : eski.concat(LEXT.ek);
   l.from = l.path[0]; l.to = l.path[l.path.length - 1];
   l.km = Math.round(pathKm(l.path));
@@ -9536,6 +9905,11 @@ let LDRAW = null, ldrawLayer = [];
 // (depo yalnız kendi karesindeki merkeze bağlanır). 8 depo + varış = 9 nokta ederdi;
 // eski 8'lik tavan patronun tam senaryosunu engelliyordu (6 Eyl).
 const LDRAW_MAX = 16;
+// 📏 UZATMA TAVANI (11 Eyl): LDRAW_MAX yalnız TEK çizim oturumunu sınırlar; uzatmanın
+// hiç tavanı yoktu ve 20 km şartı kalkınca hat sınırsız düğüme çıkabilirdi (rota okunmaz olur,
+// ensureGridLinks zinciri şişer, tek hat 100 pazar açar). 32 = 16 çizilen + 16 uzatılan.
+// Eski kayıtta bunu aşan hat varsa DOKUNULMAZ — yalnız YENİ uzatma reddedilir.
+const LEXT_MAX_NODES = 32;
 const bestBrand = () => Object.keys(BRANDS).reduce((a, b) => brandRel(b) > brandRel(a) ? b : a, 'ortac');
 window.openLinePanel = () => {
   if (!G || !G._started) return;
@@ -9543,7 +9917,13 @@ window.openLinePanel = () => {
   $('linepanel').classList.add('open'); $('linehandle').style.display = 'none';
 };
 window.closeLinePanel = () => { $('linepanel').classList.remove('open'); $('linehandle').style.display = ''; };
-function renderLinePanel() { $('linebody').innerHTML = gridPanelHTML(); }
+function renderLinePanel() {
+  // innerHTML KOMPLE değişiyor — 4. hatta merkez ekleyince liste en başa fırlamasın.
+  const el = $('linebody'); if (!el) return;
+  const y = el.scrollTop;
+  el.innerHTML = gridPanelHTML();
+  el.scrollTop = y;
+}
 function ldrawClear() { ldrawLayer.forEach(l => { try { l.remove(); } catch (e) {} }); ldrawLayer = []; }
 window.startLineDraw = () => {
   if (!stores().some(s2 => s2.buildDone <= Date.now())) { toast('Önce bir bölgeye 🔋 pil istasyonu kur — hat depodan başlar', 'warn', null, 0, true); return; }
@@ -9850,16 +10230,72 @@ function lineOmurHTML(l) {
       : f >= LINE_OMUR.bozulmaBas ? '<div class="sub" style="color:var(--danger)">🔴 Son kısım — iletkenler yoruldu, kayıp her MWh ile artıyor.</div>'
       : f >= LINE_OMUR.uyari ? '<div class="sub" style="color:var(--warn)">⚠️ Ömrünün son üçte birinde — yenileme planla.</div>' : ''}`;
 }
+// ═══ 📏 AKORDIYON DURUMU (Madde 7, patron 11 Eyl) ═══
+// GÖRÜNÜM durumudur, G'ye YAZILMAZ: kayda girseydi şema değişir (migrate gerekir) ve
+// buluta anlamsız veri giderdi.
+// ⚠️ ANAHTAR 'p'+id / 'a'+id — ÇIPLAK id DEĞİL: kişisel hat id'si G.nextId++'ten gelir,
+//    ittifak hattı da onu KURAN OYUNCUNUN sayacından; iki farklı oyuncunun sayacı aynı
+//    sayıyı üretebilir → çıplak id ile senin 7 numaralı hattın ve ittifağın 7 numaralı
+//    hattı AYNI ANDA açılırdı.
+// ⚠️ <details> SEÇİLDİ (elle JS değil): renderLinePanel innerHTML'i komple değiştiriyor,
+//    yani durum canlı DOM'da tutulamaz. `open` bir ÖZNİTELİK olduğu için her çizimde
+//    yeniden yazılır — akordiyon 12 saniyede bir kapanmaz. Erişilebilirlik de bedava gelir.
+const HAT_ACIK = new Set(), HAT_TOHUM = new Set();
+window.hatAkordiyon = (k, acik) => { acik ? HAT_ACIK.add(k) : HAT_ACIK.delete(k); };
+// Kapalı satır: 1) ilk→son durak  2) kayıp · ömür · yıpranma. SIRA BİLİNÇLİ:
+//  • KAYIP birinci — her satışta geliri doğrudan çarpar ve zaten BİLEŞİK ölçüdür
+//    (marka kaybı + yıpranmanın yarısı + ömür kaybı hepsi lineLoss içinde).
+//  • ÖMÜR ikinci — GERİ ALINAMAZ; %100'de hat kalıcı ölür, bakım bile reddedilir.
+//  • YIPRANMA üçüncü — bakımla düzelir ve zaten kaybın bir GİRDİSİDİR.
+//  • KM özete girmez: kimlik bilgisi, karar bilgisi değil — gövdede kalır.
+function hatOzetHTML(l, ally) {
+  const ad = lineNodeCells(l).map(c => placeName(c));   // l.path olmayan eski hatta da çalışır
+  const sade = ad.filter((x, i) => i === 0 || x !== ad[i - 1]);
+  const rota = sade.length === 1 ? sade[0] + ' içi' : sade[0] + ' → ' + sade[sade.length - 1];
+  const rdy = lineReady(l), olu = lineOlu(l), f = lineOmurFrac(l), loss = Math.round(lineLoss(l));
+  const orenk = f >= LINE_OMUR.bozulmaBas ? 'var(--danger)' : f >= LINE_OMUR.uyari ? 'var(--warn)' : 'var(--acc)';
+  // Durum bayrağı: oyuncu HİÇ AÇMADAN hangi hattın ilgi istediğini görsün.
+  const bayrak = !rdy ? '🏗️ ' : olu ? '⚰️ ' : f >= LINE_OMUR.bozulmaBas ? '🔴 ' : f >= LINE_OMUR.uyari ? '⚠️ ' : '';
+  const alt = !rdy ? 'İnşa ediliyor — ' + fmtHrs(Math.max(0, l.done - Date.now()) / 36e5) + ' kaldı'
+    : olu ? 'Ömrünü doldurdu — yenilenmeli'
+    : 'kayıp <b class="' + (loss >= 50 ? 'neg' : 'pos') + '">%' + loss + '</b> · ömür <b style="color:' + orenk + '">%' + Math.round(f * 100) + '</b> · yıpranma %' + Math.round(100 - lineWear(l));
+  return '<div style="display:flex;align-items:center;gap:8px"><div class="oz">'
+    + '<div class="rota">' + bayrak + (ally ? '🤝 ' : '') + rota + '</div>'
+    + '<div class="sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + alt + '</div>'
+    + '</div><span class="ok">▾</span></div>';
+}
 function gridPanelHTML() {
   const ls = G.lines || [];
-  let h = `<div style="font-size:12px;margin:12px 0 4px">⚡ <b>NAKİL HATLARIN</b> <span class="sub">${ls.length} hat</span></div>`;
+  const cells = [...new Set(stores().map(s => s.cell))];
+  // Sökülen hat Set'te birikmesin
+  const gecerli = new Set(ls.map(l => 'p' + l.id).concat(allyLines().map(l => 'a' + l.id)));
+  HAT_ACIK.forEach(k => { if (!gecerli.has(k)) HAT_ACIK.delete(k); });
+  // 🔝 YENİ HAT ÇEK EN ÜSTTE VE YAPIŞKAN (patron 11 Eyl): hat sayısı artınca düğme
+  //    listenin altında kalıp ekrandan kesiliyordu. TEK SATIR — uzun anlatım içeride,
+  //    yoksa düzeltmeye çalıştığımız "ekranı yiyen blok"u bu kez en üste taşımış olurduk.
+  let h = '<div id="lineTop"><div class="cap">⚡ YENİ HAT ÇEK <span class="sub">(depolu bölgenden · ÜLKE İÇİ)</span></div>'
+    + (cells.length ? '<button class="bigsell" onclick="startLineDraw()">✏️ Haritaya Hat Çiz</button>'
+                    : '<div class="sub">Önce bir bölgeye pil istasyonu kur.</div>') + '</div>';
+  h += `<details class="hatyardim"><summary>Hat nasıl çizilir? · kurallar</summary>
+    <p class="sub">Depolu bölgene dokun, sonra hattın geçeceği noktalara sırayla dokun (ör. Kocaeli → İzmir → Şanlıurfa).
+    Her <b>ara nokta</b> bir 🗼 <b>Enerji Transfer Merkezi</b> olur ve kaybı düşürür. Önce <b class="pos">yeşil ön izleme</b> görürsün;
+    maliyeti onaylayınca kablo <b style="color:#ff5c5c">kırmızı</b> olur ve haritada kalır.</p>
+    <p class="sub">🧍 Bireysel hat yalnız <b>ülke içindedir</b> (iller/eyaletler arası).
+    🤝 Ülke sınırını aşan hat ittifak işidir — 🤝 İttifak ekranından başkan ya da yardımcısı başlatır.
+    🌍 Kıtalar arası için ${CONS_MIN_ALLIES} ittifaklı konsorsiyum gerekir.</p></details>`;
+  h += `<div style="font-size:12px;margin:10px 0 4px">⚡ <b>NAKİL HATLARIN</b> <span class="sub">${ls.length} hat</span></div>`;
   if (!ls.length) h += '<p class="sub">Henüz hattın yok. Uzaktaki pahalı pazarlara satmak için depolu bir bölgenden hat çek.</p>';
   h += ls.map(l => {
     const rdy = lineReady(l), loss = Math.round(lineLoss(l)), wear = Math.round(100 - lineWear(l));
-    const olu = lineOlu(l);
-    return `<div style="border:1px solid ${olu ? 'var(--danger)' : 'var(--line)'};border-radius:10px;padding:8px 10px;margin:6px 0">
-      <div style="font-size:12.5px;font-weight:700">${olu ? '⚰️ ' : ''}${lineRota(l)} <span class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</span></div>
-      ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · 🗼 ${hubTotal(l.hubs)} transfer merkezi · yıpranma %${wear}</div>
+    const olu = lineOlu(l), k = 'p' + l.id;
+    // Tek hattın varken kapalı satır hiçbir şey kazandırmaz — BİR KEZ kendiliğinden açılır.
+    // Oyuncu elle kapatırsa HAT_TOHUM sayesinde bir daha otomatik açılmaz.
+    if (ls.length === 1 && !HAT_TOHUM.has(k)) { HAT_TOHUM.add(k); HAT_ACIK.add(k); }
+    return `<details class="hatk${olu ? ' olu' : ''}"${HAT_ACIK.has(k) ? ' open' : ''} ontoggle="hatAkordiyon('${k}',this.open)">
+      <summary>${hatOzetHTML(l, false)}</summary><div class="govde">
+      <div class="sub" style="margin:0 0 4px">${lineRota(l)}</div>
+      <div class="sub">${fmtN(l.km)} km · ${lineBrand(l).ico} ${lineBrand(l).nm}</div>
+      ${rdy ? `<div class="sub">🗼 ${hubTotal(l.hubs)} transfer merkezi</div>
       ${lineOmurHTML(l)}
       ${olu ? '' : lineErisimHTML(l)}
       ${olu ? '' : `<button class="bigsell half" onclick="addHub(${l.id})">🏗️ Transfer Merkezi Ekle — ${fmt(brandPrice(l.brand || 'voltas', LINE.hub))}</button>`}
@@ -9868,7 +10304,7 @@ function gridPanelHTML() {
       <button class="bigsell half" style="${olu ? 'background:var(--acc);color:#08110c' : ''}" onclick="rebuildLine(${l.id})">♻️ Hattı Yenile — ömrü sıfırla</button>
       <button class="bigsell half" style="color:var(--danger)" onclick="demolishLine(${l.id})">🗑️ Hattı Sök</button>`
       : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
-    </div>`;
+    </div></details>`;
   }).join('');
   // ── 🤝 İTTİFAK HATLARI: ittifağın ORTAK malı. Çekmek başkan/yardımcı yetkisi ister,
   //    kullanmak her üyenin hakkıdır — burada herkes görür.
@@ -9882,10 +10318,11 @@ function gridPanelHTML() {
       const ad = lineNodeCells(l).map(c => placeName(c)).filter((x, i, a2) => a2.indexOf(x) === i);
       const yetki = canAllyLine(), bakimC = Math.round((100 - wear) * l.km * 900);
       const hubC = brandPrice(l.brand || 'voltas', LINE.hub) + LINE.permitPerHub;
-      return `<div style="border:1px solid #1f7a5a;border-radius:10px;padding:8px 10px;margin:6px 0">
-        <div style="font-size:12.5px;font-weight:700">${placeName(l.from)} → ${placeName(l.to)}
-          <span class="sub">${fmtN(l.km)} km · ${l.by || '—'} kurdu</span></div>
-        ${rdy ? `<div class="sub">Kayıp: <b class="${loss >= 50 ? 'neg' : 'pos'}">%${loss}</b> · 🗼 ${hubTotal(l.hubs)} transfer merkezi · yıpranma %${100 - wear}</div>
+      const k = 'a' + l.id;
+      return `<details class="hatk ally"${HAT_ACIK.has(k) ? ' open' : ''} ontoggle="hatAkordiyon('${k}',this.open)">
+        <summary>${hatOzetHTML(l, true)}</summary><div class="govde">
+        <div class="sub" style="margin:0 0 4px">${placeName(l.from)} → ${placeName(l.to)} · ${fmtN(l.km)} km · ${l.by || '—'} kurdu</div>
+        ${rdy ? `<div class="sub">🗼 ${hubTotal(l.hubs)} transfer merkezi · yıpranma %${100 - wear}</div>
           <div class="sub">🎯 Açtığı pazarlar: ${ad.join(', ')} <span class="sub">— her üye iki yönde de satabilir</span></div>
           <div class="sub ${yakin ? 'pos' : 'neg'}">${yakin ? '✅ Deponun bu hatta erişimi var — satış ekranında görünür' : '⚠️ Deponun uzak: hattın ucuna ya da bir transfer merkezine ' + ALLY_ACCESS_KM + ' km içinde depo kur'}</div>
           ${lineOmurHTML(l)}
@@ -9895,20 +10332,9 @@ function gridPanelHTML() {
             <button class="bigsell half" style="margin:0;color:var(--danger)" onclick="demolishAllyLine(${l.id})">🗑️ Sök <span class="sub">hurda kasaya</span></button>
           </div>` : '<div class="sub">🔒 Merkez ekleme, bakım ve söküm başkan/yardımcı yetkisidir.</div>'}`
         : `<div class="sub">🏗️ İnşa ediliyor — ${fmtHrs(Math.max(0, l.done - Date.now()) / 36e5)} kaldı</div>`}
-      </div>`;
+      </div></details>`;
     }).join('');
   }
-  const cells = [...new Set(stores().map(s => s.cell))];
-  h += `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">YENİ HAT ÇEK <span class="sub">(depolu bölgenden başlar · ÜLKE İÇİ)</span></div>`;
-  h += cells.length
-    ? `<button class="bigsell" onclick="startLineDraw()">✏️ Haritaya Hat Çiz</button>
-       <p class="sub">Depolu bölgene dokun, sonra hattın geçeceği noktalara sırayla dokun (ör. Kocaeli → İzmir → Şanlıurfa).
-       Her <b>ara nokta</b> bir 🗼 <b>Enerji Transfer Merkezi</b> olur ve kaybı düşürür. Önce <b class="pos">yeşil ön izleme</b> görürsün;
-       maliyeti onaylayınca kablo <b style="color:#ff5c5c">kırmızı</b> olur ve haritada kalır.</p>`
-    : '<p class="sub">Önce bir bölgeye pil istasyonu kur.</p>';
-  h += `<p class="sub">🧍 Bireysel hat yalnız <b>ülke içindedir</b> (iller/eyaletler arası).
-    🤝 Ülke sınırını aşan hat ittifak işidir — 🤝 İttifak ekranından başkan ya da yardımcısı başlatır.
-    🌍 Kıtalar arası için ${CONS_MIN_ALLIES} ittifaklı konsorsiyum gerekir.</p>`;
   return h;
 }
 function drawLines() {
@@ -10978,7 +11404,13 @@ function allyTick() { // 2 sn'lik ana tikten çağrılır: bot katkısı + sonu�
   const eff = Math.min(now, t.until); // botlar YALNIZ pencere içinde çalışır — ama sen çevrimdışıyken de çalışırlar
   const dt = Math.max(0, (eff - (t._bt || eff)) / 1000);
   t._bt = eff;
-  t.delivered = Math.min(t.need, t.delivered + t.need * .65 / t.winSec * dt); // bot üyeler payını taşır (%65)
+  // 🔴 11 EYL (çevrimdışı denetimi): botlar ÇEVRİMİÇİ ittifakta da ihalenin %65'ini
+  //    taşıyordu ve kazanılan ittifak puanı allydir üzerinden GERÇEK küresel sıralamaya
+  //    yazılıyordu — yani sahte teslimat gerçek liderlik tablosunu belirliyordu.
+  //    Kardeş fonksiyon allyCallTick (bağış) bu kapıya ZATEN sahipti; buraya konmamıştı.
+  //    Çevrimiçi ittifakta teslimat YALNIZ üyelerin gerçek satışından gelir (sellChunk).
+  //    Sonuçlandırma (başarı/başarısızlık) aşağıda aynen çalışmaya devam eder.
+  if (!allyOnline()) t.delivered = Math.min(t.need, t.delivered + t.need * .65 / t.winSec * dt); // bot üyeler payını taşır (%65)
   if (t.delivered >= t.need - .5) {
     G.ally.tender = null;
     G.ally.pts += 1; G.ally.wins = (G.ally.wins || 0) + 1;
@@ -12218,7 +12650,11 @@ const NET = {
   // ── ☁️ BULUT KAYIT: oyuncunun tüm verisi sunucuda (cihaz değişse de kaybolmaz) ──
   async cloudSave(force, kapanis) {
     if (!this.on() || !G || !G.company) return;
-    if (!force && Date.now() - this.cloudAt < 20000) return; // 20 sn'de bir
+    // ⚡ ÖLÇEK S1: 20 sn → 120 sn. saves/<uid> TÜM G nesnesidir (~90 KB) — en büyük TEK
+    //    yazma kalemi. 20 saniyede bir 90 KB yazmak oyuncu başına saatte 16 MB eder.
+    //    Kayıp riski yok: yerel localStorage kaydı her değişimde yazılıyor, bulut yalnızca
+    //    cihaz değiştirme yedeğidir. force=true yolları (çıkış, önemli işlem) aynen çalışır.
+    if (!force && Date.now() - this.cloudAt < 120000) return; // 120 sn'de bir
     this.cloudAt = Date.now();
     const { _tcd, _aucT, _started, ...s } = G;
     s.units = G.units.map(({ _lastIcon, ...u }) => u);
@@ -12348,6 +12784,47 @@ const NET = {
   //  20 saniyede bir kırmızı uyarı çıkıyordu — patron ekranında görüldü.)
   putSessiz(p, v) { return this.req(p, 'PUT', v, false, true); },
   push(p, v) { return this.req(p, 'POST', v); },
+  // 🌍 DÜNYA OKUMASI — TEK KAPI (ölçek S1b). Hem döngü hem istek üzerine tazeleme buradan geçer.
+  //    `players` + `units` düğümlerinin TAMAMI iner; en pahalı iki istek bunlar. Blok indeksine
+  //    (S4) geçilince bu fonksiyonun İÇİ değişecek, çağıranlar değişmeyecek — o yüzden tek kapı.
+  async dunyaOku() {
+    try {
+      const [pl, un] = await Promise.all([this.get('players'), this.get('units')]);
+      this.players = pl || {}; this.units = un || {};
+      this._dunyaAt = Date.now();
+      this.indeksKur();       // ⚡ S4-0: karo indeksi BİR KEZ kurulur (aşağıya bak)
+      this._cizimKirli = true; // 🎨 dünya gerçekten değişti → yeniden çizim HAK EDİLDİ
+      return true;
+    } catch (e) { return false; }
+  },
+  // ⚡ ÖLÇEK S4-0 — KARO İNDEKSİ (11 Eyl). unitsInCell her karo için TÜM dünyayı tarıyordu;
+  //    drawOthers en fazla 260 karo çizdiği için tek çizimde 260 × (oyuncu × tesis) yineleme
+  //    oluyordu. Ölçüm: 100.000 hesapta dakikada ~1,98 MİLYAR yineleme — telefon ANR alır.
+  //    İndeks dünya okumasında BİR KEZ kurulur (30 dakikada bir), arama O(1) olur.
+  //    ⚠️ this.units'e BAŞKA yerden yazılırsa indeksi de tazele — bugün tek yazan dunyaOku.
+  indeksKur() {
+    const idx = Object.create(null);
+    for (const [pid, us] of Object.entries(this.units || {})) {
+      if (pid === this.id || typeof us !== 'object' || !us) continue;
+      for (const [uid, u] of Object.entries(us)) {
+        if (!u || !u.c) continue;
+        (idx[u.c] || (idx[u.c] = [])).push({ pid, uid, u });
+      }
+    }
+    this._karoIdx = idx;
+  },
+  // 👁️ İSTEK ÜZERİNE TAZELEME: oyuncu gerçekten BAKTIĞINDA çağrılır (sıralama, karo sayfası,
+  //    oyuncu kartı). 30 saniyeden taze veri varsa ağa hiç gitmez — karo sayfası her harita
+  //    dokunuşunda açıldığı için bu hız sınırı ZORUNLU, yoksa yaptığımız tasarruf geri gider.
+  //    Yenile başarılıysa `sonra` geri çağrısıyla açık ekran yeniden çizilir.
+  dunyaTazele(sonra) {
+    if (!this.on() || !G || !G._started) return;
+    if (this._dunyaAt && Date.now() - this._dunyaAt < 30000) return;
+    if (this._tazeleniyor) return;
+    this._tazeleniyor = true;
+    this.dunyaOku().then(ok => { this._tazeleniyor = false; if (ok && typeof sonra === 'function') { try { sonra(); } catch (e) {} } })
+      .catch(() => { this._tazeleniyor = false; });
+  },
   async loop() { // 12 sn'de bir: kendi durumunu yaz + dünyayı oku
     if (!this.on()) { setTimeout(() => this.loop(), 5000); return; }
     // 🛡️ YÖNETİM YOKLAMASI EN BAŞTA, KENDİ try'ında: aşağıdaki yazmalardan biri ağ hatasıyla
@@ -12359,6 +12836,10 @@ const NET = {
     try { await gmPoll(this._tur === 1 || this._tur % 5 === 0); } catch (e) {}
     if (!G || !G._started) { setTimeout(() => this.loop(), 5000); return; }
     try {
+      // ⚡ ÖLÇEK S1: kamuya açık karne 5 turda bir (60 sn) yazılır. `ts` çevrimiçi noktasını
+      //    besliyor ve o zaten 5 dakika bayatlıkla çalışıyor (12737) — 60 sn hiçbir şeyi bozmaz.
+      //    ⚠️ İLK TUR HEP YAZAR: oyuncu oyuna girer girmez adı ve tesisleri sunucuya düşsün.
+      if (this._tur === 1 || this._tur % 5 === 0)
       await this.put('players/' + this.id, {
         // ⚠️ Kurallar alan uzunluk/aralıklarını doğruluyor — TEK alan taşsa TÜM kayıt reddediliyor
         // ve oyuncunun adı sunucuya hiç düşmüyordu (tesisleri herkese "Oyuncu" görünüyordu).
@@ -12389,7 +12870,9 @@ const NET = {
       this.putSessiz('players/' + this.id + '/spec', anaDal() ? String(anaDal()).slice(0, 12) : null).catch(() => {});
       // 🏛️ haftalık devlet katkısı tablosu — kapanan haftalar DEĞİŞMEZ kalır, ödüller oradan
       // hesaplanır. (Kurallara 'katki' düğümü eklenene dek bu yazım sessizce reddedilir — zararsız.)
-      if (G.weekSold >= .5) this.put('katki/' + kHafta(G.week) + '/' + this.id, {
+      // ⚡ ÖLÇEK S1: haftalık katkı tablosu 25 turda bir (5 dk). Hafta kapanışı ödülü
+      //    GEÇEN haftanın donmuş tablosundan ödendiği için 5 dakikalık gecikme ödülü etkilemez.
+      if (G.weekSold >= .5 && (this._tur === 1 || this._tur % 25 === 0)) this.put('katki/' + kHafta(G.week) + '/' + this.id, {
         nm: String(G.company || '?').slice(0, 28), mwh: Math.round(G.weekSold), olcek: G.olcek || 0, ts: this.zaman(),
       }).catch(() => {});
       // kendi tesislerini paylaş (harita üzerinde diğerleri görsün)
@@ -12398,9 +12881,34 @@ const NET = {
       const mine = {};
       for (const u of G.units) if (!u.hidden && u.buildDone <= Date.now())
         mine[u.id] = { k: u.kind, t: u.t, ll: u.ll, c: u.cell, s: u.buildDone, hq: !!u.hq };
-      await this.put('units/' + this.id, mine);
-      const [pl, un] = await Promise.all([this.get('players'), this.get('units')]);
-      this.players = pl || {}; this.units = un || {};
+      // ⚡ ÖLÇEK S1: tesis listesi DEĞİŞMEDİYSE yazma. Tesisler dakikalarca aynı kalır;
+      //    her 12 saniyede aynı veriyi yazmak hem faturaya hem yazma tavanına (64 MB/dk)
+      //    boşuna yükleniyordu. İmza karşılaştırması bedava, yazmanın kendisi değil.
+      const _imza = JSON.stringify(mine);
+      if (_imza !== this._unitsImza) { await this.put('units/' + this.id, mine); this._unitsImza = _imza; }
+      // 🔴 ÖLÇEK S1 (11 Eyl) — EN PAHALI SATIR BUYDU. Eskiden HER 12 SANİYEDE `players` ve
+      //    `units` düğümlerinin TAMAMI iniyordu: dünyadaki herkes, herkesin bütün tesisleri.
+      //    Trafik N² ile büyüyor ve ES ZAMANLI oyuncuyla değil KAYITLI HESAP sayısıyla artıyor
+      //    (players düğümü hiç budanmıyor) — yani "az oyuncu var, sorun yok" YANLIŞ güvenlik.
+      //    Ölçüldü: 1.000 kayıtlı oyuncuda ~0,98 TB/saat, oyuncu başına ayda ~146 GB mobil veri.
+      //    Rakip kanıtı: Energy Manager (1M+ indirme) 12 sn'lik senkron KULLANMIYOR — hava ve
+      //    fiyat SAATTE BİR hesaplanıyor. 12 saniye bir gereksinim değil, bir varsayımdı.
+      //    Artık 5 turda bir (60 sn). Ara turlarda this.players/this.units ÖNCEKİ okumada kalır;
+      //    harita ve sıralama 60 saniyeye kadar bayat olabilir — kabul edilebilir, çünkü bu
+      //    düğümler zaten rakiplerin YAVAŞ değişen durumunu taşıyor (tesis kurmak dakikalar sürer).
+      //    ⚠️ Oyuncu ekranı KAPALIYKEN (document.hidden) 25 turda bire (5 dk) düşer.
+      //    GERİ ALMA: aşağıdaki `if` şartını silmek yeterli — göç yok, kural yok, şema yok.
+      //    ⏱️ RİTİM (patron 11 Eyl): "bizde 12 saniye, rakipte 1 saat — bizde de yarım saat olabilir."
+      //    HAKLI. Bu okumanın beslediği her şey YAVAŞ değişen veridir: rakip tesisleri (kurulumu
+      //    dakikalar sürer), şirket değeri sıralaması, çevrimiçi noktası. Hiçbiri 12 saniye istemiyor.
+      //    Rakip (Energy Manager, 1M+ indirme) SAATTE BİR hesaplıyor ve yetiyor.
+      //    Arka plan: 30 dakika (ekran kapalıysa 60 dakika).
+      //    ⚠️ BAYATLIK OYUNCUNUN YÜZÜNE VURMASIN: sıralama / karo sayfası / oyuncu kartı
+      //    açıldığında dunyaTazele() TAZE veri çeker (30 sn hız sınırlı). Yani veri tam da
+      //    oyuncunun BAKTIĞI anda taze olur — arka planda boşuna akmaz.
+      const _gizli = (typeof document !== 'undefined' && document.hidden);
+      const _dunyaTuru = _gizli ? 300 : 150;   // 150 tur × 12 sn = 30 dk · 300 = 60 dk
+      if (this._tur === 1 || this._tur % _dunyaTuru === 0) await this.dunyaOku();
       try { await kiralarCek(); } catch (e) { } // 🌐 küresel kira sicili (30 sn önbellekli)
       try { await kiraAdGuncelle(); } catch (e) { }   // şirket adı değiştiyse sicildeki kendi kayıtlarımı tazele
       try { await kiraSicilGoc(); } catch (e) { }     // sicil öncesi ödenmiş yerel kiraların tek seferlik göçü
@@ -12440,7 +12948,13 @@ const NET = {
         try { await teklifGelenYokla(); } catch (e) {}
         try { await teklifSonucYokla(); } catch (e) {}
       }
-      othersDrawn = ''; drawOthers();
+      // 🎨 ÖLÇEK S4-0: eskiden burada KOŞULSUZ `othersDrawn = ''; drawOthers();` vardı ve
+      //    drawOthers'in KENDİ imza emniyetini (sig === othersDrawn) etkisiz kılıyordu —
+      //    yani 12 saniyede bir TAM yeniden çizim, dakikada 5 tam tarama.
+      //    Artık yalnız dünya verisi GERÇEKTEN değiştiyse zorlanır (dunyaOku bayrağı koyar).
+      //    Harita kaydırma/yakınlaştırma zaten drawOthers'ı kendi imzasıyla tetikliyor;
+      //    bu satır yalnızca "rakip verisi tazelendi" durumu içindi.
+      if (this._cizimKirli) { this._cizimKirli = false; othersDrawn = ''; try { drawOthers(); } catch (e) {} }
     } catch (e) {}
     setTimeout(() => this.loop(), 12000);
   },
@@ -12470,15 +12984,18 @@ const NET = {
   },
   unitsInCell(cell) {
     const out = [];
-    for (const [pid, us] of Object.entries(this.units)) {
-      if (pid === this.id || typeof us !== 'object' || !us) continue;
-      for (const [uid, u] of Object.entries(us)) {
+    // ⚡ ÖLÇEK S4-0: eskiden burada TÜM dünya taranıyordu (bkz. indeksKur yorumu).
+    //    İndeks yoksa (eski kayıt yolu / indeksKur hiç koşmadıysa) kendiliğinden kurulur.
+    if (!this._karoIdx) this.indeksKur();
+    const liste = this._karoIdx[cell];
+    if (liste) {
+      for (const { pid, uid, u } of liste) {
         // ⚠️ TELEFON TESTİ ÇÖKMESİ: birim kimlikleri 1,2,3... sayısal olduğu için Firebase
         // units/{oyuncu} düğümünü DİZİ olarak geri veriyor ve boş indeksler NULL geliyor
         // ([null, {...}]). Eski kod doğrudan u.c okuyup çöküyordu → drawOthers her çağrıda
         // patlıyor, bu yüzden ne diğer oyuncular çiziliyor ne de "göster/gizle" düğmesi
         // işini bitirebiliyordu (istisna save() ve panel tazelemesinden ÖNCE atılıyordu).
-        if (!u || !u.c || u.c !== cell) continue;
+        // (karo eşleşmesi indekste yapıldı)
         // 🔴 KOORDİNAT DOĞRULAMASI (26 Ağu): `ll` sunucudan doğrulanmadan geliyordu. Bozuk bir
         // kayıt L.marker'a girince Leaflet istisna atıyor, istisna `zoomend` dinleyicisini
         // yarıda kesiyor ve Leaflet'in KENDİ canvas katmanları yeniden konumlanamıyor →
@@ -13391,6 +13908,9 @@ function sonGorulme(t) {
   return new Date(t).toLocaleString(LOCALE, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 window.openLeaderboard = (tab) => {
+  // 👁️ Ölçek S1b: dünya okuması artık 30 dakikada bir. Sıralama AÇILDIĞINDA taze çekilir
+  //    ve tablo yeniden çizilir — oyuncu bayat sıralama görmesin.
+  try { NET.dunyaTazele(() => { if ($('overlay').classList.contains('show')) openLeaderboard(tab); }); } catch (e) {}
   if (!G || !G.company) return;
   tab = tab || 'bireysel';
   const sekme = t => `<button onclick="openLeaderboard('${t.k}')" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid ${tab === t.k ? 'var(--acc2)' : 'var(--line)'};background:${tab === t.k ? 'var(--acc2)' : 'transparent'};color:${tab === t.k ? '#071018' : 'var(--ink)'};font-weight:800;font-size:11.5px;cursor:pointer">${t.nm}</button>`;
@@ -13444,22 +13964,31 @@ window.openLeaderboard = (tab) => {
     (NET.on() ? NET.get('katki/' + kHafta(G.week)) : Promise.resolve(null)).then(t => {
       const el = $('lbicerik');
       if (!el) return;
-      const rows = t ? Object.entries(t).filter(([id]) => id !== NET.id).map(([id, v]) => ({ raw: (v && v.nm) || '?', mwh: (v && v.mwh) || 0, alt: olcekBadge(v && v.olcek) })) : [];
-      WORLD_PLAYERS.slice(0, 10).forEach((b, i) => rows.push({ raw: b, bot: 1, mwh: Math.round(hash01(i, weekIdx(), 77) * 1100 + 60), alt: olcekBadge(1 + Math.floor(hash01(i, 4, 9) * 2)) }));
-      rows.push({ raw: G.company, me: true, mwh: Math.round(G.weekSold), alt: olcekBadge(G.olcek) });
+      // 🏅 Her satıra SAYISAL lig — ödül artık LİG İÇİ sıralamadan ödeniyor, ekran da onu göstermeli.
+      const rows = t ? Object.entries(t).filter(([id]) => id !== NET.id).map(([id, v]) => ({ raw: (v && v.nm) || '?', mwh: (v && v.mwh) || 0, lig: Math.max(0, Math.min(OLCEK.length - 1, (v && v.olcek) | 0)), alt: olcekBadge(v && v.olcek) })) : [];
+      WORLD_PLAYERS.slice(0, 10).forEach((b, i) => { const bl = 1 + Math.floor(hash01(i, 4, 9) * 2); rows.push({ raw: b, bot: 1, mwh: Math.round(hash01(i, weekIdx(), 77) * 1100 + 60), lig: bl, alt: olcekBadge(bl) }); });
+      rows.push({ raw: G.company, me: true, mwh: Math.round(G.weekSold), lig: G.olcek || 0, alt: olcekBadge(G.olcek) });
       rows.sort((a, b) => b.mwh - a.mwh);
       rows.forEach(r => r.deger = fmtN(r.mwh) + ' MWh');
       const ben = rows.findIndex(r => r.me) + 1;
+      // 🏅 Ödülün gerçekten baktığı sıra: KENDİ liginde, SİMÜLASYON satırları HARİÇ.
+      const benLig = Math.max(0, Math.min(OLCEK.length - 1, G.olcek || 0));
+      const ligRows = rows.filter(r => !r.bot && r.lig === benLig);
+      const ligAdet = ligRows.length, ligSira = ligRows.findIndex(r => r.me) + 1;
       el.innerHTML = `<table class="ledger">${rows.slice(0, 20).map(satir).join('')}${ben > 20 ? satir(rows[ben - 1], ben - 1) : ''}</table>
-        <p class="sub">🎁 <b>Hafta kapanış ödülleri ölçeğine göre ödenir:</b><br>
-        · 🏠🏢🏬 <b>Mikro · Küçük · Orta</b> — NAKİT: #1 ${fmt(KATKI_ODUL[0])} · #2 ${fmt(KATKI_ODUL[1])} · #3 ${fmt(KATKI_ODUL[2])} · ilk 10 ${fmt(KATKI_ODUL[3])} · katkısı olan herkese ${fmt(KATKI_ODUL[4])}<br>
-        · 🏭 <b>Büyük Ölçekli</b> — 💠 İMTİYAZ PUANI: #1 ${KATKI_IP[3].bir} · #2 ${KATKI_IP[3].iki} · #3 ${KATKI_IP[3].uc} · 4-20 arası ${KATKI_IP[3].yirmi}<br>
-        · 👑 <b>Enerji Holdingi</b> — 💠 İMTİYAZ PUANI: #1 ${KATKI_IP[4].bir} · #2 ${KATKI_IP[4].iki} · #3 ${KATKI_IP[4].uc} · 4-20 arası ${KATKI_IP[4].yirmi}<br>
+        <p class="sub">🏅 <b>Kendi liginde sıran: #${ligSira || '—'}</b> <span style="opacity:.75">(${ligAdet} ${olcekOf(benLig).nm})</span> — ödül KÜRESEL sıradan değil, <b>KENDİ liginde</b> yarıştığın sıradan ödenir.<br>
+        <span style="opacity:.75">⚠️ 🤖 işaretli satırlar simülasyondur, ödül sıralamasına <b>girmez</b>. Ödül <b>GEÇEN</b> haftanın tablosundan ödenir; yukarıdaki tablo <b>BU</b> haftadır. Birincilik ödülü en az <b>3 rakip</b> ister.</span></p>
+        <p class="sub">🎁 <b>Senin ligin — ${olcekOf(benLig).ico} ${olcekOf(benLig).nm}</b><br>
+        ${benLig <= KATKI_PARA_LIG
+          ? '· NAKİT: #1 <b>' + fmt(KATKI_ODUL[benLig][0]) + '</b> · #2 ' + fmt(KATKI_ODUL[benLig][1]) + ' · #3 ' + fmt(KATKI_ODUL[benLig][2]) + ' · ilk 10 ' + fmt(KATKI_ODUL[benLig][3]) + ' · katkısı olan herkese ' + fmt(KATKI_ODUL[benLig][4])
+          : '· 💠 İMTİYAZ PUANI: #1 <b>' + KATKI_IP[benLig].bir + '</b> · #2 ' + KATKI_IP[benLig].iki + ' · #3 ' + KATKI_IP[benLig].uc + ' · 4-20 arası ' + KATKI_IP[benLig].yirmi}<br>
+        <span style="opacity:.85">Merdiven — her ligin birincilik ödülü: 🏠 ${fmt(KATKI_ODUL[0][0])} → 🏢 ${fmt(KATKI_ODUL[1][0])} → 🏬 ${fmt(KATKI_ODUL[2][0])} → 🏭 💠${KATKI_IP[3].bir} → 👑 💠${KATKI_IP[4].bir}</span><br>
         <span style="opacity:.75">Alt liglerde para kıttır ve büyümeyi hızlandırır; üst liglerde para bol, kıt olan İmtiyaz Puanıdır. Ödül her ligde o ligin ihtiyacı olanı verir.</span></p>`;
     }).catch(() => { const el = $('lbicerik'); if (el) el.innerHTML = '<p class="sub">Tablo okunamadı — bağlantını kontrol et.</p>'; });
   }
 };
 window.openPlayerCard = (nm, geriSekme) => {
+  try { NET.dunyaTazele(() => { if ($('overlay').classList.contains('show')) openPlayerCard(nm, geriSekme); }); } catch (e) {}
   nm = (nm || '').trim();
   if (!nm || !G) return;
   // 🔙 patron: "sıralamadan girdim, kapatınca haritaya atıyor — listeye dönmeli"
@@ -15667,6 +16196,10 @@ function migrate(s) {
   for (const k of Object.keys(d)) if (s[k] === undefined) s[k] = d[k];
   // ⏰ BANKA SAATİ (denetim açığı #2): eski kayıtlarda saatEn yok — 0 gelir ve ilk bankaZaman()
   // çağrısında o anki saate çakılır. `founded` gelecekte olamaz (saat ileri alınmış kayıtlar).
+  // 🛡️ ÖLÇEK SALINIMI KALKANI: eski kayıtta olcekMax yok → freshState 0 veriyor. Öylece
+  //    bırakılırsa Orta'daki bir oyuncu düşüp yeniden çıkarak terfi ikramiyesini TEKRAR alır.
+  //    Ulaşılmış en yüksek ölçek en az mevcut ölçektir (o teşvikler zaten geçmişte ödendi).
+  if (!(s.olcekMax >= 0) || s.olcekMax < (s.olcek || 0)) s.olcekMax = s.olcek || 0;
   if (!(s.saatEn > 0)) s.saatEn = 0;
   if (s.saatSupheli === undefined) s.saatSupheli = false;
   if (s.founded > Date.now()) s.founded = Date.now();
@@ -15783,7 +16316,7 @@ function setMode(m) {
     hideSheets();
     $('modehinttxt').textContent = m === 'build'
       ? '🏗️ ' + (PENDING ? TYPE_OF(PENDING.kind, PENDING.t).nm + ' — kurmak istediğin yere dokun' : 'Kurmak istediğin yere dokun')
-      : m === 'lext' ? '📏 Önce hattın UCUNDAKİ transfer merkezine, sonra uzayacağı bölgeye dokun'
+      : m === 'lext' ? '📏 Önce hattın UCUNDAKİ transfer merkezine, sonra uzayacağı bölgeye dokun (komşu karo da olur)'
       : m === 'line' ? '⚡ Hattın varacağı uzak noktaya dokun'
       : m === 'link' ? '🔗 Bağlanacak DEPOYA haritadan dokun'
       : m === 'plink' ? '🔗 Santralı bağlayacağın İSTASYONA dokun'
@@ -16220,7 +16753,7 @@ const VIEWS = {
   normal: { nm: 'Normal', ico: '🗺️', d: 'Sade harita — tesislerin ve ruhsatların.' },
   wind: { nm: 'Rüzgar Verimliliği', ico: '🌬️', d: 'Kareler rüzgar potansiyeline göre renklenir: koyu mavi = türbin cenneti.' },
   sun: { nm: 'Güneş Verimliliği', ico: '☀️', d: 'Kareler güneş potansiyeline göre renklenir: koyu turuncu = panel cenneti.' },
-  city: { nm: 'Şehirler', ico: '🏙️', d: 'Talep merkezleri. İsme dokun: nüfus, enerji ihtiyacı ve şehrin kısa hikâyesi.' },
+  city: { nm: 'Şehirler', ico: '🏙️', d: 'Talep merkezleri ve şehrin KAROSU (sarı çerçeve — ruhsatı buradan alırsın). İsme dokun: nüfus, enerji ihtiyacı ve şehrin kısa hikâyesi. Yakınlaştırdıkça daha küçük şehirler çıkar.' },
 };
 // 🏙️ ŞEHİRLERİN KISA HİKÂYESİ (patron: "mesela Kocaeli'nin pişmaniyesi meşhurdur yazarsın")
 const CITY_NOTE = {
@@ -16438,7 +16971,14 @@ function drawCityLabels() {
   // Kademeler bir kez kurulur (sehirleriYukle CITY_TIERS'ı sıfırlar); çizim yalnız
   // görünür alan testi + çakışma elemesi yapar, 80 etikette erken çıkar.
   const KADEMELER = [7000, 3500, 1800, 900, 450, 220, 100, 0];
-  const esik = z <= 3 ? 0 : z <= 4 ? 1 : z <= 5 ? 2 : z <= 6 ? 3 : z <= 7 ? 4 : z <= 8 ? 5 : z <= 9 ? 6 : 7;
+  // 🌍 MADDE 12 (patron: "Rusya niye boş"): eşik dünya yakınlaştırmasında İKİ KADEME gevşedi.
+  //    Ölçüm: Rusya kutusunda ≥7M olan YALNIZ 3 şehir var (biri İstanbul, biri Shenyang),
+  //    Çin kutusunda 27. Aynı eşik Rusya'yı bomboş, Çin'i dolu gösteriyordu — harita bozuk
+  //    sanılıyordu. ≥1.800K'ya inince Rusya 20, İskandinavya 4+ etiket alıyor.
+  //    ⚠️ GÜVENLİ: çakışma eleyici (kutular) ve 80 etiket tavanı ZATEN kalabalığı kesiyor;
+  //    nüfus eşiği yalnız DÖNGÜ MALİYETİNİ sınırlamak için var. ≥1.800K bandı birkaç yüz
+  //    şehirdir, mobilde ucuz. Daha aşağı inme: tier 3 (≥900K) binlerce kayıt demek.
+  const esik = z <= 4 ? 3 : z <= 6 ? 4 : z <= 8 ? 5 : z <= 9 ? 6 : 7;
   if (!CITY_TIERS) {
     const sirali = cityList().slice().sort((a, c) => c[3] - a[3]);
     CITY_TIERS = KADEMELER.map(e => sirali.filter(c => c[3] >= e));
@@ -16450,6 +16990,22 @@ function drawCityLabels() {
     const w = nm.length * 6.6 + 34;
     if (kutular.some(u => Math.abs(u.x - p.x) < (u.w + w) / 2 && Math.abs(u.y - p.y) < 21)) continue;
     kutular.push({ x: p.x, y: p.y, w });
+    // 🏙️ ŞEHRİN KAROSU (patron 11 Eyl: "şehir sınırları görünür olsun").
+    //    Oyunda idari şehir sınırı verisi YOK — Natural Earth yalnız ÜLKE poligonu veriyor.
+    //    Zaten oyunun birimi de idari sınır değil KARO: ruhsat karoya alınır, talep karo
+    //    başına hesaplanır, kira karo başına ihaleye girer. Dolayısıyla oyuncunun görmesi
+    //    gereken "sınır" şehrin DÜŞTÜĞÜ KARODUR — "Moskova'ya kuracağım, hangi kare?"
+    //    sorusunun cevabı bu. Etiketle AYNI kaynaktan besleniyor ki çizilen kare ile
+    //    görünen ad her zaman aynı şehre ait olsun.
+    //    ⚠️ z < 6'da bir karo (0,1° ≈ 11 km) ekranda birkaç piksel — çizmek yalnızca
+    //    kirlilik yaratır, o yüzden yakınlaşana kadar sadece etiket gösterilir.
+    if (z >= 6) {
+      const kid = cellId([la, lo]);
+      if (gecerliKare(kid)) overlayLayer.push(L.rectangle(cellBounds(kid), {
+        color: '#ffd166', weight: 1.4, opacity: .75, fill: true, fillColor: '#ffd166', fillOpacity: .07,
+        interactive: false, renderer: VEC || undefined,
+      }).addTo(map));
+    }
     overlayLayer.push(L.marker([la, lo], {
       icon: L.divIcon({ html: `<div class="citylbl" onclick="openCityCard('${jsStr(nm)}')">${nm}<i>${popTxt(pop)}</i></div>`, className: '', iconSize: [w, 20], iconAnchor: [w / 2, 10] }),
     }).addTo(map));
@@ -16810,11 +17366,20 @@ function cellDensity(c) {
     if (T && Number.isFinite(T.mw)) mw += T.mw;
   };
   for (const u of G.units) if (u.cell === c) say(u.kind, u.t, true);
-  try { for (const o of othersInCell(c)) say(o.kind, o.t, false); } catch (e) {}
-  for (const bp of BOT_PLANTS) if (cellId(bp.ll) === c) say('plant', bp.t, false);
-  return { adet, mw: Math.round(mw * 10) / 10, benim };
+  // 🔴 11 EYL (çevrimdışı denetimi): bu sayı "karo ne kadar kalabalıksa ihale o kadar
+  //    değerli" cümlesinin DAYANAĞI — oyuncu buna bakıp milyonlarca doları bloke ediyor.
+  //    Eskiden simüle rakipler ve BOT_PLANTS de sayılıyordu; onlar HİÇ satış yapmaz,
+  //    dolayısıyla SIFIR vergi üretir. Sahte sinyale para yatırılıyordu.
+  //    Artık yalnız GERÇEK oyuncu tesisleri sayılır; simülasyon AYRI alanda raporlanır.
+  let sim = 0;
+  try { for (const o of othersInCell(c)) { if (o.kind !== 'plant') continue; if (o.net) say(o.kind, o.t, false); else sim++; } } catch (e) {}
+  for (const bp of BOT_PLANTS) if (cellId(bp.ll) === c) sim++;
+  return { adet, mw: Math.round(mw * 10) / 10, benim, sim };
 }
 function openCellSheet(c, ll, mode) {
+  // 👁️ Ölçek S1b: bu ekran "bu karoda kaç rakip santrali var" diyor ve oyuncu buna bakıp
+  //    ihaleye milyonlar yatırıyor — bayat veri burada PARA kaybettirir. 30 sn hız sınırlı.
+  try { NET.dunyaTazele(() => { if (SEL.cell === c && $('cellsheet').classList.contains('show')) openCellSheet(c, ll, mode); }); } catch (e) {}
   hideSheets();
   SEL.buildGeneric = false;
   SEL.cell = c; SEL.ll = ll;
@@ -16849,15 +17414,15 @@ function openCellSheet(c, ll, mode) {
     const sv = WX.survey && WX.survey[c];
     let svRows;
     if (sv && sv.ok) {
-      const wNote = sv.wAvg == null ? '' : sv.wAvg >= 8 ? 'mükemmel 🌟' : sv.wAvg >= 6 ? 'iyi' : sv.wAvg >= 4 ? 'orta' : 'zayıf — türbin verimsiz!';
-      const sNote = sv.sunH == null ? '' : sv.sunH >= 9 ? 'mükemmel 🌟' : sv.sunH >= 7 ? 'iyi' : sv.sunH >= 5 ? 'orta' : 'zayıf';
+      // 🔗 ORTAK HÜKÜM (11 Eyl): ülke raporu da AYNI fonksiyondan konuşuyor — bkz. havaNotu.
+      const wNote = havaNotu('w', sv.wAvg), sNote = havaNotu('s', sv.sunH);
       svRows = `
       <tr><td>⛰️ Rakım</td><td>${sv.elev != null ? fmtN(sv.elev) + ' m' : '—'}</td></tr>
       <tr><td>🌬️ Rüzgar 100m (7 gün ort.)</td><td class="${sv.wAvg >= 6 ? 'pos' : sv.wAvg < 4 ? 'neg' : ''}">${sv.wAvg != null ? sv.wAvg.toFixed(1) + ' m/s — ' + wNote : '—'}</td></tr>
       <tr><td>☀️ Güneşlenme (7 gün ort.)</td><td class="${sv.sunH >= 7 ? 'pos' : sv.sunH < 5 ? 'neg' : ''}">${sv.sunH != null ? sv.sunH.toFixed(1) + ' saat/gün — ' + sNote : '—'}</td></tr>
       ${(() => { // 💧 HES verimi (patron: hidro verimi Bilgi ekranında yazmıyordu) — rakım + iklimden
         const hq = hydroQGeo(c, cellQuality(c).hydro);
-        return `<tr><td>💧 Su kaynağı (HES verimi)</td><td class="${hq >= 1 ? 'pos' : hq < .75 ? 'neg' : ''}">×${hq.toFixed(2)} — ${hq >= 1.1 ? 'güçlü havza 🌟' : hq >= .9 ? 'iyi' : hq >= .75 ? 'orta' : 'zayıf — HES verimsiz'} <span class="sub">(rakım + yağışlı iklim)</span></td></tr>`;
+        return `<tr><td>💧 Su kaynağı (HES verimi)</td><td class="${hq >= 1 ? 'pos' : hq < .75 ? 'neg' : ''}">×${hq.toFixed(2)} — ${havaNotu('h', hq)} <span class="sub">(rakım + yağışlı iklim)</span></td></tr>`;
       })()}`;
     } else if (sv && sv.err) svRows = `<tr><td colspan="2">🏢 Saha verisi alınamadı (çevrimdışı olabilirsin) — <span class="lnk" onclick="retrySurvey('${c}')">tekrar dene</span></td></tr>`;
   else svRows = `<tr><td colspan="2">🏢 Saha keşfi yükleniyor... (canlı rakım + rüzgar + güneş verisi)</td></tr>`;
@@ -16890,14 +17455,18 @@ function openCellSheet(c, ll, mode) {
            <button class="bigsell${tutRuhsat() ? ' tut' : ''}" onclick="buyLicense()" ${G.cash < licenseFee(c) || Object.keys(G.licenses).length >= licCap() ? 'disabled' : ''}>📜 Ruhsat Al — ${fmt(licenseFee(c))}${Object.keys(G.licenses).length >= licCap() ? ' (LİMİT DOLU)' : ''}</button>`
         : `<p class="sub">🏢 Bu bölgede ofisin yok — ruhsat için önce ofis aç (${offices().length}/${maxOffices()}).</p>
            <button class="bigsell" onclick="buildOfficeAsk()" ${G.cash < OFFICE.cost || offices().length >= maxOffices() ? 'disabled' : ''}>🏢 Buraya Ofis Aç — ${fmt(OFFICE.cost)}</button>`)
-        : `<p style="font-size:11.5px;color:var(--dim)">Kurmak için: <b>🏗️ İnşa</b>'dan ürün satın al, sonra bu konuma dokun.</p>`}`
+        : `<p style="font-size:11.5px;color:var(--dim)">Kurmak için: <b>🏗️ İnşa</b>'dan ürün satın al, sonra bu konuma dokun.</p>
+           <p class="sub">📜 Ruhsatların: ${Object.keys(G.licenses).length}/${licCap()}${Object.keys(G.licenses).length >= licCap() ? ' <span style="color:var(--warn)">— limit dolu: yer açmak için bir bölgeyi terk edebilirsin</span>' : ''}</p>
+           ${tutGuide() ? '<p class="sub">🚪 Bölge terk etme 🎓 eğitim bitince açılır.</p>'
+             : `<button class="bigsell" style="color:var(--danger)" onclick="dropLicenseAsk('${c}')">🚪 Bölgeyi Terk Et${cellAssets(c).length ? ' — ' + cellAssets(c).length + ' tesisi sat' : ' (ruhsatı bırak)'}</button>`}`}`
       + (() => { // 🏭 ihale panelinin HEMEN ÜSTÜ: karo ne kadar kalabalık?
         const d = cellDensity(c);
-        if (!d.adet) return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b>henüz santral yok</b> — ihaleyi kazanırsan vergi toplayacağın üretim de yok demektir.</p>`;
+        const simNot = d.sim ? ` <span class="sub">· 🤖 ${d.sim} simülasyon tesisi (vergi üretmez)</span>` : '';
+        if (!d.adet) return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b>henüz gerçek oyuncu santrali yok</b> — ihaleyi kazanırsan vergi toplayacağın üretim de yok demektir.${simNot}</p>`;
         // ⚠️ KURULU GÜÇ (MW) BİLEREK GÖSTERİLMİYOR (patron 26 Ağu): "burdan hesap yapıp
         // ihaleye öyle girerler, biraz risk olsun." MW verilirse vergi geliri neredeyse
         // kesin hesaplanır ve ihale bir kumar olmaktan çıkar. Adet yeterli sinyal. GERİ EKLEME.
-        return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b class="pos">${fmtN(d.adet)} santral</b> var${d.benim ? ` <span class="sub">(${d.benim} tanesi senin)</span>` : ''}<br>
+        return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b class="pos">${fmtN(d.adet)} gerçek santral</b> var${d.benim ? ` <span class="sub">(${d.benim} tanesi senin)</span>` : ''}${simNot}<br>
           İhaleyi kazanan, bu karodaki <b>bütün satışlardan %${LEASE_PRIM * 100} vergi</b> toplar — karo ne kadar kalabalıksa teklif o kadar değerli.</p>`;
       })()
       + auctionPanelHTML(c);
@@ -17628,6 +18197,8 @@ const setTutCls = (id, cls, on) => { const e = $(id); if (e && e.classList.conta
 function tutClearMarks() { // BUGFIX: infobtn listede yoktu → eğitim bitince de yanıp sönüyordu
   TUT_BAR.concat('coname').forEach(id => setTutCls(id, 'tut', false));
   setTutCls('coname', 'attn', false);
+  // 🧪 Eğitim bittiği an hatırlatıcı yeniden değerlendirilsin (bekleyen puan varsa hemen yansın)
+  arastirmaYokla._duyuruldu = false;
 }
 function tutTick() {
   // ⛔ BANLIYKEN EĞİTİM YÖNLENDİRMESİ SUSAR: ikisi de aynı görsel yardımcıları (attn/.tut/ipucu)
@@ -18745,7 +19316,7 @@ function frameBody(ts) {
       }
       checkWeek(); // ⚠️ HATA AVI: yalnız menü açılınca çağrılıyordu — hafta dönümünden sonraki satışlar siliniyordu
       gpTick();    // 🧬 gelişim görevleri: gün/hafta dönümü + tamamlananların OTOMATİK ödülü
-      allyTick(); allyCallTick(); consortiumTick(); aucTick(); studyTick(); emisTick(); // 🤝 ihale · 💰 bağış · 🌍 konsorsiyum · 🔨 müzayede · 🔎 bölge araştırması
+      allyTick(); allyCallTick(); consortiumTick(); aucTick(); studyTick(); emisTick(); arastirmaYokla(); // 🤝 ihale · 💰 bağış · 🌍 konsorsiyum · 🔨 müzayede · 🔎 bölge araştırması · 🧪 boşta araştırma hatırlatıcısı
       if (G.ally) allyElectionTick(); // 🗳️ başkanlık seçimi süresi doldu mu
       // ⏫ depo kapasite inşaatı bitti mi?
       for (const d of G.units) {
