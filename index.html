@@ -690,7 +690,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-11 18:02) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-15 21:03) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -861,7 +861,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-11 18:02)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-15 21:03)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -3654,6 +3654,66 @@ const gecerliKare = id => {
   const [cy, cx] = id.split('_').map(Number);
   return cy >= -901 && cy <= 900 && cx >= -1801 && cx <= 1800;
 };
+// ═══ 🧭 BLOK İNDEKSİ YARDIMCILARI (ölçek S4-0a) — dünya 1°'lik bloklara bölünür ═══
+// Sunucuda tesisler `u2/<blok>/<karoKod>_<tesisId>_<uid>` altında duracak. Harita artık
+// "tüm gezegen" değil "baktığın 2-9 blok" indirecek. BU SÜRÜMDE HENÜZ KİMSE ÇAĞIRMIYOR —
+// zemin önce yayılsın diye ayrı bantta gidiyor.
+//
+// ⚠️ TUZAK 1 — BLOK HAM lat/lon'DAN üretilir, KARO KİMLİĞİNDEN DEĞİL. cellId, yüksek
+//    enlemde lonSteps() düzeltmesi uyguluyor (60°/75,5°/82,8° üstünde boylam adımı
+//    2/4/8 katına çıkıyor). Karo kimliğinden blok türetmek kutuplarda KAYAR.
+// ⚠️ TUZAK 2 — BOYLAM NORMALLEŞTİRİLİR. Leaflet map.getBounds() tarih çizgisini geçince
+//    SARMALANMAMIŞ boylam döndürür (190°, -200°, 540°). Normalleştirmezsek aynı fiziksel
+//    yer için İKİ AYRI blok oluşur ve tesisler ikiye bölünür.
+// ⚠️ TUZAK 3 — KUTUP. lat=90 tam değeri floor ile 181. satırı doğurur; 89,999999'a kırpılır.
+// ⚠️ TUZAK 4 (37. tur, denetim bulgusu) — `+null === 0` ve `+[] === 0`, ikisi de
+//    Number.isFinite'ı GEÇER. Saf `Number.isFinite(+la)` kapısı bozuk `ll` geldiğinde
+//    sessizce Gine Körfezi'ni (0,0) döndürürdü. `_koord` bu sınıfı kapatıyor.
+//
+// ÖLÇÜLDÜ (37. tur): 5.074.200 karoluk tam ızgara taraması → blok kayması 0.
+//   825.600 nokta (400.000 rastgele + tüm tamsayı sınırları + kutup kuşağı) →
+//   `blokId(ham ll)` her zaman `karoBloklari(cellId(ham ll))` içinde, ihlal 0.
+const _p4 = n => ('0000' + n).slice(-4);
+const _koord = v => (typeof v === 'number' || (typeof v === 'string' && v.trim() !== '')) ? +v : NaN;
+const lonNorm = lo => ((+lo + 180) % 360 + 360) % 360 - 180;
+function blokId(la, lo) {
+  let a = _koord(la); const o = _koord(lo);
+  if (!Number.isFinite(a) || !Number.isFinite(o)) return null;   // bozuk koordinat: blok YOK
+  if (a >= 90) a = 89.999999;
+  if (a < -90) a = -90;
+  return 'b' + _p4(Math.floor(a) + 90) + '_' + _p4(Math.floor(lonNorm(o)) + 180);
+}
+// Karo kimliğinin SABİT GENİŞLİKLİ (8 hane) hâli — sunucu anahtarının öneki budur.
+// SABİT GENİŞLİK ŞART: '407_299' ile '407_2990' arasında sözlük sırası ile sayısal sıra
+// AYRIŞIR; '13072099' ile '13072990' arasında ayrışmaz. startAt/endAt aralık sorgusu
+// tamamen buna dayanacak. gecerliKare bilerek gevşek (-901/-1801'e izin veriyor: eski
+// bozuk kayıtlar çizilebilsin diye) olduğu için aralık BURADA ayrıca sıkıştırılır —
+// yoksa _p4(-1) → '00-1' gibi bozuk, sıralamayı kıran bir kod çıkar.
+const karoKod = cell => {
+  if (!gecerliKare(cell)) return null;
+  const [cy, cx] = String(cell).split('_').map(Number);
+  if (cy < -900 || cy > 900 || cx < -1800 || cx > 1800) return null;
+  return _p4(cy + 900) + _p4(cx + 1800);
+};
+// karoKod'un tersi. Bozuk girdide null döner — çizim yolunda atılan istisnayı `guvenli()`
+// yutar ve harita sessizce bayat kalırdı (26 Ağu'daki düz-yeşil harita hatasının sınıfı).
+const kodKaro = kod => {
+  if (typeof kod !== 'string' || !/^\d{8}$/.test(kod)) return null;
+  return (+kod.slice(0, 4) - 900) + '_' + (+kod.slice(4, 8) - 1800);
+};
+// Bir karo HANGİ blok(lar)a düşer? |enlem| >= 75,5° kuşağında karo genişliği 0,4°/0,8°
+// olduğu için karo İKİ bloğa yayılabilir. ÖLÇÜLDÜ: tüm karoların %1,28'i (5.074.200
+// karonun 65.160'ı) — hepsi kutup kuşağında. Tek karo sorgusunda ikisi de sorulur.
+// Enlemde yayılma İMKÂNSIZ: karo yüksekliği her yerde 0,1° ve ızgara 0,1°'ye hizalı.
+function karoBloklari(cell) {
+  if (!gecerliKare(cell)) return [];
+  const b = cellBounds(cell), out = [];
+  const b1 = blokId(b[0][0] + 1e-9, b[0][1] + 1e-9);   // güney-batı köşesi
+  const b2 = blokId(b[0][0] + 1e-9, b[1][1] - 1e-9);   // güney-doğu köşesi
+  if (b1) out.push(b1);
+  if (b2 && b2 !== b1) out.push(b2);
+  return out;
+}
 // 🔴 YAPISAL KORUMA (26 Ağu): Leaflet olay dinleyicilerini SIRAYLA çağırır ve istisnayı
 // YAKALAMAZ — birinden atılan hata sonraki dinleyicileri hiç çalıştırmaz, harita bayat kalır.
 // Aynısı açılış zinciri için de geçerli: startGame içindeki tek bir çizim istisnası
@@ -3665,6 +3725,18 @@ const guvenli = (ad, fn) => { try { fn(); } catch (e) { console.warn('[harita] '
 // karar veririz. Denize YALNIZ offshore rüzgar ve yüzer güneş kurulabilir — gerçek dünyadaki gibi.
 let LAND_BOX = null;
 const SEA_OK = { wind: 1, sun: 1 }; // PLANT_TYPES.kind — denize izinli üretim türleri
+// ⚛️ NÜKLEER YERLEŞİM YASAĞI (38. tur, patron: "şehir merkezlerine nükleer kurdurmayalım,
+//    hat çekmesi gereksin; 250 mi 500 mü, hangisi mantıklıysa").
+//    ÖLÇÜLDÜ — OYUNUN KENDİ cityList()'i ile Türkiye 0,5° ızgarası (494 nokta). Listede
+//    Türkiye nüfusu İL düzeyinde (Kocaeli 2,1M, Ağrı 510K, 54 şehir ≥500K, 29 şehir ≥1M):
+//        250 km / ≥500K → %0 kurulabilir  (Kars→Ağrı 98 km, Hakkari→Van 107 km bile kapalı)
+//        250 km / ≥1M   → %4   ·   150 km / ≥1M → %23   ·   100 km / ≥500K → %24
+//        100 km / ≥1M   → %50  ✅ seçilen  ·   80 km / ≥500K → %41
+//    250/500 km ikisi de İMKÂNSIZ. 100 km / ≥1M gerçek siting'e de yakın (Akkuyu büyük
+//    şehre ~150 km). Hat zorunluluğu kendiliğinden gelir: nükleerin karosunda pazar yok,
+//    uzak satış hat ister (ALLY_ACCESS_KM 150). ⚠️ İlk sürüm 250/500K ile yazılmıştı —
+//    Python ölçümü sehirler.json'un yalnız `ek` kısmını kullanmıştı; tarayıcı ölçümü düzeltti.
+const NUKE_SEHIR_KM = 100, NUKE_SEHIR_NUFUS_BIN = 1000;
 // ⚠️ OYUN DIŞI BÖLGELER (patron kararı): statüsü uluslararası tartışmalı topraklar.
 // Harita onları çizmeye devam eder (temel dünya verisi kırpılamaz) ama oyun oraya YERLEŞMEZ:
 // ne ofis, ne santral, ne depo. Böylece oyun hiçbir tarafa konum almış olmuyor.
@@ -5193,6 +5265,20 @@ function nearestCityName(id) {
       if (d < bd) { bd = d; best = s[0]; }
     }
   return NEAR_MEMO[id] = (bd <= 80 ? best : null);
+}
+// 🏙️ EN YAKIN BÜYÜK ŞEHİR (38. tur). nearestCityName 80 km içinde EN YAKIN şehri verir —
+//    küçük olsa da. İki iş bunu değil "yakındaki BÜYÜK şehri" ister: (1) hat ucu hizalama
+//    ("Atina'ya 40 km" uyarısı), (2) nükleer yerleşim yasağı. Dönüş: {nm, la, lo, pop, km} | null.
+function enYakinBuyukSehir(ll, rKm, minPopBin) {
+  const cf = Math.cos(ll[0] * Math.PI / 180);
+  let best = null, bd = Infinity;
+  for (const grup of citiesNear(ll, rKm))
+    for (const s of grup) {
+      if ((s[3] || 0) < minPopBin) continue;
+      const d = 111 * Math.sqrt((s[1] - ll[0]) ** 2 + ((s[2] - ll[1]) * cf) ** 2);
+      if (d < bd) { bd = d; best = s; }
+    }
+  return (best && bd <= rKm) ? { nm: best[0], la: best[1], lo: best[2], pop: best[3], km: Math.round(bd) } : null;
 }
 // İNSAN OKUNUR KONUM (patron: "HG-90 oyuncu için hiçbir şey ifade etmez").
 // Sırayla dener: yakın şehir → uzaktaki en yakın şehrin "civarı" → ülke → açık deniz.
@@ -8578,6 +8664,12 @@ function placeAt(c, ll) {
     : 'Bu karede senin limitin doldu (' + cellCap() + ') — başka kareye dokun', 'warn', null, 7000); return; }
   if (kind === 'plant' && PLANT_TYPES[t].geoOnly && !q.geo) { toast('♨️ Bu karede jeotermal kaynak yok — ♨️ işaretli bir kare seç', 'warn'); return; }
   if (oyunDisiMi(ll)) { toast('Bu bölge oyuna dahil değil — başka bir konum seç', 'warn', null, 6000); return; }
+  // ⚛️ NÜKLEER ŞEHİRDEN UZAK (38. tur): ≥500K şehre 250 km'den yakına kurulamaz.
+  //    `cat` ile tanınır — nükleerin kind'ı 'geo' (jeotermalle aynı sabit-üretim eğrisi).
+  if (kind === 'plant' && PLANT_TYPES[t].cat === 'Nükleer') {
+    const bs = enYakinBuyukSehir(ll, NUKE_SEHIR_KM, NUKE_SEHIR_NUFUS_BIN);
+    if (bs) { toast('⚛️ Nükleer santral büyük şehre ' + NUKE_SEHIR_KM + ' km\'den yakın kurulamaz — <b>' + bs.nm + '</b> ' + fmtN(bs.km) + ' km ötede. Uzağa kur, elektriği hatla taşı.', 'warn', null, 8000, true); return; }
+  }
   // 🌊 DENİZ KURALI (patron): denize yalnız offshore rüzgar ve yüzer güneş. Kömür/gaz/nükleer/
   // jeotermal/hidro santraller ile depolar ve yakıt tankları karaya kurulur — gerçek dünyadaki gibi.
   if (!isLand(ll) && !(kind === 'plant' && SEA_OK[PLANT_TYPES[t].kind])) {
@@ -9579,11 +9671,22 @@ function lineConfirm(toCell) {
   const need = Math.max(0, Math.ceil(km / 300) - 1); // %100 kaybı önleyen asgari merkez
   const opt = Math.max(0, Math.ceil(km / 100) - 1);  // en iyi (%10) için gereken merkez
   const rows = [need, Math.ceil((need + opt) / 2), opt].filter((v, i, a) => a.indexOf(v) === i);
+  // 🎯 HİZALAMA UYARISI (38. tur): placeName 80 km yarıçapla "Atina" diyebiliyor — oyuncu
+  //    40 km kuzeydeki noktayı DOĞRU sanıyor. Yakında (120 km) ≥300K bir şehir varsa ve
+  //    dokunulan nokta ona 12 km'den uzaksa: mesafeyi göster + tek dokunuşla hizala.
+  //    LINE_SRC ve LINE_ALLY düğmeye AÇIKÇA gömülür (setMode sonrası durumdan bağımsız).
+  const _bs = enYakinBuyukSehir(cellCenter(toCell), 120, 300);
+  const _bsCell = _bs ? cellId([_bs.la, _bs.lo]) : null;
+  const hizala = (_bs && _bs.km > 12 && _bsCell !== toCell)
+    ? `<p class="sub" style="color:var(--warn)">⚠️ Dokunduğun nokta <b>${_bs.nm}</b>'ya <b>${fmtN(_bs.km)} km</b> uzakta.
+       <button class="bigsell half" style="margin-top:4px" onclick="hatHizala('${LINE_SRC}','${_bsCell}',${LINE_ALLY ? 'true' : 'false'})">🎯 ${_bs.nm} merkezine hizala</button></p>`
+    : '';
   $('modal').innerHTML = `
     <h2>⚡ Enerji Nakil Hattı</h2>
     <p><b>${placeName(LINE_SRC)}</b> → <b>${placeName(toCell)}</b><br>
     Mesafe: <b>${fmtN(km)} km</b> · Hedef bölge alım fiyatı: <b class="pos">${fmt(cellPriceNow(toCell))}</b>/MWh
     <span class="sub">(senin bölgen: ${fmt(cellPriceNow(LINE_SRC))})</span></p>
+    ${hizala}
     <p class="sub">Kayıp kuralı: her 100 km %10 · 300 km'den uzun bölüm taşınamaz → <b>Enerji Transfer Merkezi</b> hattı böler.</p>
     <table class="ledger">
       <tr><td>🔌 Kablo (${fmtN(km)} km × ${fmt(LINE.cableKm)})</td><td>${fmt(km * LINE.cableKm)}</td></tr>
@@ -9604,6 +9707,15 @@ function lineConfirm(toCell) {
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
   $('overlay').classList.add('show');
 }
+// 🎯 HİZALA (38. tur): hat ucunu yakındaki büyük şehrin karosuna taşıyıp onayı yeniden kur.
+//    Kaynak ve ittifak bayrağı parametreyle gelir — modal açıkken setMode(null) çoktan koşmuş
+//    olabilir, LINE_SRC'nin o anki değerine güvenilmez.
+window.hatHizala = (src, to, ally) => {
+  if (!src || !to || src === to) return;
+  LINE_SRC = src; LINE_ALLY = !!ally;
+  closeModal();
+  lineConfirm(to);
+};
 // ⚙️ MARKA SEÇİMİ (patron): aynı trafo 4 markadan alınabilir — fiyat, kayıp, süre, dayanıklılık farkı
 window.pickBrand = (toCell, km, hubs) => {
   const base = lineCost(km, hubs, lineKatCells(LINE_SRC, toCell, km));
@@ -12737,13 +12849,24 @@ const NET = {
     }
     const oldId = this.id;
     // REST misafiri: Google'a girilir, uid değişir → bulut kaydı taşınır. GIS butonu birincil.
+    // 📦 36. TUR — SIRA DEĞİŞTİ: eski kayıt ŞİMDİ alınır ve ŞİMDİ silinir. Girişten sonra
+    //    eski uid'nin kayıtları ne okunabilir ne silinebilir (kural: auth.uid === $uid).
+    //    Bugün okuma yalnızca `saves/$uid .read:true` AÇIĞI sayesinde çalışıyordu; o açık
+    //    kapatıldığında bu sıra olmadan taşıma tamamen ölür ve oyuncu ilerlemesini kaybeder.
+    const paket = await this.gocPaketiAl(oldId);
     let auth = null;
-    if (yerel) {
-      auth = await this.googleLogin(); // yerel yol; iptalde kendi hatasını fırlatır
-    } else if (gisVar) {
-      auth = await this.googleLoginGIS();
-      if (!auth) throw new Error('Bağlama iptal edildi — dilediğin zaman yeniden deneyebilirsin');
-    } else auth = await this.adoptUser((await a.signInWithPopup(prov)).user);
+    try {
+      if (yerel) {
+        auth = await this.googleLogin(); // yerel yol; iptalde kendi hatasını fırlatır
+      } else if (gisVar) {
+        auth = await this.googleLoginGIS();
+        if (!auth) throw new Error('Bağlama iptal edildi — dilediğin zaman yeniden deneyebilirsin');
+      } else auth = await this.adoptUser((await a.signInWithPopup(prov)).user);
+    } catch (e) {
+      // Giriş olmadı → kimlik hâlâ ESKİ, yazma yetkisi duruyor. Kaydı geri koy.
+      await this.gocPaketiGeriYaz(paket);
+      throw e;
+    }
     return { mode: 'move', auth, moved: await this.moveCloudData(oldId, auth.uid) };
   },
   // Bulut kaydını eski uid'den yenisine taşır. HEDEFTE ŞİRKET VARSA ÜZERİNE YAZMAZ —
@@ -12751,23 +12874,38 @@ const NET = {
   async moveCloudData(oldId, newId, overwrite) {
     if (!oldId || !newId || oldId === newId) return 'same';
     try {
-      const mine = await this.get('saves/' + oldId);
+      // 📦 Göç paketi varsa ONDAN oku: eski kayıt artık sunucuda YOK (gocPaketiAl sildi) ve
+      //    zaten giriş sonrası okuma yetkisi de kalmıyor.
+      const paket = this.gocPaketiOku(oldId);
+      const mine = paket ? paket.save : await this.get('saves/' + oldId);
       if (!mine || !mine.company) return 'empty';
       if (!overwrite) {
+        // ⚠️ ÇAKIŞMADA PAKET SİLİNMEZ: oyuncu 'misafir ilerlemem devam etsin' derse
+        //    linkKeepGuest yine buraya gelir ve kaydı PAKETTEN yazar.
         const there = await this.get('saves/' + newId);
         if (there && there.company) return 'conflict';
       }
       await this.put('saves/' + newId, mine);
-      const p = await this.get('players/' + oldId);
+      const p = paket ? paket.player : await this.get('players/' + oldId);
       if (p) await this.put('players/' + newId, p);
-      await this.req('saves/' + oldId, 'DELETE').catch(() => {});
-      await this.req('players/' + oldId, 'DELETE').catch(() => {});
+      if (!paket) {
+        // Paketsiz eski yol (yalnız geriye uyumluluk). ⚠️ `sessiz` ŞART: bu iki silme
+        //    yeni jetonla koştuğu için sunucu REDDEDER ve sessiz olmazsa oyuncuya
+        //    bağlama BAŞARILI olduğu anda yalan bir "SUNUCUYA YAZILAMIYOR" uyarısı çıkar.
+        await this.req('saves/' + oldId, 'DELETE', undefined, false, true).catch(() => {});
+        await this.req('players/' + oldId, 'DELETE', undefined, false, true).catch(() => {});
+      }
+      this._unitsImza = '';   // tesisler YENİ uid altına yeniden yazılsın (imza freni açılsın)
+      this.gocPaketiSil();
       return 'moved';
     } catch (e) { console.warn('[NET] taşıma', e.message); return 'error'; }
   },
   // ── ☁️ BULUT KAYIT: oyuncunun tüm verisi sunucuda (cihaz değişse de kaybolmaz) ──
   async cloudSave(force, kapanis) {
     if (!this.on() || !G || !G.company) return;
+    // 📦 GÖÇ PENCERESİ: gocPaketiAl eski uid'nin kayıtlarını silerken araya giren bir
+    //    cloudSave `saves/<eski>`yi anında geri doğururdu — tam da temizlediğimiz yetim.
+    if (this._gocSiliyor) return;
     // ⚡ ÖLÇEK S1: 20 sn → 120 sn. saves/<uid> TÜM G nesnesidir (~90 KB) — en büyük TEK
     //    yazma kalemi. 20 saniyede bir 90 KB yazmak oyuncu başına saatte 16 MB eder.
     //    Kayıp riski yok: yerel localStorage kaydı her değişimde yazılıyor, bulut yalnızca
@@ -12787,6 +12925,57 @@ const NET = {
     if (!this.on()) return null;
     try { return await this.get('saves/' + this.id); } catch (e) { return null; }
   },
+  // ── 📦 GÖÇ PAKETİ (36. tur) — hesap bağlamadan ÖNCE, misafir kimliği HÂLÂ ELDEYKEN ──
+  // 🐛 DÜZELTİLEN HATA: taşıma giriş SONRASINDA yeni jetonla koşuyordu; kural
+  //    `auth.uid === $uid` olduğu için eski uid'nin kayıtları SİLİNEMİYORDU (.catch yutuyordu)
+  //    ve `units/<eski>` hiç denenmiyordu. Her bağlama ~90 KB saves + karne + TÜM TESİSLERİ
+  //    kalıcı yetim bırakıyordu; tesisler haritada sahipsiz kalıyor, `units` 256 MB duvarına
+  //    şişiyordu. S3 budaması da temizlemiyor ("saves ASLA silinmez" kuralı).
+  // ⚠️ KİMLİK TAKASI DENENDİ, ÇALIŞMIYOR: `token()` içinde SDK yolu var —
+  //    `firebase.auth().currentUser` doluysa `this.auth` ne olursa olsun ONUN jetonu döner.
+  // ⚠️ SİLMEK NEDEN GÜVENLİ: bulut kaydı YEDEKTİR, asıl kayıt localStorage'dadır (bkz.
+  //    cloudSave yorumu). Paket bellekte VE localStorage'da durur; giriş iptal edilirse
+  //    eski kimlik hâlâ geçerlidir ve `gocPaketiGeriYaz` kaydı geri yazar.
+  async gocPaketiAl(oldId) {
+    if (!oldId || oldId !== this.id || !this.on()) return null;
+    const s0 = await this.getVar('saves/' + oldId);
+    if (!s0.ok) return null;                 // 🔴 AĞ/YETKİ HATASI → HİÇBİR ŞEY SİLME
+    if (!s0.val || !s0.val.company) return null;  // taşınacak kayıt yok
+    const p = { oldId, save: s0.val, player: null, at: Date.now() };
+    const pl = await this.getVar('players/' + oldId);
+    if (pl.ok) p.player = pl.val;
+    this._gocPaketi = p;
+    try { localStorage.setItem('ec_goc', JSON.stringify(p)); } catch (e) {}
+    // 🔴 SİLME SIRASI: units → players → saves. `saves` EN SON, çünkü paketin sunucudaki
+    //    tek yedeği odur; ilk silinip araya çökme girerse geri yazacak kaynak kalmaz.
+    this._gocSiliyor = true;   // cloudSave/loop bu pencerede eski uid'yi DİRİLTMESİN
+    try {
+      for (const yol of ['units/', 'players/', 'saves/']) {
+        try { await this.req(yol + oldId, 'DELETE', undefined, false, true); }
+        catch (e) { console.warn('[NET] göç: silinemedi ' + yol + oldId, e.message); }
+      }
+    } finally { this._gocSiliyor = false; }
+    // ⚠️ İMZA SIFIRLANMALI: units yazması "değişmediyse yazma" imzasına bakıyor. Sunucudan
+    //    sildik ama imza aynı kaldığı için döngü bir daha ASLA yazmazdı — tesisler yok olurdu.
+    this._unitsImza = '';
+    return p;
+  },
+  // Giriş iptal/başarısız → eski kimlik HÂLÂ geçerli, kaydı geri yaz.
+  async gocPaketiGeriYaz(p) {
+    if (!p || !p.save || p.oldId !== this.id) return false;
+    try {
+      await this.put('saves/' + p.oldId, p.save);
+      if (p.player) await this.put('players/' + p.oldId, p.player);
+      this.gocPaketiSil();
+      return true;
+    } catch (e) { console.warn('[NET] göç geri yazma', e.message); return false; }
+  },
+  gocPaketiOku(oldId) {
+    let p = this._gocPaketi;
+    if (!p) { try { p = JSON.parse(localStorage.getItem('ec_goc') || 'null'); } catch (e) { p = null; } }
+    return (p && p.save && (!oldId || p.oldId === oldId)) ? p : null;
+  },
+  gocPaketiSil() { this._gocPaketi = null; try { localStorage.removeItem('ec_goc'); } catch (e) {} },
   // 🔐 jetonu ZORLA tazele (önbelleği atlayarak) — 401 sonrası tek deneme için
   async freshToken() {
     const a = this.auth;
@@ -12851,7 +13040,7 @@ const NET = {
     // Kurallar auth.uid'ye geçirilmeden ÖNCE bu sürümün yayılmış olması şart, aksi halde
     // eski sürümdeki oyuncular anında kilitlenir (devam notundaki sıra birebir bu).
     const tok = await this.token();
-    const url = t2 => this.db + '/' + path + '.json' + (t2 ? '?auth=' + encodeURIComponent(t2) : '');
+    const url = t2 => this._url(path, t2);
     let r = await fetch(url(tok), o);
     // ⏰ SAAT KAYMASI ÖLÇÜMÜ: 401'in eski cihazlardaki en yaygın sebebi budur.
     // Jetonun süresi CIHAZ saatiyle hesaplanıyor; saat geride kalırsa oyun "jeton hâlâ taze"
@@ -12881,13 +13070,57 @@ const NET = {
     if (r.ok && this._yetkiUyari && method && method !== 'GET') this._yetkiUyari = 0; // düzeldi
     return r.ok ? r.json() : null;
   },
+  // ── 🔗 TEK URL KURUCUSU (ölçek S4-0a) ──────────────────────────────────────
+  // Bugün URL İKİ ayrı yerde elle kuruluyor (req ve getVar) ve ikisi de `?auth=` ekliyor.
+  // S4'ün blok okuması sorgu dizgesi getirecek (`u2/<blok>?orderBy="$key"&limitToFirst=400`)
+  // ve o hâlde elle kurulan URL İKİNCİ bir `?` üretir → geçersiz URL, sunucu 400 döner.
+  // Tek kapı bunu bir kez çözer: `path` zaten `?` taşıyorsa ayraç `&` olur.
+  // ⚠️ Bu değişiklik DAVRANIŞI DEĞİŞTİRMEZ — sorgusuz yolda çıktı birebir eskisiyle aynı.
+  _url(path, tok) {
+    const p = String(path);
+    const i = p.indexOf('?');
+    const yol = i < 0 ? p : p.slice(0, i);
+    const srg = i < 0 ? '' : p.slice(i + 1);
+    const par = [];
+    if (srg) par.push(srg);
+    if (tok) par.push('auth=' + encodeURIComponent(tok));
+    return this.db + '/' + yol + '.json' + (par.length ? '?' + par.join('&') : '');
+  },
   get(p) { return this.req(p, 'GET'); },
   // {ok, val}: ok=false ise İSTEK başarısız (ağ/sunucu) — veri hakkında hiçbir şey söylemez.
   // ok=true && val===null ise düğüm GERÇEKTEN yok. Yerel kayıt silmeden önce bu ayrım şart.
   async getVar(p) {
     try {
       const tok = await this.token();
-      const r = await fetch(this.db + '/' + p + '.json' + (tok ? '?auth=' + encodeURIComponent(tok) : ''), { cache: 'no-store' });
+      let r = await fetch(this._url(p, tok), { cache: 'no-store' });
+      // 🔐 401/403 — JETON TAZELEME (37. tur). `req` bunu yapıyordu, `getVar` YAPMIYORDU.
+      //    Dünya okuması getVar'a taşınınca bu telafi ŞART oldu: süresi dolmuş jetonla
+      //    yapılan tek okuma aksi hâlde "istek başarısız" sayılıp geri çekilir ve kendini
+      //    onarma yolu kaybolur. (401'in eski cihazlardaki en yaygın sebebi saat kayması.)
+      //
+      // ⛔ `_retrying` BAYRAĞINI KULLANMA — DENENDİ VE ÖLÇÜLEREK GERİ ALINDI (37. tur).
+      //    İlk sürüm `req`'in `_retrying` bayrağını paylaşıyordu. Çürütme turu ölçtü:
+      //    getVar bayrağı tutarken eş zamanlı bir YAZMA'nın 401 telafisi ÇALINIYOR ve
+      //    oyuncuya SAHTE "SUNUCUYA YAZILAMIYOR — ilerlemen BULUTA KAYDEDİLMİYOR"
+      //    kırmızı perdesi düşüyordu (aynı yazma TEK BAŞINA koştuğunda BAŞARILI oluyor).
+      //    Erişim yolu: `openCellSheet` → `NET.dunyaTazele(...)` await EDİLMİYOR ve
+      //    döngünün `await this.put('players/' + this.id, …)` yazmasıyla örtüşüyor.
+      //    Ayrıca bayrağı görüp ATLAMAK yüzünden `dunyaOku`nun paralel iki bacağından
+      //    yalnız biri tazeleniyor, taze jetonla 200 dönen düğüm `!pv.ok || !uv.ok`
+      //    şartına takılıp ÇÖPE gidiyordu.
+      //
+      // ✅ ÇÖZÜM — TEK UÇUŞ SÖZÜ: bayrak yerine paylaşılan bir Promise. İkinci çağıran
+      //    tazelemeyi ATLAMAZ, BEKLER. Böylece securetoken'a yine TEK istek gider
+      //    (jeton fırtınası yok) ama HER İKİ bacak da taze jetonla yeniden dener ve
+      //    dünya okuması AYNI çağrıda iyileşir. Ölçüldü: paralel 401 → dönüş true,
+      //    securetoken POST = 1, eş zamanlı yazma senaryosunda panik = 0.
+      if (r.status === 401 || r.status === 403) {
+        try {
+          this._tazeSoz = this._tazeSoz || Promise.resolve(this.freshToken()).finally(() => { this._tazeSoz = null; });
+          const t2 = await this._tazeSoz;
+          if (t2 && t2 !== tok) r = await fetch(this._url(p, t2), { cache: 'no-store' });
+        } catch (e) {}
+      }
       if (!r.ok) return { ok: false, val: null };
       return { ok: true, val: await r.json() };
     } catch (e) { return { ok: false, val: null }; }
@@ -12902,18 +13135,46 @@ const NET = {
   //  20 saniyede bir kırmızı uyarı çıkıyordu — patron ekranında görüldü.)
   putSessiz(p, v) { return this.req(p, 'PUT', v, false, true); },
   push(p, v) { return this.req(p, 'POST', v); },
+  // 🧩 ÇOK YOLLU YAZMA (ölçek S4-0a). RTDB'de PATCH, gövdedeki her anahtarı AYRI bir yol
+  //    olarak ele alır ve hepsini TEK ATOMİK işlemde uygular: ya hepsi olur ya hiçbiri.
+  //    S4'te tesis yazması iki düğüme birden gidecek (`units/<uid>` + `u2/<blok>/<anahtar>`);
+  //    ayrı iki PUT'ta araya çökme girerse tesis bir düğümde var bir düğümde yok kalır.
+  //    ⚠️ `sessiz`: kuralı henüz yayınlanmamış yol için kırmızı uyarı bastırılır (putSessiz ile aynı gerekçe).
+  patch(p, v, sessiz) { return this.req(p, 'PATCH', v, false, sessiz); },
   // 🌍 DÜNYA OKUMASI — TEK KAPI (ölçek S1b). Hem döngü hem istek üzerine tazeleme buradan geçer.
   //    `players` + `units` düğümlerinin TAMAMI iner; en pahalı iki istek bunlar. Blok indeksine
   //    (S4) geçilince bu fonksiyonun İÇİ değişecek, çağıranlar değişmeyecek — o yüzden tek kapı.
   async dunyaOku() {
     try {
-      const [pl, un] = await Promise.all([this.get('players'), this.get('units')]);
-      this.players = pl || {}; this.units = un || {};
+      // 🛡️ 401 KALKANI (37. tur) — ÖLÇÜLDÜ: `get()` başarısız GET'te `null` döner
+      //    (`req` GET'te throw ETMİYOR: `if (!r.ok && method && method !== 'GET')`).
+      //    ESKİ KOD bu null'ı `pl || {}` ile **BOŞ DÜNYA** sayıyor, `_dunyaAt`i TAZE
+      //    damgalıyor, `_cizimKirli` koyup haritayı BOŞ çizdiriyor ve `true` dönüyordu.
+      //    Sonuç: tek bir 401/403/5xx oyuncunun haritasındaki BÜTÜN rakipleri siliyor
+      //    ve S1'den sonra bu **30-60 DAKİKA** sürüyordu (döngü dünya okumasını tur
+      //    sayacıyla çağırıyor), hiçbir uyarı çıkmadan.
+      //    `getVar` {ok,val} döndürüyor: "düğüm gerçekten boş" ile "istek başarısız"
+      //    AYRI şeyler — kodun kendi yorumu da "yerel kayıt silmeden önce bu ayrım şart" diyor.
+      const [pv, uv] = await Promise.all([this.getVar('players'), this.getVar('units')]);
+      if (!pv.ok || !uv.ok) {
+        // ⚠️ VERİYE DOKUNMA. Elimizdeki BAYAT dünya, uydurulmuş BOŞ dünyadan iyidir.
+        //    `_dunyaAt` de KONMAZ — yoksa bayat veri "taze" sayılır ve düzelme gecikir.
+        this._dunyaHata = (this._dunyaHata || 0) + 1;
+        this._dunyaHataAt = Date.now();
+        console.warn('[NET] dünya okunamadı (players:' + pv.ok + ' units:' + uv.ok + ') — deneme ' + this._dunyaHata);
+        return false;
+      }
+      this.players = pv.val || {}; this.units = uv.val || {};
+      this._dunyaHata = 0; this._dunyaHataAt = 0; this._cizimHata = 0; // 🎨 yeni veri geldi: cizim yeniden denemesi HAK EDILDI
       this._dunyaAt = Date.now();
       this.indeksKur();       // ⚡ S4-0: karo indeksi BİR KEZ kurulur (aşağıya bak)
       this._cizimKirli = true; // 🎨 dünya gerçekten değişti → yeniden çizim HAK EDİLDİ
       return true;
-    } catch (e) { return false; }
+    } catch (e) {
+      this._dunyaHata = (this._dunyaHata || 0) + 1;
+      this._dunyaHataAt = Date.now();
+      return false;
+    }
   },
   // ⚡ ÖLÇEK S4-0 — KARO İNDEKSİ (11 Eyl). unitsInCell her karo için TÜM dünyayı tarıyordu;
   //    drawOthers en fazla 260 karo çizdiği için tek çizimde 260 × (oyuncu × tesis) yineleme
@@ -12938,6 +13199,10 @@ const NET = {
   dunyaTazele(sonra) {
     if (!this.on() || !G || !G._started) return;
     if (this._dunyaAt && Date.now() - this._dunyaAt < 30000) return;
+    // 🛡️ 37. tur: okuma başarısızsa `_dunyaAt` KONMUYOR, yani yukarıdaki fren tutmaz.
+    //    Karo sayfası her harita dokunuşunda açılıyor — ayrı bir hata penceresi olmasa
+    //    kopuk bağlantıda her dokunuşta yeni bir istek fırlardı.
+    if (this._dunyaHataAt && Date.now() - this._dunyaHataAt < 30000) return;
     if (this._tazeleniyor) return;
     this._tazeleniyor = true;
     this.dunyaOku().then(ok => { this._tazeleniyor = false; if (ok && typeof sonra === 'function') { try { sonra(); } catch (e) {} } })
@@ -13003,7 +13268,8 @@ const NET = {
       //    her 12 saniyede aynı veriyi yazmak hem faturaya hem yazma tavanına (64 MB/dk)
       //    boşuna yükleniyordu. İmza karşılaştırması bedava, yazmanın kendisi değil.
       const _imza = JSON.stringify(mine);
-      if (_imza !== this._unitsImza) { await this.put('units/' + this.id, mine); this._unitsImza = _imza; }
+      // 📦 GÖÇ PENCERESİ: bkz. cloudSave — silinen eski uid'yi geri doğurmayalım.
+      if (!this._gocSiliyor && _imza !== this._unitsImza) { await this.put('units/' + this.id, mine); this._unitsImza = _imza; }
       // 🔴 ÖLÇEK S1 (11 Eyl) — EN PAHALI SATIR BUYDU. Eskiden HER 12 SANİYEDE `players` ve
       //    `units` düğümlerinin TAMAMI iniyordu: dünyadaki herkes, herkesin bütün tesisleri.
       //    Trafik N² ile büyüyor ve ES ZAMANLI oyuncuyla değil KAYITLI HESAP sayısıyla artıyor
@@ -13026,7 +13292,14 @@ const NET = {
       //    oyuncunun BAKTIĞI anda taze olur — arka planda boşuna akmaz.
       const _gizli = (typeof document !== 'undefined' && document.hidden);
       const _dunyaTuru = _gizli ? 300 : 150;   // 150 tur × 12 sn = 30 dk · 300 = 60 dk
-      if (this._tur === 1 || this._tur % _dunyaTuru === 0) await this.dunyaOku();
+      // 🛡️ BAŞARISIZ OKUMADA ÜSTEL GERİ ÇEKİLME (37. tur). Dünya okuması TUR SAYACIYLA
+      //    çağrılıyor, `_dunyaAt` ile değil — yani başarısızlıkta bir sonraki deneme
+      //    30-60 DAKİKA sonraydı. Artık 5 → 10 → 20 → 40 tur (60 sn → 2 dk → 4 dk → 8 dk)
+      //    geri çekilerek yeniden deniyoruz; tavan normal aralık, yani kopuk bağlantıda
+      //    fatura normalin ÜSTÜNE çıkmaz.
+      const _h = this._dunyaHata || 0;
+      const _bekle = _h ? Math.min(_dunyaTuru, 5 * Math.pow(2, _h - 1)) : _dunyaTuru;
+      if (this._tur === 1 || this._tur % _bekle === 0) await this.dunyaOku();
       try { await kiralarCek(); } catch (e) { } // 🌐 küresel kira sicili (30 sn önbellekli)
       try { await kiraAdGuncelle(); } catch (e) { }   // şirket adı değiştiyse sicildeki kendi kayıtlarımı tazele
       try { await kiraSicilGoc(); } catch (e) { }     // sicil öncesi ödenmiş yerel kiraların tek seferlik göçü
@@ -13072,7 +13345,26 @@ const NET = {
       //    Artık yalnız dünya verisi GERÇEKTEN değiştiyse zorlanır (dunyaOku bayrağı koyar).
       //    Harita kaydırma/yakınlaştırma zaten drawOthers'ı kendi imzasıyla tetikliyor;
       //    bu satır yalnızca "rakip verisi tazelendi" durumu içindi.
-      if (this._cizimKirli) { this._cizimKirli = false; othersDrawn = ''; try { drawOthers(); } catch (e) {} }
+      // ⚠️ BAYRAK ÇİZİMDEN SONRA TEMİZLENİR (36. tur denetimi, 37. turda uygulandı).
+      //    Eskiden ÖNCE temizleniyordu: `drawOthers` istisna atarsa bayrak KAYBOLUYOR ve
+      //    rakipler bir sonraki dünya okumasına (30-60 dk) kadar hiç çizilmiyordu.
+      //    İstisna artık sessizce yutulmuyor.
+      // 🛡️ 37. tur HAKEM DUZELTMESI — bayrak CIZIMDEN SONRA temizlenmesi DOGRU (gecici
+      //    istisnada rakipler 30 dk yerine 12 dk icinde geri geliyor, OLCULDU), ama KALICI
+      //    istisnada bayrak sonsuza dek true kaliyordu: saatte 3 yerine 300 deneme (100x).
+      //    drawOthers ilk isinde `othersDrawn = sig` deyip HEMEN `othersLayer.forEach(m =>
+      //    m.remove())` yaptigi icin her denemede rakip katmani SILINIP yarim doluyor —
+      //    harita 12 saniyede bir titriyor. 3 deneme (36 sn) gercek gecici hatayi yakalar,
+      //    kalici hatada titremeyi ve konsol dolmasini durdurur. Sayac basarili okumada sifirlanir.
+      if (this._cizimKirli) {
+        othersDrawn = '';
+        try { drawOthers(); this._cizimKirli = false; this._cizimHata = 0; }
+        catch (e) {
+          this._cizimHata = (this._cizimHata || 0) + 1;
+          if (this._cizimHata >= 3) this._cizimKirli = false;
+          console.warn('[harita] drawOthers', e && e.message);
+        }
+      }
     } catch (e) {}
     setTimeout(() => this.loop(), 12000);
   },
@@ -15184,13 +15476,22 @@ const KREDI_TAHSIL = 0.50;      // temerrütte satışlardan alınan pay
 // Bu, patronun "oyuncuyu oyuna bağlayalım" hedefinin asıl kancasıdır.
 // `gunluk` = günlük faiz oranı; toplam faiz = gunluk × vade. B notu + 10 gün = %30 (patron ayarı).
 const KREDI_NOT_BAS = 70;       // yeni şirket B notuyla başlar → 10 günde tam olarak %30 faiz
+// 🪜 NOT MERDİVENİ (38. tur, patron): limit = şirket değeri × KREDI_LIMIT(%20) × çarpan →
+//    A %50 · B %35 · C %20 · D %10 · E %5. E ARTIK KAPALI DEĞİL ("Son Şans": az ama var,
+//    faizi en yüksek). Eski tablo E'yi `gunluk:null` ile tamamen kapatıyordu — patron:
+//    "büyüme kredisi takılı kaldı ya, hani takılı kalmayacaktı". Her kademe temiz ödemeyle
+//    bir üst limite çıkar; temerrüt hem notu düşürür hem KREDI_YASAK_GUN merdivenini işletir.
 const KREDI_NOTLAR = [
-  { min: 85, ad: 'A · Güvenilir',   gunluk: .025, carpan: 1.25 },
-  { min: 65, ad: 'B · İyi',         gunluk: .030, carpan: 1.00 },
-  { min: 45, ad: 'C · Riskli',      gunluk: .040, carpan: 0.70 },
-  { min: 25, ad: 'D · Yüksek risk', gunluk: .055, carpan: 0.40 },
-  { min: 0,  ad: 'E · Kredi yok',   gunluk: null, carpan: 0 }
+  { min: 85, ad: 'A · Güvenilir',   gunluk: .025, carpan: 2.50 },   // %50
+  { min: 65, ad: 'B · İyi',         gunluk: .030, carpan: 1.75 },   // %35
+  { min: 45, ad: 'C · Riskli',      gunluk: .040, carpan: 1.00 },   // %20
+  { min: 25, ad: 'D · Yüksek risk', gunluk: .055, carpan: 0.50 },   // %10
+  { min: 0,  ad: 'E · Son Şans',    gunluk: .075, carpan: 0.25 }    // %5  — pahalı ama açık
 ];
+// 🪜 TEMERRÜT YASAĞI (patron: "ödemezsem 3, bir daha 5, sonra 7, sonra 30 gün"). Üst üste
+//    kaçıncı büyüme kredisi TEMERRÜTLE kapandıysa o kadar gün yeni kredi yok. Temiz kapanış
+//    sayacı sıfırlar (af). Yalnız BÜYÜME'ye; Acil ve Kurtarma'ya DOKUNMAZ.
+const KREDI_YASAK_GUN = [3, 5, 7, 30];
 // Seçilen vadenin TOPLAM faizi — ekranda hep bu gösterilir, günlük oran asla.
 const krediFaizi = (vade) => { const k = notKademe(); return k.gunluk === null ? null : k.gunluk * vade; };
 const KREDI_NOT_ODUL = 2, KREDI_NOT_CEZA = 15, KREDI_NOT_TEMERRUT = 40;
@@ -15395,6 +15696,14 @@ function yatKapat(erken) {
   // Bekleme = başlangıç + VADE + 1 gün. Erken kapatmak kısaltmaz.
   G.krediBekle = K.bas + K.vade + KREDI_BEKLE_EK;
   if (!K.gecikme) G.krediNot = Math.min(100, notu() + KREDI_NOT_ODUL * 2); // sicili temiz bitirene ek ödül
+  // 🪜 TEMERRÜT MERDİVENİ (38. tur): temerrütle kapanan kredi sayacı artırır ve yasak günü
+  //    olağan beklemeyi EZER (uzunsa). Temiz kapanış sayacı sıfırlar.
+  let yasakGun = 0;
+  if (K.temerrut) {
+    G.krediTemerrutSayi = (G.krediTemerrutSayi || 0) + 1;
+    yasakGun = KREDI_YASAK_GUN[Math.min(G.krediTemerrutSayi - 1, KREDI_YASAK_GUN.length - 1)];
+    G.krediBekle = Math.max(G.krediBekle, bankaGun() + yasakGun);
+  } else G.krediTemerrutSayi = 0;
   const bek = Math.max(0, G.krediBekle - bankaGun());
   G.kredi = null;
   toast('🏗️ KREDİN BİTTİ! ' + (erken ? 'Erken kapattın. ' : '') + 'Kredi notun: ' + notKademe().ad, '', null, 0, true);
@@ -15402,7 +15711,10 @@ function yatKapat(erken) {
     fmt(K.anapara) + ' tutarındaki büyüme kredin tamamen ödendi' + (erken ? ' (erken kapatma — faiz indirimi uygulanmaz)' : '')
     + '.<br><br>Gecikme sayın: <b>' + (K.gecikme || 0) + '</b> · Kredi notun: <b>' + notKademe().ad + '</b>'
     + '<br><br>Yeni kredi için <b>' + bek + ' gün</b> beklemelisin. '
-    + 'Bekleme, kredinin <b>başlangıcından</b> sayılır ve vadeden bağımsızdır.', true);
+    + (yasakGun ? '🚫 <b>Temerrüt yasağı:</b> bu üst üste <b>' + G.krediTemerrutSayi + '.</b> temerrüdün — merdiven '
+        + KREDI_YASAK_GUN.map((g, i) => (i + 1 === Math.min(G.krediTemerrutSayi, KREDI_YASAK_GUN.length) ? '<b>' + g + '</b>' : g)).join(' → ')
+        + ' gün. Bir sonraki krediyi temerrütsüz kapatırsan sayaç sıfırlanır. '
+      : 'Bekleme, kredinin <b>başlangıcından</b> sayılır ve vadeden bağımsızdır. '), true);
   beep(880, .18);
 }
 
@@ -15686,18 +15998,41 @@ function yatPanel() {
       + 'bozulur ve paranız yetmezse ilk gün de yardım alabilirsiniz.</span></p></div>' + '</div>';
   const bek = yatBeklemeKalan(), limit = yatLimit();
   if (bek > 0) {
+    const tsayi = G.krediTemerrutSayi || 0;
+    if (tsayi > 0) return h + '<p class="sub neg">🚫 <b>Temerrüt yasağı: ' + bek + ' gün</b> <span class="sub">(üst üste ' + tsayi + '. temerrüt)</span></p>'
+      + '<p class="sub">Son büyüme kredin <b>temerrütle</b> kapandı. Merdiven: '
+      + KREDI_YASAK_GUN.map((g, i) => (i + 1 === Math.min(tsayi, KREDI_YASAK_GUN.length) ? '<b>' + g + '</b>' : g)).join(' → ')
+      + ' gün. Bir sonraki krediyi temerrütsüz kapatırsan sayaç sıfırlanır. 🛟 Kurtarma ve ⚡ Acil Nakit bu yasaktan etkilenmez.</p></div>';
     return h + '<p class="sub">⏳ <b>Yeni kredi için ' + bek + ' gün beklemelisin.</b></p>'
       + '<p class="sub">Bekleme, önceki kredinin <b>başlangıcından</b> sayılır ve <b>vadeden bağımsızdır</b> — ne kısa vade seçmek ne de erken kapatmak onu kısaltır. '
       + 'Bu kural, krediyi çekip hemen kapatıp tekrar çekerek sonsuz büyüme döngüsü kurmayı engeller.</p></div>';
   }
   if (kd.gunluk === null) {
-    return h + '<p class="sub neg">🚫 <b>Kredi notun çok düşük — banka kredi vermiyor.</b></p>'
-      + '<p class="sub">Notun, geciken borçlarını ödedikçe ve yeni kredileri düzenli kapattıkça yükselir.</p></div>';
+    // ⚠️ 38. TUR (ikinci düzeltme): E artık `gunluk: .075` ile AÇIK — bu dal ULAŞILMAZ.
+    //    Emniyet olarak duruyor (tablo ileride yeniden kapatılırsa ekran susmasın).
+    // 🐛 38. TUR (patron 2. kez: "kredi notu E'de, bu sorun hâlâ neden devam ediyor"):
+    //    E bir ÖLÜ DÖNGÜ değil (Acil Nakit ve Kurtarma nota bakmaz, not +3/gün işler) —
+    //    ama ekran bunu SÖYLEMİYORDU. Oyuncu ne NEDEN'i ne KAÇ GÜN'ü görüyordu.
+    //    Ölçüldü: notTazele açık borç (yat/kredi/acil) varken notu DONDURUR; borç yokken
+    //    +3/gün, tavan 50. E=0-24, D=25. Artık dal DURUMU söylüyor.
+    const acikBorc = yatVar() ? 'büyüme kredisi' : krediVar() ? 'kurtarma kredisi' : acilVar() ? 'acil nakit borcu' : null;
+    const dGun = Math.max(1, Math.ceil((25 - notu()) / NOT_TOPARLA_GUN));
+    const aLim = acilLimit();
+    let d = '<p class="sub neg">🚫 <b>Kredi notun çok düşük — banka BÜYÜME kredisi vermiyor.</b> <span class="sub">(' + Math.round(notu()) + '/100 · D için 25 gerekir)</span></p>';
+    if (acikBorc) d += '<p class="sub" style="color:var(--warn)">⏸️ <b>Notun şu an DONUK:</b> açık <b>' + acikBorc + '</b> varken sicil düzelmez. '
+      + 'Borcu kapat → not <b>her gün +' + NOT_TOPARLA_GUN + '</b> işler, D\'ye <b>' + dGun + ' gün</b>.</p>';
+    else if (G.saatSupheli) d += '<p class="sub" style="color:var(--warn)">⏸️ <b>Cihaz saati şüpheli</b> — günler sayılıyor ama puan yazılmıyor. Saati otomatik ayara al.</p>';
+    else d += '<p class="sub pos">📈 <b>Notun her gün +' + NOT_TOPARLA_GUN + ' işliyor</b> (açık borcun yok). D kademesine <b>' + dGun + ' gün</b> kaldı — D\'de büyüme kredisi yeniden açılır.</p>';
+    if (aLim > 0) d += '<p class="sub">💡 Bu arada <b>Acil Nakit</b> kredi notuna bakmaz: şu an <b>' + fmt(aLim) + '</b> çekebilirsin.</p>'
+      + '<button class="primary ghostbtn" onclick="openBank(\'acil\')">⚡ Acil Nakit sekmesine git</button>';
+    else if (!acikBorc) d += '<p class="sub">💡 <b>Acil Nakit</b> ve <b>Kurtarma</b> kredi notuna bakmaz — şu an bekleme süresi ya da güven süresi yüzünden kapalı; sekmelerde kalan süre yazıyor.</p>';
+    return h + d + '</div>';
   }
   h += '<p class="sub" style="margin-top:0">Yeni santral, depo ya da hat için borçlanırsın. '
     + '<b>Para doğrudan kasana girer</b> — istediğin yere harcarsın.</p>'
     + '<table class="ledger">'
-    + '<tr><td>Kredi limitin</td><td><b>' + fmt(limit) + '</b> <span class="sub">(şirket değerinin %' + Math.round(KREDI_LIMIT * 100) + '\'si × ' + kd.carpan + ')</span></td></tr>'
+    + '<tr><td>Kredi limitin</td><td><b>' + fmt(limit) + '</b> <span class="sub">(şirket değerinin %' + Math.round(KREDI_LIMIT * kd.carpan * 100) + '\'i · ' + kd.ad.split(' ')[0] + ' notu)</span></td></tr>'
+    + '<tr><td>🪜 Not merdiveni</td><td class="sub">' + KREDI_NOTLAR.slice().reverse().map(n => (n === kd ? '<b>' : '') + n.ad.split(' ')[0] + ' %' + Math.round(KREDI_LIMIT * n.carpan * 100) + (n === kd ? '</b>' : '')).join(' → ') + '</td></tr>'
     + '</table>'
     + '<div style="font-size:11px;color:var(--acc2);font-weight:800;margin:10px 0 4px">⏱️ VADE SEÇ — kısa vade ucuz ama taksiti ağır</div>'
     + '<div style="display:flex;gap:6px">'
@@ -17500,6 +17835,71 @@ const CITY_NOTE = {
   'Şarja': 'Arap dünyasının kültür başkenti ilan edilmişti; müzeleri ve dev kitap fuarıyla tanınır.',
   'Şiraz': 'Şairlerin şehri: Hafız ile Sadi burada yatar, bahçeleri de şiirleri kadar meşhurdur.',
   'Şımkent': 'İpek Yolu kervanlarını koruyan bir kervansaraydan doğmuş; Kazakistan\'ın üçüncü büyük şehri.',
+
+  // ═══ 🏙️ NOTSUZ KALAN 53 KAYIT (36. tur, patron istedi) ═══
+  // 35. turun teshisi YANLISTI: bunlarin 40'i eyalet degil GERCEK SEHIR (Yokohama,
+  // Kobe, Queens, Soweto, Foshan...). `buyuk-sehirler.js` golge kayitlari (golge===0)
+  // ve STATE_POP'u disarida biraktigi icin "580/580 notlu" diyordu. Ama golge kaydin
+  // talebe girmemesi yalniz CIFT SAYIM FRENIDIR: drawCityLabels onu adiyla etiketler ve
+  // openCityCard kartini acar. Yani oyuncu Yokohama'ya dokunup BOS KART goruyordu.
+  // ⚠️ Yeni not eklerken `node tools/kalan-notlar.js` ile listeyi cikar —
+  //    buyuk-sehirler.js TEK BASINA eksik liste verir.
+  // 8 ajan yazdi, ayri ajanlar olgu denetimi yapti (11 duzeltme = %21), hakem turu
+  // tekduzelik/tarafsizlik suzgecinden gecirdi, Turkce imla turu olgu kaymasi
+  // kontrolunden gecti (tools/notlar36-imla.py).
+  'Amazonas': 'Kara sulu Negro ile çamurlu Solimões nehirleri, tek yatakta birleşmeden önce kilometrelerce yan yana akar.',
+  'Arizona': 'Yaz saati uygulamayan ender yerlerden; güneşi bir saat uzatmak çölde klima faturasını daha da kabartırdı.',
+  'Bahia': 'Atlantik sahili boyunca Hindistan cevizi koruları uzanır; ardında Chapada Diamantina yaylasının şelaleleri saklıdır.',
+  'Bao\'an': 'Adı Shenzhen kentinden bin altı yüz yıl eskidir; batı ucundaki fabrikalar dünyaya elektronik parça yollar.',
+  'Baoshan': 'Huangpu Nehri Yangtze ile tam burada buluşur; Wusongkou iskelesine dev yolcu gemileri yanaşır.',
+  'Bavyera': 'Almanya\'nın en geniş eyaletidir; ortasından Tuna akar, güneyinde Zugspitze buzullarıyla birlikte yükselir.',
+  'Biên Hòa': 'Dong Nai boyunca uzanan eski bir çömlekçi kenti; üç asırlık fırınları sanayi bacalarıyla yan yana yaşar.',
+  'Callao': 'Pasifik kıyısında Peru\'nun ana limanı; temeli 1747 yılında atılan Real Felipe Kalesi bu koyu korsanlara karşı korurdu.',
+  'Ceará': 'Yer değiştiren kum tepeleri ve hiç dinmeyen doğu rüzgârı, sahili rüzgâr sörfçülerinin uğrak yeri yapmıştır.',
+  'Depok': 'Yıldız meyvesi bahçeleriyle ünlendi; güneydeki üniversite yerleşkesinde sekiz yapay göl ve bir kent ormanı vardır.',
+  'Dombivali': 'Kalyan ile aynı belediyeyi paylaşır; Marathi yeni yılında düzenlenen süslü araba alayıyla ve kültür hayatıyla tanınır.',
+  'Douala': 'Wouri haliçinin ağzında, Gine Körfezi\'ne açılan rıhtımlarından kakao ve kereste dünyaya ulaşır.',
+  'Ecatepec de Morelos': 'Adı Nahuatl dilinde rüzgâr tepesi anlamına gelir; Guadalupe Sıradağları\'nın eteğinde, kurumuş Texcoco Gölü tabanında yayılır.',
+  'Faridabad': 'Aravalli tepelerinin eteğinde; 10. yüzyıldan kalma Surajkund havuzu her şubat el sanatları şenliğine ev sahipliği yapar.',
+  'Fengxiang': 'Hangzhou Körfezi\'ne bakan kumsallar burada başlar; adı bilgeye saygı göstermek anlamına gelir.',
+  'Foshan': 'İnci Nehri deltasında Guangzhou ile sırt sırta büyür; çömlek fırınları ve Wing Chun kung fu ocağı buranın mirasıdır.',
+  'Gazipur': 'Başkentin 25 kilometre kuzeyi; hazır giyim tezgâhları Bhawal sal ormanının sınırına dayanmıştır.',
+  'Ghāziābād': 'Hindon nehri kenti ikiye böler; Delhi sınırında durduğu için Uttar Pradesh\'in kapısı diye anılır.',
+  'Goyang-si': 'Han Nehri\'nin kuzeyinde, Seul şehrine bitişik seralar dolusu bir ova; her bahar burada büyük bir çiçek fuarı kurulur.',
+  'Guarulhos': 'Tietê Irmağı\'nın kuzeyinde, 760 metre yükseklikteki bir platodadır; São Paulo metropolünün havalimanı buradadır.',
+  'Hokkaido': 'Tsugaru Boğazı ile Honshu adasından ayrılır; batısına metrelerce kar yağar, iç kesiminde yazın lavanta tarlaları açar.',
+  'Jiading': 'Formula 1 pistini ve otomobil fabrikalarını barındırır; Nanxiang semti çorbalı mantının memleketidir.',
+  'K. Ren-Vestfalya': 'Ruhr havzasının kömür ocakları ülkeyi onlarca yıl ısıttı; Zollverein bugün müze olarak geziliyor.',
+  'Kaliforniya': 'Karlı Sierra Nevada zirveleri ile deniz seviyesinin altındaki Ölüm Vadisi çölü birbirine birkaç saatlik yoldur.',
+  'Kalyān': 'Ulhas haliçinin bittiği yerdeki eski bir ticaret iskelesi; antik Yunan seyir metinlerinde bile adı geçer.',
+  'Katalonya': 'Pirenelerin doğu ucu burada Akdeniz\'e iner; güneydeki Ebro Deltası\'nın çeltik tarlaları göçmen kuşları ağırlar.',
+  'Kawasaki': 'Tokyo ile Yokohama arasına sıkışmış dar bir şerit; kuzey sınırını Tama Nehri çizer, yeni yılda tapınağı dolup taşar.',
+  'Khartoum North': 'Yerel adı Bahri olan bu yaka, Mavi Nil ile Beyaz Nil kavşağının kuzeyinde köprülerle komşularına bağlanır.',
+  'Kobe': 'Bir yanda Rokko dağları bir yanda deniz, arada uzayıp giden dar bir şehir; etinin ünü de dünyaya yayılmıştır.',
+  'Kyushu': 'Japonya\'daki kaplıcaların üçte biri bu volkanik adada kaynar; Aso kalderasının içinde köyler ve tarlalar vardır.',
+  'Minhang': 'Huangpu kıvrımındaki güneybatı yaka; bin yıllık Qibao su kasabası buranın içinde kalır.',
+  'Najafgarh': 'Delhi\'nin güneybatı ucunda; Sahibi suyunun beslediği sazlıklar kuş cenneti, kriket yıldızı Sehwag da buralıdır.',
+  'New Taipei City': 'Taipei şehrini çepeçevre saran, ondan daha kalabalık ayrı bir belediye; kuzey ucundaki kayaları rüzgârla tuz oymuştur.',
+  'Omdurman': 'Nil nehrinin batı yakasında, başkentin tam karşısındadır; deve ve baharat çarşıları buranın en canlı köşeleridir.',
+  'Pikine': 'Dakar yarımadasının karaya bağlandığı yerde; kum tepeleri arasındaki Niaye bostanları şehre taze sebze yetiştirir.',
+  'Pimpri-Chinchwad': 'Pune şehrinin kuzeybatısında Pavana nehri boyunca uzanan ikiz kent; Morya Gosavi tapınağı Ganesha hacılarını çeker.',
+  'Qingpu': 'En batı uçta Jiangsu ve Zhejiang eyaletlerine sınırdır; Dianshan Gölü ile su kasabalarının diyarı.',
+  'Queens': 'Yüzden fazla ülkeden gelen sakinleriyle onlarca dilin duyulduğu New York ilçesi; JFK ve LaGuardia havalimanları da buradadır.',
+  'Sadr City': 'Bağdat\'ın kuzeydoğu ucunda 1959 yılında planlanan konut bölgesidir; mahalleleri numaralı ızgara düzeninde dizilir.',
+  'Saitama': 'Üç ayrı şehrin 2001 yılında birleşmesiyle doğdu; bir mahallesi baştan aşağı bonsai bahçelerine ayrılmıştır.',
+  'Songjiang': 'Şanghay yerleşiminin en eski çekirdeği; yüz metrelik Sheshan tepesi bu düzlüğün tek doğal yüksekliğidir.',
+  'South Tangerang': '2008 yılında ayrı bir kent oldu; toprakları masa başında çizilmiş planlı uydu yerleşimlerden oluşur.',
+  'Soweto': 'Adı güneybatı mahallelerinin kısaltmasından gelir; kullanım dışı kalan soğutma kuleleri bugün renkli duvar resimleriyle kaplıdır.',
+  'Taguig': 'Laguna de Bay gölünün kuzeybatı kıyısında balıkçı köyüydü; gökdelenleri eski bir askeri üssün satılan topraklarında yükseldi.',
+  'Tangerang': 'Cisadane suyunda her yıl ejderha kayığı yarışları düzenlenir; Benteng Çinlileri denen topluluk yüzyıllardır buradadır.',
+  'Teksas': 'Güney sınırını baştan sona Rio Grande çizer; batısı çöl, doğusu ise Körfez kıyısının nemli ovalarıdır.',
+  'The Bronx': 'New York şehrinin büyük bölümüyle anakarada uzanan tek ilçesi; hip hop müziğinin 1973 yazında doğduğu yer olarak bilinir.',
+  'Thāne': 'Hindistan\'ın ilk yolcu treni 1853 yılında Bombay\'dan buraya ulaştı; otuza yakın gölüyle göl şehri lakabını taşır.',
+  'Tohoku': 'Honshu adasının kuzeyi Japonya\'nın pirinç ambarıdır; kışları Sibirya rüzgârıyla kar altında geçer.',
+  'Urumçi': 'Tanrı Dağları\'nın kuzey eteğinde yayılır; en yakın kıyıya yaklaşık 2.500 km ile dünyada denize en uzak büyük şehirdir.',
+  'Xianyang': 'Qin hanedanının imparatorluk başkentiydi; Wei Nehri\'nin açtığı ova Han ve Tang türbeleriyle kaplıdır.',
+  'Yokohama': 'Ticarete açıldığı 1859 yılına dek altı yüz nüfuslu bir balıkçı köyüydü; bugün Tokyo Körfezi\'nin liman yüzü.',
+  'Zapopan': 'Guadalajara kentinin kuzeybatı kanadı; her ekim ayında bir milyonu aşkın kişinin yürüdüğü Romeria alayıyla tanınır.',
 };
 window.setMapView = v => { MAPVIEW = v; ilSinirTazele(); drawOverlay(); openViewSheet(); toast(VIEWS[v].ico + ' ' + VIEWS[v].nm + ' görünümü', ''); };
 window.toggleLines = () => { G.hideLines = !G.hideLines; save(); drawOverlay(); openViewSheet(); toast(G.hideLines ? '🙈 Kablolar gizlendi' : '⚡ Kablolar görünür', ''); };
@@ -17712,10 +18112,22 @@ function drawCityLabels() {
     const p = map.latLngToContainerPoint(merkez), w = g.m.nm.length * 6.6 + 20;
     if (kutular.some(u => Math.abs(u.x - p.x) < (u.w + w) / 2 && Math.abs(u.y - p.y) < 26)) continue;
     kutular.push({ x: p.x, y: p.y, w });
-    overlayLayer.push(L.marker(merkez, {
+    // 🐛 38. TUR (patron: "İzmir→Atina ittifak hattı Atina'nın 40 km kuzeyine gitti"):
+    //    bu etiket `interactive:false` idi → Leaflet `pointer-events:none` verir → dokunuş
+    //    HARİTAYA geçer → `mapTapAt(merkez)` → hat ucu / tesis ÜLKE KUTUSUNUN MERKEZİNE oturur.
+    //    Canlı kayıtta ölçüldü: to="383_238" = Yunanistan kutusunun merkezi, Chalkída civarı.
+    //    Artık etiket dokunuşu YAKALAR: çizim/yerleştirme modunda YUTAR + uyarır; normal
+    //    modda eski davranış (karo sayfası) korunur. Ülke merkezi bir hedef DEĞİLDİR.
+    const ulkeMk = L.marker(merkez, {
       icon: L.divIcon({ html: `<div class="citylbl" style="opacity:.72;border-style:dashed">${g.m.nm}</div>`, className: '', iconSize: [w, 20], iconAnchor: [w / 2, 10] }),
-      interactive: false,
-    }).addTo(map));
+      interactive: true, zIndexOffset: -100,
+    }).addTo(map);
+    ulkeMk.on('click', ev => {
+      if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
+      if (MODE) { toast('🏳️ Bu bir ÜLKE etiketi — hat ucu ya da tesis için bir ŞEHRE ya da haritada bir NOKTAYA dokun', 'warn', null, 6000); return; }
+      mapTapAt(merkez);
+    });
+    overlayLayer.push(ulkeMk);
     if (kutular.length > 110) break;
   }
 }
@@ -20292,6 +20704,11 @@ bootGuncelle().then(yenilenecek => {
     if (a) {
       // 🔗 "Hesabı Bağla" yönlendirmesinden dönüş: misafir kaydını yeni uid'ye taşı.
       // Taşıma olmazsa oyuncu Google'a bağlanır ama şirketi eski uid'de kalıp kaybolurdu.
+      // ⚠️ 36. TUR ÖLÇÜMÜ — BU DAL ÖLÜ: `ec_link_from` HİÇBİR YERDE setItem edilmiyor
+      //    (dosyada yalnız getItem/removeItem var) ve `signInWithRedirect` 12639'da
+      //    KALDIRILMIŞ, dolayısıyla getRedirectResult hiç dolmuyor. `from` her zaman null,
+      //    yani buradaki moveCloudData hiç çalışmıyor. Yönlendirme yolu geri getirilirse
+      //    `gocPaketiAl` YÖNLENDİRMEDEN ÖNCE çağrılmalı — paket zaten localStorage'da durur.
       let from = null;
       try { from = localStorage.getItem('ec_link_from'); } catch (e) {}
       if (from && from !== a.uid) {
