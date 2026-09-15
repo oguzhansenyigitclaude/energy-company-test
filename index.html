@@ -690,7 +690,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-15 21:03) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-15 21:04) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -861,7 +861,7 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-15 21:03)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-15 21:04)'; // deploy.js yayında tarih damgası ekler
 
 // ═══════════ 🗣️ DİL ALTYAPISI (hedef 22 dil — docs/dil-ve-kapsam-plani.md) ═══════════
 // KARARLAR (plan dosyasında ölçülerek verildi, değiştirmeden önce oku):
@@ -15475,7 +15475,13 @@ const KREDI_TAHSIL = 0.50;      // temerrütte satışlardan alınan pay
 // Zamanında ödeyen ucuzlar ve limiti büyür; geciken pahalılaşır ve limiti daralır.
 // Bu, patronun "oyuncuyu oyuna bağlayalım" hedefinin asıl kancasıdır.
 // `gunluk` = günlük faiz oranı; toplam faiz = gunluk × vade. B notu + 10 gün = %30 (patron ayarı).
-const KREDI_NOT_BAS = 70;       // yeni şirket B notuyla başlar → 10 günde tam olarak %30 faiz
+// 🪜 38. tur (patron 16 Eyl: "yeni şirket C notuyla başlasın"). Eskiden 70 (B) idi; not
+//    merdiveni gelince B'nin limiti %20'den %35'e çıktı ve "yeni oyuncu 500M için en az 1 ay
+//    oynasın" pacing kararıyla çatıştı. C = %20 limit (eski başlangıçla aynı), günlük faiz %4.
+//    60 seçildi (C bandı 45-64): bir gecikme (−15) hâlâ C'de bırakır, bir temiz 10 günlük
+//    kredi (+2×10 +4) B'ye çıkarır. Yalnız `notu()` varsayılanı — kayıtlı notu olan oyuncuya
+//    dokunmaz (ölçüldü: tek kullanım).
+const KREDI_NOT_BAS = 60;       // yeni şirket C notuyla başlar → 10 günde %40 faiz, limit %20
 // 🪜 NOT MERDİVENİ (38. tur, patron): limit = şirket değeri × KREDI_LIMIT(%20) × çarpan →
 //    A %50 · B %35 · C %20 · D %10 · E %5. E ARTIK KAPALI DEĞİL ("Son Şans": az ama var,
 //    faizi en yüksek). Eski tablo E'yi `gunluk:null` ile tamamen kapatıyordu — patron:
