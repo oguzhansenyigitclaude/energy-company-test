@@ -690,7 +690,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-22 21:21) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-22 21:28) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -861,17 +861,17 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-22 21:21)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-22 21:28)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-09-23',
+  etiket: '2026-09-23a',
   baslik: '📦 Güncelleme notu — 23 Eylül',
   maddeler: [
-    '💾 <b>İki telefonda oynayanlar için kayıt koruması.</b> Şirketini başka bir cihazda açtıysan, oyun bunu artık fark ediyor ve <b>hangi kayıtla devam edeceğini sana soruyor</b>. Eskiden son açan cihaz diğerinin ilerlemesini sessizce siliyordu.',
+    '💾 <b>İki telefonda oynayanlar için kayıt koruması.</b> Şirketini başka bir cihazda açtıysan, oyun bunu artık fark ediyor ve <b>hangi kayıtla devam edeceğini sana soruyor</b>. Eskiden son açan cihaz diğerinin ilerlemesini sessizce siliyordu. <b>Google hesabıyla girenlerde de</b> çalışıyor.',
     '⏳ <b>Kıtalar arası hatta 48 saat finansman süresi.</b> Ortak kabul ettikten sonra payın <b>48 saat</b> içinde ödenmezse proje kendiliğinden iptal olur ve koridor yeniden teklife açılır. Kasandan kesinti yalnız payın <b>tamamı</b> ödendiğinde yapılır — iptalde toplanan bağışların hepsi ittifak kasanızda kalır.',
     '⏱️ İttifak ekranında kalan süre geri sayımla görünüyor; kasa yetersizse <b>ne kadar eksik olduğu</b> da yazıyor.',
   ],
@@ -20130,6 +20130,13 @@ function cloudNewerCheck(yerelDamga, yerelAd) {
     //    güncellemeyi alan HERKES bir kez yalan soru görürdü). Bir sonraki bulut yazması
     //    damgayı kurar ve koruma o andan itibaren çalışır. (`ec_surum` ile aynı "ilk damga" kuralı.)
     if (!cloud || !cloud.company || !cloud._dev || cloud._dev === CIHAZ_ID) { birak(); return; }
+    // ♻️ BENİMSEME DÖNGÜSÜ KALKANI (çürütme bulgusu): "Buluttaki kayıtla devam" dendiğinde
+    //    yerel kayıt o kaydın YABANCI `_dev`ini taşır ve bulut henüz BİZİM damgamızla
+    //    yazılmamıştır — `location.reload()` sonrası aynı soru YENİDEN çıkar ve oyuncu
+    //    sonsuz döngüye girerdi. Kabul edilen kaydın `_sv` imzası saklanır, aynı imza bir
+    //    daha sorulmaz. Başka cihaz YENİDEN yazınca `_sv` değişir → soru DOĞRU şekilde döner.
+    let kabulImza = null; try { kabulImza = localStorage.getItem('ec_bulut_kabul'); } catch (e) {}
+    if (kabulImza && kabulImza === String(cloud._sv || 0)) { birak(); return; }
     BULUT_ADAY = cloud;
     // 🛟 EMNİYET: oyuncu soruyu cevaplamadan bırakırsa bulut yedeği sonsuza dek durmasın.
     //    Geç cevap da güvenli — benimseme BULUT_ADAY'ı kullanıyor, buluta yeniden bakmıyor.
@@ -20156,6 +20163,8 @@ window.adoptCloudSave = async () => {
     //    yüklüyor, diğer cihazın ilerlemesini siliyordu. Artık denetimde okunan kayıt kullanılır.
     const cloud = BULUT_ADAY || await NET.cloudLoad();
     if (cloud && cloud.company) {
+      // ♻️ Bu bulut kaydını KABUL ETTİK — reload sonrası aynı soru tekrar sorulmasın.
+      try { localStorage.setItem('ec_bulut_kabul', String(cloud._sv || 0)); } catch (e) {}
       localStorage.setItem(SAVE_KEY, JSON.stringify(cloud));
       location.reload(); // temiz başlangıç — eski oyunun işaretçi/katman kalıntısı kalmasın
       return;
@@ -20232,9 +20241,26 @@ async function afterLogin() {
   const local = load();
   let s = null;
   // Sunucudaki kayıt ESAS. Yerel kopya yalnız çevrimdışı oynanan süre daha yeniyse kullanılır.
-  if (cloud && cloud.company) s = (local && local.company && local.lastSeen > (cloud._sv || cloud.lastSeen || 0) + 60000) ? local : cloud;
+  // 📱 BURASI GOOGLE OYUNCUSUNUN CANLI KARAR YOLU (çürütme bulgusu, ölçüldü): boot
+  //    `googleCheckRedirect()` dolu dönünce `afterLogin()` çağırıp RETURN ediyor —
+  //    `wizardStart` (ve oradaki `cloudNewerCheck`) Google oyuncusunda HİÇ çalışmıyor.
+  //    Eski satır kaybedeni SORMADAN çöpe atıyordu; üstelik CİHAZ saatli `lastSeen` ile
+  //    SUNUCU saatli `_sv`yi kıyasladığı için saat kayması kazananı belirliyordu.
+  // 🔑 Bulut kaydını BAŞKA bir cihaz yazmışsa sessiz seçim YOK: yerel kayıt başlatılır ve
+  //    `cloudNewerCheck` ile AYNI soru sorulur. Diğer hallerde davranış AYNEN korunur.
+  const baskaCihaz = !!(cloud && cloud.company && cloud._dev && cloud._dev !== CIHAZ_ID && local && local.company);
+  if (baskaCihaz) s = local;
+  else if (cloud && cloud.company) s = (local && local.company && local.lastSeen > (cloud._sv || cloud.lastSeen || 0) + 60000) ? local : cloud;
   else if (local && local.company) s = local;
-  if (s) { G = migrate(s); startGame(true); return; }
+  if (s) {
+    // ⚠️ Damga ve ad PRİMİTİF kopyalanır — `G = migrate(s)` ikisini aynı nesne yapar ve
+    //    `startGame(true)` damgayı tazeler (bkz. wizardStart'taki aynı tuzak).
+    const yerelDamga = s.lastSeen || 0, yerelAd = s.company;
+    if (baskaCihaz) NET._bulutSorgusu = true;   // soru bitene kadar bayat kaydı buluta yazma
+    G = migrate(s); startGame(true);
+    if (baskaCihaz) cloudNewerCheck(yerelDamga, yerelAd);
+    return;
+  }
   $('app').classList.add('wiz');
   $('modal').innerHTML = `
     <div class="biglogo">${LOGO_SVG}</div>
