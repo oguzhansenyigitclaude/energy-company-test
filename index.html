@@ -690,7 +690,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-22 20:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-22 20:46) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -861,18 +861,19 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-22 20:22)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-22 20:46)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-09-22',
-  baslik: '📦 Güncelleme notu — 22 Eylül',
+  etiket: '2026-09-22b',
+  baslik: '📦 Güncelleme notu — 22 Eylül (düzeltme)',
   maddeler: [
-    '🏭 <b>Çekmeceden tesise tek dokunuş.</b> ⛽ İKMAL ya da 💰 DEPOLARIN listesinde bir tesisin adına dokun: harita oraya uçar ve <b>uçuş biter bitmez o tesisin kartı kendiliğinden açılır</b>. Artık uçuşun bitmesini bekleyip ikinci kez dokunmana gerek yok.',
-    '🗺️ Uçuş sırasında başka bir tesise dokunursan artık <b>son dokunduğun</b> tesis açılır — eskiden iki uçuş birbirine karışabiliyordu.',
+    '🏭 <b>Çekmeceden tesise tek dokunuş.</b> ⛽ İKMAL ya da 💰 DEPOLARIN listesinde bir tesisin adına dokun: harita oraya uçar ve <b>uçuş bitince o tesisin kartı kendiliğinden açılır</b>. İkinci kez dokunmana gerek yok.',
+    '🔧 <b>Düzeltme:</b> kart bir önceki sürümde uçuş daha bitmeden açılıyor, harita yarım görünüyordu. Artık kart <b>gerçekten varıldıktan</b> sonra, harita netleşince açılıyor.',
+    '🗺️ Uçuş sırasında başka bir tesise dokunursan <b>son dokunduğun</b> tesis açılır.',
   ],
 };
 // ✨ SÜRÜM DEĞİŞİMİ TESPİTİ — doğrudan yükleme yolu için. APK canlı adresi DOĞRUDAN yüklüyor;
@@ -18391,18 +18392,44 @@ function flyFx() { const el = $('flyfx'); el.classList.remove('on'); void el.off
 //    (b) JETON: oyuncu uçuş sürerken BAŞKA bir satıra dokunursa eski uçuşun işi İPTAL olur;
 //        yoksa yanlış tesisin kartı açılırdı.
 let UCUS_JETON = 0;
-function ucusBitince(jeton, is, tavanMs) {
+// ⏳ VARIŞ SONRASI YERLEŞME PAYI. Haritada `L.tileLayer` YOK — dünya `L.canvas` üzerine
+//    çizilen VEKTÖR. Leaflet uçuş boyunca tuvali ÖLÇEKLİYOR (pikselli görünür) ve ancak uçuş
+//    bitince yeniden ÇİZİYOR. Kart varış anında açılırsa oyuncu tam o bulanık kareyi görür —
+//    patron: "pikseller arasında seyahat sonrası tesis sayfası açılıyor, saçma oldu".
+const UCUS_YERLESME_MS = 600;
+function ucusBitince(jeton, is, tavanMs, hedef, hedefZ) {
   if (typeof is !== 'function' || !map) return;
-  let bitti = false;
+  let kilit = false;
+  // 🎯 HEDEFE VARDI MI? "Herhangi bir moveend" YETMEZ — `mapwrap` üzerindeki ResizeObserver
+  //    her boyut değişiminde `map.invalidateSize()` çağırıyor, o da moveend atıyor. Uçuşun
+  //    ilk işi `closeNav()` olduğu için çekmece kapanınca bu olay UÇUŞ DAHA BAŞLAMADAN
+  //    geliyordu ve kart anında açılıyordu (patron bildirdi: "uçuş tamamlanmıyor bile").
+  //    Tolerans ~2 km: zoom 11'de ekran ~20 km, yani varışı kaçırmayacak kadar geniş,
+  //    başka bir tesisi varış sanmayacak kadar dar.
+  const vardi = () => {
+    try {
+      const c = map.getCenter();
+      return Math.abs(c.lat - hedef[0]) < .02 && Math.abs(c.lng - hedef[1]) < .02
+        && Math.abs(map.getZoom() - hedefZ) < .01;
+    } catch (e) { return true; }   // harita okunamıyorsa kilitleme — iş yine çalışsın
+  };
   const calistir = () => {
-    if (bitti) return;
-    bitti = true;
-    map.off('moveend', calistir);
     if (jeton !== UCUS_JETON) return;   // araya yeni uçuş girdi — bu iş artık geçersiz
     try { is(); } catch (e) { console.warn('[uçuş] sonra', e && e.message); }
   };
-  map.on('moveend', calistir);
-  setTimeout(calistir, tavanMs);
+  function bak() {
+    if (kilit || !vardi()) return;      // ara ya da yabancı moveend — beklemeye devam
+    kilit = true; map.off('moveend', bak);
+    setTimeout(calistir, UCUS_YERLESME_MS);   // tuval netleşsin, oyuncu nereye geldiğini GÖRSÜN
+  }
+  map.on('moveend', bak);
+  // 🎯 ZATEN HEDEFTE Mİ? (ölçüldü: aynı tesise ikinci kez dokunulduğunda harita hiç oynamıyor,
+  //    boyut da değişmediği için `invalidateSize` bile moveend atmıyor → kart ancak TAVAN
+  //    süresinde açılıyordu, oyuncu 3 sn boşuna bekliyordu.) Uçuş yeni başladığı için harita
+  //    normalde hâlâ ESKİ konumdadır; bu dal yalnız gerçekten varılmış hâlde çalışır.
+  bak();
+  // Son emniyet: uçuş takılırsa kart yine açılır.
+  setTimeout(() => { if (kilit) return; kilit = true; map.off('moveend', bak); calistir(); }, tavanMs);
 }
 // 🛡️ GÜVENLİ UÇUŞ: harita kabı GİZLİ / SIFIR BOYUTLU iken Leaflet'in `flyTo`su
 //    "Invalid LatLng object: (NaN, NaN)" atıyor (39. turda tarayıcıda yakalandı). Bu tuzak
@@ -18421,7 +18448,7 @@ window.flyToPlace = (lat, lng, zoom, label, sonra) => {
   const ll = [lat, lng], z = zoom || 11, from = map.getCenter();
   const km = kmDist([from.lat, from.lng], ll);
   // Yakın hedefe doğrudan uç — her seferinde şov yapmak yorucu olur
-  if (km < 350) { ucGuvenli(ll, z, .9); pingAt(ll, label); ucusBitince(jeton, sonra, 1600); return; }
+  if (km < 350) { ucGuvenli(ll, z, .9); pingAt(ll, label); ucusBitince(jeton, sonra, 3000, ll, z); return; }
   flyFx();
   const outZ = km > 5000 ? 2 : km > 2000 ? 3 : km > 800 ? 4 : 5;
   ucGuvenli([(from.lat + ll[0]) / 2, (from.lng + ll[1]) / 2], outZ, 1.1);
@@ -18432,7 +18459,7 @@ window.flyToPlace = (lat, lng, zoom, label, sonra) => {
     ucGuvenli(ll, z, 1.4);
     // `moveend` ANCAK BURADA bağlanır: başta bağlansaydı uzak hedefte BİRİNCİ aşamanın
     //    (uzaklaşma) moveend'i kartı erken açardı.
-    ucusBitince(jeton, sonra, 2200);
+    ucusBitince(jeton, sonra, 4800, ll, z);
     setTimeout(() => { if (jeton === UCUS_JETON) pingAt(ll, label); }, 1250);
   }, 1250);
 };
