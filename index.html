@@ -690,7 +690,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-22 20:46) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-22 21:21) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -861,19 +861,19 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-22 20:46)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-22 21:21)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-09-22b',
-  baslik: '📦 Güncelleme notu — 22 Eylül (düzeltme)',
+  etiket: '2026-09-23',
+  baslik: '📦 Güncelleme notu — 23 Eylül',
   maddeler: [
-    '🏭 <b>Çekmeceden tesise tek dokunuş.</b> ⛽ İKMAL ya da 💰 DEPOLARIN listesinde bir tesisin adına dokun: harita oraya uçar ve <b>uçuş bitince o tesisin kartı kendiliğinden açılır</b>. İkinci kez dokunmana gerek yok.',
-    '🔧 <b>Düzeltme:</b> kart bir önceki sürümde uçuş daha bitmeden açılıyor, harita yarım görünüyordu. Artık kart <b>gerçekten varıldıktan</b> sonra, harita netleşince açılıyor.',
-    '🗺️ Uçuş sırasında başka bir tesise dokunursan <b>son dokunduğun</b> tesis açılır.',
+    '💾 <b>İki telefonda oynayanlar için kayıt koruması.</b> Şirketini başka bir cihazda açtıysan, oyun bunu artık fark ediyor ve <b>hangi kayıtla devam edeceğini sana soruyor</b>. Eskiden son açan cihaz diğerinin ilerlemesini sessizce siliyordu.',
+    '⏳ <b>Kıtalar arası hatta 48 saat finansman süresi.</b> Ortak kabul ettikten sonra payın <b>48 saat</b> içinde ödenmezse proje kendiliğinden iptal olur ve koridor yeniden teklife açılır. Kasandan kesinti yalnız payın <b>tamamı</b> ödendiğinde yapılır — iptalde toplanan bağışların hepsi ittifak kasanızda kalır.',
+    '⏱️ İttifak ekranında kalan süre geri sayımla görünüyor; kasa yetersizse <b>ne kadar eksik olduğu</b> da yazıyor.',
   ],
 };
 // ✨ SÜRÜM DEĞİŞİMİ TESPİTİ — doğrudan yükleme yolu için. APK canlı adresi DOĞRUDAN yüklüyor;
@@ -6997,6 +6997,22 @@ const isoWeek = () => { const d = new Date((typeof bankaZaman === 'function' && 
 
 // ── Durum ──
 const SAVE_KEY = 'enerjioyunu_proto_v8';
+// 📱 CİHAZ KİMLİĞİ (40. tur) — bulut kaydını EN SON HANGİ CİHAZIN yazdığını bilmek için.
+//    ⚠️ NEDEN SAAT DEĞİL: eski denetim `cloud._sv` ile `lastSeen`i kıyaslıyordu, ama `_sv`
+//    SUNUCU saatiyle yazılıyor (`zaman()` = Date.now() + _saatFark), `lastSeen` ise HAM
+//    CİHAZ saatiyle. Aradaki fark tam olarak cihaz saati kaymasıdır: saati 3 dk GERİ olan
+//    telefon HER açılışta yalan soru görür, İLERİ olan hiç görmez. Kimlik karşılaştırması
+//    saatten tamamen bağımsız — kayma ne olursa olsun doğru cevabı verir.
+//    ⚠️ Depolama kapalıysa sabit değer döner: kimlik hep "biz" çıkar, denetim kendini kapatır
+//    (yalan soru sormaktansa sormamak). `saves/$uid` kuralında `$other` kısıtı YOK, `_dev`
+//    alanı için Firebase kuralı değiştirmek GEREKMİYOR (ölçüldü).
+const CIHAZ_ID = (() => {
+  try {
+    let d = localStorage.getItem('ec_cihaz');
+    if (!d) { d = 'c' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); localStorage.setItem('ec_cihaz', d); }
+    return d;
+  } catch (e) { return 'c-gecici'; }
+})();
 let G = null, UID = 1;
 function freshState() {
   return {
@@ -11096,6 +11112,9 @@ window.fundConsortium = () => {
   const c = G.ally && G.ally.consortium;
   if (!c || c.status !== 'accepted') return;
   if (!canAllyLine()) { toast('🌍 Kasadan finansman başkan/yardımcı yetkisidir', 'warn'); return; }
+  // ⏳ Süre dolmuşken ödeme kabul edilmez — tik henüz iptali işlememiş olabilir (ekran
+  //    açıkken saniyeler geçer). Parayı alıp sonra iptal etmek en kötü sonuç olurdu.
+  if (consFinDoldu(c)) { toast('⏳ Finansman süresi doldu — proje iptal ediliyor', 'warn'); consortiumIptal(); return; }
   const r = CONSORTIUM_ROUTES[c.route], share = r.cost / 2;
   if ((G.ally.treasury || 0) < share) { toast('Kasada ' + fmt(share) + ' olmalı — bağış çağrısı aç', 'warn'); return; }
   G.ally.treasury -= share;
@@ -11135,9 +11154,62 @@ window.fundConsortium = () => {
   addMail('🌍 ' + c.partner, 'İnşaat başladı', `${r.nm} hattının inşaatı başladı. 3 gün içinde devreye girecek; gelir paylaşımı otomatik işleyecek.`);
   save(); refreshAllyUI();
 };
+// ═══════════ ⏳ KONSORSİYUM FİNANSMAN SÜRESİ (patron 23 Eyl) ═══════════
+// PATRON: "48 saat içinde o kıtalar arası hat için gerekli para toplanmaz ise proje
+// iptal edilir ve alınan paralar geri verilir."
+// ⚠️ SÜRE SUNUCUYA YAZILMIYOR — `meta/consortium` kuralı BEYAZ LİSTE ($other: validate
+//    false). Yeni bir alan göndermek BÜTÜN konsorsiyum yazmalarını 401'e düşürürdü
+//    (yazma hataları sessizce yutulur; özellik "çalışıyor" görünüp senkron olmaz).
+//    Bunun yerine süre, zaten gönderilen ve kuralda İZİNLİ olan `since`ten TÜRETİLİR —
+//    her üyenin istemcisi aynı sonucu hesaplar, ek alan ve kural değişikliği gerekmez.
+const CONS_FIN_SAAT = 48;
+const consFinSon = c => (c && c.since ? c.since : Date.now()) + CONS_FIN_SAAT * 36e5 / (G && G.demo ? 60 : 1);
+const consFinKaldi = c => Math.max(0, consFinSon(c) - Date.now());
+const consFinDoldu = c => !!c && c.status === 'accepted' && Date.now() > consFinSon(c);
+// İptal tekrarı bastırma: yetkisiz üyenin istemcisi yerelde iptal etse de ortak kayıt
+// duruyorsa allyApply projeyi geri getirir — her turda posta/toast yağmasın.
+let CONS_IPTAL = { rota: -1, at: 0 };
+// 🌍 Süre doldu: ortaklığı feshet. Kasadan kesinti YAPILMADIĞI için iade edilecek tutar
+//    yoktur — `fundConsortium` parayı tek seferde çeker ve aynı anda 'building'e geçer,
+//    yani 'accepted' beklerken kasaya hiç dokunulmamıştır. Toplanan bağışlar kasada kalır.
+function consortiumIptal() {
+  const c = G.ally && G.ally.consortium;
+  if (!c) return;
+  // Yetkisi olmayan üye ortak kaydı silemez; başkanın istemcisi halleder. O da yerelde
+  // gizlemesin — yoksa iki üye farklı şey görür. Çevrimdışı oyunda yetki aranmaz.
+  if (allyOnline() && !canAllyLine()) return;
+  const r = CONSORTIUM_ROUTES[c.route] || { nm: 'Kıtalararası hat', cost: 0 };
+  const tekrar = CONS_IPTAL.rota === c.route && Date.now() - CONS_IPTAL.at < 6e5;
+  CONS_IPTAL = { rota: c.route, at: Date.now() };
+  G.ally.consortium = null;
+  // ⚠️ SUNUCUDAN DA SİL: `consortiumPush` `!c` ise hiçbir şey yazmaz; yalnız yerelde
+  //    null yapsaydık `allyApply` ortak kayıttan projeyi GERİ GETİRİRDİ (sonsuz döngü).
+  //    Kural silmeye izin veriyor (`!newData.exists() || ...`); 'iptal' diye bir status
+  //    YAZILAMAZ çünkü enum yalnız pending/accepted/building/live kabul ediyor.
+  if (allyOnline()) NET.allyMetaSet(G.allyId, 'consortium', null).catch(() => {});
+  if (!tekrar) {
+    toast('🌍 KONSORSİYUM İPTAL — ' + r.nm + ' için finansman ' + CONS_FIN_SAAT + ' saatte tamamlanamadı', 'warn', null, 0, true);
+    addMail('🌍 ' + (c.partner || 'Konsorsiyum'), 'Proje iptal edildi',
+      `${r.nm} projesindeki payınız olan ${fmt(r.cost / 2)} <b>${CONS_FIN_SAAT} saatlik finansman süresi</b> içinde toplanamadı; ortaklık sözleşmesi kendiliğinden feshedildi.<br><br>` +
+      `💰 <b>Kasanızdan hiçbir kesinti yapılmadı.</b> Pay yalnızca tamamı ödendiğinde çekilir, o da olmadı — toplanan bağışların tamamı ittifak kasanızda duruyor ve dilediğiniz projede kullanılabilir.<br><br>` +
+      `Koridor yeniden teklife açık; kasa hazır olduğunda yeni bir konsorsiyum kurabilirsiniz.`, true);
+  }
+  save(); refreshAllyUI();
+}
 function consortiumTick() {
   const c = G.ally && G.ally.consortium;
-  if (!c || c.status !== 'building' || Date.now() < c.done) return;
+  if (!c) return;
+  // ⏳ KAYIP 'accepted' GEÇİŞİ: kabul, `sendConsortium` içinde bir `setTimeout` ile
+  //    yapılıyor — oyuncu o 20 sn dolmadan uygulamayı kapatırsa zamanlayıcı kaybolur ve
+  //    proje sonsuza dek 'pending' kalırdı (finansmana hiç geçemezdi). Burada tamamlanıyor.
+  if (c.status === 'pending' && Date.now() - (c.since || 0) > 20000) {
+    c.status = 'accepted';
+    consortiumPush();
+    save(); refreshAllyUI();
+  }
+  // ⏳ FİNANSMAN SÜRESİ DOLDU → ortaklık feshedilir (patron 23 Eyl).
+  if (consFinDoldu(c)) { consortiumIptal(); return; }
+  if (c.status !== 'building' || Date.now() < c.done) return;
   c.status = 'live';
   consortiumPush(); // hat devreye girdi — bütün üyeler görsün
   G.ally.pts += 3;
@@ -12355,8 +12427,9 @@ function allyHTML() {
       const r = CONSORTIUM_ROUTES[cs.route];
       h += `<div style="border:1px solid var(--gold);border-radius:10px;padding:8px 10px;margin:6px 0">
         <div style="font-size:12.5px;font-weight:700">${r.nm}</div>
-        <div class="sub">Ortak: ${cs.partner} · durum: <b>${cs.status === 'pending' ? '⏳ yanıt bekleniyor' : cs.status === 'accepted' ? '✅ kabul edildi — finansman bekliyor' : cs.status === 'building' ? '🏗️ inşa: ' + fmtHrs(Math.max(0, cs.done - Date.now()) / 36e5) : '🌍 DEVREDE'}</b></div>
-        ${cs.status === 'accepted' ? `<button class="bigsell" onclick="fundConsortium()" ${(G.ally.treasury || 0) < r.cost / 2 ? 'disabled' : ''}>💰 Kasadan Payı Öde — ${fmt(r.cost / 2)}${(G.ally.treasury || 0) < r.cost / 2 ? ' (kasa yetersiz)' : ''}</button>` : ''}
+        <div class="sub">Ortak: ${cs.partner} · durum: <b>${cs.status === 'pending' ? '⏳ yanıt bekleniyor' : cs.status === 'accepted' ? '✅ kabul edildi — finansman: <b class="' + (consFinKaldi(cs) < 6 * 36e5 ? 'neg' : 'pos') + '">' + fmtHrs(consFinKaldi(cs) / 36e5) + '</b> kaldı' : cs.status === 'building' ? '🏗️ inşa: ' + fmtHrs(Math.max(0, cs.done - Date.now()) / 36e5) : '🌍 DEVREDE'}</b></div>
+        ${cs.status === 'accepted' ? `<button class="bigsell" onclick="fundConsortium()" ${(G.ally.treasury || 0) < r.cost / 2 ? 'disabled' : ''}>💰 Kasadan Payı Öde — ${fmt(r.cost / 2)}${(G.ally.treasury || 0) < r.cost / 2 ? ' (kasa yetersiz)' : ''}</button>
+        <div class="sub">⏳ Pay <b>${CONS_FIN_SAAT} saat</b> içinde ödenmezse ortaklık feshedilir. Kasadan kesinti yalnız payın <b>tamamı</b> ödendiğinde yapılır — iptalde toplanan bağışlar kasanızda kalır.${(G.ally.treasury || 0) < r.cost / 2 ? ` Eksik: <b class="neg">${fmt(r.cost / 2 - (G.ally.treasury || 0))}</b> — 📣 bağış çağrısı açın.` : ''}</div>` : ''}
         ${cs.status === 'live' ? `<div class="sub pos">Taşınan her MWh için kasaya ${fmt(r.kwhFee * 1000)} geliyor.</div>
         ${lineOmurHTML({ km: r.km, hubs: CONS_HUBS, omur: consOmurMax(cs), tasinan: cs.tasinan || 0, built: cs.since || Date.now() })}
         ${(() => { // 🌍 KİRAYA VERME (patron: "ittifak başkanı hat sekmesinde kira bedeli %10-%60")
@@ -12657,6 +12730,7 @@ const NET = {
   db: null, key: null, id: null, ready: false, players: {}, units: {}, chat: {}, lastPull: 0,
   auth: null,   // { kind:'guest'|'google', uid, token, refresh, email, name }
   cloudAt: 0,   // son bulut kaydı zamanı
+  _bulutSorgusu: false,   // ☁️ açılış bulut denetimi sürerken saves/<uid> YAZILMAZ (bkz. cloudNewerCheck)
   on() { return !!this.db; },
   async init() {
     try {
@@ -12965,7 +13039,12 @@ const NET = {
     if (!this.on() || !G || !G.company) return;
     // 📦 GÖÇ PENCERESİ: gocPaketiAl eski uid'nin kayıtlarını silerken araya giren bir
     //    cloudSave `saves/<eski>`yi anında geri doğururdu — tam da temizlediğimiz yetim.
-    if (this._gocSiliyor) return;
+    // ☁️ BULUT DENETİMİ PENCERESİ (40. tur): açılışta "bulut kaydını başka cihaz mı yazdı"
+    //    sorulurken BAYAT yerel kayıt buluta inerse, oyuncu "buluttaki ile devam" dese bile
+    //    kendi eski verisini geri yükler ve diğer cihazın ilerlemesi ÖLÜR. Bekçi throttle'dan
+    //    ÖNCE: `cloudAt` damgalanmaz, pencere kapanınca ilk save() gerçekten yazar — yani
+    //    yazma ERTELENİR, kaybolmaz. (Aynı kalıp: `_gocSiliyor`.)
+    if (this._gocSiliyor || this._bulutSorgusu) return;
     // ⚡ ÖLÇEK S1: 20 sn → 120 sn. saves/<uid> TÜM G nesnesidir (~90 KB) — en büyük TEK
     //    yazma kalemi. 20 saniyede bir 90 KB yazmak oyuncu başına saatte 16 MB eder.
     //    Kayıp riski yok: yerel localStorage kaydı her değişimde yazılıyor, bulut yalnızca
@@ -12975,6 +13054,7 @@ const NET = {
     const { _tcd, _aucT, _started, ...s } = G;
     s.units = G.units.map(({ _lastIcon, ...u }) => u);
     s._sv = this.zaman();   // 🕐 kural: _sv <= now+60sn (SUNUCU saati; cihaz saati ileriyse 401)
+    s._dev = CIHAZ_ID;      // 📱 bu kaydı EN SON yazan cihaz — açılış denetimi saate DEĞİL buna bakar
     // 💾 KAPANIŞ FLUSH'I (4 bağımsız bot bulgusu + patron onayı): sekme kapanırken normal fetch
     // iptal ediliyordu, son ≤20 sn'lik oynanış (satış, onarım, satın alma) buluta HİÇ yazılmıyordu.
     // keepalive:true ile istek sayfa kapansa da tamamlanır (tarayıcı sınırı 64KB — büyük kayıtta
@@ -20008,8 +20088,15 @@ function wizardStart() {
     return;
   }
   if (has) {
+    // ⚠️ DAMGAYI VE ADI PRİMİTİF OLARAK KOPYALA — `G = has` ikisini AYNI nesne yapar
+    //    (`migrate` yeni nesne DÖNDÜRMÜYOR, gelen nesneyi yerinde değiştirip geri veriyor).
+    //    `startGame(true)` senkron olarak `offlineProgress()`i çağırıp damgayı tazeliyor,
+    //    ardından sim tiki HER KAREDE tazelemeye devam ediyor. `cloudNewerCheck` okumasını
+    //    bir AĞ TURUNDAN SONRA yaptığı için nesne geçirmek bu hatayı kapatmaz — sayı şart.
+    const yerelDamga = has.lastSeen || 0, yerelAd = has.company;
+    NET._bulutSorgusu = true;   // denetim bitene kadar bayat kaydı buluta YAZMA
     G = has; startGame(true);
-    cloudNewerCheck(has); // arka planda: başka cihazda oynanmış daha yeni bulut kaydı var mı?
+    cloudNewerCheck(yerelDamga, yerelAd); // bulut kaydını başka bir cihaz mı yazdı?
     return;
   }
   wizardWelcome();
@@ -20028,29 +20115,46 @@ function wizardWelcome() { // karşılama + kuruluş sihirbazının kapısı (wi
     <p style="text-align:center;font-size:10px;margin-top:10px">${BUILD_TAG} — ${CEV('test sürümü')}</p>`;
   $('overlay').classList.add('show');
 }
-// Yerel kayıtla oyuna girildi ama bulutta 3+ dk daha yeni kayıt varsa: sessizce ezme, SOR.
-function cloudNewerCheck(localS) {
-  if (!NET.on() || !NET.auth || CLOUD_CHECKED) return;
+// Yerel kayıtla oyuna girildi ama bulut kaydını BAŞKA BİR CİHAZ yazmışsa: sessizce ezme, SOR.
+// ⚠️ İMZA PRİMİTİF ALIR — canlı `G` referansı bu fonksiyona GİRMEMELİ (bkz. wizardStart).
+let BULUT_ADAY = null;   // denetimde okunan bulut kaydı; adoptCloudSave İKİNCİ kez okumasın
+function cloudNewerCheck(yerelDamga, yerelAd) {
+  if (!NET.on() || !NET.auth || CLOUD_CHECKED) { NET._bulutSorgusu = false; return; }
   CLOUD_CHECKED = true;
-  NET.cloudLoad().then(cloud => {
-    if (!cloud || !cloud.company || !cloud._sv) return;
-    const yerel = localS.lastSeen || 0;
-    if (cloud._sv <= yerel + 3 * 60000) return; // bulut belirgin yeni değil — dokunma
-    const tf = t => new Date(t).toLocaleString(LOCALE, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const birak = () => { NET._bulutSorgusu = false; };   // pencereyi kapat: bulut yazması serbest
+  // ⏱️ ZAMAN AŞIMI: "yerel kayıt yok" dalındaki 8 sn'lik kalkanın aynısı. Olmazsa ağ ölünce
+  //    pencere HİÇ kapanmaz ve bulut yedeği süresiz durur (yeni ilerleme yedeklenmez).
+  Promise.race([NET.cloudLoad(), new Promise(r => setTimeout(() => r(null), 8000))]).then(cloud => {
+    // 📱 SAAT DEĞİL KİMLİK: bulut kaydını en son BİZ mi yazdık? Biz yazdıysak sorulacak bir şey
+    //    yok. `_dev` hiç yoksa kayıt bu yamadan ÖNCE yazılmıştır — o açılışta SORMA (yoksa
+    //    güncellemeyi alan HERKES bir kez yalan soru görürdü). Bir sonraki bulut yazması
+    //    damgayı kurar ve koruma o andan itibaren çalışır. (`ec_surum` ile aynı "ilk damga" kuralı.)
+    if (!cloud || !cloud.company || !cloud._dev || cloud._dev === CIHAZ_ID) { birak(); return; }
+    BULUT_ADAY = cloud;
+    // 🛟 EMNİYET: oyuncu soruyu cevaplamadan bırakırsa bulut yedeği sonsuza dek durmasın.
+    //    Geç cevap da güvenli — benimseme BULUT_ADAY'ı kullanıyor, buluta yeniden bakmıyor.
+    setTimeout(birak, 300000);
+    const tf = t => t ? new Date(t).toLocaleString(LOCALE, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
     $('modal').innerHTML = `
-      <h2>☁️ Bulutta daha yeni kayıt var</h2>
-      <p>📱 Bu cihaz: <b>${localS.company}</b> <span class="sub">· son oynama ${tf(yerel)}</span><br>
+      <h2>☁️ Başka cihazda oynanmış</h2>
+      <p>📱 Bu cihaz: <b>${yerelAd}</b> <span class="sub">· son oynama ${tf(yerelDamga)}</span><br>
       ☁️ Bulut: <b>${cloud.company}</b> <span class="sub">· son kayıt ${tf(cloud._sv)}</span></p>
-      <p class="sub">Başka bir cihazda/tarayıcıda oynamışsın gibi görünüyor. Hangisiyle devam edelim?</p>
-      <button class="primary" onclick="adoptCloudSave()">☁️ Buluttaki (daha yeni) kayıtla devam</button>
-      <button class="primary ghostbtn" onclick="closeModal()">📱 Bu cihazdakiyle devam</button>`;
+      <p class="sub">Bulut kaydını en son <b>başka bir cihaz</b> yazmış. Hangisiyle devam edelim? Seçmediğin taraftaki ilerleme kaybolur.</p>
+      <button class="primary" onclick="adoptCloudSave()">☁️ Buluttaki kayıtla devam</button>
+      <button class="primary ghostbtn" onclick="bulutReddet()">📱 Bu cihazdakiyle devam</button>`;
     $('overlay').classList.add('show');
-  }).catch(() => {});
+  }).catch(() => { birak(); });
 }
+// 📱 "Bu cihazdakiyle devam" — pencereyi kapat, bulut yazması serbest kalsın.
+window.bulutReddet = () => { BULUT_ADAY = null; NET._bulutSorgusu = false; closeModal(); };
 window.adoptCloudSave = async () => {
   $('modal').innerHTML = '<h2>' + CEV('☁️ Yükleniyor') + '</h2><p>' + CEV('Buluttaki kayıt getiriliyor...') + '</p>';
   try {
-    const cloud = await NET.cloudLoad();
+    // ⚠️ İKİNCİ KEZ OKUMA YOK (40. tur): eski kod burada `NET.cloudLoad()`u YENİDEN çağırıyordu.
+    //    O ana kadar bu cihazın BAYAT kaydı buluta inmiş oluyordu (cloudAt=0 → ilk yazma
+    //    frensiz), yani "buluttaki kayıtla devam" düğmesi oyuncuya KENDİ eski verisini geri
+    //    yüklüyor, diğer cihazın ilerlemesini siliyordu. Artık denetimde okunan kayıt kullanılır.
+    const cloud = BULUT_ADAY || await NET.cloudLoad();
     if (cloud && cloud.company) {
       localStorage.setItem(SAVE_KEY, JSON.stringify(cloud));
       location.reload(); // temiz başlangıç — eski oyunun işaretçi/katman kalıntısı kalmasın
