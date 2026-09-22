@@ -690,7 +690,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-15 22:04) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-22 20:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -861,21 +861,18 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-15 22:04)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-22 20:22)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-09-16',
-  baslik: '📦 Güncelleme notu — 16 Eylül',
+  etiket: '2026-09-22',
+  baslik: '📦 Güncelleme notu — 22 Eylül',
   maddeler: [
-    '🏦 <b>Büyüme kredisi artık E notunda da açık.</b> Not merdiveni: E %5 → D %10 → C %20 → B %35 → A %50 (şirket değerinin). Krediyi ödemezsen yasak: 3 → 5 → 7 → 30 gün; temiz ödeme sayacı sıfırlar. Yeni şirketler C notuyla başlar.',
-    '⚡ <b>Nakil hattı çizerken</b> ülke etiketine dokununca uç artık oraya gitmiyor. Onay ekranı en yakın büyük şehre mesafeyi yazıyor ve tek dokunuşla oraya hizalıyor.',
-    '⚛️ <b>Nükleer santral</b> 1 milyon+ nüfuslu şehre 100 km\'den yakın kurulamıyor — elektriği hatla taşımak gerek.',
-    '🗺️ <b>Bağlantı koptuğunda rakipler haritadan silinmiyor.</b> Eski veri korunur, 1 dakikada bir yeniden denenir.',
-    '📦 Bu posta her güncellemede yenilikleri anlatmak için gelecek. Açılıştaki "✨ Güncellendi" yazısı yeni sürüme geçtiğini gösterir.',
+    '🏭 <b>Çekmeceden tesise tek dokunuş.</b> ⛽ İKMAL ya da 💰 DEPOLARIN listesinde bir tesisin adına dokun: harita oraya uçar ve <b>uçuş biter bitmez o tesisin kartı kendiliğinden açılır</b>. Artık uçuşun bitmesini bekleyip ikinci kez dokunmana gerek yok.',
+    '🗺️ Uçuş sırasında başka bir tesise dokunursan artık <b>son dokunduğun</b> tesis açılır — eskiden iki uçuş birbirine karışabiliyordu.',
   ],
 };
 // ✨ SÜRÜM DEĞİŞİMİ TESPİTİ — doğrudan yükleme yolu için. APK canlı adresi DOĞRUDAN yüklüyor;
@@ -18099,7 +18096,7 @@ function renderFuelPanel() {
     const yeter = f ? have >= Math.min(need, .5) : G.cash >= Math.round(T.fuel * T.mw * (yakitSaat() - saat) * yakitKat(T));
     return `<div class="strow">
       <div class="top">
-        <span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${u.ll[0]},${u.ll[1]},11,'${(placeName(u.cell)).replace(/'/g, '')}')">${unitName(u)}</span>
+        <span style="cursor:pointer;text-decoration:underline" onclick="flyToUnit(${u.id})">${unitName(u)}</span>
         <span class="cap">${placeName(u.cell)}</span></div>
       <div class="bar"><i style="width:${pct}%;background:${saat <= 0 ? 'var(--danger)' : saat < 3 ? 'var(--warn)' : 'linear-gradient(90deg,#3ddc97,#5ab0ff)'}"></i></div>
       <div class="foot">
@@ -18112,7 +18109,7 @@ function renderFuelPanel() {
     const T = DEPOT_TYPES[u.t], F = FUEL_TYPES[T.fuel], cap = depotCap(u), dolu = u.fuel || 0;
     const bos = Math.max(0, cap - dolu), alinabilir = Math.floor(Math.min(bos, G.cash / F.price));
     return `<div class="strow">
-      <div class="top"><span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${u.ll[0]},${u.ll[1]},11,'${(placeName(u.cell)).replace(/'/g, '')}')">${F.ico} ${unitName(u)}</span>
+      <div class="top"><span style="cursor:pointer;text-decoration:underline" onclick="flyToUnit(${u.id})">${F.ico} ${unitName(u)}</span>
         <span class="cap">${placeName(u.cell)}</span></div>
       <div class="bar"><i style="width:${Math.min(100, cap ? dolu / cap * 100 : 0)}%"></i></div>
       <div class="foot">
@@ -18127,7 +18124,7 @@ function renderFuelPanel() {
     ${sant.length ? `<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">⚡ YAKITLI SANTRALLER (${sant.length})</div>${sant.slice().sort((a, b) => (a.fuelH || 0) - (b.fuelH || 0)).map(satir).join('')}` : ''}
     ${dep.length ? `<div style="font-size:11px;color:var(--gold);margin:12px 0 2px">🛢️ YAKIT DEPOLARI (${dep.length})</div>${dep.map(depSatir).join('')}`
       : '<p class="sub" style="margin-top:10px">🛢️ Yakıt deposu yok — kömür/gaz santralleri depodan ikmal alır. 🏗️ İnşa > Yakıt sekmesinden kur.</p>'}
-    <p class="sub" style="margin-top:8px">İkmal her zaman senin kararın — oto-ikmal yok. Depo adına dokun → harita oraya uçar.</p>`;
+    <p class="sub" style="margin-top:8px">İkmal her zaman senin kararın — oto-ikmal yok. Tesis adına dokun → harita oraya uçar ve <b>kartı açılır</b>.</p>`;
 }
 // ⏳ DEPO DOLMA SÜRESİ (patron: "kapasite dolmasına 3 saat kaldı gibi"): kalan boş kapasite,
 // depoya AKAN güce bölünür. Depo dolunca üretim boşa gittiği için oyuncunun en çok ihtiyaç
@@ -18385,17 +18382,67 @@ function pingAt(ll, label) {
   setTimeout(clearPing, 3400);
 }
 function flyFx() { const el = $('flyfx'); el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); }
-window.flyToPlace = (lat, lng, zoom, label) => {
+// 🛫 UÇUŞ BİTİNCE ÇALIŞACAK İŞ (39. tur, patron: "zoom in bittikten sonra tıklanan tesisin
+//    sayfası açılsın"). Uçuş İKİ AŞAMALI olabildiği için (uzak hedefte önce uzaklaş, sonra
+//    yaklaş) "bitti" anını SABİT bir süreyle kestirmek yanlış olur — Leaflet'in kendi
+//    `moveend` olayı beklenir. İki emniyet:
+//    (a) ZAMAN AŞIMI: harita ZATEN hedefteyse `flyTo` hiç oynatmayabilir ve `moveend`
+//        GELMEZ — kart hiç açılmazdı. Tavan süre dolunca iş yine çalışır.
+//    (b) JETON: oyuncu uçuş sürerken BAŞKA bir satıra dokunursa eski uçuşun işi İPTAL olur;
+//        yoksa yanlış tesisin kartı açılırdı.
+let UCUS_JETON = 0;
+function ucusBitince(jeton, is, tavanMs) {
+  if (typeof is !== 'function' || !map) return;
+  let bitti = false;
+  const calistir = () => {
+    if (bitti) return;
+    bitti = true;
+    map.off('moveend', calistir);
+    if (jeton !== UCUS_JETON) return;   // araya yeni uçuş girdi — bu iş artık geçersiz
+    try { is(); } catch (e) { console.warn('[uçuş] sonra', e && e.message); }
+  };
+  map.on('moveend', calistir);
+  setTimeout(calistir, tavanMs);
+}
+// 🛡️ GÜVENLİ UÇUŞ: harita kabı GİZLİ / SIFIR BOYUTLU iken Leaflet'in `flyTo`su
+//    "Invalid LatLng object: (NaN, NaN)" atıyor (39. turda tarayıcıda yakalandı). Bu tuzak
+//    projede zaten biliniyor — üç çağıran kendi başına sarmış (`goHome`, kuruluş sihirbazı).
+//    Ama `flyToPlace` — çekmecedeki HER satırın geçtiği kapı — korumasızdı. Artık uçuşun
+//    ardına KART AÇMA işi bağlı olduğu için istisna "hiçbir şey olmadı"ya dönüşürdü:
+//    ne harita gider ne kart açılır, tek uyarı da çıkmaz.
+const ucGuvenli = (hedef, zoom, sure) => {
+  try { map.flyTo(hedef, zoom, { duration: sure }); }
+  catch (e) { try { map.setView(hedef, zoom); } catch (e2) { console.warn('[uçuş] harita oynatılamadı', e2 && e2.message); } }
+};
+window.flyToPlace = (lat, lng, zoom, label, sonra) => {
   if (!map) return;
   closeNav(); hideSheets();
+  const jeton = ++UCUS_JETON;
   const ll = [lat, lng], z = zoom || 11, from = map.getCenter();
   const km = kmDist([from.lat, from.lng], ll);
   // Yakın hedefe doğrudan uç — her seferinde şov yapmak yorucu olur
-  if (km < 350) { map.flyTo(ll, z, { duration: .9 }); pingAt(ll, label); return; }
+  if (km < 350) { ucGuvenli(ll, z, .9); pingAt(ll, label); ucusBitince(jeton, sonra, 1600); return; }
   flyFx();
   const outZ = km > 5000 ? 2 : km > 2000 ? 3 : km > 800 ? 4 : 5;
-  map.flyTo([(from.lat + ll[0]) / 2, (from.lng + ll[1]) / 2], outZ, { duration: 1.1 });
-  setTimeout(() => { map.flyTo(ll, z, { duration: 1.4 }); setTimeout(() => pingAt(ll, label), 1250); }, 1250);
+  ucGuvenli([(from.lat + ll[0]) / 2, (from.lng + ll[1]) / 2], outZ, 1.1);
+  setTimeout(() => {
+    // ⚠️ ARAYA GİREN UÇUŞ: bu bekleme sırasında yeni bir flyToPlace başlamışsa ESKİ uçuşun
+    //    ikinci aşaması koşmamalı — eskiden koşuyordu ve harita yanlış hedefe gidiyordu.
+    if (jeton !== UCUS_JETON) return;
+    ucGuvenli(ll, z, 1.4);
+    // `moveend` ANCAK BURADA bağlanır: başta bağlansaydı uzak hedefte BİRİNCİ aşamanın
+    //    (uzaklaşma) moveend'i kartı erken açardı.
+    ucusBitince(jeton, sonra, 2200);
+    setTimeout(() => { if (jeton === UCUS_JETON) pingAt(ll, label); }, 1250);
+  }, 1250);
+};
+// 🏭 ÇEKMECEDEN TESİSE: uç, uçuş BİTİNCE o tesisin kartını aç (patron 39. tur).
+//    `openUnitSheet` tek kapıdır — santral, enerji deposu ve yakıt deposu için doğru kartı
+//    kendisi seçer. Böylece çekmece, haritadaki işaretçiye dokunmakla AYNI davranır.
+window.flyToUnit = id => {
+  const u = G && G.units && G.units.find(x => x.id === id);
+  if (!u || !gecerliLL(u.ll)) return;
+  flyToPlace(u.ll[0], u.ll[1], 11, placeName(u.cell), () => openUnitSheet(id));
 };
 // 📍 Bölge adına dokununca: bölgeye uç + bilgi ekranı (müzayede kartı vb. inline onclick'ler için).
 // Sıra ÖNEMLİ: flyToPlace içindeki hideSheets açık paneli kapatır — bilgi ekranı uçuştan SONRA açılmalı.
@@ -18472,7 +18519,7 @@ function renderStorePanel() {
       const dolum = cap - mwh; // kalan boş kapasite (MWh)
       return `<div class="strow">
         <div class="top">
-          <span style="cursor:pointer;text-decoration:underline" onclick="flyToPlace(${s.ll[0]},${s.ll[1]},11,'${(placeName(s.cell)).replace(/'/g, '')}')">${unitName(s)}</span>
+          <span style="cursor:pointer;text-decoration:underline" onclick="flyToUnit(${s.id})">${unitName(s)}</span>
           <span class="cap">${placeName(s.cell)}</span></div>
         <div class="bar"><i style="width:${Math.min(100, pct * 100)}%"></i></div>
         <div class="foot">
