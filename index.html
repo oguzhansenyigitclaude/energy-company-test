@@ -289,7 +289,16 @@
   /* Paneller TAM EKRAN açılır (patron isteği — yarım ekran kalktı); üst HUD ve alt bar görünür kalır */
   .sheet{position:absolute;left:0;right:0;top:0;bottom:0;background:var(--panel);border-top:2px solid var(--line);border-radius:0;z-index:1200;max-height:none;overflow-y:auto;padding:12px 14px 16px;display:none;box-shadow:0 -6px 30px #000b}
   .sheet.show{display:block}
-  .sheet h3{font-size:13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  /* 🩹 OYUNCU ŞİKAYETİ (Valtora Enerji, 4 kez — 03/09, 08/09, 15/09, 25/09):
+     "yandaki sıralamanın olduğu çubuğun kapatma imleci yok".
+     Panel `top:0;bottom:0` ile TÜM EKRANI kaplıyor ve kendi içinde kayıyor; başlık yapışkan
+     olmadığı için aşağı kaydırınca ✕ ekrandan çıkıyor, `#sheetdim` de panelin ALTINDA
+     kaldığından dışarı dokunacak yer yok → oyuncunun HİÇBİR çıkışı kalmıyordu.
+     Negatif kenar boşlukları başlığı panelin kenarlarına taşır ki yapışınca altındaki
+     içerik kenarlardan sızmasın. */
+  .sheet h3{font-size:13px;display:flex;justify-content:space-between;align-items:center;
+    position:sticky;top:0;z-index:4;background:var(--panel);
+    margin:-12px -14px 8px;padding:12px 14px 8px;box-shadow:0 6px 10px -8px #000a}
   .sheet h3 .x{cursor:pointer;color:var(--dim);font-size:16px;padding:2px 8px}
   /* 📬 Posta başlığındaki 🗑️ / ☑️ düğmeleri — başlık akışını bozmasın diye küçük ve sade */
   .mailhbtn{background:var(--panel2);border:1px solid var(--line);color:var(--cream);
@@ -477,6 +486,11 @@
   #overlay{position:absolute;inset:0;background:#05070cf2;z-index:80;display:none;align-items:center;justify-content:center;padding:14px}
   #overlay.show{display:flex}
   #modal{background:var(--panel);border:1px solid #3a466a;border-radius:16px;width:100%;max-width:430px;max-height:94%;overflow-y:auto;padding:18px 16px}
+  /* 🩹 Aynı şikayetin ikinci yarısı: uzun modallerde (💠 İmtiyaz Mağazası) "Kapat"
+     düğmesi EN ALTTA kalıyor, tepede çıkış görünmüyordu. Yapışkan ✕ hep ekranda. */
+  #modal .modalx{position:sticky;top:0;float:right;margin:-6px -6px 0 8px;z-index:6;
+    width:34px;height:34px;border-radius:50%;background:#1b2337;border:1px solid #3a466a;
+    color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer}
   #modal h2{font-size:18px;margin-bottom:6px}
   #modal p{font-size:12.5px;color:var(--dim);line-height:1.5;margin-bottom:8px}
   #modal p b{color:var(--ink)}
@@ -690,7 +704,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-09-22 21:28) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-09-29 21:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -861,19 +875,19 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-09-22 21:28)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-09-29 21:26)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-09-23a',
-  baslik: '📦 Güncelleme notu — 23 Eylül',
+  etiket: '2026-09-30',
+  baslik: '📦 Güncelleme notu — 30 Eylül',
   maddeler: [
-    '💾 <b>İki telefonda oynayanlar için kayıt koruması.</b> Şirketini başka bir cihazda açtıysan, oyun bunu artık fark ediyor ve <b>hangi kayıtla devam edeceğini sana soruyor</b>. Eskiden son açan cihaz diğerinin ilerlemesini sessizce siliyordu. <b>Google hesabıyla girenlerde de</b> çalışıyor.',
-    '⏳ <b>Kıtalar arası hatta 48 saat finansman süresi.</b> Ortak kabul ettikten sonra payın <b>48 saat</b> içinde ödenmezse proje kendiliğinden iptal olur ve koridor yeniden teklife açılır. Kasandan kesinti yalnız payın <b>tamamı</b> ödendiğinde yapılır — iptalde toplanan bağışların hepsi ittifak kasanızda kalır.',
-    '⏱️ İttifak ekranında kalan süre geri sayımla görünüyor; kasa yetersizse <b>ne kadar eksik olduğu</b> da yazıyor.',
+    '✖️ <b>Artık her açtığın sayfayı kapatabiliyorsun.</b> Sıralama, ittifak, şirket gibi uzun listelerde aşağı kaydırınca kapatma (✕) düğmesi kayboluyordu; artık <b>başlık ekranın tepesine yapışıyor</b> ve ✕ her zaman elinin altında.',
+    '💠 <b>İmtiyaz Mağazasında çıkış düğmesi.</b> Mağaza uzun olduğu için "Kapat" en altta kalıyordu — şimdi <b>sağ üstte ✕</b> var. Ayrıca <b>ekranın boş yerine dokunmak</b> ya da ESC de kapatıyor.',
+    '🙏 Bu düzeltmeyi <b>💡 Öneri / İstek</b> ekranından bize yazan oyuncumuza borçluyuz. Takıldığın bir şey olursa yaz — okuyoruz.',
   ],
 };
 // ✨ SÜRÜM DEĞİŞİMİ TESPİTİ — doğrudan yükleme yolu için. APK canlı adresi DOĞRUDAN yüklüyor;
@@ -16718,6 +16732,42 @@ function offlineProgress() {
   $('overlay').classList.add('show');
   save();
 }
+// 🩹 MODAL ÇIKIŞI (42. tur) — oyuncu şikayeti: "açılan sayfadan geri çıkma düğmesi yok".
+// ⚠️ KAPANMAMASI GEREKEN PERDELER DOKUNULMAZ: giriş ekranı, ban perdesi ve kuruluş sihirbazı
+//    `closeModal` çağıran bir düğme İÇERMEZ; bu yüzden onlara ✕ eklenmez, perde dokunuşu ve
+//    ESC de onları kapatmaz. Ölçüt "modalde zaten bir kapanma yolu var mı" — davranış
+//    değiştirmiyoruz, VAR OLAN çıkışı görünür/erişilebilir yapıyoruz.
+function modalKapanabilir() {
+  const m = $('modal');
+  return !!(m && /closeModal\(|bulutReddet\(/.test(m.innerHTML));
+}
+function modalKapatmaEkle() {
+  const m = $('modal');
+  if (!m || m.querySelector('.modalx')) return;   // ⚠️ erken çıkış: gözlemci sonsuz döngüye girmesin
+  if (!modalKapanabilir()) return;
+  const b = document.createElement('span');
+  b.className = 'modalx'; b.textContent = '✕';
+  b.setAttribute('title', 'Kapat');
+  b.onclick = () => closeModal();
+  m.insertBefore(b, m.firstChild);
+}
+// İçerik her değiştiğinde (innerHTML ataması) ✕ yeniden eklenir.
+try {
+  new MutationObserver(() => { try { modalKapatmaEkle(); } catch (e) {} })
+    .observe($('modal'), { childList: true });
+} catch (e) {}
+// Perdeye (modalin DIŞINA) dokunma kapatır — mobilde en beklenen çıkış.
+try {
+  $('overlay').addEventListener('click', e => {
+    if (e.target !== $('overlay')) return;        // modalin İÇİNE dokunuş kapatmaz
+    if (modalKapanabilir()) closeModal();
+  });
+} catch (e) {}
+// ESC (tarayıcıda/klavyeli cihazda)
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('overlay').classList.contains('show') && modalKapanabilir()) closeModal();
+});
 window.closeModal = () => {
   $('overlay').classList.remove('show');
   if (MG_IV) { clearInterval(MG_IV); MG_IV = null; MG = null; } // açık mini oyun kapanınca sayaç da dursun
