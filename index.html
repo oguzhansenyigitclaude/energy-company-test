@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-01 17:58) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-03 18:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -890,22 +890,24 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-01 17:58)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-03 18:22)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-01a',
-  baslik: '📦 Güncelleme notu — 1 Ekim',
+  etiket: '2026-10-03',
+  baslik: '📦 Güncelleme notu — 3 Ekim',
   maddeler: [
+    '🛡️ <b>Şirketin artık kaybolamaz.</b> Telefonunu değiştirdiğinde ya da uygulamayı yeniden kurduğunda sunucudaki kaydın okunamazsa, oyun eskiden sessizce <b>yeni şirket</b> açıyor ve ilk otomatik kayıt sunucudaki şirketinin üstüne yazıyordu. Artık okuma başarısız olursa <b>Kayıt okunamadı</b> ekranı çıkıyor, <b>Tekrar Dene</b> diyebiliyorsun ve sunucudaki şirketine kesinlikle dokunulmuyor. Bu turda bulduğumuz en ağır hata buydu.',
+    '⏱️ <b>Saati şaşmış telefonlarda sunucuya yazma düzeldi.</b> Telefonunun saati 1 dakikadan fazla ileriyse bulut kaydın, karo kiraların, tekliflerin, postaların ve ittifak defteri yazmaların sunucu tarafından <b>sessizce reddediliyordu</b>. Oyun yerelde çalışmaya devam ettiği için bunu ancak telefon değiştirince fark ediyordun. Zaman damgası artık sunucu saatinden alınıyor.',
+    '⚡ <b>Hepsini Sat artık donmuyor.</b> Çok depolu şirketlerde tek dokunuş 60 ayrı tam kayıt işlemi başlatıyor, oyun saniyelerce kilitleniyordu. Tek kayda indirildi.',
+    '💾 <b>Kayıt yazılamıyorsa artık söylüyoruz.</b> Cihaz depolaması dolduğunda ya da engellendiğinde ilerleme sessizce kaydedilmiyordu; artık kırmızı uyarı çıkıyor.',
+    '🛡️ <b>Saat hilesi kapatıldı.</b> Gün devri artık cihazın değil <b>sunucunun</b> saatinden hesaplanıyor. Telefon tarihini değiştirerek 🎉 Hafta Sonu Kampanyasını (alım fiyatı ×2), 🧪 günlük araştırma puanını, 🎬 reklam hakkını ve 🎮 mini oyun hakkını yeniden açmak artık mümkün değil. Dürüst oynayanın hiçbir hakkı değişmedi.',
+    '🏛️ <b>İhale baştan sona elden geçti.</b> Üstüne teklif verilirse <b>cezasız, TAM iade</b> ile çekilebiliyorsun — %20 kesinti yalnızca <b>önde olduğun hâlde</b> kendi isteğinle çekilince uygulanıyor. Teklif verip bir hafta oyuna girmeyen şirketin bloke parası <b>yanıyor</b> ve üstüne bir hafta ihale yasağı basılıyordu: artık tam iade var, yasak yok. İhale sonucu cihaz saatiyle öne çekilemiyor. Kazanılan karonun dönemi 6 saat sonra düşüyordu, artık tam bir hafta sürüyor.',
     '🏆 <b>İLK ÖNERİ ÖDÜLÜ: Valtora Enerji.</b> Açılan panellerin kapatma düğmesini bulamadığını 💡 Öneri / İstek ekranından bize bildirdi. İncelediğimizde <b>üç ayrı kusur</b> çıktı ve hepsi düzeltildi. Katkısı için <b style="color:#cfc2ff">💠 50 İmtiyaz Puanı</b> ile ödüllendirildi. Tebrikler!',
-    '🎁 <b>Sen de kazanabilirsin.</b> 🐞 hata bulana ve 💡 güzel öneri getirene <b>100 İmtiyaz Puanına kadar</b> ödül veriyoruz. Öneri oyuna girdiğinde <b>şirketinin adı bu notta yazılır</b> ve kazandığın puan tüm oyunculara duyurulur. 👤 profil → 💡 Öneri / İstek.',
-    '🎚️ <b>Bildirim filtresi geldi.</b> 🔔 Bildirimler ekranından hangi türleri alacağını seç: 💰 satış, 🔋 depo, 🏗️ inşaat, 🤝 ittifak, 🏛️ devlet. Kapattığın tür <b>ne ekranda ne de telefon bildiriminde</b> çıkar. Kritik uyarılar (hata, ceza, veri kaybı) her zaman gelir.',
-    '🗑️ <b>Bildirimleri silebiliyorsun.</b> 🔔 Bildirimler başlığının yanındaki çöp kutusuna dokun.',
-    '⚡ <b>Yıldırım menüsü artık kapanıyor.</b> Menünün sol kenarındaki ▶ çıkıntısı görünmüyordu; açtığın menüyü kapatamıyordun. Düzeltildi.',
-    '✖️ <b>Kapatma düğmesi sadeleşti.</b> Panellerde artık tüm başlık yerine <b>yalnızca yuvarlak ✕</b> ekranda kalıyor — İmtiyaz Mağazasındaki gibi.',
+    '🎁 <b>Sen de kazanabilirsin.</b> 🐞 hata bulana ve 💡 güzel öneri getirene <b>100 İmtiyaz Puanına kadar</b> ödül veriyoruz. Öneri oyuna girdiğinde <b>şirketinin adı bu notta yazılır</b> ve kazandığın puan tüm oyunculara duyurulur. 👤 profil → 💡 Öneri / İstek.'
   ],
 };
 // ✨ SÜRÜM DEĞİŞİMİ TESPİTİ — doğrudan yükleme yolu için. APK canlı adresi DOĞRUDAN yüklüyor;
@@ -5422,6 +5424,8 @@ function demandLeft(cell) {
 // Pencere: her gün 09:00-21:00 (prototip; tam oyunda haftalık Pazar — demo modunda hep açık).
 // Taban teklif karenin talebiyle orantılı (10 kat talep = 10 kat taban — bedavaya ihale yok).
 // Teklifin paran bloke edilir; biri üstüne çıkarsa TAM iade; kendi isteğinle çekilirsen %20 ceza.
+// ⚠️ 44. tur: bu söz 22 gündür KODDA UYGULANMIYORDU — withdrawBid %20'yi koşulsuz kesiyordu.
+//    Artık ceza YALNIZ lider olunan çekilişte. Ayrıca escrow iki yolda yanıyordu, bkz. resolveAuction.
 // Kazanan: sonraki ihale bitimine dek o karede +%20 alım garantisiyle satar.
 const LEASE_PRIM = 0.20, WITHDRAW_PENALTY = 0.20, BID_STEP = 1.07;
 const LEASE_MS = 7 * 864e5; // kira süresi: 1 HAFTA
@@ -5446,8 +5450,28 @@ function auctionOf(cell) {
   let a = G.auctions[cell];
   if (!a || a.day !== key) {
     // yeni gün: eski ihaleyi SONUÇLANDIR (dünkü pencere kapandı)
+    const eski = a;
     if (a && a.day !== key) resolveAuction(cell, a);
     a = G.auctions[cell] = { day: key, top: 0, topBy: null, myEscrow: 0, botCap: 0, windowEnd: auctionWindow().endTs };
+    // 🩹 DÖNEM DEVRİ (46. tur — takvim ÖLÇÜLEREK bulundu).
+    //    İhale PAZAR 21:00'de kapanıyor, kira ertesi PAZAR 00:00'a kadar (6,13 gün).
+    //    Ama `auctionDayKey()` = weekIdx() ve weekIdx PAZARTESİ 00:00'da devrediyor —
+    //    yani ihaleden ALTI SAAT sonra. Eski kod bu nesneyi sıfırdan kuruyordu ve:
+    //      • botLease() dönemi TAMAMEN bu nesneden türettiği için botun 6 günlük alım
+    //        garantisi 6 SAATTE ölüyor, oyuncu %20 karo vergisini 5,9 gün erken bırakıyordu;
+    //      • `a.top` 0'a döndüğü için directRentOpen() açılıyor ve botun PAZAR günü
+    //        50M'ye kazandığı karo PAZARTESİ taban bedelle doğrudan kiralanabiliyordu.
+    //        İhaleye girmenin anlamı kalmıyordu: bekle, bot kazansın, ertesi gün ucuza al.
+    //    Süren dönem artık yeni nesneye TAŞINIR. Dönem bitince bir sonraki geri
+    //    dönüşümde kendiliğinden düşer (koşul `until > Date.now()`), kayıt şişmez.
+    //    ⚠️ Oyuncunun KENDİ kazanımı etkilenmiyordu — o `G.leases` içinde, ayrı ve kalıcı.
+    const devir = (eski && eski.onceki && eski.onceki.until > Date.now())
+      ? eski.onceki
+      : (eski && eski.resolved && eski.topBy && eski.topBy !== 'SEN' && eski.top > 0
+         && eski.leaseUntil > Date.now())
+        ? { sahip: eski.topBy, until: eski.leaseUntil }
+        : null;
+    if (devir) a.onceki = devir;
     // bot iştahı: deterministik — bazı karelerde botlar yarışır
     const [cy, cx] = cell.split('_').map(Number);
     const h = hash01(cy, cx, 31 + Math.floor(Date.now() / 864e5));
@@ -5458,26 +5482,59 @@ function auctionOf(cell) {
 }
 function resolveAuction(cell, a) {
   if (!a || a.resolved) return;
+  // 🔁 YENİDEN GİRİŞ KALKANI — bayrak EN BAŞTA kalmalı. Aşağıdaki toast/addMail/
+  //    kiraBekleyenIsle yolları ekran tazeleyebilir, tazeleme auctionOf() çağırır ve
+  //    auctionOf gün anahtarı değişmişse resolveAuction'ı TEKRAR çağırır → ÇİFTE İADE.
+  //    (Denetimde "bayrağı sona taşı" önerildi; o öneri bu döngüyü açıyordu.)
   a.resolved = true;
   a.leaseUntil = nextSunday00(a.windowEnd); // 🗓️ dönem: ihale bitişinden SONRAKİ Pazar 00:00'a kadar
-  if (a.topBy === 'SEN' && a.top > 0) {
+  // ⏰ İKİ KELEPÇE (44. tur denetimi — ikisi de ölçüldü, ikisi de para kaybettiriyordu):
+  //  1) PENCERE GERÇEKTEN KAPANDI MI?  Tik yalnız `Date.now() > a.windowEnd` diyordu ve
+  //     aynı tikte sonuçlandırma ile bot teklifi birbirini dışlıyor, sonuçlandırma ÖNCE
+  //     koşuyor. Oyuncu saati Pazar 09:05'e alıp taban teklifi verip hemen Pazartesi'ye
+  //     alınca ihale ilk tikte kapanıyor, botun 60-180 sn'lik tepki sayacı HİÇ işlemiyor:
+  //     rakipsiz, taban bedelle karo. guvenliZaman() cihaz saatine bakmaz.
+  //  2) DÖNEM HÂLÂ GEÇERLİ Mİ?  leaseUntil = pencere bitişinden ~6,1 gün sonrası. Pazar
+  //     akşamı teklif verip 9 gün oyuna girmeyen oyuncuda dönem GEÇMİŞ oluyor; eski kod
+  //     yine "kazandın" dalına girip ölü tarihi yazıyor, sicil talebini oluşturmuyor,
+  //     escrow'u siliyor ve üstüne tekel-önleme yasağını basıyordu → para yandı, karo yok,
+  //     bir hafta ihaleye de giremiyor. Artık TAM İADE dalına düşer, yasak da basılmaz.
+  //  demo muaf: test modunda ihale penceresi her zaman açık (auctionWindow).
+  const simdi = guvenliZaman();
+  const kazandi = a.topBy === 'SEN' && a.top > 0 && (G.demo || simdi > a.windowEnd) && a.leaseUntil > simdi;
+  // 💰 PARA HAREKETİ EN ÖNDE: toast/addMail/kiraBekleyenIsle'den bir istisna gelse bile
+  //    kasa hesabı çoktan yapılmış olur (eski sırada iade bu çağrıların ARDINDA kalıyordu).
+  const geri = kazandi ? 0 : (a.myEscrow || 0);
+  if (geri > 0) { G.cash += geri; gider('ihale', -geri); }
+  const esk = a.myEscrow;
+  a.myEscrow = 0;
+  if (kazandi) {
     G.leases[cell] = a.leaseUntil; // imtiyaz dönemi (escrow = ödeme, geri gelmez)
     G.wonWeek = G.wonWeek || {}; G.wonWeek[cell] = weekIdx(); // gelecek hafta bu karede ihaleye giremezsin
     toast('🏛️ İHALEYİ KAZANDIN! ' + fmt(a.top) + ' — 1 hafta boyunca bu bölge senden +%20 pahalı fiyatla alır. (Gelecek haftaki ihaleye katılamazsın — tekel önleme)', '', null, 0, true);
     // 🌐 SİCİL TALEBİ (kalıcı kuyruk): kazanım ancak sunucu sicili kabul ederse kesinleşir.
     // Ateşle-unut DEĞİL — talep G.kiraBekleyen'e yazılır; uygulama o an kapansa bile sonraki
     // açılışta yeniden denenir, kesin retse TAM iade edilir (kiraBekleyenIsle).
-    if (a.leaseUntil > Date.now()) {
-      G.kiraBekleyen = G.kiraBekleyen || {};
-      G.kiraBekleyen[cell] = { until: a.leaseUntil, bedel: a.top, ts: Date.now() };
-      try { kiraBekleyenIsle(); } catch (e) { }
+    // ⛓️ `leaseUntil > Date.now()` iç şartı KALDIRILDI — yukarıdaki `kazandi` ölçütü aynı
+    //    kontrolü GÜVENİLİR saatle zaten yapıyor. Eski haliyle kazanan dalına girip sicil
+    //    talebini atlamak mümkündü; escrow da ödeme sayıldığı için para buharlaşıyordu.
+    G.kiraBekleyen = G.kiraBekleyen || {};
+    G.kiraBekleyen[cell] = { until: a.leaseUntil, bedel: a.top, ts: Date.now() };
+    try { kiraBekleyenIsle(); } catch (e) { }
+  } else if (geri > 0) {
+    // 🩹 Eskiden bu dal YALNIZ "kazanamadın" demekti. Artık ihalenin GEÇERLİ kapanmadığı
+    //    (saat oynatılmış ya da dönem geçmiş) durumda da buraya düşüyoruz; oyuncu neyin
+    //    olduğunu anlasın diye ayrı metin + kalıcı posta.
+    if (a.topBy === 'SEN' && a.top > 0) {
+      addMail('🏛️ İhale Kurumu', CEV('İhale geçerli kapanmadı — tam iade'),
+        CEV('{0} karosunun ihalesi geçerli bir şekilde sonuçlanmadı (dönem teklifin üstünden geçtiği için kapandı). Bloke tutarın tamamı hesabına geri yatırıldı: {1}. Karo bir sonraki Pazar ihalesinde yeniden açılacak.', cellCode(cell), fmt(geri)), true);
+      toast('🏛️ İhale geçerli kapanmadı — teklifinin TAMAMI iade edildi: ' + fmt(geri), 'warn', null, 0, true);
+    } else {
+      toast('🏛️ İhale kapandı — kazanamadın, teklifin tam iade edildi: ' + fmt(geri), '');
     }
-    a.myEscrow = 0;
-  } else if (a.myEscrow > 0) {
-    G.cash += a.myEscrow; gider('ihale', -a.myEscrow); // kaybettin: TAM iade
-    toast('🏛️ İhale kapandı — kazanamadın, teklifin tam iade edildi: ' + fmt(a.myEscrow), '');
-    a.myEscrow = 0;
   }
+  // 💰 Para hareketi oldu: 120 sn'lik bulut throttle'ını bekleme (20037'deki kalıbın aynısı).
+  if (esk > 0) { try { save(); if (NET.on()) NET.cloudSave(true); } catch (e) { } }
 }
 function botMaybeBid(cell) {
   const a = auctionOf(cell), w = auctionWindow();
@@ -5495,6 +5552,12 @@ function botMaybeBid(cell) {
     }
   } else if (!a.topBy && a.botCap && Date.now() % 7 < 1) {
     a.top = minBid(cell); a.topBy = a.botName; // bot açılış teklifi
+    // 🩹 46. tur: bu dal save() ve panel tazelemesi YAPMIYORDU (üstteki "üstüne çıktı"
+    //    dalı yapıyor). Panel açıkken bot açılış teklifi verince düğme BAYAT tutarı
+    //    gösteriyor ("Teklif Ver — 5,0M") ama placeBid `a.top * 1.07` hesaplayıp daha
+    //    fazlasını kesiyordu — tam bir yem-değiştirme. Üst daldaki iki satırın aynısı.
+    save();
+    if (SEL.cell === cell && $('cellsheet').classList.contains('show')) openCellSheet(cell, SEL.ll);
   }
 }
 window.placeBid = cell => {
@@ -5514,12 +5577,30 @@ window.placeBid = cell => {
 window.withdrawBid = cell => {
   const a = auctionOf(cell);
   if (!a.myEscrow) return;
-  const back = Math.round(a.myEscrow * (1 - WITHDRAW_PENALTY));
+  // 🩹 44. tur — CEZA YALNIZ LİDERKEN. Eski kod %20'yi KOŞULSUZ kesiyordu: bot üstüne
+  //    çıktığında oyuncu zaten kaybetmişti, parası ihale bitimine dek bloke kalıyordu ve
+  //    tek çıkış düğmesi ona %20 daha yakıyordu. Satır 5424'teki tasarım sözü ("biri üstüne
+  //    çıkarsa TAM iade; KENDİ İSTEĞİNLE çekilirsen %20 ceza") kodda hiç uygulanmamıştı.
+  // ⚠️ SIRA: `lider` bayrağı a.topBy SIFIRLANMADAN ÖNCE okunmalı.
+  const lider = a.topBy === 'SEN';
+  const yanan = lider ? Math.round(a.myEscrow * WITHDRAW_PENALTY) : 0;
+  const back = a.myEscrow - yanan;   // tam iadede yuvarlama YOK — kuruşu kuruşuna geri döner
   G.cash += back;
-  toast('🏛️ İhaleden çekildin: %20 ceza — ' + fmt(back) + ' iade, ' + fmt(a.myEscrow - back) + ' yandı', 'warn');
-  if (a.topBy === 'SEN') { a.top = 0; a.topBy = null; }
+  // 🧾 placeBid gideri yazıyor, resolveAuction geri alıyor, burası ALMIYORDU: "paran nereye
+  //    gitti" ekranı ihale kalemini harcanmamış parayla şişik gösteriyordu.
+  gider('ihale', -back);
+  toast(lider
+    ? '🏛️ İhaleden çekildin: %' + (WITHDRAW_PENALTY * 100) + ' ceza — ' + fmt(back) + ' iade, ' + fmt(yanan) + ' yandı'
+    : '🏛️ Teklifin geri çekildi — üstüne çıkıldığı için ceza YOK, ' + fmt(back) + ' TAM iade edildi',
+    lider ? 'warn' : '', null, 0, true);
+  // ⚠️ `a.top = 0` YALNIZ lider dalında kalmalı. Lider olmayan çekilişte de sıfırlanırsa
+  //    oyuncu bedava teklif verip tepe fiyatı sıfırlayarak sonsuz döngü açar (denetimde
+  //    bu tuzak ayrıca işaretlendi) — rakibin AYAKTA duran teklifi silinmemeli.
+  if (lider) { a.top = 0; a.topBy = null; }
   a.myEscrow = 0;
-  save(); openCellSheet(cell, SEL.ll);
+  save();
+  if (NET.on()) NET.cloudSave(true);   // 💰 para hareketi: 120 sn'lik throttle'ı bekleme
+  openCellSheet(cell, SEL.ll);
 };
 // BOŞ KARO — DOĞRUDAN TEMİN: ihalede teklif çıkmadıysa HERKES (bekleme cezalısı dahil) haftanın
 // herhangi bir günü taban tutarla kiralayabilir. DİKKAT: dönem süreye değil TAKVİME bağlı —
@@ -5728,7 +5809,12 @@ function myLease(cell) {
 function botLease(cell) { // rakip şirketin bu dönemki alım garantisi (dönem PAZAR 00:00'da biter)
   if (myLease(cell)) return null;
   const a = (G.auctions || {})[cell];
-  if (!a || !a.resolved || !a.topBy || a.topBy === 'SEN') return null;
+  if (!a) return null;
+  // 🩹 46. tur: hafta anahtarı ihaleden 6 SAAT sonra devrediyor ve ihale nesnesi
+  //    yenileniyor. Süren dönem auctionOf tarafından `onceki`ye taşınır; dönemin
+  //    sahibini ÖNCE oradan okumalıyız, yoksa bot kirası 6 günde değil 6 saatte biter.
+  if (a.onceki && a.onceki.until > Date.now()) return a.onceki.sahip;
+  if (!a.resolved || !a.topBy || a.topBy === 'SEN') return null;
   const until = a.leaseUntil || nextSunday00(a.windowEnd);
   return Date.now() < until ? a.topBy : null;
 }
@@ -6962,9 +7048,17 @@ const DAILY_EVENTS = [
 ];
 // 🎉 HAFTA SONU KAMPANYASI (patron): Cumartesi ve Pazar devlet alım fiyatı 2 KATI.
 const WEEKEND_EVENT = { ico: '🎉', nm: 'Hafta Sonu Kampanyası', d: 'Devlet alım fiyatı 2 KATI — tüm gün', priceAll: 2, weekend: true };
-const isWeekend = d => { const g = (d || new Date()).getDay(); return g === 0 || g === 6; };
+const isWeekend = d => { const g = (d || new Date(guvenliZaman())).getDay(); return g === 0 || g === 6; };
 function todayEvents() { // o günün etkinlik listesi (hafta içi 1, hafta sonu 2)
-  const d = new Date();
+  // 🔴 EN PAHALI SAAT HİLESİ BURADAYDI (44. tur denetimi): `new Date()` ham cihaz saatiydi.
+  //    Cihaz tarihini bir CUMARTESİye almak isWeekend(d) üzerinden WEEKEND_EVENT'i
+  //    (priceAll: 2) KALICI olarak açıyordu; priceAt içindeki `p *= ev.priceAll` ile her
+  //    satış iki katına çıkıyordu. DAILY_EVENTS günü de (doy % 12) seçilebildiği için
+  //    Soğuk Dalgası (priceAll 1.4) ile birlikte kalıcı ×2,8 fiyat demekti.
+  //    guvenliZaman() sunucu çıpalı; SAAT DİLİMİ dönüşümü yerel kalıyor (Japonya'daki
+  //    oyuncu Japonya Cumartesisinde hafta sonunu görür — doğru olan bu). Dilim kaydırmak
+  //    gün sınırında en çok ±1 gün oynatır, kalıcı bir durum yaratamaz.
+  const d = new Date(guvenliZaman());
   const doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
   const gun = DAILY_EVENTS[doy % DAILY_EVENTS.length];
   return isWeekend(d) ? [WEEKEND_EVENT, gun] : [gun];
@@ -6974,7 +7068,7 @@ function todayEvents() { // o günün etkinlik listesi (hafta içi 1, hafta sonu
 const EV_MULT_KEYS = ['wind', 'sun', 'hydro', 'priceAll', 'priceDay', 'priceEve', 'priceNight'];
 let _evCache = null, _evCacheKey = '';
 function todayEvent() {
-  const key = new Date().toDateString();
+  const key = odulGun();   // 🔒 önbellek anahtarı da sunucu gününden (eski: ham cihaz saati)
   if (_evCacheKey === key && _evCache) return _evCache;
   const list = todayEvents();
   let o;
@@ -7001,7 +7095,7 @@ window.etkinlikAc = () => {
         <div class="sub" style="font-size:${kucuk ? 10.5 : 12}px">${CEV(e.d)}</div>
       </div>
     </div>`;
-  const yarinD = new Date(Date.now() + 864e5);
+  const yarinD = new Date(guvenliZaman() + 864e5);   // 🔒 'yarın' kartı da sunucu gününden
   const doyY = Math.floor((yarinD - new Date(yarinD.getFullYear(), 0, 0)) / 864e5);
   const gunY = DAILY_EVENTS[doyY % DAILY_EVENTS.length];
   const yarinList = isWeekend(yarinD) ? [WEEKEND_EVENT, gunY] : [gunY];
@@ -7951,7 +8045,10 @@ const AD_BONUS = 1.15, AD_MAX = 5;
 const ilkSaatReklamsiz = () => { const dt = Date.now() - ((G && G.founded) || 0); return dt >= 0 && dt < 3600e3; };
 const adVerb = () => CEV(ilkSaatReklamsiz() ? '🎬 Reklamı Geç' : '🎬 Reklam İzle');
 function adAvail() {
-  const key = new Date().toDateString();
+  // 🔒 44. tur: ham cihaz saati → sunucu günü. Tarihi oynatmak günde 5 reklam hakkını
+  //    (her biri +%15 satış primi) sınırsız yeniliyordu. Anahtar artık SAYI; eski kayıttaki
+  //    metin değere hiç eşit olmayacağı için güncelleme gününde bir kez sıfırlanır (zararsız).
+  const key = odulGun();
   if (G.adDate !== key) { G.adDate = key; G.adUses = 0; }
   return AD_MAX - (G.adUses || 0);
 }
@@ -8298,7 +8395,13 @@ window.startDischarge = (id, frac, adMult, targetCell, quiet) => {
   const T = STORE_TYPES[st.t];
   if (!quiet) toast('⚡ Boşaltma başladı: ' + fmtE(amt) + ' MWh — ~' + Math.max(1, Math.ceil(dischSecOf(T) * amt / T.cap)) + ' sn' + (targetCell ? ' · 🔁 ' + cellCode(targetCell) + ' pazarına (-%10 aktarım)' : ''), '');
   if (quiet) beep(600, .08); else kaching(); // 💰 SAT tuşuna basınca yazarkasa (toplu satış tek sefer çalar)
-  save(); refreshUnitMarkers();
+  // 🔴 47. tur: BU İKİSİ KOŞULSUZDU. sellAll 60 merkez depo için bunu 60 KEZ çağırıyordu:
+  //    60 TAM kayıt (780 birimde ~172 KB × 60 ≈ 10 MB JSON) + 60 Leaflet işaretçi geçişi.
+  //    Android WebView'da senkron localStorage yazması her biri ~5-30 ms → tek dokunuşta
+  //    5-15 saniyelik TAM KİLİTLENME, Android ANR ("uygulama yanıt vermiyor") riski.
+  //    `quiet` parametresi ZATEN vardı ve toplu yollar onu geçiyordu; toplu çağıranlar
+  //    döngü BİTİNCE bir kez kaydeder (sellAll / sellAllStores / hat üzerinden satış).
+  if (!quiet) { save(); refreshUnitMarkers(); }
   if ($('unitsheet').classList.contains('show') && window.__lastUnit === id) openUnitSheet(id);
 };
 let _dischSaveAcc = 0;
@@ -8366,7 +8469,7 @@ function sellAll(frac) {
   // bağlı uydu doğrudan seçilince startDischarge onu reddediyor ama sayaca giriyordu (yanıltıcı toast).
   for (const st of stores())
     if (!st.disch && !st.link && st.buildDone <= Date.now() && st.stored * frac >= .005) { startDischarge(st.id, frac, null, null, true); n++; }
-  if (n) { toast('⚡ ' + n + ' depo boşaltılıyor — para satış aktıkça hesabına geçer', ''); kaching(); } // 💰 kaç depo olursa olsun TEK yazarkasa
+  if (n) { save(); refreshUnitMarkers(); toast('⚡ ' + n + ' depo boşaltılıyor — para satış aktıkça hesabına geçer', ''); kaching(); } // 💰 kaç depo olursa olsun TEK yazarkasa VE TEK KAYIT
   else toast('Boşaltılacak dolu depo yok', 'warn');
 }
 function restartAll() {
@@ -9149,7 +9252,9 @@ function claimWeek() {
 }
 // 🧪 Günlük araştırma puanı: günün İLK elle satışında +1 (aktifliğin ödülü — Sv1-10 araştırmaların anahtarı)
 function grantDailyResPt() {
-  const dk = new Date().toDateString();
+  // 🔒 44. tur: ham cihaz saati → sunucu günü. Telefon tarihini oynatan oyuncu 53 kademelik
+  //    araştırma ağacını dakikalar içinde açabiliyordu.
+  const dk = odulGun();
   if (G.resPts.dailyKey === dk) return;
   G.resPts.dailyKey = dk;
   G.resPts.daily += 1;
@@ -9236,7 +9341,10 @@ function eventWindow() {
 }
 const MG_MAX = 3;
 function mgAvail() {
-  const key = clockDate().toDateString();
+  // 🔒 44. tur: clockDate() = Date.now() + demoOffsetMin, yani ham cihaz saati.
+  //    NOT: mini oyun PENCERESİ (eventWindow) hâlâ clockDate() kullanıyor — o saat dilimine
+  //    de bağlı ve ayrı bir iş (Adım 2). Burada kapatılan şey HAK SAYISI.
+  const key = odulGun();
   if (G.mgDate !== key) { G.mgDate = key; G.mgPlays = 0; }
   return MG_MAX - G.mgPlays;
 }
@@ -10567,7 +10675,7 @@ window.sellGrid = (lineId, cell) => {
   if (!sts.length) { toast('⚡ Bu hatta satılacak enerjisi olan bağlı depo yok', 'warn'); return; }
   sts.forEach(st => startDischarge(st.id, 1, null, cell, true));
   toast('⚡ ' + sts.length + ' depo ' + placeName(cell) + ' pazarına boşaltılıyor — hat kaybı %' + Math.round(lineLoss(l)), '', null, 0, true);
-  save(); renderNav(); renderLinePanel();
+  save(); refreshUnitMarkers(); renderNav(); renderLinePanel();   // 🔁 işaretçiler de döngü bitince TEK kez
 };
 function gridRowHTML(u) {
   if (u.kind !== 'store' || u.link) return '';
@@ -12830,6 +12938,13 @@ const NET = {
   auth: null,   // { kind:'guest'|'google', uid, token, refresh, email, name }
   cloudAt: 0,   // son bulut kaydı zamanı
   _bulutSorgusu: false,   // ☁️ açılış bulut denetimi sürerken saves/<uid> YAZILMAZ (bkz. cloudNewerCheck)
+  // 🛡️ AÇILIŞ OKUMA KİLİDİ (48. tur — tarayıcıda ÖLÇÜLEN yarış). `_bulutSorgusu` bu iş için
+  //    KULLANILAMIYOR: cloudNewerCheck'in ilk satırı `CLOUD_CHECKED` doluysa onu KOŞULSUZ
+  //    `false` yapıyor. bulutKaydiAra zaten CLOUD_CHECKED'i doldurduğu için, 12 sn'lik okuma
+  //    sürerken araya giren bir cloudNewerCheck (afterLogin yolu) kalkanı DÜŞÜRÜYORDU ve
+  //    otokayıt buluttaki kaydı ezebiliyordu — tam da kapatmaya çalıştığımız delik.
+  //    Bu bayrağı YALNIZ bulutKaydiAra kendi sonuç dallarında ve oyuncunun açık onayı kaldırır.
+  _acilisKilidi: false,
   on() { return !!this.db; },
   async init() {
     try {
@@ -13018,12 +13133,44 @@ const NET = {
   // idToken 1 saatte doluyor. Google (SDK) oturumunda SDK kendi yeniliyor; REST misafirinde
   // refreshToken ile securetoken uç noktasından yeni jeton alınıyor. Jeton alınamazsa null
   // döner ve istek jetonsuz gider — eski kurallarla çalışmaya devam eder (oyun kilitlenmez).
+  // 🔒 SUNUCU SAATİ ÇIPASI — JETONDAN (45. tur, tarayıcıda ölçülerek bulundu).
+  // NEDEN `Date` BAŞLIĞI DEĞİL: CORS yalnız safelisted yanıt başlıklarını JS'e açar ve
+  // `Date` o listede YOK. Oyunun RTDB adresine çapraz kökenden bakıldığında okunabilen
+  // başlıklar yalnızca cache-control / content-length / content-type — ÖLÇÜLDÜ. Yani
+  // aşağıdaki `r.headers.get('date')` dalı CANLIDA HER ZAMAN null dönüyor ve bu katman
+  // bugüne dek hiç çalışmamış. (Aynı kökende çalışır, o yüzden silinmedi.)
+  // Firebase kimlik jetonu Google tarafından İMZALANMIŞ bir JWT'dir: `iat` alanı jetonun
+  // SUNUCUDA üretildiği saniyedir, oyuncu değiştirirse imza bozulur ve RTDB 401 döner.
+  // Jeton her istekte zaten elimizde → EK AĞ İSTEĞİ YOK, KURAL DEĞİŞİKLİĞİ YOK.
+  // ⚠️ `iat` önbellekli jetonda ~55 dk eski olabilir; bu yüzden çıpa YALNIZ `iat`
+  //    BÜYÜDÜĞÜNDE yenilenir ve o anın performance.now() damgasıyla eşlenir. En kötü hâli
+  //    ~1 saat GERİDE olmaktır ve geride olmak GÜVENLİ yöndür: ödül günü geç açılır, ihale
+  //    geç sonuçlanır. İLERİ oynatmak imkânsız — `iat` imzalı.
+  _zamanCipasiKur(tok) {
+    try {
+      if (!tok) return;
+      const g = String(tok).split('.');
+      if (g.length !== 3) return;                       // JWT değil (yerel misafir kimliği)
+      let b = g[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';                    // base64url → base64 dolgusu
+      // ⚠️ JSON.parse YOK: gövdede oyuncunun Türkçe adı olabilir, atob() ikili dizi döndürür
+      //    ve JSON.parse çok baytlı karakterde patlar. Sayıyı düz metinden okumak dayanıklı.
+      const m = /"iat"\s*:\s*(\d{10})/.exec(atob(b));
+      if (!m) return;
+      const ms = +m[1] * 1000;
+      if (!(ms > 17e11 && ms < 4e12)) return;            // akıl sınırı (2023 — 2096)
+      if (ms <= (this._tokIat || 0)) return;             // aynı ya da eski jeton: çıpayı OYNATMA
+      this._tokIat = ms;
+      this._sunucuMs = ms;
+      this._cipaPerf = performance.now();
+    } catch (e) { /* çıpa kurulamadı: guvenliZaman() bankaZaman() yedeğine düşer */ }
+  },
   async token() {
     const a = this.auth;
     if (!a || a.local) return null;
     const fa = (window.firebase && firebase.apps && firebase.apps.length) ? firebase.auth() : null;
     if (fa && fa.currentUser) {
-      try { const t = await fa.currentUser.getIdToken(); a.token = t; a.at = Date.now(); this.saveAuth(); return t; } catch (e) {}
+      try { const t = await fa.currentUser.getIdToken(); a.token = t; a.at = Date.now(); this.saveAuth(); this._zamanCipasiKur(t); return t; } catch (e) {}
     }
     if (a.token && Date.now() - (a.at || 0) < 50 * 60e3) return a.token; // 50 dk taze say (1 sa ömür)
     if (a.refresh && this.key) {
@@ -13035,7 +13182,8 @@ const NET = {
           body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(a.refresh),
         });
         const j = await r.json();
-        if (j.id_token) { a.token = j.id_token; a.refresh = j.refresh_token || a.refresh; a.at = Date.now(); this.saveAuth(); }
+        // 🔒 TAZE jeton: `iat` saniyeler kadar eski → en isabetli saat çıpası (bkz. _zamanCipasiKur)
+        if (j.id_token) { a.token = j.id_token; a.refresh = j.refresh_token || a.refresh; a.at = Date.now(); this.saveAuth(); this._zamanCipasiKur(j.id_token); }
         else console.warn('[NET] jeton yenilenemedi:', j.error && j.error.message);
       } catch (e) { console.warn('[NET] jeton yenileme hatası', e.message); }
       finally { this._tokBusy = false; }
@@ -13143,7 +13291,7 @@ const NET = {
     //    kendi eski verisini geri yükler ve diğer cihazın ilerlemesi ÖLÜR. Bekçi throttle'dan
     //    ÖNCE: `cloudAt` damgalanmaz, pencere kapanınca ilk save() gerçekten yazar — yani
     //    yazma ERTELENİR, kaybolmaz. (Aynı kalıp: `_gocSiliyor`.)
-    if (this._gocSiliyor || this._bulutSorgusu) return;
+    if (this._gocSiliyor || this._bulutSorgusu || this._acilisKilidi) return;
     // ⚡ ÖLÇEK S1: 20 sn → 120 sn. saves/<uid> TÜM G nesnesidir (~90 KB) — en büyük TEK
     //    yazma kalemi. 20 saniyede bir 90 KB yazmak oyuncu başına saatte 16 MB eder.
     //    Kayıp riski yok: yerel localStorage kaydı her değişimde yazılıyor, bulut yalnızca
@@ -13163,6 +13311,19 @@ const NET = {
   async cloudLoad() {
     if (!this.on()) return null;
     try { return await this.get('saves/' + this.id); } catch (e) { return null; }
+  },
+  // ☁️ {ok,val} SÖZLEŞMELİ BULUT OKUMA (47. tur — VERİ KAYBI düzeltmesi).
+  // `cloudLoad()` ağ/yetki hatasını da "kayıt yok"u da aynı `null` ile döndürüyor ve
+  // açılış yolu bunu doğrudan "Yeni Oyun"a çeviriyordu: yerel kaydı olmayan oyuncu
+  // (yeni telefon, yeniden kurulum, tarayıcı temizliği) zayıf şebekede sıfırdan şirket
+  // kuruyor, 5 saniye sonraki ilk otokayıt da sunucudaki AYLARIN ilerlemesini EZİYORDU.
+  // Doğru ayrım dosyada zaten yazılıydı (bkz. getVar yorumu): ok=false İSTEK başarısız
+  // demektir ve VERİ HAKKINDA HİÇBİR ŞEY SÖYLEMEZ; yalnız ok=true && val===null
+  // "kayıt gerçekten yok" demektir. cloudLoad eskisi gibi duruyor (6 çağıranı var,
+  // hepsi yerel kaydı OLAN yollar); kritik açılış yolu artık bunu kullanıyor.
+  async cloudLoadVar() {
+    if (!this.on()) return { ok: false, val: null };
+    return await this.getVar('saves/' + this.id);
   },
   // ── 📦 GÖÇ PAKETİ (36. tur) — hesap bağlamadan ÖNCE, misafir kimliği HÂLÂ ELDEYKEN ──
   // 🐛 DÜZELTİLEN HATA: taşıma giriş SONRASINDA yeni jetonla koşuyordu; kural
@@ -13279,6 +13440,7 @@ const NET = {
     // Kurallar auth.uid'ye geçirilmeden ÖNCE bu sürümün yayılmış olması şart, aksi halde
     // eski sürümdeki oyuncular anında kilitlenir (devam notundaki sıra birebir bu).
     const tok = await this.token();
+    this._zamanCipasiKur(tok);   // 🔒 sunucu saati çıpası (Date başlığı CORS'ta kapalı — bkz. _zamanCipasiKur)
     const url = t2 => this._url(path, t2);
     let r = await fetch(url(tok), o);
     // ⏰ SAAT KAYMASI ÖLÇÜMÜ: 401'in eski cihazlardaki en yaygın sebebi budur.
@@ -13287,13 +13449,21 @@ const NET = {
     // başlığı gerçek saati veriyor — farkı saklayıp uyarıda oyuncuya söylüyoruz.
     try {
       const d = r.headers.get('date');
-      if (d) { const fark = Date.parse(d) - Date.now(); if (isFinite(fark)) { this._saatFark = fark; this._saatPerf = performance.now(); } } // _saatPerf: bankaZaman() tazelik ölçüsü (cihaz saatinden bagimsiz)
+      // 🔒 _sunucuMs (44. tur): _saatFark bir FARK — canlı cihaz saatine eklendiği için
+      //    saat değişince o da kayıyor. Sunucunun verdiği MUTLAK damgayı da saklıyoruz;
+      //    guvenliZaman() bunu performance.now() ile ilerletiyor ve cihaz saatine hiç bakmıyor.
+      // ⚠️ ÖLÇÜLDÜ (45. tur): capraz kökende `date` CORS'ta kapalı → bu dal canlıda HİÇ
+      //    çalışmıyor, `_saatFark`/`_saatPerf` hiç yazılmıyor ve saatDogru() hiç true olmuyor.
+      //    Silmedik: aynı kökende (yerel sunucu/test) çalışıyor ve o hâlde en isabetli kaynak.
+      //    Çıpayı (_sunucuMs/_cipaPerf) burası da besler; jeton yolu için bkz. _zamanCipasiKur.
+      if (d) { const ms = Date.parse(d), fark = ms - Date.now(); if (isFinite(fark)) { this._saatFark = fark; this._saatPerf = performance.now(); if (ms > (this._tokIat || 0)) { this._tokIat = ms; this._sunucuMs = ms; this._cipaPerf = performance.now(); } } } // _saatPerf: bankaZaman() tazelik ölçüsü (cihaz saatinden bagimsiz)
     } catch (e) {}
     // 🔐 401/403: jeton eskimiş olabilir — ZORLA tazeleyip BİR KEZ tekrar dene (bot bulgusu 23 Ağu)
     if ((r.status === 401 || r.status === 403) && !this._retrying) {
       this._retrying = true;
       try {
         const t2 = await this.freshToken();
+        this._zamanCipasiKur(t2);   // 🔒 TAZE jeton: `iat` saniyeler kadar eski → en isabetli çıpa
         if (t2 && t2 !== tok) {
           if (o.body !== undefined) o.body = typeof o.body === 'string' ? o.body : JSON.stringify(o.body);
           r = await fetch(url(t2), o);
@@ -13366,7 +13536,25 @@ const NET = {
   },
   // 🕐 SUNUCUYA YAZILACAK ZAMAN DAMGASI — cihaz saati değil, SUNUCU saati.
   // Kurallar `<= now + 60000` diyor; ileri giden telefon aksi hâlde her yazmada 401 alır.
-  zaman() { const f = this._saatFark; return Date.now() + (isFinite(f) ? f : 0); },
+  // 🔴 47. tur: `_saatFark` ÖLÜ BİR ALAN. Tek yazıcısı `date` başlığı dalıdır ve 45. turda
+  //    ÖLÇTÜM: RTDB çapraz kökende `date` CORS'ta KAPALI → o dal canlıda HİÇ çalışmıyor →
+  //    `_saatFark` hep undefined → bu fonksiyon bugüne dek HER ZAMAN ham cihaz saatini
+  //    döndürmüş. Kurallar `ts <= now + 60000` istediği için saati 1 dakikadan fazla İLERİ
+  //    olan telefonda oyuncunun SUNUCUYA yazdığı HER ŞEY 401 alıyordu: bulut kaydı, kira,
+  //    teklif, posta, ittifak defteri, sohbet. Oyun yerelde oynanmaya devam ettiği için
+  //    oyuncu bunu ancak telefon değiştirince — her şeyi kaybederek — fark ediyordu.
+  // ✅ Artık imzalı jetondan gelen çıpa (bkz. _zamanCipasiKur) kullanılıyor.
+  // ⚠️ Math.min: çıpa ÖNBELLEKLİ jetonda ~1 saat GERİDE olabilir. min() iki yönü birden
+  //    güvene alır — değer bugünkünden ASLA ileri olmaz (401 yönü kapanır) ve çıpa bayatsa
+  //    cihaz saati tavan kalır. `<= now + 60000` kuralı için geride olmak zararsız yöndür.
+  zaman() {
+    const f = this._saatFark, cihaz = Date.now() + (isFinite(f) ? f : 0);
+    if (this._sunucuMs > 0 && this._cipaPerf > 0 && typeof performance !== 'undefined' && performance.now) {
+      const gecen = performance.now() - this._cipaPerf;
+      if (gecen >= 0) return Math.round(Math.min(cihaz, this._sunucuMs + gecen));
+    }
+    return cihaz;
+  },
   put(p, v, kapanis) { return this.req(p, 'PUT', v, kapanis); },
   // 🔇 SESSİZ YAZMA: kuralı henüz yayınlanmamış alanlar için. Reddedilirse oyuncuya
   // "SUNUCUYA YAZILAMIYOR" korkutması GÖSTERİLMEZ — çünkü ana kayıt zaten sağlam.
@@ -13482,6 +13670,19 @@ const NET = {
       // başarısız olur, ana karne sağlam kalır. (Aynı desen 'katki' düğümünde de kullanıldı.)
       // ⚠️ Gerçek kasa DEĞİL, kaba kademe gönderilir — bkz. nakitKademe().
       this.putSessiz('players/' + this.id + '/cash', nakitKademe()).catch(() => {});
+      // 📊 TELEMETRİ (49. tur · PLAN.md madde 10) — AYRI ve SESSİZ yazılır, `cash` deseninin
+      //    aynısı: `players/$uid` beyaz liste olduğu için ana karneye eklenseydi kuralın
+      //    görünmediği bir an TÜM karneyi (oyuncunun adını bile) düşürürdü. Kural 3 Eki'de
+      //    yayınlandı ve sunucudan doğrulandı; desen yine de koruma olarak duruyor.
+      //    Neden şimdi: PLAN.md "telemetri TESTTEN ÖNCE canlıda olmalı" — 12 testçi ayrı
+      //    sektörlerde başlayacak ve "kaç kişi $10B Tesis Değerine ulaştı, kaç günde"
+      //    sorusunun cevabı ancak veri ÖNCEDEN toplanıyorsa alınabilir.
+      this.putSessiz('players/' + this.id + '/tesis', Math.max(0, Math.min(1e15, Math.round(tesisDegeri()) || 0))).catch(() => {});
+      // 🔄 rebirth henüz YOK (G.rb dosyada hiç geçmiyor). Alan şimdiden yazılıyor ki rebirth
+      //    geldiğinde geçmiş veri kesintisiz olsun. rbAt yalnız GERÇEKTEN varsa yazılır —
+      //    null yazmak Firebase'de SİLME demektir, boş yere düğüm oynatmayalım.
+      this.putSessiz('players/' + this.id + '/rb', Math.max(0, Math.min(500, Math.round(G.rb) || 0))).catch(() => {});
+      if (G.rbAt > 0) this.putSessiz('players/' + this.id + '/rbAt', Math.min(this.zaman(), Math.round(G.rbAt))).catch(() => {});
       // 🌍 şehir veri damgası (cash ile aynı desen — ayrı yazım): yönetim panelinden hangi
       // oyuncunun geniş şehir setiyle oynadığı görülür. Dosyayı engelleyip düşük talep/minBid
       // ile oynama girişimi bu damgayla yakalanır (minBid'i veriden ayırmak ayrı iş — E6).
@@ -15103,6 +15304,19 @@ const botWorth = i => { const days = Math.floor(Date.now() / 864e5) - 20655; ret
 // doğan bir yükümlülüktür.
 const borcToplam = () => (krediVar() ? krediKalan() : 0) + (yatVar() ? G.kredi.borc : 0) + acilBorc();
 const myWorth = () => G.cash + G.units.reduce((s, u) => s + TYPE_OF(u.kind, u.t).cost * .7, 0) + invValue() - borcToplam();
+// 🏭 TESİS DEĞERİ — rebirth hedefinin ölçütü. ⚠️ `myWorth()` DEĞİL, bilerek.
+// Patron: "Kasa dahil olmaması gerekiyor... sadece KURULU TESİSLERİN toplam değerinden
+// baz alınarak hesaplanacak." Gerekçesi de kendi sözleriyle: "tesis kurmamın bir amacı
+// kalmamıştı çünkü zaten param vardı" — hedef kasayı sayarsa oyuncu inşa etmeyi bırakıyor.
+// TANIM: TAMAMLANMIŞ tesislerin İNŞA bedeli toplamı. Kasa/envanter/borç hariç, hâlâ inşa
+// halindekiler sayılmaz, ikinci el indirimi (×0,7) YOK — "10 milyarlık tesis kurdum" sezgisi
+// doğru olsun. Bilinmeyen tür gelirse 0 sayılır (eski kayıt katalogdan düşmüş tür taşıyabilir).
+// ⚠️ Bu tanım henüz rebirth KAPISI değil, yalnız ÖLÇÜM — hedef merdiveniyle birlikte kesinleşecek.
+const tesisDegeri = () => ((typeof G !== 'undefined' && G && G.units) ? G.units : []).reduce((t, u) => {
+  if ((u.buildDone || 0) > Date.now()) return t;            // inşaat sürüyor: sayma
+  const T = TYPE_OF(u.kind, u.t);
+  return t + ((T && T.cost) || 0);
+}, 0);
 // 💸 GİDER DEFTERİ (patron: "653M ciro, 306M tesis, 8M kasa — geri kalan nerede?")
 // Ciro GELİRDİR, kâr değil: para tesise, yakıta, bakıma, ruhsata, hatta, ihaleye gider.
 // Bu defter olmadan oyuncu parasının nereye gittiğini göremiyordu. Her kasa çıkışı kalemlenir;
@@ -15796,6 +16010,39 @@ function notTazele() {
 
 // Türkiye takvim günü (UTC+3, DST yok — kalıcı saat dilimi). Taksit sınırı gece 00:00 TR.
 const trGun = (ts) => Math.floor((ts + 3 * 36e5) / 864e5);
+
+// ⏰ SUNUCU ÇIPALI SAAT — CİHAZ SAATİNDEN BAĞIMSIZ (44. tur, denetimde ölçüldü).
+// NEDEN bankaZaman() YETMİYOR: o yalnız saati GERİYE almaya ve 400 günden (SAAT_AKIL_MS)
+// büyük sıçramaya karşı korur. Saati 1 GÜN ileri alan oyuncuda sıçrama kabul edilir,
+// G.saatEn ilerler ve günlük ödül kapısı yeniden açılır — 60 kez ileri al, 60 ödül.
+// Üstelik `saatDogru()` dalında `ham = Date.now() + NET._saatFark`; _saatFark DONMUŞ bir
+// farktır ve CANLI cihaz saatine eklenir, yani o dal da cihaz saatini takip eder.
+// ÇÖZÜM: NET._req her yanıtta sunucunun Date başlığını (_sunucuMs) ve o andaki
+// performance.now() damgasını (_saatPerf) yazıyor. performance.now() sayfa açılışından beri
+// monotondur ve cihaz saatiyle DEĞİŞMEZ → "sunucu damgası + o damgadan beri geçen monoton
+// süre" oyuncunun oynatamadığı bir saattir. Çevrimiçi oyuncuda çıpa her istekte (otomatik
+// kayıt) tazelenir, sapma milisaniye düzeyinde kalır.
+// ÇIPA YOKSA (hiç bağlanmamış oturum) bankaZaman()'a düşer — bugünkü davranış, gerileme yok.
+// ⚠️ ÇIPA AYRI ALANLARDA (_sunucuMs + _cipaPerf) DURUR — `_saatFark`/`_saatPerf`'e
+//    BİLEREK dokunulmaz. Onları yazsaydık saatDogru() true olur, bankaZaman() "sunucu esas"
+//    dalına girer ve `ham = Date.now() + DONMUŞ _saatFark` ile monoton çentiği GERİYE de
+//    çekebilirdi: çıpayı oraya bağlamak bankaZaman()'ı iyileştirmez, KÖTÜLEŞTİRİRDİ.
+//    bankaZaman()'ı sunucuya bağlamak ayrı bir iş (kredi faizi/temerrüt ona bağlı — Adım 2).
+function guvenliZaman() {
+  if (typeof NET !== 'undefined' && NET._sunucuMs > 0 && NET._cipaPerf > 0
+      && typeof performance !== 'undefined' && performance.now) {
+    const gecen = performance.now() - NET._cipaPerf;
+    if (gecen >= 0) return NET._sunucuMs + gecen;   // 🔒 cihaz saati bu hesaba HİÇ girmiyor
+  }
+  return (typeof bankaZaman === 'function' && typeof G !== 'undefined' && G) ? bankaZaman() : Date.now();
+}
+// 🎁 ÖDÜL GÜNÜ: bankaGun() ile AYNI gün tanımı (trGun = UTC+3) — oyun zaten kredi taksitini
+// bu güne göre işliyor, günlük ödül de aynı takvimi kullanmalı ki iki ayrı "gün" oluşmasın.
+// ⚠️ MONOTON (`>`) KIYAS BİLEREK YAPILMADI: bir kez yukarı kaçmış anahtarı bir daha
+//    sıfırlamaz. RTC'si şaşmış (hiç hile yapmamış) bir cihaz +300 gün okursa oyuncu 300 gün
+//    boyunca günlük ödül ALAMAZ ve onarım yolu yok. Çağrı yerlerindeki `!==` kalıbı kendi
+//    kendini bir günde onarır; çevrimiçi oyuncuda çıpa zaten gerçek sunucu gününü veriyor.
+const odulGun = () => trGun(guvenliZaman());
 
 const notu = () => Math.max(0, Math.min(100, G && G.krediNot !== undefined ? G.krediNot : KREDI_NOT_BAS));
 const notKademe = () => KREDI_NOTLAR.find(n => notu() >= n.min);
@@ -16949,10 +17196,38 @@ function save() {
   // çevrimdışı üretim telafisini iptal ediyordu. lastSeen'i yalnız sim tiki (frame) günceller.
   const { _tcd, _aucT, _started, ...s } = G; // geçici alanlar kayda girmez
   s.units = G.units.map(({ _lastIcon, ...u }) => u); // marker HTML önbelleği kaydı şişirmesin
-  localStorage.setItem(SAVE_KEY, JSON.stringify(s));
+  // 🔴 47. tur: BU SATIR TRY/CATCH'SİZDİ. Depolama kotası dolduğunda (QuotaExceededError)
+  //    ya da depolama engelliyken (gizli sekme, WebView verisi kilitli) istisna save()'i
+  //    çağıran HER yolu kırıyor ve oyuncu HİÇBİR uyarı almadan ilerlemesini kaybediyordu.
+  //    Artık yutuluyor AMA sessizce değil: kırmızı uyarı ('bad' sınıfı bildirim süzgecini
+  //    her zaman geçer) ve aynı kimlikle tekrar basmaz. Bulut kaydı yolu açık kalır.
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(s));
+    _kayitHatasi = 0;
+  } catch (e) {
+    _kayitHatasi++;
+    if (_kayitHatasi === 1 || _kayitHatasi % 120 === 0)
+      toast('🔴 KAYIT YAZILAMIYOR (' + ((e && e.name) || 'hata') + ') — cihaz depolaması dolu ya da engelli. İlerlemen bu cihaza kaydedilmiyor! Google hesabın bağlıysa bulut kaydı sürüyor.',
+        'bad', 'kayit-hatasi', 0, true);
+    try { console.warn('[KAYIT] localStorage yazılamadı:', e && e.message); } catch (e2) {}
+  }
 }
+let _kayitHatasi = 0;
 function load() {
-  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.company) return migrate(s); } catch (e) {}
+  let ham = null;
+  try { ham = localStorage.getItem(SAVE_KEY); } catch (e) { return null; }  // depolama okunamıyor
+  if (!ham) return null;                                                    // gerçekten kayıt yok
+  try {
+    const s = JSON.parse(ham);
+    if (s && s.company) return migrate(s);
+  } catch (e) {
+    // 🔴 47. tur: boş `catch (e) {}` BOZUK kaydı "kayıt YOK" ile aynı sayıyordu; oyun
+    //    sihirbaza düşüp üstüne yazıyor, bozuk metin de teşhis için saklanmıyordu.
+    //    Artık kenara alınıyor (bir kez) ve konsola yazılıyor. Bulut yolu zaten devrede:
+    //    yerel bozuksa buluttan iner — (A) düzeltmesiyle o yol artık güvenli.
+    try { if (!localStorage.getItem(SAVE_KEY + '_bozuk')) localStorage.setItem(SAVE_KEY + '_bozuk', ham); } catch (e2) {}
+    try { console.warn('[KAYIT] yerel kayıt BOZUK, kenara alındı:', e && e.message); } catch (e2) {}
+  }
   return null;
 }
 // Eski kayıtları yeni alanlarla tamamla (yakıt deposu / ofis / araştırma güncellemesi)
@@ -18824,7 +19099,7 @@ window.sellAllStores = () => {
   const sts = stores().filter(s => s.buildDone <= Date.now() && !s.disch && !s.link && (isLinked(s) ? groupStored(s) : s.stored) >= .005);
   sts.forEach(s => startDischarge(s.id, 1, null, null, true)); // quiet: tek tek bildirim yağmuru olmasın
   toast('💰 ' + sts.length + ' depo boşaltılıyor — para akmaya başladı', '', null, 0, true);
-  save(); renderNav();
+  save(); refreshUnitMarkers(); renderNav();   // 🔁 işaretçiler de döngü bitince TEK kez
 };
 function renderNavPanel() {
   const offs = offices();
@@ -19148,10 +19423,12 @@ function auctionPanelHTML(c) {
         <tr><td>En yüksek teklif</td><td>${a.top > 0 ? '<b>' + fmt(a.top) + '</b> — ' + (a.topBy === 'SEN' ? '<b class="pos">SEN 🏆</b>' : a.topBy) : '— henüz teklif yok'}</td></tr>
         ${a.myEscrow > 0 ? `<tr><td>Bloke paran</td><td>${fmt(a.myEscrow)}</td></tr>` : ''}
       </table>
-      <p class="sub" style="border:1px dashed var(--line);border-radius:8px;padding:6px 8px">📜 İhale açık usulde yapılır. Teklif tutarları <b>bloke edilir</b>; bloke tutar <b>ihale bitişinde</b> hesabınıza iade edilir (kazanan hariç — onunki ödemedir). İhaleden kendi isteğinizle çekilirseniz %20 kesinti uygulanır.</p>
+      <p class="sub" style="border:1px dashed var(--line);border-radius:8px;padding:6px 8px">📜 İhale açık usulde yapılır. Teklif tutarları <b>bloke edilir</b>; bloke tutar <b>ihale bitişinde</b> hesabınıza iade edilir (kazanan hariç — onunki ödemedir). Üstünüze teklif verilirse <b class="pos">cezasız, TAM iade</b> ile çekilebilirsiniz; <b>önde olduğunuz hâlde</b> kendi isteğinizle çekilirseniz %${WITHDRAW_PENALTY * 100} kesinti uygulanır.</p>
       ${a.topBy === 'SEN' ? '<p class="sub">🏆 Öndesin — 21:00\'e kadar üstüne çıkılmazsa alım garantisi senin.</p>' : ''}
       <button class="bigsell" onclick="placeBid('${c}')" ${!w.open || a.topBy === 'SEN' || G.cash < next - a.myEscrow ? 'disabled' : ''}>🏛️ Teklif Ver — ${fmt(next)}</button>
-      ${a.myEscrow > 0 ? `<button class="bigsell half" onclick="withdrawBid('${c}')" style="color:var(--danger)">↩️ Teklifi Çek — %20 ceza (${fmt(Math.round(a.myEscrow * WITHDRAW_PENALTY))} yanar)</button>` : ''}
+      ${a.myEscrow > 0 ? (a.topBy === 'SEN'
+        ? `<button class="bigsell half" onclick="withdrawBid('${c}')" style="color:var(--danger)">↩️ Teklifi Çek — %${WITHDRAW_PENALTY * 100} ceza (${fmt(Math.round(a.myEscrow * WITHDRAW_PENALTY))} yanar)</button>`
+        : `<button class="bigsell half" onclick="withdrawBid('${c}')">↩️ Teklifi Çek — ${fmt(a.myEscrow)} TAM iade (üstüne çıkıldı, ceza yok)</button>`) : ''}
       ${directRentOpen(c) ? `<button class="bigsell half" onclick="directRentConfirm('${c}')" ${G.cash < minBid(c) ? 'disabled' : ''}>🏛️ Boş Karoyu Doğrudan Kirala — ${fmt(minBid(c))} (dönem Pazar 00:00'da biter)</button><p class="sub">Geçen ihalede teklif çıkmadı — <b>boş</b> karolar doğrudan teminle kiralanabilir.</p>` : ''}
       ${(myLease(c) || leaseOwnerOf(c)) && !w.open ? `<p class="sub">🔒 Bu karonun alım garantisi <b>${myLease(c) ? 'SENDE' : leaseOwnerOf(c)}</b> — dönem bitmeden doğrudan kiralanamaz. Sahiplik yalnız <b>Pazar 09:00–21:00 ihalesiyle</b> el değiştirir.</p>` : ''}`;
   }
@@ -20213,6 +20490,62 @@ function renderHUD() {
 
 // ═══════════ ONBOARDING: gerçek dünya haritasından Ülke → İl → Şirket ═══════════
 let CLOUD_CHECKED = false; // bulut kaydı oturum başına bir kez denetlenir
+// ☁️ AÇILIŞTA BULUT KAYDI ARAMA (47. tur — YENİDEN YAZILDI, veri kaybı düzeltmesi).
+// 🔴 ESKİ HÂLİ: `Promise.race([NET.cloudLoad(), 8 sn])` — cloudLoad ağ/yetki hatasını da
+//    `null` döndürüyor, zaman aşımı da `null` döndürüyordu ve kod ikisini de doğrudan
+//    `wizardWelcome()`e çeviriyordu. Ekranda tek düğme var: "Yeni Oyun". Oyuncu şirket
+//    kuruyor, 5 saniye sonraki ilk otokayıt (setInterval 5000) sunucudaki aylarca
+//    birikmiş kaydın ÜSTÜNE yazıyordu — cloudAt=0 olduğu için 120 sn freni de yok.
+// ✅ ARTIK: okuma başarısızsa sihirbaza DÜŞÜLMEZ. `NET._bulutSorgusu` okuma kesinleşene
+//    kadar açık kalır; o bayrak cloudSave'i bloklar, yani oyuncu ne yaparsa yapsın
+//    sunucudaki kayıt EZİLMEZ. Yalnız sunucu "kayıt yok" dediğinde sihirbaz açılır.
+function bulutKaydiAra() {
+  LOGIN_BUSY = true;              // closeModal emniyet ağı bu bekleme sırasında sihirbazı tetiklemesin
+  NET._acilisKilidi = true;       // 🛡️ okuma KESİNLEŞENE kadar saves/<uid> YAZILMAZ (ayrı bayrak: bkz. _acilisKilidi)
+  $('app').classList.add('wiz');
+  $('modal').innerHTML = '<h2>' + CEV('☁️ Kayıt aranıyor') + '</h2><p>' + CEV('Buluttaki şirket kaydın kontrol ediliyor...') + '</p>';
+  $('overlay').classList.add('show');
+  // ⏱️ 8 sn → 12 sn: kaybeden taraf artık veri kaybettirmiyor, yalnız "tekrar dene"
+  //    gösteriyor. Mobil şebekeye daha müsamahakâr olmanın bir bedeli kalmadı.
+  Promise.race([NET.cloudLoadVar(), new Promise(r => setTimeout(() => r({ ok: false, val: null }), 12000))])
+    .then(r => {
+      LOGIN_BUSY = false;
+      const cloud = r && r.val;
+      if (cloud && cloud.company) {
+        NET._acilisKilidi = false;
+        G = migrate(cloud);
+        save();
+        closeModal();
+        $('app').classList.remove('wiz');
+        startGame(true);
+        toast(CEV('☁️ Buluttaki şirketinle devam ediyorsun: {0}', G.company), '', null, 0, true);
+      } else if (!r || !r.ok) {
+        bulutOkunamadi();            // 🔴 İSTEK başarısız — EZME YOK, sihirbaza da düşmüyoruz
+      } else {
+        NET._acilisKilidi = false;   // sunucu "kayıt YOK" dedi — sihirbaz güvenli
+        closeModal();
+        wizardWelcome();
+      }
+    })
+    .catch(() => { LOGIN_BUSY = false; bulutOkunamadi(); });   // eskiden burası da wizardWelcome'a düşüyordu
+}
+window.bulutKaydiAra = bulutKaydiAra;
+function bulutOkunamadi() {
+  $('app').classList.add('wiz');
+  $('modal').innerHTML = '<h2>☁️ ' + CEV('Kayıt okunamadı') + '</h2>'
+    + '<p>' + CEV('Sunucuya ulaşılamadı; buluttaki şirket kaydın OKUNAMADI. Bu "kaydın yok" demek DEĞİL — bağlantı sorunu da olabilir.') + '</p>'
+    + '<p class="sub">' + CEV('Şimdi yeni şirket kurarsan sunucudaki şirketinin üzerine yazılabilir. Önce bağlantını kontrol edip tekrar dene.') + '</p>'
+    + '<button class="primary" onclick="bulutKaydiAra()">🔄 ' + CEV('Tekrar Dene') + '</button>'
+    + '<button class="bigsell half" style="color:var(--danger)" onclick="bulutuYokSayVeKur()">' + CEV('Yine de yeni şirket kur') + '</button>';
+  $('overlay').classList.add('show');
+}
+window.bulutuYokSayVeKur = () => {
+  // ⚠️ Tek geri dönüşü olmayan yol — bu yüzden açık onay. (Aynı kalıp: "Tüm ilerleme silinsin mi?")
+  if (!confirm(CEV('Buluttaki kaydın OKUNAMADI. Yeni şirket kurarsan sunucudaki eski şirketin kalıcı olarak kaybolabilir. Emin misin?'))) return;
+  NET._acilisKilidi = false;   // yazma kalkanı ancak oyuncu AÇIKÇA onayladığında kalkar
+  closeModal();
+  wizardWelcome();
+};
 function wizardStart() {
   // 🔐 HESAP EKRANI (patron): ilk girişte Google hesabı bağla ya da misafir olarak oyna.
   // Google'a bağlayan oyuncu telefon değiştirse bile kaydını kaybetmez (kayıt sunucuda).
@@ -20226,23 +20559,7 @@ function wizardStart() {
   // belirgin daha yeni kayıt aranır ve bulunursa oyuncuya SEÇİM sorulur (sessiz ezme yok).
   if (!has && NET.on() && NET.auth && !CLOUD_CHECKED) {
     CLOUD_CHECKED = true;
-    LOGIN_BUSY = true; // closeModal emniyet ağı bu bekleme sırasında sihirbazı tetiklemesin
-    $('app').classList.add('wiz');
-    $('modal').innerHTML = '<h2>' + CEV('☁️ Kayıt aranıyor') + '</h2><p>' + CEV('Buluttaki şirket kaydın kontrol ediliyor...') + '</p>';
-    $('overlay').classList.add('show');
-    Promise.race([NET.cloudLoad(), new Promise(r => setTimeout(() => r(null), 8000))])
-      .then(cloud => {
-        LOGIN_BUSY = false;
-        if (cloud && cloud.company) {
-          G = migrate(cloud);
-          save();
-          closeModal();
-          $('app').classList.remove('wiz');
-          startGame(true);
-          toast(CEV('☁️ Buluttaki şirketinle devam ediyorsun: {0}', G.company), '', null, 0, true);
-        } else { closeModal(); wizardWelcome(); }
-      })
-      .catch(() => { LOGIN_BUSY = false; closeModal(); wizardWelcome(); });
+    bulutKaydiAra();
     return;
   }
   if (has) {
