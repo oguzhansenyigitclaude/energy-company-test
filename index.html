@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-03 18:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-09 19:27) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -890,23 +890,19 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-03 18:22)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-09 19:27)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-03',
-  baslik: '📦 Güncelleme notu — 3 Ekim',
+  etiket: '2026-10-09',
+  baslik: '📦 Güncelleme notu — 9 Ekim',
   maddeler: [
-    '🛡️ <b>Şirketin artık kaybolamaz.</b> Telefonunu değiştirdiğinde ya da uygulamayı yeniden kurduğunda sunucudaki kaydın okunamazsa, oyun eskiden sessizce <b>yeni şirket</b> açıyor ve ilk otomatik kayıt sunucudaki şirketinin üstüne yazıyordu. Artık okuma başarısız olursa <b>Kayıt okunamadı</b> ekranı çıkıyor, <b>Tekrar Dene</b> diyebiliyorsun ve sunucudaki şirketine kesinlikle dokunulmuyor. Bu turda bulduğumuz en ağır hata buydu.',
-    '⏱️ <b>Saati şaşmış telefonlarda sunucuya yazma düzeldi.</b> Telefonunun saati 1 dakikadan fazla ileriyse bulut kaydın, karo kiraların, tekliflerin, postaların ve ittifak defteri yazmaların sunucu tarafından <b>sessizce reddediliyordu</b>. Oyun yerelde çalışmaya devam ettiği için bunu ancak telefon değiştirince fark ediyordun. Zaman damgası artık sunucu saatinden alınıyor.',
-    '⚡ <b>Hepsini Sat artık donmuyor.</b> Çok depolu şirketlerde tek dokunuş 60 ayrı tam kayıt işlemi başlatıyor, oyun saniyelerce kilitleniyordu. Tek kayda indirildi.',
-    '💾 <b>Kayıt yazılamıyorsa artık söylüyoruz.</b> Cihaz depolaması dolduğunda ya da engellendiğinde ilerleme sessizce kaydedilmiyordu; artık kırmızı uyarı çıkıyor.',
-    '🛡️ <b>Saat hilesi kapatıldı.</b> Gün devri artık cihazın değil <b>sunucunun</b> saatinden hesaplanıyor. Telefon tarihini değiştirerek 🎉 Hafta Sonu Kampanyasını (alım fiyatı ×2), 🧪 günlük araştırma puanını, 🎬 reklam hakkını ve 🎮 mini oyun hakkını yeniden açmak artık mümkün değil. Dürüst oynayanın hiçbir hakkı değişmedi.',
-    '🏛️ <b>İhale baştan sona elden geçti.</b> Üstüne teklif verilirse <b>cezasız, TAM iade</b> ile çekilebiliyorsun — %20 kesinti yalnızca <b>önde olduğun hâlde</b> kendi isteğinle çekilince uygulanıyor. Teklif verip bir hafta oyuna girmeyen şirketin bloke parası <b>yanıyor</b> ve üstüne bir hafta ihale yasağı basılıyordu: artık tam iade var, yasak yok. İhale sonucu cihaz saatiyle öne çekilemiyor. Kazanılan karonun dönemi 6 saat sonra düşüyordu, artık tam bir hafta sürüyor.',
-    '🏆 <b>İLK ÖNERİ ÖDÜLÜ: Valtora Enerji.</b> Açılan panellerin kapatma düğmesini bulamadığını 💡 Öneri / İstek ekranından bize bildirdi. İncelediğimizde <b>üç ayrı kusur</b> çıktı ve hepsi düzeltildi. Katkısı için <b style="color:#cfc2ff">💠 50 İmtiyaz Puanı</b> ile ödüllendirildi. Tebrikler!',
+    '⚡ <b>Büyük şirketlerde donma bitti.</b> Çok tesisli şirketlerde oyun kasıyordu. Ölçtük: 780 tesisli bir şirkette tek karenin hesabı <b>723 milisaniye</b> sürüyordu, şimdi <b>9,5</b>. Harita, satış ve üretim sayaçları akıcı. Bugünkü ölçekte de 10 kat hafifledi.',
+    '🛡️ <b>Açılışı engelleyebilecek iki yol kapatıldı.</b> Nadir de olsa oyunun hiç açılmamasına yol açabilecek iki kusur vardı; ikisi de giderildi. Mevcut oyunlarda hiçbir şey değişmiyor.',
+    '🐞 <b>Açılış sorunu artık bize ulaşıyor.</b> Oyun açılırken bir hata olursa kaydı tutuluyor ve bir sonraki açılışta otomatik bildiriliyor. Daha önce <b>oyun açılmıyor</b> diyen oyuncunun elinde gösterecek bir şey yoktu, bizim de bakacak verimiz. Artık var.',
     '🎁 <b>Sen de kazanabilirsin.</b> 🐞 hata bulana ve 💡 güzel öneri getirene <b>100 İmtiyaz Puanına kadar</b> ödül veriyoruz. Öneri oyuna girdiğinde <b>şirketinin adı bu notta yazılır</b> ve kazandığın puan tüm oyunculara duyurulur. 👤 profil → 💡 Öneri / İstek.'
   ],
 };
@@ -6722,7 +6718,39 @@ const speedMult = () => boostFactor() * (tutActive() ? TUT_MULT : 1); // TEK hı
 
 // KALICI BAĞLANTILAR (u.st = istasyon id): yeni santral boş slota otomatik bağlanır;
 // oyuncu istediği an KESebilir ve başka istasyona BAĞLAyabilir (küçüğü kes, büyüğü bağla senaryosu).
-const storeById = id => G.units.find(x => x.id === id && x.kind === 'store');
+// ⚡ BİRİM KİMLİK İNDEKSİ (51. tur) — `storeById` her çağrıda `G.units`i BAŞTAN TARIYORDU
+//    ve `storeMaster` onu zincirin HER adımında çağırıyor. Tarayıcıda ÖLÇÜLDÜ (60 karo /
+//    780 birim / depolar dolu, TEK KARE): storeMaster 434.400 çağrı → ~340 MİLYON eleman
+//    ziyareti → 723 ms/kare (1,4 fps). Bugünkü ölçekte (156 birim) bile 6,7 ms/kare, ve
+//    mobil WebView masaüstünden 3-6 kat yavaş.
+// 🔒 KENDİNİ DOĞRULAYAN ÖNBELLEK — "sürüm sayacı" BİLEREK kullanılmadı: sayacı G.units'in
+//    değiştiği ALTI yere + load/migrate yoluna elle koymak gerekirdi ve BİRİNİ unutmak
+//    bayat indeks, yani enerjinin YANLIŞ DEPOYA gitmesi demek. Bunun yerine her çağrıda
+//    üç ucuz karşılaştırma yapılır ve şüphede indeks YENİDEN KURULUR:
+//      • dizi KİMLİĞİ → `G.units = G.units.filter(...)` yolları yakalanır
+//      • uzunluk      → push / splice yakalanır
+//      • G.nextId     → aynı karede splice+push olsa bile yakalanır
+//    `id` ASLA yeniden atanmıyor (ölçüldü: `G.nextId++` yalnız YENİ nesne üretirken
+//    kullanılıyor), bu yüzden kimlik → birim eşlemesi sabittir.
+//    Yeniden kurma O(birim); kare başına bir kez ödenip 434.400 arama O(1) olur.
+let _bIdxArr = null, _bIdxLen = -1, _bIdxNext = -1, _bIdx = null, _depoIdx = null;
+function birimIdx() {
+  const us = (typeof G !== 'undefined' && G && Array.isArray(G.units)) ? G.units : null;
+  if (!us) { _bIdxArr = null; _bIdx = null; return null; }
+  if (us !== _bIdxArr || us.length !== _bIdxLen || G.nextId !== _bIdxNext) {
+    const m = new Map(), dp = [];
+    // 🔋 DEPO LİSTESİ de burada kurulur: `stores()` her çağrıda G.units'i filtreliyordu ve
+    //    `storeGroup` onu kare başına ~2.400 kez çağırıyor. Üyelik yalnız EKLEME/SİLMEYE
+    //    bağlı, yani yukarıdaki üç ölçüt onu da tam olarak kapsar — ek bir risk YOK.
+    //    Sıra `G.units.filter` ile BİREBİR aynı (aynı yönde tek geçiş).
+    for (const u of us) if (u && u.id != null) { m.set(u.id, u); if (u.kind === 'store') dp.push(u); }
+    _bIdx = m; _depoIdx = dp; _bIdxArr = us; _bIdxLen = us.length; _bIdxNext = G.nextId;
+  }
+  return _bIdx;
+}
+// ⚠️ DAVRANIŞ BİREBİR KORUNDU: eskisi gibi yalnız `kind === 'store'` döndürür, bulunamazsa
+//    `undefined`. (Kimlikler benzersiz olduğu için Map ile `find` aynı sonucu verir.)
+const storeById = id => { const m = birimIdx(); const u = m ? m.get(id) : null; return (u && u.kind === 'store') ? u : undefined; };
 // Özel isim: oyuncu istasyonlarını yeniden adlandırabilir ("25'lik istasyon", "Güneş panellerinin istasyonu"...)
 // OFİS ADI (patron): "Bölge Ofisi #9" oyuncuya hiçbir şey anlatmıyordu. Artık ÜLKE + o ülkedeki
 // sıra numarası: "Angola Ofisi 1", aynı ülkede ikincisini açarsan "Angola Ofisi 2".
@@ -7325,14 +7353,49 @@ setInterval(checkUpdate, 3 * 60000);
 
 // ── 🐞 TEST SÜRÜMÜ HATA YAKALAMA: son 3 hata kaydedilir, "Hata Bildir" raporuna eklenir ──
 const ERRLOG = [];
-window.addEventListener('error', e => {
-  ERRLOG.push((e.message || 'hata') + ' @' + (e.lineno || '?'));
+// 🩹 KALICI HATA GÜNLÜĞÜ (54. tur). ERRLOG yalnız BELLEKTEydi: sayfa yenilenince ya da
+//    WebView çöküp açılınca gidiyordu — yani tam da teşhis etmek istediğimiz "açılışta
+//    çöktü" durumunda elimizde hiçbir şey kalmıyordu. Artık localStorage'a da yazılıyor.
+//    `acilis` işareti taşıyanlar bir sonraki SAĞLIKLI açılışta sunucuya gönderilir.
+const ERR_KEY = 'ec_hata';
+function hataOku() { try { const k = JSON.parse(localStorage.getItem(ERR_KEY) || '[]'); return Array.isArray(k) ? k : []; } catch (e) { return []; } }
+function hataYaz(mesaj, acilis) {
+  const m = String(mesaj == null ? 'hata' : mesaj).slice(0, 160);
+  ERRLOG.push(m);
   if (ERRLOG.length > 3) ERRLOG.shift();
-});
-window.addEventListener('unhandledrejection', e => {
-  ERRLOG.push('promise: ' + ((e.reason && e.reason.message) || e.reason || '?'));
-  if (ERRLOG.length > 3) ERRLOG.shift();
-});
+  try {
+    const k = hataOku();
+    k.push({ m, v: (typeof BUILD_TAG !== 'undefined' ? BUILD_TAG : '?'), ts: Date.now(), acilis: !!acilis });
+    while (k.length > 3) k.shift();
+    localStorage.setItem(ERR_KEY, JSON.stringify(k));
+  } catch (e) { /* depolama dolu/engelli — bellekteki ERRLOG yine duruyor */ }
+}
+window.addEventListener('error', e => hataYaz((e.message || 'hata') + ' @' + (e.lineno || '?')));
+window.addEventListener('unhandledrejection', e => hataYaz('promise: ' + ((e.reason && e.reason.message) || e.reason || '?')));
+// 📤 BEKLEYEN AÇILIŞ HATASINI SUNUCUYA GÖNDER — yalnız `acilis` işaretliler, oturumda BİR KEZ.
+//    Her çalışma-anı hatasını göndermek paneli boğardı. Yeni Firebase kuralı GEREKMİYOR:
+//    `reports/` düğümü zaten yönetici-okumalı / oyuncu-yazılabilir ve beyaz listesi
+//    from · fromId · target · reason · ts (reason ≤ 200). Rapor panelin 📮 sekmesine düşer.
+let _hataGonderildi = false;
+async function hataBildirKuyruk() {
+  if (_hataGonderildi) return;
+  if (typeof NET === 'undefined' || !NET.on() || !NET.auth) return;
+  const k = hataOku(), bekleyen = k.filter(x => x && x.acilis);
+  if (!bekleyen.length) return;
+  _hataGonderildi = true;
+  const x = bekleyen[bekleyen.length - 1];
+  try {
+    await NET.push('reports', {
+      from: String((typeof G !== 'undefined' && G && G.company) || 'şirket kurulmamış').slice(0, 28),
+      fromId: String(NET.id || '').slice(0, 48),
+      target: '🐞 AÇILIŞ HATASI',
+      reason: (String(x.v) + ' · ' + String(x.m)).slice(0, 200),
+      ts: NET.zaman(),
+    });
+    // gönderildi: yalnız açılış kayıtlarını düş, diğerleri "🐞 Hata Bildir" raporunda kalsın
+    try { localStorage.setItem(ERR_KEY, JSON.stringify(k.filter(y => !(y && y.acilis)))); } catch (e) {}
+  } catch (e) { _hataGonderildi = false; /* ağ yoksa kuyrukta kalsın, sonraki açılışta gider */ }
+}
 window.reportBug = () => {
   const d = [
     '🐞 ENERGY COMPANY — HATA BİLDİRİMİ',
@@ -7344,6 +7407,9 @@ window.reportBug = () => {
     G && G.company ? `Eğitim: ${G.starterClaimed ? 'bitti' : 'görev ' + (tutStep() + 1)} · ruhsat ${Object.keys(G.licenses).length} · ofis ${offices().length}` : '',
     'Ekran: ' + innerWidth + 'x' + innerHeight + ' · ' + (navigator.userAgent.match(/Android [\d.]+/) || ['tarayıcı'])[0],
     ERRLOG.length ? 'Hatalar: ' + ERRLOG.join(' | ') : 'JS hatası yok',
+    // 🩹 54. tur: önceki oturumlardan kalan kayıtlar da rapora girsin — "açılışta çöktü,
+    //    sonra açıldı" durumunda eski hata aksi hâlde kaybolurdu.
+    (() => { const k = hataOku(); return k.length ? 'Geçmiş: ' + k.map(x => (x.acilis ? '[AÇILIŞ] ' : '') + x.m).join(' | ') : ''; })(),
   ].filter(Boolean).join('\n');
   try { navigator.clipboard && navigator.clipboard.writeText(d); } catch (e) {}
   $('modal').innerHTML = `
@@ -7967,7 +8033,11 @@ const emBadgeHTML = (em, big) => { const b = emBadgeOf(em); return `<span style=
 // botların emisyon karnesi (liderlik tablosunda görünür — deterministik)
 const botEm = i => Math.round(hash01(i, 7, 3) * 700);
 const plants = () => G.units.filter(u => u.kind === 'plant');
-const stores = () => G.units.filter(u => u.kind === 'store');
+// ⚡ 52. tur: `G.units.filter(...)` -> önbellek (bkz. birimIdx). ÖLÇÜLDÜ, 60 karo/kare başına:
+//    storeGroup toplamı 24,7 ms -> 9,5 ms. Çağıranların HİÇBİRİ diziyi değiştirmiyor
+//    (sort/push/splice/reverse araması: 0 sonuç) — hepsi filter/map/some/reduce/for-of.
+//    ⚠️ Mutasyon eklenirse bu önbellek paylaşılan diziyi bozar; eklemeden önce `.slice()` al.
+const stores = () => { birimIdx(); return _depoIdx || []; };
 const readyStores = c => G.units.filter(u => u.kind === 'store' && u.cell === c && u.buildDone <= Date.now());
 const totalOutput = () => plants().reduce((s, u) => s + plantOutput(u), 0);
 const totalStored = () => stores().reduce((s, u) => s + u.stored, 0);
@@ -9140,6 +9210,21 @@ const OLCEK = [
   { nm: 'Büyük Ölçekli İşletme', ico: '🏭', esik: 20000 },
   { nm: 'Enerji Holdingi', ico: '👑', esik: 100000 },
 ];
+// 🛡️ ÜLKE ERİŞİMİ (53. tur) — `COUNTRIES[G.country]` dokuz yerden okunuyordu ve
+//    YEDİSİ korumasızdı; biri `renderHUD`, yani sürekli çağrılan yol. Sözlükte olmayan
+//    bir ülke adı oraya düşerse her çağrı TypeError atar, HUD çizilmez, açılış zinciri
+//    kırılır ve oyuncu BİR DAHA GİREMEZ — kendi başına çıkabileceği bir yol da yok.
+//    Bugün tetiklenmiyor (sihirbaz yalnız 6 ülke veriyor, adlar 27 Ağu'dan beri aynı —
+//    ölçüldü), ama `saves/$uid` düğümünde doğrulama YOK ve Company Manager'da ülke
+//    listesi değişecek. Bedeli sıfır bir sigorta.
+// ⚠️ `G.country` DEĞİŞTİRİLMİYOR: bilinmeyen değeri sessizce "Türkiye" yapmak oyuncunun
+//    şirketini başka ülkeye taşımak olurdu. Yalnız GÜVENLİ ÇİZİYORUZ.
+const ULKE_BILINMEYEN = { flag: '🏳️', note: '', states: null };
+const ulkeBilgi = ad => COUNTRIES[ad] || ULKE_BILINMEYEN;
+const ulkeBayrak = ad => ulkeBilgi(ad).flag || '🏳️';
+// ⚠️ `|| []` ŞART: Türkiye'de `states` MEŞRU olarak null (kod TR_ILLER'e dallanıyor).
+//    Bilinmeyen ülkede de null dönerse `.map` yine patlar — doğru cevap BOŞ liste.
+const ulkeIlleri = ad => ulkeBilgi(ad).states || [];
 const olcekOf = i => OLCEK[Math.max(0, Math.min(OLCEK.length - 1, i || 0))];
 const olcekBadge = i => { const o = olcekOf(i); return `${o.ico} ${CEV(o.nm)}`; };
 const kHafta = w => 'h' + String(w || isoWeek()).replace(/[^0-9]/g, '-'); // '2026-34' → 'h2026-34' (güvenli anahtar)
@@ -15315,7 +15400,16 @@ const myWorth = () => G.cash + G.units.reduce((s, u) => s + TYPE_OF(u.kind, u.t)
 const tesisDegeri = () => ((typeof G !== 'undefined' && G && G.units) ? G.units : []).reduce((t, u) => {
   if ((u.buildDone || 0) > Date.now()) return t;            // inşaat sürüyor: sayma
   const T = TYPE_OF(u.kind, u.t);
-  return t + ((T && T.cost) || 0);
+  if (!T || !T.cost) return t;                              // katalogdan düşmüş tür: 0 say, çökme
+  // 🔼 KAPASİTE KADEMELERİ DE TESİS YATIRIMIDIR (patron: "tam bedel", 4 Eki).
+  //    Ölçüldü — upgradeDepot satır 8622: `const cost = n * T.cost / 2`, yani kademe
+  //    başına ÖDENEN para deponun taban bedelinin TAM YARISI. Aşağıdaki çarpan bir
+  //    yaklaşım değil, oyuncunun kasasından çıkan tutarın kendisi.
+  //    (`capLvl` bugün yalnız yakıt depolarında var — depotResKey → coalcap/gascap;
+  //     diğer türlerde 0 olduğu için terim kendiliğinden düşer.)
+  //    ⚠️ İNŞA HÂLİNDEKİ kademe (u.upgAdd) sayılmaz — yeni tesiste olduğu gibi,
+  //       para çıkmış olsa da kapasite henüz KURULU değil.
+  return t + T.cost + (u.capLvl || 0) * T.cost / 2;
 }, 0);
 // 💸 GİDER DEFTERİ (patron: "653M ciro, 306M tesis, 8M kasa — geri kalan nerede?")
 // Ciro GELİRDİR, kâr değil: para tesise, yakıta, bakıma, ruhsata, hatta, ihaleye gider.
@@ -20137,7 +20231,7 @@ function openCompanySheet() {
       ${lvl >= D.max ? '<b class="pos">MAKS ✓</b>' : `<button onclick="startResearch('${key}')" ${blocked ? 'disabled' : ''} style="padding:8px 12px;border-radius:8px;border:none;background:${blocked ? '#2a3346' : 'var(--acc2)'};color:${blocked ? 'var(--dim)' : '#071018'};font-weight:800;font-size:11.5px;cursor:pointer">🧪 Başlat</button>`}</div>`;
   };
   $('comp_body').innerHTML = `
-    <div class="sub" style="margin-bottom:6px">${COUNTRIES[G.country].flag} ${G.il}, ${G.country} · ${new Date(G.founded || Date.now()).toLocaleDateString(LOCALE)}'den beri</div>
+    <div class="sub" style="margin-bottom:6px">${ulkeBayrak(G.country)} ${G.il}, ${G.country} · ${new Date(G.founded || Date.now()).toLocaleDateString(LOCALE)}'den beri</div>
     <!-- 📬 POSTA + 💡 ÖNERİ/İSTEK — patron 27 Ağu: "buton konumlarını Araştırma satırının
          hemen üstüne al." Sayfanın en altındaydı; banlı oyuncu (ve Play'in aradığı hesap
          yolu) için ikisi de kaydırmadan görünmek zorunda. -->
@@ -20444,7 +20538,9 @@ function openHelp() {
 function renderHUD() {
   ipRozetTazele(); // 💠 bakiye rozetini canlı tut
   $('coname').innerHTML = (G.company || '—') + ' <span style="font-size:10px;font-weight:600">' + emBadge().ico + '</span>';
-  $('coloc').textContent = G.country ? `${COUNTRIES[G.country].flag} ${G.il}, ${G.country}` : '—';
+  // 🛡️ 53. tur: burası KORUMASIZDI ve renderHUD sürekli çağrılıyor — bilinmeyen bir
+  //    ülke adı her karede TypeError atıp oyuncuyu kalıcı olarak dışarıda bırakırdı.
+  $('coloc').textContent = G.country ? `${ulkeBayrak(G.country)} ${G.il}, ${G.country}` : '—';
   $('cash').textContent = fmt(G.cash);
   const d = clockDate();
   $('clockline').textContent = '🕐 ' + d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' }) + (G.demo ? ' ⏩' : '') + (boostFactor() > 1 ? ' 🚀' : '');
@@ -20795,13 +20891,13 @@ function wizStep2() {
   const [ll, z] = COUNTRY_VIEW[G.country];
   try { map.flyTo(ll, z, { duration: .7 }); } catch (e) { map.setView(ll, z); } // gizli/sıfır boyutlu panelde flyTo NaN atabiliyor
   const isTR = G.country === 'Türkiye';
-  const items = isTR ? Object.values(TR_ILLER).flat() : COUNTRIES[G.country].states;
+  const items = isTR ? Object.values(TR_ILLER).flat() : ulkeIlleri(G.country);
   // harita noktaları (rakipteki beyaz şehir noktaları)
   items.forEach(il => {
     const ll2 = IL_COORD[il]; if (!ll2) return;
     const m = L.marker(ll2, { icon: divIcon('<div class="ilmark" style="background:#ff8c42"></div>', [18, 18]) }).addTo(map);
     const pop = (isTR ? TR_POP[il] : STATE_POP[il]) || 0;
-    m.bindPopup(() => `<b>${il.toUpperCase()}</b><br>${COUNTRIES[G.country].flag} ${G.country}<br>${CEV('Bölge')}: ${cellCode(cellId(ll2))}<br>${CEV('Nüfus')}: ${fmtN(pop)}K → ${CEV('talep')} ${fmtN(cellDemand(cellId(ll2)))} MWh/${CEV('gün')}`); // tembel: talep yalnız popup açılınca hesaplanır
+    m.bindPopup(() => `<b>${il.toUpperCase()}</b><br>${ulkeBayrak(G.country)} ${G.country}<br>${CEV('Bölge')}: ${cellCode(cellId(ll2))}<br>${CEV('Nüfus')}: ${fmtN(pop)}K → ${CEV('talep')} ${fmtN(cellDemand(cellId(ll2)))} MWh/${CEV('gün')}`); // tembel: talep yalnız popup açılınca hesaplanır
     m.on('click', () => { wizSetIl(il); });
     wizLayer.push(m);
   });
@@ -20813,7 +20909,7 @@ function wizStep2() {
         `<optgroup label="${r}">${ils.map(il => `<option value="${il}">${il}</option>`).join('')}</optgroup>`).join('');
   } else {
     $('wizselect').innerHTML = `<option value="">${CEV('— Bölge seç —')}</option>` +
-      COUNTRIES[G.country].states.map(il => `<option value="${il}">${il}</option>`).join('');
+      ulkeIlleri(G.country).map(il => `<option value="${il}">${il}</option>`).join('');
   }
   $('wiznext').style.display = '';
   $('wiznext').disabled = true;
@@ -20836,7 +20932,7 @@ $('wizsuggest').addEventListener('click', () => {
     const cs = Object.keys(COUNTRIES);
     wizSetCountry(cs[Math.floor(Math.random() * cs.length)]);
   } else {
-    const items = G.country === 'Türkiye' ? Object.values(TR_ILLER).flat() : COUNTRIES[G.country].states;
+    const items = G.country === 'Türkiye' ? Object.values(TR_ILLER).flat() : ulkeIlleri(G.country);
     wizSetIl(items[Math.floor(Math.random() * items.length)]);
   }
 });
@@ -20877,7 +20973,7 @@ function wizNameModal(il) {
   if (map) map.closePopup();
   $('modal').innerHTML = `
     <h2>Şirketini Kur</h2>
-    <p>📍 ${il}, ${G.country} ${COUNTRIES[G.country].flag} — merkez ofisin burada.</p>
+    <p>📍 ${il}, ${G.country} ${ulkeBayrak(G.country)} — merkez ofisin burada.</p>
     <input id="nameinput" placeholder="Şirket adı..." maxlength="24">
     <button class="choice" onclick="document.getElementById('nameinput').value = ['Enerji A.Ş.','Volt Holding','Şimşek Enerji','Poyraz Elektrik','TeraWatt','Kıvılcım Enerji'][Math.floor(Math.random()*6)]">🎲 Rastgele isim</button>
     <button class="primary" onclick="wizDone()">🏢 Şirketi Kur ve Başla</button>
@@ -21161,8 +21257,7 @@ let lastTs = 0, uiAcc = 0, histAcc = 0, mkAcc = 0, aucT = 0, sheetTouchTs = 0;
 $('unitsheet').addEventListener('pointerdown', () => sheetTouchTs = performance.now(), { passive: true });
 function frame(ts) {
   try { frameBody(ts); } catch (e) { // tek bir hata simülasyonu kalıcı öldürmesin (test sürümü koruması)
-    ERRLOG.push('frame: ' + (e && e.message));
-    if (ERRLOG.length > 3) ERRLOG.shift();
+    hataYaz('frame: ' + (e && e.message));
   }
   lastTs = ts;
   requestAnimationFrame(frame);
@@ -21511,9 +21606,19 @@ bootGuncelle().then(yenilenecek => {
   }
   bootDone();
   wizardStart();
-}).catch(() => { bootDone(); wizardStart(); }); // açılış ekranı ASLA takılı kalmasın
+}).catch(e => {
+  // 🩹 54. tur: burası hatayı PARAMETRE OLARAK BİLE ALMIYORDU — açılışın neden çöktüğü
+  //    hiçbir yere yazılmıyordu. Yakalanan bir reddetme `unhandledrejection` TETİKLEMEZ,
+  //    yani ERRLOG'a da düşmüyordu: açılış hatası tamamen görünmezdi.
+  //    `acilis: true` işareti bunu bir sonraki sağlıklı açılışta sunucuya taşır.
+  try { hataYaz('açılış: ' + ((e && e.message) || e), true); } catch (e2) {}
+  bootDone(); wizardStart();
+}); // açılış ekranı ASLA takılı kalmasın
 }); // ← bootGuncelle().then kapanışı: güncelleme yoksa açılış buradan sürer
 let SON_EMNIYET = setTimeout(bootDone, 16000); // son emniyet: ağ ölse bile 16 sn sonra oyuna gir (38. tur: 12→16, güncelleme beklemesi perdeden sonra sayılıyor)
+// 📤 Bekleyen AÇILIŞ hatası varsa 20 sn sonra bildir: o an oyun ayakta ve NET hazır demektir.
+//    Bu oturum da bozuksa gönderilemez, kayıt kuyrukta kalır ve sonraki sağlıklı açılışta gider.
+setTimeout(() => { try { hataBildirKuyruk(); } catch (e) {} }, 20000);
 requestAnimationFrame(frame);
 // debug/test
 window.G_get = () => G; window.__step = step; window.__sellAll = sellAll; window.__addUnit = addUnit; window.__cellQuality = cellQuality; window.__cellId = cellId; window.__setSel = (c, ll) => { SEL.cell = c; SEL.ll = ll; };
