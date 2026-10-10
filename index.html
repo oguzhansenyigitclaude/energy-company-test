@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-10 22:17) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-10 23:11) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,14 +891,14 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-10 22:17)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-10 23:11)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11c',
+  etiket: '2026-10-11d',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
     '⚖️ <b>Tarim ekonomisi duzeltildi.</b> Ilk surumde tohum bedeli sabitti ve dusuk kalitede ciroyu asiyordu — yani yeni ciftci kacinilmaz olarak zarar ediyordu. Artik tohum, hasadin degerinin sabit bir yuzdesi. Olctuk: artik <b>her kalitede kar var</b>.',
@@ -6732,7 +6732,16 @@ const kmDist = (a, b) => 111 * Math.sqrt((a[0] - b[0]) ** 2 + ((a[1] - b[1]) * M
 const officeCovers = cell => { const c = cellCenter(cell); return offices().some(o => o.buildDone <= Date.now() && kmDist(o.ll, c) <= officeRadius()); };
 // Tutorial (Başlarken): tutGuide = ipuçları + otomatik ödül; tutActive = hız ayrıcalıkları + UI kilidi.
 // Ayrıcalıklar yalnız kuruluşun İLK 60 DAKİKASINDA — eğitimi bilerek bitirmeyip süresiz ×10 sömürüsü kapalı.
-const tutGuide = () => G && G.company && !G.starterClaimed && !G.demo;
+// 🔴 SEKTÖR KAPISI (68. yama) — ÖLÇÜLDÜ: bu fonksiyon sektöre hiç bakmıyordu, yani
+//    Tarım seçen oyuncuya 9 adımlık ENERJİ eğitimi açılıyordu: "🌬️ Bir rüzgar türbini kur",
+//    "💰 İlk enerji satışını yap", "🔋 Pil İstasyonu kur"… Tarım oyuncusu için anlamsız,
+//    ve turuncu yönlendirme onu enerji düğmelerine gönderiyordu.
+// ⚠️ İkinci ve daha sinsi sebep: `tutActive()` buradan türüyor ve `speedMult()` içinde
+//    ×10 TUT_MULT uyguluyor. Tarım ekonomisi NORMAL hızda kalibre edildi (66. yama);
+//    eğitim çarpanı açık kalsaydı bütün denge ölçümleri yanlış olurdu.
+// Tarımın kendi eğitimi sonraki dilimde gelecek; o zamana kadar yönlendirme Tarım
+//    panelinden ve aşağıdaki tek seferlik ipucundan geliyor.
+const tutGuide = () => G && G.company && !G.starterClaimed && !G.demo && G.sektor !== 'tarim';
 // ⚠️ HATA AVI (kritik): fark NEGATİF olunca da "< 3600e3" doğru çıkıyordu. Cihaz saatini
 // geriye alan oyuncuda eğitim ×10 KALICILAŞIYOR ve toplam hız ×100'e fırlıyordu. dt >= 0 şart.
 const tutActive = () => { const dt = Date.now() - (G.founded || 0); return tutGuide() && dt >= 0 && dt < 3600e3; };
@@ -7259,6 +7268,7 @@ function freshState() {
     // satim: BUGUN hangi sehre/urune/kaliteye kac ton satildigi. Gun donunce komple
     //        sifirlanir — boylece defter kendiliginden budanir, sonsuz buyumez.
     tarim: { std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0, ciro: 0, tohum: 0, maasGun: '', maas: 0, satim: { gun: '', v: {} } },
+    tarimIpucu: false,   // 🌾 ilk yönlendirme gösterildi mi (68. yama)
     lastSeen: Date.now(), muted: false, demo: false,
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
   };
@@ -16098,6 +16108,14 @@ function tarimAkis(dtSec) {
   if (_tarimBirikim < TARIM_TIK_SN) return;
   _tarimBirikim = 0;
   try {
+    // 🌾 İLK YÖNLENDİRME (68. yama): enerji eğitimi Tarımda kapalı olduğu için yeni
+    //    çiftçi boş haritaya bakıyor. Tarlası yokken, tek sefer, çekmeceyi işaret et.
+    //    `toast`un kendi kimliği tekrarı önlüyor; bayrak kayda yazılıyor ki yeniden
+    //    açılışta da çıkmasın.
+    if (!G.tarimIpucu && !tarlalar().length) {
+      G.tarimIpucu = true;
+      toast('🌾 Tarıma hoş geldin — sağdaki ⚡ tutamağa dokun, 🌾 Tarım düğmesinden ilk tarlanı kur.', '', 'tarimilk', 14000);
+    }
     const ton = tarlaTick();            // işçili tarlaları topla
     const maas = isciMaasIsle();        // gün döndüyse maaşı kes
     if (maas > 0) toast('👷 Günlük işçi maaşı ödendi — ' + fmt(maas), '', 'tarimmaas', 8000);
