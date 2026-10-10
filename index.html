@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-10 22:00) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-10 22:17) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,14 +891,14 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-10 22:00)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-10 22:17)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11b',
+  etiket: '2026-10-11c',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
     '⚖️ <b>Tarim ekonomisi duzeltildi.</b> Ilk surumde tohum bedeli sabitti ve dusuk kalitede ciroyu asiyordu — yani yeni ciftci kacinilmaz olarak zarar ediyordu. Artik tohum, hasadin degerinin sabit bir yuzdesi. Olctuk: artik <b>her kalitede kar var</b>.',
@@ -15554,6 +15554,12 @@ function deneyimEkle(id, ton) {
   if (!t || !urunVar(id)) return 0;
   const n = Math.max(0, +ton || 0);
   if (!(n > 0)) return 0;
+  // 🛡️ YAZICI KALKANI (67. yama): okuyucular (urunStd/urunDnm/aileTavan) alan yokluğuna
+  //    karşı zaten korunuyordu, yazıcı atlanmıştı. `stokEkle`deki Array.isArray kalıbının
+  //    aynısı. migrate de sertleştiriliyor; bu ikinci savunma hattı — bulut yolundan gelen
+  //    bir kaydın migrate'e hiç uğramadığı bir yol çıkarsa satış yine çökmesin.
+  if (!t.dnm || typeof t.dnm !== 'object') t.dnm = {};
+  if (!t.std || typeof t.std !== 'object') t.std = {};
   t.dnm[id] = (t.dnm[id] || 0) + n;
   const tavan = urunTavan(id);
   let std = urunStd(id), yukseldi = 0;
@@ -15702,6 +15708,18 @@ function tarlaHasat(u, elle, simdi) {
   // Damgayı TÜKETİLEN döngü kadar ilerlet — `s`e çekersek artan süre yanar ve
   // oyuncu her girişte birkaç dakikalık ilerlemesini kaybeder.
   u.ekildi = (+u.ekildi || s) + n * tarlaSure(u);
+  // 🔴 TAVAN GERÇEKTEN TAVAN OLSUN (67. yama). Denetim yakaladı ve DOĞRULANDI:
+  //    damga yalnız tüketilen döngü kadar ilerlediği için AŞAN döngüler silinmiyordu,
+  //    bekliyordu. 30 gün girmeyen oyuncuda 360 döngü birikiyor ve 5 saniyelik tik
+  //    bunu 24'er 24'er, yani ~75 SANİYEDE tamamen ödüyordu. Yani yazdığım
+  //    "emniyet" yorumu YANLIŞTI: tavan değil, sadece bir hız kısmasıydı.
+  // Artık tavanı aşan kısım ÜRETİLMEMİŞ sayılıyor (yok edilmiyor — hiç olmadı).
+  //    Gerekçe §4: "Ambar dolunca üretim DURUR, ürün kaybolmaz." Ambar freni Tarıma
+  //    henüz gelmedi; tavan o frenin yerini tutuyor.
+  if (!elle) {
+    const sure = tarlaSure(u), ek0 = +u.ekildi || s;
+    if (s - ek0 >= sure) u.ekildi = s - ((s - ek0) % sure);   // biriken artığı DÜŞÜR
+  }
   if (u.ekildi > s) u.ekildi = s;              // elle hasatta ileri kaçmasın
   return ton;
 }
@@ -16053,7 +16071,16 @@ window.tarimSatUygula = (urun, k) => {
   const cell = tarimAktifSehir();
   if (!cell) { toast('Ruhsatlı karen yok', 'warn'); return; }
   const ton = stokDagilim(urun)[k] || 0;
-  const s = tarimSat(cell, urun, k, ton);
+  // 🛡️ SESSİZ ÇÖKME KALKANI (67. yama): burada try/catch YOKTU. İçeride bir istisna
+  //    olduğunda toast + save + panel tazeleme ÜÇÜ birden atlanıyor, global yakalayıcı da
+  //    yalnız sessizce günlüğe yazıyordu — oyuncu "tıklıyorum hiçbir şey olmuyor" görüyordu.
+  let s;
+  try { s = tarimSat(cell, urun, k, ton); }
+  catch (e) {
+    hataYaz('tarimSat: ' + (e && e.message));
+    toast('⚠️ Satış tamamlanamadı — hata kaydedildi, bize ulaşacak', 'warn');
+    save(); tarimPanel(); return;
+  }
   if (s.red) { toast('⛔ ' + s.red, 'warn'); return; }
   toast('💰 ' + fmtE(s.satilan) + ' ton ' + kaliteAd(k) + ' ' + urunBilgi(urun).ad + ' satıldı — ' + fmt(s.gelir)
     + (s.atilTon > 0 ? ' (· ' + fmtE(s.atilTon) + ' ton atıl fiyattan)' : ''), '');
@@ -18056,6 +18083,20 @@ function migrate(s) {
   s.gpGorev = Object.assign({ gun: '', ids: [], alindi: {}, temel: {}, hedef: {}, hafta: '', hid: '', halindi: false, sayac: {} }, s.gpGorev);
   if (!Array.isArray(s.gpGorev.ids)) s.gpGorev.ids = [];
   for (const k2 of ['alindi', 'temel', 'hedef', 'sayac']) if (!s.gpGorev[k2] || typeof s.gpGorev[k2] !== 'object') s.gpGorev[k2] = {};
+  // 🌾 TARIM GÖÇÜ (67. yama) — adversarial denetimden geldi, dosyadan doğrulandı.
+  // 🔴 Üç satır yukarıdaki `resPts dersi` BİREBİR burada tekrarlanıyordu: üst düzey döngü
+  //    yalnız TAMAMEN eksik anahtarı doldurur; `s.tarim` tanımlıysa İÇİ hiç onarılmaz.
+  // 🔴 Neden gerçekten oluyor: Firebase RTDB **boş nesne/dizi SAKLAMAZ**. Hiç satış
+  //    yapmamış oyuncuda `std/dnm/arge` boş `{}` ve `stok` boş `[]` olduğu için tek bir
+  //    bulut turunda bu alanlar kayıttan DÜŞER; `tarim` düğümü ise `isci/ciro/tohum/maas`
+  //    sayı oldukları için hayatta kalır. Sonuç: `t` truthy, `t.dnm` undefined.
+  //    (Aynı sınıf zaten biliniyor — yukarıdaki "Firebase seyrek dizi" notuna bak.)
+  s.tarim = Object.assign({ std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0,
+                            ciro: 0, tohum: 0, maasGun: '', maas: 0, satim: { gun: '', v: {} } }, s.tarim);
+  for (const k4 of ['std', 'dnm', 'arge']) if (!s.tarim[k4] || typeof s.tarim[k4] !== 'object') s.tarim[k4] = {};
+  if (!Array.isArray(s.tarim.stok)) s.tarim.stok = [];
+  if (!s.tarim.satim || typeof s.tarim.satim !== 'object') s.tarim.satim = { gun: '', v: {} };
+  if (!s.tarim.satim.v || typeof s.tarim.satim.v !== 'object') s.tarim.satim.v = {};
   s.prodByCat = (s.prodByCat && typeof s.prodByCat === 'object') ? s.prodByCat : {};
   s.canta = (s.canta && typeof s.canta === 'object') ? s.canta : {}; // 🎒 hediye envanteri
   if (!(s.weekProd >= 0)) s.weekProd = 0;   // ⚡ üretim tabanlı ölçek (3 Eyl) — eski kayıtta yok
