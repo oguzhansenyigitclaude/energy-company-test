@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-10 21:44) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-10 22:00) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,16 +891,17 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-10 21:44)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-10 22:00)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11',
+  etiket: '2026-10-11b',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '⚖️ <b>Tarim ekonomisi duzeltildi.</b> Ilk surumde tohum bedeli sabitti ve dusuk kalitede ciroyu asiyordu — yani yeni ciftci kacinilmaz olarak zarar ediyordu. Artik tohum, hasadin degerinin sabit bir yuzdesi. Olctuk: artik <b>her kalitede kar var</b>.',
     '🌾 <b>TARIM SEKTORU geldi (ilk surum).</b> Yeni oyuna baslarken artik <b>sektor seciyorsun</b>. Tarimi secersen tarla kurar, isci tutar, urun eker ve sehirlere satarsin. Enerji oynayanlar icin hicbir sey degismedi.',
     '👷 <b>Isci calisinca sen uyurken de hasat olur.</b> Tarlana isci dustuyse biriken hasatlarin hepsini toplar. Iscisiz tarla olgunlasip bekler, elle toplarsin. Yani oyuna girmedin diye urunun <b>curumez ve yanmaz</b>.',
     '🏅 <b>Urun kalitesi: E den A ya.</b> Yeni sirket E kalite uretir. Urettigin urunu <b>sattikca</b> deneyim kazanir ve standardin yukselir. Sehirler yuksek kaliteyi <b>kotali</b> ve <b>cok daha pahaliya</b> alir.',
@@ -15469,8 +15470,16 @@ const TARIM_AYAR = {
   // kalite fiyat çarpanları (açık madde 15) — C = taban = 1,00
   kaliteCarpan: { 1: .35, 2: .60, 3: 1, 4: 1.70, 5: 3 },
   atilCarpan: .15,                       // şehrin iştahı bittikten sonra dibe inen fiyat
-  // deneyim eşikleri, SATILAN ton (açık madde 11) — hedef: C'ye ~1 hafta
-  dnmEsik: { 2: 60, 3: 240 },
+  // deneyim eşikleri, SATILAN ton (açık madde 11)
+  // 🔴 ÖLÇÜLDÜ (11 Eki gece): eski değerlerle (60/240) C kaliteye **2 GÜNDE** ulaşılıyordu.
+  //    Patron hedefi: D ~3. gün, **C 2. hafta**, B 4. hafta, A 6. hafta. Yani 7 kat hızlıydı.
+  // Ölçüm tabanı: 1 tarla patates = 12 döngü/gün × 12 ton = **144 ton/gün**; ve şehrin
+  //    günlük iştahı (Kocaeli C bandı ~190 ton) deneyimi ayrıca frenliyor — atıl satış
+  //    deneyime sayılmıyor (patron kararı).
+  // ⚠️ Bu bir KALİBRASYON, tuned bir değer DEĞİL: tek veri noktasına dayanıyor ve
+  //    oyuncunun kaç tarla/kaç şehir kullandığına göre kayar. Gerçek oyunda ölçülüp
+  //    düzeltilecek — değiştirilecek yer YALNIZ bu iki sayı.
+  dnmEsik: { 2: 600, 3: 5000 },
   // araştırma: süre ve bedel (açık madde 12) — B 1 hafta, A 2 hafta (patron takvimi)
   argeSure: { 4: 7 * 864e5, 5: 14 * 864e5 },
   argeBedel: { 4: 25e6, 5: 120e6 },
@@ -15485,6 +15494,12 @@ const TARIM_AYAR = {
   isciMaas: 4000,                        // işçi başına GÜNLÜK maaş
   lojmanKapasite: 4,                     // lojman başına işçi (açık madde 27)
   lotSaat: 36e5,                         // stok partisi birleştirme penceresi (bkz. stokEkle)
+  // 🔴 TOHUM ORANSAL — ÖLÇÜLDÜ (11 Eki gece): sabit tohum bedeliyle BÜTÜN ürünler E
+  //    kalitede ZARAR ediyordu (patates -2.512/gün … ayçiçeği -7.108/gün). Oyunun BAŞLADIĞI
+  //    yer olan E kalite, oyuncuyu kaçınılmaz olarak batırıyordu.
+  //    Sebep: tohum sabit, fiyat kaliteyle düşüyor — E'de tohum cironun %87'si oluyordu.
+  //    Çözüm: tohum, hasadın C kalitedeki değerinin sabit yüzdesi olsun; oran her kalitede korunur.
+  tohumOran: .10,
 };
 
 // ── 🌱 ÜRÜN KATALOĞU ───────────────────────────────────────────────────────────
@@ -15492,16 +15507,16 @@ const TARIM_AYAR = {
 // ⚠️ Süreler kasıtlı olarak KISA (2-4 saat): patronun şikâyeti tam buydu — "3 saatte biten
 //    patatesi girmezsem günde 1 kez topluyorum". Kaybı işçi kapatacak, süre uzatarak değil.
 const TARIM_URUN = {
-  bugday:  { ad: 'Buğday',   ico: '🌾', aile: 'ham', sure: 3 * 3600,   verim: 8,  taban: 280, tohum: 900 },
-  patates: { ad: 'Patates',  ico: '🥔', aile: 'ham', sure: 2 * 3600,   verim: 12, taban: 220, tohum: 800 },
-  aycicek: { ad: 'Ayçiçeği', ico: '🌻', aile: 'ham', sure: 4 * 3600,   verim: 6,  taban: 420, tohum: 1400 },
-  misir:   { ad: 'Mısır',    ico: '🌽', aile: 'ham', sure: 3 * 3600,   verim: 10, taban: 250, tohum: 850 },
-  domates: { ad: 'Domates',  ico: '🍅', aile: 'ham', sure: 2.5 * 3600, verim: 9,  taban: 380, tohum: 1200 },
+  bugday:  { ad: 'Buğday',   ico: '🌾', aile: 'ham', sure: 3 * 3600,   verim: 8,  taban: 1700 },
+  patates: { ad: 'Patates',  ico: '🥔', aile: 'ham', sure: 2 * 3600,   verim: 12, taban: 1300 },
+  aycicek: { ad: 'Ayçiçeği', ico: '🌻', aile: 'ham', sure: 4 * 3600,   verim: 6,  taban: 3000 },
+  misir:   { ad: 'Mısır',    ico: '🌽', aile: 'ham', sure: 3 * 3600,   verim: 10, taban: 1450 },
+  domates: { ad: 'Domates',  ico: '🍅', aile: 'ham', sure: 2.5 * 3600, verim: 9,  taban: 1600 },
 };
 const urunVar = id => Object.prototype.hasOwnProperty.call(TARIM_URUN, id);
 // ⚠️ Bilinmeyen ürün kimliği gelirse ÇÖKME yok — 53. yamadaki COUNTRIES dersi birebir aynı:
 //    eski kayıt katalogdan düşmüş bir kimlik taşıyabilir ve her karede TypeError atardı.
-const URUN_BILINMEYEN = { ad: '—', ico: '❓', aile: 'ham', sure: 3600, verim: 0, taban: 0, tohum: 0 };
+const URUN_BILINMEYEN = { ad: '—', ico: '❓', aile: 'ham', sure: 3600, verim: 0, taban: 0 };
 const urunBilgi = id => TARIM_URUN[id] || URUN_BILINMEYEN;
 
 // ── 🏅 KALİTE ──────────────────────────────────────────────────────────────────
@@ -15669,7 +15684,9 @@ function tarlaHasat(u, elle, simdi) {
   // 🌰 TOHUM BEDELİ: her yeniden ekim tohum ister. Bedava sayılırsa tarlanın günlük
   //    neti olduğundan yüksek görünür (ölçüldü: patateste günde ~12 ekim × tohum).
   //    Parası yetmeyen oyuncu için döngü sayısı ÖDEYEBİLDİĞİ kadarına iner — borç yazmıyoruz.
-  const birim = Math.max(0, B.tohum || 0);
+  // Tohum bedeli ORANSAL: hasadın C kalitedeki değerinin tohumOran kadarı.
+  // Sabit olsaydı düşük kalitede ciroyu aşar, yeni oyuncuyu batırırdı (ölçüldü).
+  const birim = Math.max(0, Math.round((B.verim || 0) * (B.taban || 0) * TARIM_AYAR.tohumOran));
   if (birim > 0) {
     const alinabilir = Math.max(0, Math.floor((G.cash || 0) / birim));
     if (alinabilir < n) n = alinabilir;
