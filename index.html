@@ -756,7 +756,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 11:58) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 12:38) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -935,16 +935,18 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 11:58)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 12:38)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11r',
+  etiket: '2026-10-11s',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🌾 <b>CIFTCI TOPARLANDI — para yakan alti delik kapandi.</b> Tarim oynayan oyuncuya enerji oyunu goruniyordu. Artik: 🏗️ Insa katalogu <b>tarla ve lojman</b> gosteriyor (eskiden yalnizca enerji vardi, ustelik <b>100 milyon ile 20 milyar arasi</b> kapasite lisansi satin alinabiliyordu, tarimda hicbir karsiligi yok). Tarim sirketinde enerji tesisi <b>kurulamaz</b>. Alim garantisi ihalesi tarimda kapali — eskiden <b>en az 5 milyonu</b> karsiliksiz yakabiliyordun. Haritada baska oyuncunun enerji santrali <b>cizilmiyor ve satin alinamiyor</b>. Muzayede botlari artik komur santrali degil <b>tarla ve lojman</b> satiyor.',
+    '🔴 <b>Tesis satisinda VERI KAYBI duzeltildi.</b> Bir oyuncu tesisin icin teklif verip kabul ettiginde, devredilen birim <b>kimlikle degil tur ve karo ile</b> araniyordu. Tarimda butun tarlalar birbirinin tipki esi oldugu icin ayni karodaki <b>yanlis tarla</b> gidebiliyordu — olgunlasmis tarlani kaybedip bos tarlayi sattigini sanabilirdin. Artik kimlikle araniyor.',
     '🏛️ <b>Kayyumdan DEVRALMA geldi — dongu tamamlandi.</b> Alti sektorun hepsini bitirince <b>Rebirth +1</b> olur ve hepsi yeniden acilir; park ettigin sirketi sectiginde artik sifirdan kurmuyorsun, <b>geri devraliyorsun</b>. Kasasi, tesisleri, ruhsatlari, arastirmalari aynen yerinde. Sektor ekraninda hangi sirketin kayyumda oldugu ve kasasinda ne kadar birikti gorunur.',
     '🔧 <b>Kayyum tesisleri yipranir — ama harap etmez.</b> Devlet uretimi surdurur, yatirim yapmaz: park edilen her gun saglamliktan 1 puan duser ve <b>yuzde 45 in altina asla inmez</b>. Donunce <b>Devir Raporu</b> postasi hangi tesiste bakim gerektigini yazar. Curume kayip degil, <b>is</b> uretir.',
     '🔴 <b>Rebirth HATASI duzeltildi.</b> Rebirth atmaya calisanlara haksiz yere <b>Hesabin kisitli</b> uyarisi cikiyordu. Sebep bizim hatamizdi: kod ban bayragi yerine <b>engelledigin kisiler listesini</b> okuyordu — listeye bir kez dokunan herkeste rebirth kapaniyordu. Ayni gozden gecirmede iki yanlis uyari daha bulundu: <b>suresi gecmis</b> ittifak ihalesi ve <b>omru dolmus</b> satin alma teklifi de rebirth i kilitliyordu. Ucu de acildi.',
@@ -5644,7 +5646,13 @@ function botMaybeBid(cell) {
     if (SEL.cell === cell && $('cellsheet').classList.contains('show')) openCellSheet(cell, SEL.ll);
   }
 }
+// 🌾 89. yama — İHALE TARIMDA KAPALI. Ölçüldü: Alım Garantisi tarım satışına HİÇ dokunmuyor
+//    (`tarimSatUygula` → `sehirUrunTalep`, myLease/LEASE_PRIM yok), ama panel '+%20 alım
+//    fiyatı' vaat ediyordu ve taban teklif `Math.max(5e6, …)` — çiftçi en az 5 milyonu
+//    karşılıksız yakabiliyordu. Aynı sınıf: 'transfer merkezi limiti' (patron 3,5 milyar yaktı).
+//    Panel gizlendi; bu iki kapı window üzerinden erişime karşı kemer-askı.
 window.placeBid = cell => {
+  if (tarimSektoru()) { toast('🌾 Alım garantisi ihalesi tarımda henüz karşılıksız — teklif alınmadı', 'warn'); return; }
   if (krediKilidi('ihaleye teklif')) return;
   const a = auctionOf(cell), w = auctionWindow();
   if (bidBlocked(cell)) { toast('🏛️ Geçen ihaleyi SEN kazandın — tekel önleme kuralı gereği bu haftaki ihaleye katılamazsın', 'warn'); return; }
@@ -5712,6 +5720,7 @@ function directRentOpen(cell) {
   return !w.open;
 }
 window.directRentConfirm = cell => {
+  if (tarimSektoru()) { toast('🌾 Karo kiralama tarımda henüz karşılıksız — işlem yapılmadı', 'warn'); return; }
   if (!directRentOpen(cell)) {
     const sahip = myLease(cell) ? 'SENDE' : leaseOwnerOf(cell);
     toast(sahip ? '🏛️ Bu karonun alım garantisi ' + sahip + ' — elinden almanın tek yolu PAZAR ihalesini kazanmak' : '🏛️ Şu an doğrudan kiralama kapalı — Pazar ihalesini bekle', 'warn', null, 0, true);
@@ -6786,6 +6795,10 @@ const TARIM_TIPLERI = {
 // 53. yama dersi: bilinmeyen kimlik ÇÖKERTMEZ, güvenli yedek döner.
 const TARIM_TIP_BILINMEYEN = { cat: 'Tarım', nm: '—', ico: '❓', cost: 0, build: 0, d: '' };
 const tarimKindMi = k => Object.prototype.hasOwnProperty.call(TARIM_TIPLERI, k);
+// 🌾 89. yama — SEKTOR KAPISI. Tek okunakli ölçüt; `G.sektor` doğrudan karşılaştırmak
+//    yerine bunu kullan ki yeni sektör gelince tek yerden genişlesin.
+const tarimSektoru = () => !!(typeof G !== 'undefined' && G && G.sektor === 'tarim');
+const enerjiSektoru = () => !(typeof G !== 'undefined' && G) || !G.sektor || G.sektor === 'enerji';
 // 🔴 TUZAK 1 KAPANDI: zincirin son dalı OFFICE'ti, yani kind:'tarla' SESSİZCE ofis
 //    sayılıyordu (cost 1.000.000, nm 'Bölge Ofisi') ve tesisDegeri() de yanlış sayıyordu.
 const TYPE_OF = (kind, t) => kind === 'plant' ? PLANT_TYPES[t] : kind === 'store' ? STORE_TYPES[t] : kind === 'fueldepot' ? DEPOT_TYPES[t] : tarimKindMi(kind) ? (TARIM_TIPLERI[kind][t] || TARIM_TIP_BILINMEYEN) : OFFICE;
@@ -7139,7 +7152,8 @@ window.connectUnitTo = (id, stId) => {
 };
 // TASARIM KARARI (patron): OTO-SATIŞ YOK. Satış anı oyunun kalbi — geri dönme sebebini otomatikleştirmek oyunu öldürür.
 // Onun yerine: depo dolunca 🔔 bildirim + dolu depo satışında 🎬 reklam bonusu (aktifliğin ödülü).
-const CAT_GRAD = { 'Güneş': 'linear-gradient(135deg,#ff9d2f,#ffd166)', 'Rüzgar': 'linear-gradient(135deg,#2bc0e4,#4ea8ff)', 'Kömür': 'linear-gradient(135deg,#5a6274,#2e3546)', 'Gaz': 'linear-gradient(135deg,#ff7043,#8d3b2f)', 'Hidro': 'linear-gradient(135deg,#4ea8ff,#7fd8ff)', 'Jeotermal': 'linear-gradient(135deg,#8a5cff,#c98fff)', 'Nükleer': 'linear-gradient(135deg,#b8d94a,#5ab0ff)', 'Depo': 'linear-gradient(135deg,#3f6fb5,#8ec9ff)', 'Yakıt': 'linear-gradient(135deg,#8d6e63,#4e342e)' };
+const CAT_GRAD = { 'Güneş': 'linear-gradient(135deg,#ff9d2f,#ffd166)', 'Rüzgar': 'linear-gradient(135deg,#2bc0e4,#4ea8ff)', 'Kömür': 'linear-gradient(135deg,#5a6274,#2e3546)', 'Gaz': 'linear-gradient(135deg,#ff7043,#8d3b2f)', 'Hidro': 'linear-gradient(135deg,#4ea8ff,#7fd8ff)', 'Jeotermal': 'linear-gradient(135deg,#8a5cff,#c98fff)', 'Nükleer': 'linear-gradient(135deg,#b8d94a,#5ab0ff)', 'Depo': 'linear-gradient(135deg,#3f6fb5,#8ec9ff)', 'Yakıt': 'linear-gradient(135deg,#8d6e63,#4e342e)', 'Tarım': 'linear-gradient(135deg,#6a9e3f,#b5d96a)' };
+// 🌾 89. yama — 'Tarım' anahtari yoksa tarim kartinin resim zemini `background:undefined` olur.
 
 // ── 🎒 ÇANTA: hediye envanteri (tek kapı) ──
 // Oyuncu hediyeyi İnşa ekranından kendi seçtiği kareye kurar; ödeme alınmaz, adet düşer.
@@ -8938,13 +8952,23 @@ function carbonScatter(curKey) {
   </svg>`;
 }
 window.openDetail = (t, mode) => {
-  const isStore = mode === true || mode === 'store';
-  const isDepot = mode === 'depot';
-  const T = isDepot ? DEPOT_TYPES[t] : isStore ? STORE_TYPES[t] : PLANT_TYPES[t];
-  const kind = isDepot ? 'fueldepot' : isStore ? 'store' : 'plant';
+  // 🌾 89. yama — TARIM TİPİ: katalogda artık tarım kartı var ve kartın "İncele" düğmesi
+  //    buraya geliyor. Eskiden `PLANT_TYPES['tarla']` undefined dönüp ilk `T.build`
+  //    okumasında TypeError atardı. `TYPE_OF` zaten doğru tabloyu seçiyor.
+  const isTarim = tarimKindMi(mode);
+  const isStore = !isTarim && (mode === true || mode === 'store');
+  const isDepot = !isTarim && mode === 'depot';
+  const T = isTarim ? TYPE_OF(mode, t) : isDepot ? DEPOT_TYPES[t] : isStore ? STORE_TYPES[t] : PLANT_TYPES[t];
+  const kind = isTarim ? mode : isDepot ? 'fueldepot' : isStore ? 'store' : 'plant';
+  if (!T) { toast('Bu ürün katalogda bulunamadı', 'warn'); return; }
   const q = SEL.cell ? cellQuality(SEL.cell) : null;
   const rows = [];
-  if (isDepot) {
+  if (isTarim) {
+    rows.push(['⏱ Kurulum süresi', T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn']);
+    if (mode === 'lojman') rows.push(['👷 İşçi kapasitesi', '+' + TARIM_AYAR.lojmanKapasite]);
+    else rows.push(['🌱 Ürün', 'ekimi sen seçersin — kurduktan sonra 🌾 Tarım panelinden']);
+    rows.push(['💸 İşçi maaşı', fmt(TARIM_AYAR.isciMaas) + '/gün']);
+  } else if (isDepot) {
     const F = FUEL_TYPES[T.fuel];
     rows.push([F.ico + ' Başlangıç kapasitesi', T.baseCap + ' ton']);
     rows.push(['⏫ Kademe', '+' + DEPOT_STEP + ' ton — 🧪 "' + RESEARCH[T.fuel === 'coal' ? 'coalcap' : 'gascap'].nm + '" araştırmasıyla açılır']);
@@ -9210,6 +9234,14 @@ function placeAt(c, ll) {
   if (!isLand(ll) && kind === 'plant' && PLANT_TYPES[t].kind === 'wind' && !OFFSHORE_WIND[baseTypeOf(t)]) {
     toast('🌊 ' + T.nm + ' bir KARA türbini — denize yalnız OS (Offshore) modeller kurulabilir', 'warn', null, 7000);
     return;
+  }
+  // 🌾 89. yama — SEKTOR KAPISI (emniyet). Katalog zaten enerji kartı göstermiyor ama
+  //    `buildHere` window üzerinden çağrılabilir; ana döngüdeki `step()` sektöre BAKMIYOR,
+  //    yani kurulan türbin tarımda gerçekten üretir ve çiftçi tarla kurmadan enerji oynar.
+  // ⚠️ `office` ZORUNLU İSTİSNA: ruhsatın ön şartı merkez ofistir, engellenirse çiftçi
+  //    ruhsat alamaz ve oyun kilitlenir (tarım açılışı da ofisi addUnit ile kuruyor).
+  if (tarimSektoru() && !tarimKindMi(kind) && kind !== 'office') {
+    toast('🌾 Tarım şirketinde enerji tesisi kurulamaz', 'warn'); PENDING = null; setMode(null); return;
   }
   if (kind === 'plant' && capBlocked(t)) { toast('🔒 ' + T.cat + ' kurulu güç limitin dolu — İnşa ekranından lisans yükselt', 'warn'); PENDING = null; setMode(null); return; }
   // 🎓 EĞİTİMDE YANLIŞ KAREYE KURMA UYARISI (patron 26 Ağu: "ya uyarı ekranı gelecek ya da
@@ -14182,6 +14214,10 @@ function othersInCell(cell) {
   return simUnitsInCell(cell);
 }
 function simUnitsInCell(cell) {
+  // 🌾 89. yama — uydurma rakipler YALNIZ enerji türü üretiyor (OTHER_TYPES: solar/wind/
+  //    coal/gas/hydro/geo + store). Tarım oyuncusunun haritasının ~%28'ini enerji
+  //    santralleriyle dolduruyordu. Tarım sim-rakip tablosu yazılana kadar boş dönüyor.
+  if (tarimSektoru()) return [];
   if (G.licenses[cell]) return [];
   const [cy, cx] = cell.split('_').map(Number);
   if (hash01(cy, cx, 91) < .72) return []; // karelerin ~%28'inde başka oyuncu var
@@ -14206,7 +14242,9 @@ function drawOthers() {
   const b = map.getBounds();
   const y0 = Math.floor(b.getSouth() / CELL), y1 = Math.floor(b.getNorth() / CELL);
   const x0 = Math.floor(b.getWest() / CELL), x1 = Math.floor(b.getEast() / CELL);
-  const sig = [y0, y1, x0, x1, zoomNow(), Object.keys(G.licenses).length].join(',');
+  // 🌾 89. yama — imzaya SEKTOR eklendi: rebirth ile sektör değişince imza aynı kalıp
+  //    eski sektörün çizimi ekranda asılı kalıyordu.
+  const sig = [y0, y1, x0, x1, zoomNow(), Object.keys(G.licenses).length, G.sektor || ''].join(',');
   if (sig === othersDrawn) return;
   othersDrawn = sig;
   othersLayer.forEach(m => m.remove()); othersLayer = [];
@@ -14216,6 +14254,10 @@ function drawOthers() {
    for (let cx = Math.floor(x0 / k) * k; cx <= x1; cx += k) {
     for (const o of othersInCell(cy + '_' + cx)) {
       if (G.boughtOthers && G.boughtOthers[o.oid]) continue; // satın aldıysan artık senin
+      // 🌾 89. yama — EN AĞIR BULGU: gerçek oyuncuların ENERJİ tesisleri tarım haritasında
+      //    çiziliyor VE 'Satın Al' düğmesi veriliyordu; kabul edilirse `addUnit('plant',…)`
+      //    ile çiftçinin G.units'ine ÇALIŞAN bir santral giriyordu. Sektör süzgeci şart.
+      if (tarimSektoru() ? (!tarimKindMi(o.kind) && o.kind !== 'office') : tarimKindMi(o.kind)) continue;
       const T = TYPE_OF(o.kind, o.t);
       if (!T) continue; // bilinmeyen tür (eski sunucu kaydı) çizimi çökertmesin
       const px = o.kind === 'office' ? 26 : o.kind === 'store' ? 22 : 26;
@@ -14415,7 +14457,15 @@ async function teklifGelenYokla() {
 window.teklifYanitla = async (id, kabul) => {
   const t = (G.teklifGelen || {})[id];
   if (!t) return;
-  const u = G.units.find(x => x.kind === t.kind && x.t === t.t && x.cell === t.cell);
+  // 🔴 89. yama — VERİ KAYBI: eşleşme kimlikle değil tür+karo ile yapılıyordu. Tarımda
+  //    BÜTÜN tarlalar birbirinin tıpkı eşi (kind='tarla', t='tarla') ve oyuncu aynı karoya
+  //    onlarca tarla kurar — `find` dizideki İLKİNİ devrediyordu. Oyuncu olgunlaşmış, ekili
+  //    tarlasını kaybedip boş tarlayı sattığını sanabilirdi. Hafıza dersi: İNDİS DEĞİL KİMLİK.
+  // `oid` zaten '<sahipPid>_<birimId>' biçiminde (NET.unitsInCell) ve teklif yüküyle geliyor;
+  //    yeni alan EKLENMİYOR, yani Firebase beyaz liste riski YOK.
+  const oidId = Number(String(t.oid || '').split('_')[1]);
+  const u = (Number.isFinite(oidId) && G.units.find(x => x.id === oidId))
+    || G.units.find(x => x.kind === t.kind && x.t === t.t && x.cell === t.cell);
   if (kabul && !u) { toast(CEV('⚠️ Bu tesis artık sende değil — teklif reddedildi'), 'warn'); kabul = false; }
   if (kabul && u.hq) { toast(CEV('🏢 Merkez ofis satılamaz'), 'warn'); return; }
   if (kabul && aucListed(u.kind === 'store' ? 'store' : 'unit', u.id)) { toast(CEV('🔨 Bu tesis açık artırmada — önce ilanı çek'), 'warn'); return; }
@@ -14883,9 +14933,13 @@ function seedAucMarket() {
   const merkez = hq ? hq.ll : [40.77, 29.94];
   for (let k = 0; k < 3; k++) {
     const h = hash01(slot, k, 29);
-    const types = Object.keys(PLANT_TYPES);
-    const t = types[Math.floor(h * types.length)];
-    const T = PLANT_TYPES[t];
+    // 🌾 89. yama — havuz KOŞULSUZ PLANT_TYPES idi: tarım oyuncusuna kömür santrali
+    //    satılıyordu ve kazanınca tarla oyununun ortasına ÇALIŞAN bir santral kuruluyordu
+    //    (üstüne bölge ruhsatı ve ofisi de otomatik alınıyordu).
+    const tarM = tarimSektoru();
+    const havuz = tarM ? Object.keys(TARIM_TIPLERI) : Object.keys(PLANT_TYPES);
+    const t = havuz[Math.floor(h * havuz.length)];
+    const T = tarM ? TARIM_TIPLERI[t][t] : PLANT_TYPES[t];
     const term = AUC_TERMS[Math.floor(hash01(slot, k, 31) * 3)].h;
     // 📍 İLAN KONUMU (patron: "devraldığı bölgede kalacak"): HQ çevresinde 40-350 km arası
     // GERÇEK bir kara noktası — oyuncu bölge adına dokunup koşullara bakarak karar verir.
@@ -14903,10 +14957,10 @@ function seedAucMarket() {
     const cell = cellId(ll);
     G.auctionsMkt.push({
       id: G.nextId++, mine: false, seller: WORLD_PLAYERS[Math.floor(hash01(slot, k, 37) * WORLD_PLAYERS.length)],
-      ico: T.ico, nm: T.nm + ' (ikinci el)', note: T.mw + ' MW · %' + (60 + Math.floor(h * 35)) + ' sağlam',
+      ico: T.ico, nm: T.nm + ' (ikinci el)', note: (T.mw != null ? T.mw + ' MW · ' : '') + '%' + (60 + Math.floor(h * 35)) + ' sağlam',
       cell, ll, loc: placeName(cell) + ' · ' + cellCode(cell),
       // assetType/assetCond: kazanan oyuncuya GERÇEK birim kurabilmek için tür bilgisi taşınır
-      assetKind: 'unit', assetId: -1, assetType: t, assetType2: 'plant', assetCond: 60 + Math.floor(h * 35),
+      assetKind: 'unit', assetId: -1, assetType: t, assetType2: tarM ? t : 'plant', assetCond: 60 + Math.floor(h * 35),
       start: Math.round(T.cost * (.45 + h * .3) / 1e5) * 1e5,
       top: 0, topBy: null, term, until: Date.now() + term * 36e5 / (G.demo ? 60 : 1), _bt: Date.now(),
     });
@@ -20703,7 +20757,7 @@ function openCellSheet(c, ll, mode) {
         return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b class="pos">${fmtN(d.adet)} gerçek santral</b> var${d.benim ? ` <span class="sub">(${d.benim} tanesi senin)</span>` : ''}${simNot}<br>
           İhaleyi kazanan, bu karodaki <b>bütün satışlardan %${LEASE_PRIM * 100} vergi</b> toplar — karo ne kadar kalabalıksa teklif o kadar değerli.</p>`;
       })()
-      + auctionPanelHTML(c);
+      + (tarimSektoru() ? '' : auctionPanelHTML(c));   // 🌾 89. yama — bkz. placeBid kapisi
   } else if (!licensed) {
     if (!officeCovers(c)) {
       // OFİS KURALI (patron, rakip paraleli): bölgede ofis yoksa ruhsat YOK — önce ofis aç
@@ -20745,16 +20799,23 @@ function openBuildSheet() {
   $('cs_title').textContent = CEV('🏗️ İnşa — ürün seç');
   $('cs_quality').innerHTML = '';
   $('cs_occupancy').innerHTML = '<span class="sub">' + CEV('Satın Al → sonra haritada kurulacak YERE dokun (ödeme yerleştirme anında). Saha raporu ℹ️ Bilgi ekranında.') + '</span>';
-  const CATS = ['Tümü', 'Güneş', 'Rüzgar', 'Kömür', 'Gaz', 'Hidro', 'Jeotermal', 'Nükleer', 'Depo', 'Yakıt'];
+  // 🌾 89. yama — katalog SEKTORE BAGLI. Eskiden tarim oyuncusu 🏗️ İnşa'ya basınca yalnız
+  //    ENERJİ türlerini görüyordu; tarla/lojman katalogda HİÇ yoktu (tarimPanel'den kuruluyordu).
+  //    Daha kötüsü: 'Gaz'/'Nükleer' sekmesindeki kapasite lisansı bandı çiftçiye de açıktı ve
+  //    $100M–$20B'lik lisans satın alınabiliyordu — tarımda HİÇBİR karşılığı yok, para yanardı.
+  const tar = tarimSektoru();
+  const CATS = tar ? ['Tarım'] : ['Tümü', 'Güneş', 'Rüzgar', 'Kömür', 'Gaz', 'Hidro', 'Jeotermal', 'Nükleer', 'Depo', 'Yakıt'];
   let html = `<div class="catrow">${CATS.map(x => `<button class="${x === cat ? 'on' : ''}" ${tutLock && x !== tutCatNm ? 'disabled style="opacity:.35"' : `onclick="setCat('${x}')"`}>${CEV(x)}</button>`).join('')}</div>`;
   // 🏭 MARKA FİLTRESİ (patron: "üste marka seçimi butonu koy ne olur ne olmaz")
-  if (!tutLock) html += `<div class="catrow">
+  if (!tar && !tutLock) html += `<div class="catrow">
     <button class="${!SEL.brand ? 'on' : ''}" onclick="setBrandFilter('')">🏭 Tüm markalar</button>
     ${Object.keys(BRAND_ARCH).map(b => `<button class="${SEL.brand === b ? 'on' : ''}" onclick="setBrandFilter('${b}')">${brandLogoHTML(b, 15)} ${brandKisa(b)}</button>`).join('')}
   </div>`;
   if (tutGuideOn) html += `<p style="color:var(--gold);font-size:12.5px;font-weight:700;margin:4px 0">🎓 ${tutG === 'turbin' ? 'İlk santralin' : tutG === 'turbin2' ? 'Yeni bölgene, pil istasyonunun yanına' : 'Yeni bölgene'}: ${tutPickT_.ico} ${tutPickT_.nm} — 👇 <b>ALTIN ÇERÇEVELİ</b> karta dokun, Satın Al'dan sonra haritada YANIP SÖNEN kareye dokunacaksın.</p>`;
   // ⚡ KAPASİTE LİSANS BANDI: santral kategorisi seçiliyken kurulu güç / limit / sonraki lisans
-  if (!tutLock && CAP_TIERS[cat]) {
+  // `tar` iken CATS yalnız 'Tarım' olduğu için CAP_TIERS[cat] zaten undefined kalır;
+  // `!tar` kemer-askı olarak duruyor (ileride kategori eklenirse band sızmasın).
+  if (!tar && !tutLock && CAP_TIERS[cat]) {
     const used = catUsedMW(cat), cap = capMWOf(cat), nt = nextCapTier(cat);
     html += `<div style="display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:11.5px">
       <span style="flex:1">⚡ ${cat} kurulu gücün: <b class="${used >= cap ? 'neg' : ''}">${fmtN(used)} / ${fmtN(cap)} MW</b>${cap === 0 ? ' — <b class="neg">LİSANS GEREKLİ</b>' : ''}</span>
@@ -20763,7 +20824,10 @@ function openBuildSheet() {
   }
   const card = (t, T, mode) => { // mode: 'plant' | 'store' | 'depot' — konumdan bağımsız kart
     const isStore = mode === 'store', isDepot = mode === 'depot';
-    const kind = isDepot ? 'fueldepot' : isStore ? 'store' : 'plant';
+    // 🔴 89. yama duzeltmesi — ÖLÇÜLDÜ: tarım kartları `buildHere('plant','tarla')` yazıyordu.
+    //    `mode` tarımda kind'in KENDİSİ ('tarla'/'lojman'); isDepot/isStore ikisi de false
+    //    olduğu için zincir sonunda 'plant'a düşüyor ve kart HİÇBİR ŞEY kuramıyordu.
+    const kind = tarimKindMi(mode) ? mode : isDepot ? 'fueldepot' : isStore ? 'store' : 'plant';
     const tutPick = tutGuideOn && t === tutPickT;   // hedef kart eğitim bitene kadar parlar
     const tutOff = tutLock && t !== tutPickT;        // diğerlerini karartma yalnız ilk 60 dk
     const capLock = mode === 'plant' && capBlocked(t);
@@ -20772,7 +20836,12 @@ function openBuildSheet() {
     const btTxt = T.build >= 60 ? Math.round(T.build / 60) + ' dk' : T.build + ' sn';
     // 🏷️ Rakip tarzı ETİKETLİ SATIRLAR (patron 29 Ağu): yatay çipler yerine her özellik ayrı satır
     const prow = (ik, et, deger) => `<div class="prow"><span class="pl">${ik} ${et}</span><b>${deger}</b></div>`;
-    const rowsHtml = isDepot ?
+    // 🌾 89. yama — tarim kartinin kendi satirlari; enerji dalina girerse `undefined MW` yazar.
+    const rowsHtml = tarimKindMi(mode) ?
+      prow('⏱', CEV('Kurulum süresi'), btTxt) +
+      (mode === 'lojman' ? prow('👷', CEV('İşçi kapasitesi'), '+' + TARIM_AYAR.lojmanKapasite) : prow('🌱', CEV('Ürün'), CEV('ekimi sen seçersin'))) +
+      prow('💸', CEV('İşçi maaşı'), fmt(TARIM_AYAR.isciMaas) + CEV('/gün')) :
+      isDepot ?
       prow(FUEL_TYPES[T.fuel].ico, CEV('Başlangıç'), T.baseCap + ' t') +
       prow('⏫', CEV('Kademe başına'), '+' + DEPOT_STEP + ' t') +
       prow('⏱', CEV('Kurulum süresi'), btTxt) :
@@ -20790,7 +20859,7 @@ function openBuildSheet() {
       return `<div style="font-size:11px;font-weight:800;color:${B.col};margin-top:1px">${brandLogoHTML(T.brand, 13)} ${brandNm(T.brand)}${rel > 0 ? ` <span class="sub">· sadakat ${rel} → -%${Math.round(25 * rel / 100)}</span>` : ''}</div>`; })() : '';
     return `<div class="pcard${tutPick ? ' tut' : ''}"${tutOff ? ' style="opacity:.4;pointer-events:none"' : ''}>
       <div class="phead">
-        <div class="pname" onclick="openDetail('${t}','${mode}')">${T.nm} <span class="pmw">${isDepot ? T.baseCap + ' ton' : isStore ? T.cap + ' MWh' : T.mw + ' MW'}</span>${markaSatiri}</div>
+        <div class="pname" onclick="openDetail('${t}','${mode}')">${T.nm} <span class="pmw">${isDepot ? T.baseCap + ' ton' : isStore ? T.cap + ' MWh' : (T.mw != null ? T.mw + ' MW' : '')}</span>${markaSatiri}</div>
         <button class="ghostmini" onclick="openDetail('${t}','${mode}')">${CEV('İncele')} ›</button>
       </div>
       <div class="pmain">
@@ -20818,11 +20887,16 @@ function openBuildSheet() {
   // Markasız TABAN tipler katalogda gösterilmez: her ürünün 5 markalı sürümü var, markasızı
   // 6. bir seçenek olarak karışıklık yaratırdı. Tipler PLANT_TYPES'ta duruyor — eski kayıtlar bozulmasın.
   const markaGec = T => !SEL.brand || T.brand === SEL.brand; // üstteki marka filtresi
+  if (tar) {
+    // 🌾 Tarım kataloğu: kind ile tip adı aynı (TARIM_TIPLERI.tarla.tarla) — `card(t, T, kind)`
+    for (const k of Object.keys(TARIM_TIPLERI))
+      for (const [t, T] of Object.entries(TARIM_TIPLERI[k])) rows.push([t, card(t, T, k), 0, T.cost, '']);
+  } else
   for (const [t, T] of Object.entries(PLANT_TYPES))
     if (T.brand && markaGec(T) && (cat === 'Tümü' || T.cat === cat)) rows.push([t, card(t, T, 'plant'), CATS.indexOf(T.cat), T.mw, T.brand]);
-  if (cat === 'Tümü' || cat === 'Depo')
+  if (!tar && (cat === 'Tümü' || cat === 'Depo'))
     for (const [t, T] of Object.entries(STORE_TYPES)) if (T.brand && markaGec(T)) rows.push([t, card(t, T, 'store'), CATS.indexOf('Depo'), T.cap, T.brand]);
-  if (cat === 'Tümü' || cat === 'Yakıt')
+  if (!tar && (cat === 'Tümü' || cat === 'Yakıt'))
     for (const [t, T] of Object.entries(DEPOT_TYPES)) rows.push([t, card(t, T, 'depot'), CATS.indexOf('Yakıt'), T.baseCap, '']);
   // 📏 SIRALAMA (patron): markaya göre gruplama YOK. Kategori içinde EN DÜŞÜKTEN YÜKSEĞE
   // boyuta göre sıralanır ve aynı boyutun bütün markaları YAN YANA gelir — oyuncu 5 MW'a
