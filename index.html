@@ -833,7 +833,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 16:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 17:10) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -1013,16 +1013,22 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 16:26)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 17:10)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11za',
+  etiket: '2026-10-11zb',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🐄 <b>HAYVANCILIK GELDI — ve bu bizim kozumuz.</b> Uc barinak kuruluyor: <b>Ahir</b> (50 inek, sut), <b>Agil</b> (120 koyun, yun), <b>Kumes</b> (400 tavuk, yumurta). Hayvanlar her gun uretir, <b>her gun yem yer</b> ve veteriner masrafi cikarir. Urunler tarlalarinkiyle ayni siloya girer, ayni kalite kademelerinden gecer, ayni sehir kotasiyla satilir — ogrenecek ikinci bir sistem yok.',
+    '🌾 <b>Tarla ile ahir ayni zincirin iki ucu.</b> Yem <b>bugday ve misir silosundan</b> cekilir; patates ya da domates yem olmaz. Yani ilk defa ektigin seyin nereye gittigi onem kazaniyor: 1 bugday tarlasi yaklasik <b>5 ahiri</b> besler. Yem bittiginde hayvan olmez ama <b>yarim doyumla</b> uretir, doyum yuzde 50 nin altina inerse <b>dogum durur</b> ve omru dolan hayvandan <b>et de alinmaz</b>.',
+    '🏅 <b>A kalite hayvan SATIN ALINAMAZ.</b> Pazardan aldigin her hayvan <b>E kalite</b>. Yukari cikmanin tek yolu nesil: yavrunun kalitesi <b>annenin bir ustu</b> ama <b>yemin kalitesini gecemez</b>. Yani A kalite sut icin A kalite bugday lazim, o da arastirma ister. Bu yuzden ekranda bir <b>YEM TERCIHI</b> dugmesi var: <b>once kotu yem</b> (iyi urununu satarsin, suru yerinde sayar) ya da <b>once iyi yem</b> (ciro feda, suru nesil nesil yukselir). Oyunun en uzun vadeli karari bu.',
+    '⚠️ <b>Kotu beslenen suru COKMEZ, duser.</b> Hayvanin kalitesinden dusuk yem verirsen hemen cezalanmazsin — <b>ust uste 3 gun</b> olursa bir kademe duser. Listede o hayvanin yaninda <b>uyari sayaci</b> gorunur, arada bir iyi yem verirsen sayac sifirlanir.',
+    '🥩 <b>Et, omrun sonunda gelir.</b> Her turun bir omru var (tavuk 60, koyun 90, inek 120 gun) ve dolunca hayvan kesilir, eti <b>kendi kalitesinde</b> siloya girer. Istedigin zaman elle de kesebilirsin; <b>En kotu 10 basi kes</b> dugmesiyle toplu da. Listeyi <b>en iyiler / en kotuler / en yaslilar</b> diye siralayabiliyorsun, boylece 400 tavugun icinde kesecegini bulabiliyorsun.',
+    '🏚️ <b>Silo freni hayvanda da gecerli.</b> Silo dolduysa o gun hayvanlar sagilmaz — <b>urun kaybolmaz, uretim durur</b>, tarladaki kuralin aynisi. Ve yer kitken <b>once en iyi kalite</b> sagilir: A kalite inegin E kalite inek yuzunden heba olmaz. Yem silodan cikarken yer actigi icin besledikce kendine alan aciyorsun.',
     '🚜 <b>MAKINE FILOSU geldi.</b> Artik traktor ve bicerdover alabiliyorsun. Bir tarlaya makine atayinca o tarlanin olgunlasma suresi <b>makinenin kati kadar kisaliyor</b>: isciyle 3 saat suren bugday, en ust bicerdoverle <b>11 dakikaya</b> iniyor. 🔑 Ama <b>bir makine ayni anda tek tarlada</b> calisir — ikinci tarlaya atadiginda birincisinden kendiliginden cozulur. Yani 3 makinen varsa 8 tarlanin sadece 3 u hizli doner; hangisine koyacagin gercek bir karar.',
     '🌱 <b>TARLA KARTI geldi.</b> Haritada bir tarlaya dokununca artik kendi kunyesi aciliyor: arazinin <b>gercek sekli</b> (haritadaki poligonun aynisi, urun dokusuyla), alani hektar olarak, durumu, gubresi, iscisi; altinda uretim standardin, hasat basina kac ton aldigi, olgunlasma suresi, bekleyen hasat ve <b>siloda kac hasatlik yer kaldigi</b>.',
     '🧪 <b>GUBRE geldi.</b> Tarlayi gubreleyince <b>5 hasat boyunca verim yuzde 25 fazla</b>. Bedel tarlanin hektarina gore — 360 hektarlik tarla icin yaklasik 7 bin dolar. Gubre kalite yukseldikce degerleniyor: C kalitede kari az, A kalitede cok. Arastirmaya yatirim yapan oyuncu iki kez kazaniyor.',
@@ -6880,6 +6886,20 @@ const TARIM_TIPLERI = {
     lojman: { cat: 'Tarım', nm: 'İşçi Lojmanı', ico: '🏘️', cost: 40e5, build: 40,
               d: 'İşçi barındırır. Her lojman belirli sayıda işçi alır; 1 işçi 1 tarlaya bakar.' },
   },
+  // 🐄 99. yama — HAYVAN BARINAKLARI. Harita birimi olmalari bilincli: karo limitini
+  //    (8-13) tarlayla paylasiyorlar, yani her seyi ayni kareye tikistirma yok.
+  ahir: {
+    ahir: { cat: 'Tarım', nm: 'Ahır', ico: '🐄', cost: 60e5, build: 50,
+            d: 'En çok 50 inek barındırır. Süt verir. Yemi buğday/mısır silosundan çeker.' },
+  },
+  agil: {
+    agil: { cat: 'Tarım', nm: 'Ağıl', ico: '🐑', cost: 30e5, build: 35,
+            d: 'En çok 120 koyun barındırır. Yün verir, yem ihtiyacı inekten çok azdır.' },
+  },
+  kumes: {
+    kumes: { cat: 'Tarım', nm: 'Kümes', ico: '🐔', cost: 15e5, build: 25,
+             d: 'En çok 400 tavuk barındırır. Yumurta verir — en ucuz giriş, en hızlı döngü.' },
+  },
 };
 // 53. yama dersi: bilinmeyen kimlik ÇÖKERTMEZ, güvenli yedek döner.
 const TARIM_TIP_BILINMEYEN = { cat: 'Tarım', nm: '—', ico: '❓', cost: 0, build: 0, d: '' };
@@ -7468,7 +7488,7 @@ function freshState() {
     // tohum: ödenen toplam tohum bedeli — gelir-gider tablosunda ayrı kalem
     // satim: BUGUN hangi sehre/urune/kaliteye kac ton satildigi. Gun donunce komple
     //        sifirlanir — boylece defter kendiliginden budanir, sonsuz buyumez.
-    tarim: { std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0, ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} }, siloLvl: 0, makineler: [] },
+    tarim: { std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0, ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} }, siloLvl: 0, makineler: [], hayvanlar: [], hayvanGun: 0, yemKalite: 'ucuz' },
     tarimIpucu: false,   // 🌾 ilk yönlendirme gösterildi mi (68. yama)
     lastSeen: Date.now(), muted: false, demo: false,
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
@@ -15831,7 +15851,19 @@ const TARIM_URUN = {
   aycicek: { ad: 'Ayçiçeği', ico: '🌻', aile: 'ham', sure: 4 * 3600,   verim: 6,  taban: 3000 },
   misir:   { ad: 'Mısır',    ico: '🌽', aile: 'ham', sure: 3 * 3600,   verim: 10, taban: 1450 },
   domates: { ad: 'Domates',  ico: '🍅', aile: 'ham', sure: 2.5 * 3600, verim: 9,  taban: 1600 },
+  // 🐄 99. yama — HAYVAN URUNLERI AYNI KATALOGA giriyor, ayri bir sisteme DEGIL.
+  //    Gerekce: silo kapasitesi, kalite, curume, sehir kotasi ve satis zincirinin TAMAMI
+  //    `TARIM_URUN` uzerinden calisiyor. Ayri tablo acmak o bes zinciri ikiye bolerdi.
+  // ⚠️ `ekilir: false` — tarlaya EKILEMEZLER. Ekim seritleri bu bayraga bakiyor.
+  //    `sure`/`verim` 0: tarla motoru bunlara hic dokunmaz.
+  sut:     { ad: 'Süt',      ico: '🥛', aile: 'hayvan', sure: 0, verim: 0, taban: 15000, ekilir: false },
+  yumurta: { ad: 'Yumurta',  ico: '🥚', aile: 'hayvan', sure: 0, verim: 0, taban: 22000, ekilir: false },
+  yun:     { ad: 'Yün',      ico: '🧶', aile: 'hayvan', sure: 0, verim: 0, taban: 48000, ekilir: false },
+  et:      { ad: 'Et',       ico: '🥩', aile: 'hayvan', sure: 0, verim: 0, taban: 62000, ekilir: false },
 };
+// Ekilebilir urunler — ekim seritleri ve urun secimi YALNIZ bunlari gosterir.
+const EKILIR_URUNLER = Object.keys(TARIM_URUN).filter(k => TARIM_URUN[k].ekilir !== false);
+const hayvanUrunuMu = id => (TARIM_URUN[id] || {}).aile === 'hayvan';
 const urunVar = id => Object.prototype.hasOwnProperty.call(TARIM_URUN, id);
 // ⚠️ Bilinmeyen ürün kimliği gelirse ÇÖKME yok — 53. yamadaki COUNTRIES dersi birebir aynı:
 //    eski kayıt katalogdan düşmüş bir kimlik taşıyabilir ve her karede TypeError atardı.
@@ -15874,11 +15906,21 @@ function cikisKalite(standart, malzeme) {
 
 // ── 📈 STANDART VE DENEYİM ─────────────────────────────────────────────────────
 const tarimD = () => (typeof G !== 'undefined' && G && G.tarim) ? G.tarim : null;
-const urunStd = id => { const t = tarimD(); return kaliteSin((t && t.std && t.std[id]) || 1); };
+// 🐄 99. yama — HAYVANDA AYRI URETIM STANDARDI YOK (tasarim §4b): cikti kalitesi
+//    hayvanin KENDI kalitesi. Burayi atlasaydik ekranlar 'Sut standardin: E' yazarken
+//    siloya A kalite sut giriyordu — tam da avladigimiz 'yalan soyleyen ekran' sinifi.
+const urunStd = id => {
+  if (hayvanUrunuMu(id)) return suruKalitesi(id);
+  const t = tarimD(); return kaliteSin((t && t.std && t.std[id]) || 1);
+};
 const urunDnm = id => { const t = tarimD(); return Math.max(0, (t && t.dnm && t.dnm[id]) || 0); };
 // Ailenin araştırmayla açılmış tavanı: araştırma yoksa C (3), yani deneyimle gelinebilecek en üst.
 const aileTavan = aile => { const t = tarimD(); return kaliteSin((t && t.arge && t.arge[aile]) || 3); };
-const urunTavan = id => aileTavan(urunBilgi(id).aile);
+// ⚠️ Hayvanda tavan ARASTIRMAYLA degil NESILLE aciliyor (patron: 'A kalite hayvanlar
+//    satin alinamaz'), bu yuzden tavan dogrudan A. Fren yemin kalitesinde: yavru
+//    `min(anne+1, yem)` oldugu icin A hayvan ancak A yem ile olur, A yem de ham aile
+//    arastirmasini gerektirir. Yani kapi kapanmiyor, zincire baglaniyor.
+const urunTavan = id => hayvanUrunuMu(id) ? 5 : aileTavan(urunBilgi(id).aile);
 
 // Deneyim yalnız SATIŞTAN kazanılır (patron: "üretip SATMALI") ve STANDARDA göre işler,
 // çıktıya göre DEĞİL (açık madde 22) — yoksa A malzeme alan yeni tesis D'yi atlardı.
@@ -16259,7 +16301,12 @@ function isciMaasIsle() {
   return tutar;
 }
 // İnşa ekranında gösterilecek rakam (patron: "tesisi kurarken günlük masrafı yazsın").
-const tarimGunlukGider = () => isciMaasGunluk();
+// 🐄 99. yama — gider artik maas + veteriner + yemin PARA karsiligi. Yem silodan
+//    cikiyor ama oyuncunun gozunde bedeli var: satmadigi tondur. Ekran yalniz maasi
+//    gosterseydi hayvancilik BEDAVA gorunurdu — yalan soyleyen ekran.
+const tarimGunlukGider = () => isciMaasGunluk()
+  + ((typeof vetGiderGun === 'function') ? vetGiderGun() : 0)
+  + ((typeof yemIhtiyaciGun === 'function') ? Math.round(yemIhtiyaciGun() * urunBilgi('bugday').taban) : 0);
 
 // ═══════════════════════ 🏙️ ŞEHRE SATIŞ (61. yama) ═══════════════════════
 // Şehir talebi SIFIRDAN uydurulmuyor: oyunda zaten ölçülmüş `cellDemand(cell)` var
@@ -16418,7 +16465,7 @@ function tarimTarlaSatir(u) {
   if (insa) return '<div class="qline"><span>🌱 Tarla #' + u.id + '</span><span class="sub">🏗️ inşa ediliyor</span></div>';
   if (!u.urun) {
     return '<div class="qline"><span>🌱 Tarla #' + u.id + ' <span class="sub">— boş</span></span>'
-      + '<span>' + Object.keys(TARIM_URUN).map(id =>
+      + '<span>' + EKILIR_URUNLER.map(id =>
           '<button onclick="tarimEkUygula(' + u.id + ',\'' + id + '\')" style="padding:3px 4px;line-height:0" title="' + TARIM_URUN[id].ad + '">' + urunKare(id, 34) + '</button>').join('')
       + '</span></div>';
   }
@@ -16648,11 +16695,17 @@ function tarimPanel() {
   $('modal').innerHTML = '<h2>🌾 Tarım</h2>'
     + '<div class="qline"><span>📐 Arazi</span><span><b>' + fmtN(Math.round(tarlaToplamHektar())) + ' ha</b> <span class="sub">' + ts.length + ' tarla</span></span></div>'
     + '<div class="qline"><span>👷 İşçi</span><span><b>' + isciCalisan() + '</b> / ' + isciKapasite() + ' kapasite</span></div>'
+    + (hayvanlar().length
+        ? '<div class="qline"><span>🐾 Sürü</span><span><b>' + fmtN(hayvanlar().length) + ' baş</b> <span class="sub">'
+          + HAYVAN_TUR.map(t => HAYVAN_TIPLERI[t].ico + ' ' + hayvanlarTur(t).length).join(' · ')
+          + '</span></span></div>'
+        : '')
     + '<div class="qline"><span>💸 Günlük gider</span><span><b>' + fmt(gunluk) + '</b></span></div>'
     + '<div class="qline"><span>📈 Tarım cirosu</span><span>' + fmt((tarimD() && tarimD().ciro) || 0) + '</span></div>'
     + '<div class="catrow" style="margin:6px 0">'
     + '<button onclick="closeModal();doBuild(\'tarla\',\'tarla\')">🌱 Tarla — ' + fmt(TARIM_TIPLERI.tarla.tarla.cost) + '</button>'
     + '<button onclick="makineFilosu()">🚜 Makineler — ' + makineler().length + '</button>'
+    + '<button onclick="hayvanPaneli()">🐄 Hayvancılık — ' + hayvanlar().length + ' baş</button>'
     + '<button onclick="closeModal();doBuild(\'lojman\',\'lojman\')">🏘️ Lojman — ' + fmt(TARIM_TIPLERI.lojman.lojman.cost)
     + ' <span class="sub">(+' + TARIM_AYAR.lojmanKapasite + ' işçi)</span></button>'
     + '</div>'
@@ -16669,6 +16722,420 @@ function tarimPanel() {
 }
 
 // ── Birim sayfasından çağrılan küçük panel (58. yamadaki soket bunu arıyor) ──
+// ═══════════════════════ 🐄 HAYVANCILIK (99. yama) ═══════════════════════
+// Tasarim §4b'nin uygulamasi. KAPALI DONGU:
+//     bugday/misir tarlasi → YEM → ahir/agil/kumes → SUT · YUN · YUMURTA · ET → sehir
+// 🏆 Rakibin BOS biraktigi yer burasi: ~190 oyuncu yorumunda sut/yumurta/yun/et SIFIR kez
+//    geciyor, oyuncular hayvanlar icin 'para getirmeyen evcil hayvanlar' diyor. Bizde
+//    hayvan bir URETIM HATTI: yem kalitesi hem miktari hem CIKTI KALITESINI belirliyor.
+//
+// 🔑 PATRON KURALLARI (tasarim belgesinden birebir):
+//  · 'A kalite hayvanlar SATIN ALINAMAZ — ilk alimda her zaman E kalite.'
+//  · 'Yavrularin kalitesi beslenme sekline gore belirlenir.' → yavru = min(anne + 1, yem)
+//  · 'Kotu yemle beslenirse kalitesi duser — 1 seferde degil, 3 KERE ARKA ARKAYA.'
+//  · 'at esek v.b. seyler olmasin cunki bunlar getirisi olmayan hayvanlar' → yalniz 3 tur.
+//  · Gider = yem + veteriner, bas sayisiyla DOGRUSAL.
+//
+// 💰 DENGE (olculdu): 1 bugday tarlasi 64 ton/gun veriyor. Dolu ahir (50 inek) gunde
+//    12,5 ton yem yiyor → bir tarla ~5 ahiri besler. Dolu ahirin gunluk neti ~$174k,
+//    bedeli $6M bina + $2,25M hayvan → amorti ~47 gun. Agil ~21 gun, kumes ~23 gun.
+//    Yani KUMES baslangic, AHIR son oyun. Tarlaya gore biraz yavas; karsiligi surunun
+//    BEDAVA cogalmasi ve omur sonunda gelen et.
+const HAYVAN_TIPLERI = {
+  inek:  { nm: 'İnek',  nmk: 'inek',  ico: '🐄', bina: 'ahir',  alis: 45000, tavan: 50,
+           yemGun: .25,  urun: 'sut',     urunGun: .28,  vet: 300, dogumGun: 14, omur: 120, et: .30,
+           d: 'Süt verir. En pahalı yem, en pahalı barınak, en büyük ciro.' },
+  koyun: { nm: 'Koyun', nmk: 'koyun', ico: '🐑', bina: 'agil',  alis: 12000, tavan: 120,
+           yemGun: .08,  urun: 'yun',     urunGun: .030, vet: 90,  dogumGun: 10, omur: 90,  et: .025,
+           d: 'Yün verir. Yemi az, sürüsü hızlı büyür — en dengeli yatırım.' },
+  tavuk: { nm: 'Tavuk', nmk: 'tavuk', ico: '🐔', bina: 'kumes', alis: 400,   tavan: 400,
+           yemGun: .005, urun: 'yumurta', urunGun: .008, vet: 5,   dogumGun: 6,  omur: 60,  et: .0015,
+           d: 'Yumurta verir. En ucuz giriş, en hızlı döngü — çiftçinin ilk hayvanı.' },
+};
+const HAYVAN_TUR = Object.keys(HAYVAN_TIPLERI);
+const hayvanTipVar = t => Object.prototype.hasOwnProperty.call(HAYVAN_TIPLERI, t);
+// Bina kind -> tur ve tersi. `hayvanBinasiMi` tarimBirimPanel icin tek kapi.
+const binaTuru = kind => HAYVAN_TUR.find(t => HAYVAN_TIPLERI[t].bina === kind) || null;
+const hayvanBinasiMi = u => !!(u && binaTuru(u.kind));
+const hayvanlar = () => { const d = tarimD(); return (d && Array.isArray(d.hayvanlar)) ? d.hayvanlar : []; };
+const hayvanlarTur = t => hayvanlar().filter(h => h && h.t === t);
+const hayvanBul = id => hayvanlar().find(h => h && h.id === id) || null;
+// Bu turun barinak KAPASITESI: insasi BITMIS bina sayisi x tur tavani.
+const barinaklar = t => !hayvanTipVar(t) ? [] : ((typeof G !== 'undefined' && G && Array.isArray(G.units)) ? G.units : [])
+  .filter(u => u && u.kind === HAYVAN_TIPLERI[t].bina && (u.buildDone || 0) <= tarimSimdi());
+const barinakKapasite = t => hayvanTipVar(t) ? barinaklar(t).length * HAYVAN_TIPLERI[t].tavan : 0;
+// Surunun ortalama kalitesi — `urunStd` bunu HAYVAN urunlerinde standart yerine donduruyor.
+function suruKalitesi(urun) {
+  const t = HAYVAN_TUR.find(x => HAYVAN_TIPLERI[x].urun === urun);
+  // 🥩 Et tek bir turden gelmiyor, butun suruden. Et icin de genel ortalama dogru cevap.
+  const liste = t ? hayvanlarTur(t) : hayvanlar();
+  if (!liste.length) return 1;
+  return kaliteSin(liste.reduce((a, h) => a + kaliteSin(h.k), 0) / liste.length);
+}
+const HAYVAN_ADLARI = ['Sarıkız', 'Karabaş', 'Pamuk', 'Benekli', 'Zeytin', 'Fındık', 'Duman',
+  'Çilek', 'Maviş', 'Tomurcuk', 'Yıldız', 'Gelincik', 'Kestane', 'Bulut', 'Nazlı', 'Boncuk'];
+const hayvanAdiUret = n => HAYVAN_ADLARI[Math.abs(Math.round(n)) % HAYVAN_ADLARI.length];
+
+// 🌾 YEM = silodaki bugday veya misir (gercek yem taneleri). Patates/ayciceği/domates yem
+//    DEGIL — yoksa 'ne ekersen yem olur' olur ve bugdayin rolu kaybolurdu.
+const YEM_URUNLERI = ['bugday', 'misir'];
+// ⚠️ Yem kalitesi yavrunun TAVANINI belirliyor, yani bu bir STRATEJI dugmesi:
+//    'ucuz' → once KOTU yemi yakar (iyi bugdayini satarsin, suru yerinde sayar)
+//    'iyi'  → once IYI yemi yakar (ciro feda, suru nesil nesil A kaliteye cikar)
+const yemTercihi = () => { const d = tarimD(); return (d && d.yemKalite === 'iyi') ? 'iyi' : 'ucuz'; };
+window.yemTercihSec = v => {
+  const d = tarimD(); if (!d) return;
+  d.yemKalite = (v === 'iyi') ? 'iyi' : 'ucuz';
+  toast(v === 'iyi' ? '🥬 Artık ÖNCE İYİ yem veriliyor — sürü nesil nesil yükselir'
+                    : '🌾 Artık ÖNCE KÖTÜ yem veriliyor — iyi ürünü satarsın', '');
+  save(); if (typeof hayvanPaneli === 'function') hayvanPaneli();
+};
+// Silodan `ton` kadar yem cek. Donus: { alinan, kalite } — kalite AGIRLIKLI ortalama.
+// ⚠️ `lotKalite` kullaniliyor, `l.k` DEGIL: curume sonrasi gercek kalite neyse yem odur.
+function yemTuket(ton) {
+  const d = tarimD();
+  if (!d || !Array.isArray(d.stok) || !(ton > 0)) return { alinan: 0, kalite: 0 };
+  const yon = (yemTercihi() === 'iyi') ? -1 : 1;
+  const lotlar = d.stok.filter(l => l && YEM_URUNLERI.indexOf(l.u) >= 0 && l.t > 0)
+    .sort((a, b) => yon * (lotKalite(a) - lotKalite(b)));
+  let kalan = ton, alinan = 0, agirlikli = 0;
+  for (const l of lotlar) {
+    if (kalan <= 1e-9) break;
+    const al = Math.min(l.t, kalan);
+    l.t -= al; kalan -= al; alinan += al; agirlikli += al * lotKalite(l);
+  }
+  d.stok = d.stok.filter(l => l && l.t > 1e-4);
+  return { alinan: alinan, kalite: alinan > 0 ? kaliteSin(agirlikli / alinan) : 0 };
+}
+const yemStoku = () => ((tarimD() && Array.isArray(tarimD().stok)) ? tarimD().stok : [])
+  .filter(l => l && YEM_URUNLERI.indexOf(l.u) >= 0).reduce((a, l) => a + (+l.t || 0), 0);
+const yemIhtiyaciGun = () => hayvanlar().reduce((a, h) =>
+  a + ((h && hayvanTipVar(h.t)) ? HAYVAN_TIPLERI[h.t].yemGun : 0), 0);
+const vetGiderGun = () => Math.round(hayvanlar().reduce((a, h) =>
+  a + ((h && hayvanTipVar(h.t)) ? HAYVAN_TIPLERI[h.t].vet : 0), 0));
+
+// 🐄 GUNLUK TIK. `tarimGun()` sayisal gun anahtari; saklanan anahtarla ayni ise cikar.
+// 🔴 TELAFI TAVANI maastaki ile AYNI (3 gun): oyuncu 10 gun girmezse 10 gunluk veteriner
+//    gideri kasayi sifirlardi ve 10 gunluk yem silodan bir anda ucardi. §4 karari:
+//    uretim durdugunda sabit gider de durur.
+const HAYVAN_TELAFI_TAVAN = 3;
+function hayvanGunluk() {
+  const d = tarimD();
+  if (!d) return null;
+  if (!Array.isArray(d.hayvanlar)) d.hayvanlar = [];
+  const gun = tarimGun();
+  if (!gun) return null;
+  if (!d.hayvanGun) { d.hayvanGun = gun; return null; }   // ilk kurulum: geriye donuk islem YOK
+  if (d.hayvanGun === gun) return null;
+  let n = 1;
+  const a = Number(d.hayvanGun), b = Number(gun);
+  if (isFinite(a) && isFinite(b) && b > a) n = b - a;
+  n = Math.max(1, Math.min(HAYVAN_TELAFI_TAVAN, n));
+  d.hayvanGun = gun;
+  if (!d.hayvanlar.length) return null;
+  const top = { gun: 0, yem: 0, yemKalite: 0, urun: {}, dogan: 0, kesilen: 0, olen: 0, etTon: 0, vet: 0, doyum: 1, siloAtlanan: 0 };
+  for (let i = 0; i < n; i++) {
+    const r = hayvanBirGun(d);
+    if (!r) break;
+    top.gun++; top.yem += r.yem; top.yemKalite = r.yemKalite; top.doyum = r.doyum;
+    top.dogan += r.dogan; top.kesilen += r.kesilen; top.olen += r.olen;
+    top.etTon += r.etTon; top.vet += r.vet; top.siloAtlanan += r.siloAtlanan;
+    for (const k of Object.keys(r.urun)) top.urun[k] = (top.urun[k] || 0) + r.urun[k];
+  }
+  return top;
+}
+function hayvanBirGun(d) {
+  const r = { yem: 0, yemKalite: 0, urun: {}, dogan: 0, kesilen: 0, olen: 0, etTon: 0, vet: 0, doyum: 1, siloAtlanan: 0 };
+  // 1 - YEM
+  const gerek = yemIhtiyaciGun();
+  const yem = yemTuket(gerek);
+  r.yem = yem.alinan; r.yemKalite = yem.kalite;
+  const doyum = gerek > 0 ? Math.min(1, yem.alinan / gerek) : 1;
+  r.doyum = doyum;
+  // 2 - VETERINER (bas sayisiyla dogrusal; yem olsa da olmasa da odenir)
+  r.vet = vetGiderGun();
+  if (r.vet > 0) {
+    G.cash -= r.vet;                                 // kasa eksiye duser: borc degil, uyari
+    if (typeof gider === 'function') { try { gider('bakim', r.vet); } catch (e) {} }
+  }
+  // 3 - KALITE: 3 KERE ARKA ARKAYA kotu yem → bir kademe duser (patron kurali)
+  for (const h of d.hayvanlar) {
+    if (yem.kalite > 0 && yem.kalite < kaliteSin(h.k)) {
+      h.kv = (h.kv || 0) + 1;
+      if (h.kv >= 3) { h.k = kaliteSin(kaliteSin(h.k) - 1); h.kv = 0; }
+    } else h.kv = 0;
+  }
+  // 4 - URUN: cikti kalitesi = HAYVANIN kalitesi, miktar doyumla carpilir
+  // 🔴 OLCULDU (11 Eki, tarayicida): fren YALNIZ `tarlaHasat` icindeydi, hayvan uretimi
+  //    onu atliyordu — silo 2.000/2.000 doluyken 50 inek gunu stoku 2.016,5 tona cikardi.
+  //    TARIM_AYAR kurali: 'Ambar dolunca uretim DURUR, urun KAYBOLMAZ.' Hayvanda bunun
+  //    dogru karsiligi: o gun sagilmaz / toplanmaz. Hayvan zarar gormez, urun uretilmez.
+  // ⚠️ SIRA ONEMLI: yem ADIM 1'de yenmis durumda, yani silo once BOSALIYOR, sonra urun
+  //    giriyor. Bu dogru akis — oyuncu yem verdikce kendine yer aciyor.
+  // 🏅 Yer kitken ONCE EN IYI KALITE sagilir: oyuncunun A kalite ineginin sutu, E kalite
+  //    inek yuzunden heba olmasin.
+  {
+    let yer = (typeof siloBos === 'function') ? siloBos() : Infinity;
+    const sira = d.hayvanlar.slice().sort((x, y) => kaliteSin(y.k) - kaliteSin(x.k));
+    for (const h of sira) {
+      if (!hayvanTipVar(h.t)) continue;
+      const T = HAYVAN_TIPLERI[h.t];
+      const istek = T.urunGun * doyum;
+      if (!(istek > 0)) continue;
+      const ton = Math.min(istek, Math.max(0, yer));
+      if (ton <= 1e-9) { r.siloAtlanan += istek; continue; }
+      yer -= ton;
+      if (ton < istek - 1e-9) r.siloAtlanan += (istek - ton);
+      stokEkle(T.urun, h.k, ton, tarimSimdi());
+      r.urun[T.urun] = (r.urun[T.urun] || 0) + ton;
+    }
+  }
+  // 5 - YAS · OLUM · DOGUM
+  // 🥩 ET bu yuzden akiyor: hayvan omrunu tamamlayinca kesilir. Tasarim 'tavani asanlari
+  //    kesip etinden faydalaniriz' diyordu; ama dogum tavanda durdugu icin tasma neredeyse
+  //    hic olmuyor. Et akisinin gercek kaynagi OMUR — ve oyuncu elle de kesebilir.
+  const olenler = [];
+  for (const h of d.hayvanlar) {
+    if (!hayvanTipVar(h.t)) continue;
+    h.yas = (h.yas || 0) + 1;
+    if (h.yas >= HAYVAN_TIPLERI[h.t].omur) olenler.push(h);
+  }
+  if (olenler.length) {
+    for (const h of olenler) {
+      const T = HAYVAN_TIPLERI[h.t];
+      // ⚠️ Ac olen hayvanin eti ALINMAZ. Yoksa 'hic yem vermeyip et fabrikasi kur'
+      //    istismari acilirdi — yem zincirinin disisi serbest et olurdu.
+      if (doyum >= .5) { stokEkle('et', h.k, T.et, tarimSimdi()); r.etTon += T.et; r.kesilen++; }
+      else r.olen++;
+    }
+    const oid = new Set(olenler.map(x => x.id));
+    d.hayvanlar = d.hayvanlar.filter(x => !oid.has(x.id));
+  }
+  if (doyum >= .5) {
+    for (const h of d.hayvanlar.slice()) {
+      if (!hayvanTipVar(h.t)) continue;
+      const T = HAYVAN_TIPLERI[h.t];
+      if (!h.yas || h.yas % T.dogumGun !== 0) continue;
+      if (hayvanlarTur(h.t).length >= barinakKapasite(h.t)) continue;      // yer yok
+      // 🔑 YAVRU = min(anne + 1, YEM KALITESI). A kaliteye YALNIZ nesil nesil cikilir.
+      const yk = yem.kalite > 0 ? yem.kalite : 1;
+      const id = G.nextId++;
+      d.hayvanlar.push({ id: id, t: h.t, k: kaliteSin(Math.min(kaliteSin(h.k) + 1, yk)),
+                         yas: 0, kv: 0, ad: hayvanAdiUret(id) });
+      r.dogan++;
+    }
+  }
+  // 6 - TAVAN ASIMI → KESIM (bina yikilinca/satilinca devreye girer)
+  for (const t of HAYVAN_TUR) {
+    const kap = barinakKapasite(t);
+    const liste = hayvanlarTur(t);
+    if (liste.length <= kap) continue;
+    const kes = liste.slice().sort((x, y) => (kaliteSin(x.k) - kaliteSin(y.k)) || (y.yas - x.yas))
+      .slice(0, liste.length - kap);
+    for (const h of kes) {
+      stokEkle('et', h.k, HAYVAN_TIPLERI[t].et, tarimSimdi());
+      r.etTon += HAYVAN_TIPLERI[t].et; r.kesilen++;
+    }
+    const kid = new Set(kes.map(x => x.id));
+    d.hayvanlar = d.hayvanlar.filter(x => !kid.has(x.id));
+  }
+  return r;
+}
+
+// ── Oyuncu eylemleri ────────────────────────────────────────────────────────
+window.hayvanAl = (t, adet) => {
+  if (!hayvanTipVar(t)) return;
+  if (typeof krediKilidi === 'function' && krediKilidi('hayvan alımı')) return;
+  const d = tarimD(); if (!d) return;
+  if (!Array.isArray(d.hayvanlar)) d.hayvanlar = [];
+  const T = HAYVAN_TIPLERI[t];
+  const bos = barinakKapasite(t) - hayvanlarTur(t).length;
+  if (bos <= 0) {
+    toast(T.ico + ' Yer yok — önce ' + TARIM_TIPLERI[T.bina][T.bina].nm + ' kur (inşası bitmiş olmalı)', 'warn');
+    return;
+  }
+  const n = Math.max(0, Math.min(Math.max(1, adet || 1), bos, Math.floor(G.cash / T.alis)));
+  if (n < 1) { toast('Yetersiz bakiye — ' + fmt(T.alis) + ' gerekli', 'warn'); return; }
+  G.cash -= n * T.alis;
+  if (typeof gider === 'function') { try { gider('yatirim', n * T.alis); } catch (e) {} }
+  // 🔑 SATIN ALINAN HAYVAN HER ZAMAN E (kalite 1) — patron kurali.
+  for (let i = 0; i < n; i++) {
+    const id = G.nextId++;
+    d.hayvanlar.push({ id: id, t: t, k: 1, yas: 0, kv: 0, ad: hayvanAdiUret(id) });
+  }
+  toast(T.ico + ' ' + n + ' ' + T.nmk + ' alındı — <b>E kalite</b>; iyi yemle nesil nesil yükselir',
+        '', null, 0, true);
+  beep(660, .1);
+  save(); if (typeof hayvanPaneli === 'function') hayvanPaneli();
+};
+window.hayvanKes = id => {
+  const h = hayvanBul(id);
+  if (!h || !hayvanTipVar(h.t)) return;
+  const T = HAYVAN_TIPLERI[h.t];
+  if (!confirm(T.nm + ' ' + (h.ad || '') + ' (' + kaliteAd(h.k) + ') kesilecek.\n'
+    + fmtE(T.et) + ' ton ' + kaliteAd(h.k) + ' et siloya girer. Onaylıyor musun?')) return;
+  const d = tarimD(); if (!d) return;
+  stokEkle('et', h.k, T.et, tarimSimdi());
+  d.hayvanlar = hayvanlar().filter(x => x.id !== id);
+  toast('🥩 ' + fmtE(T.et) + ' ton ' + kaliteAd(h.k) + ' et siloya girdi', '');
+  save(); if (typeof hayvanPaneli === 'function') hayvanPaneli();
+};
+window.hayvanAdiDegistir = id => {
+  const h = hayvanBul(id);
+  if (!h) return;
+  const ad = (prompt('Yeni ad:', h.ad || '') || '').replace(/[<>&"]/g, '').trim().slice(0, 16);
+  if (!ad) return;
+  h.ad = ad;
+  save(); if (typeof hayvanPaneli === 'function') hayvanPaneli();
+};
+
+// ── EKRAN ───────────────────────────────────────────────────────────────────
+// Rakibin hayvan ekraninin duzeni: ustte suru ozeti, altinda TUR SEKMELERI, her
+// sekmede bas kartlari. Bizim eklentimiz YEM ozeti ve yem tercihi dugmesi —
+// cunku bizde yem gercek bir zincir, rakipte dekor.
+let _hayvanSekme = 'inek';
+// 🔴 OLCULDU: liste yalniz EN IYI 40 basi gosteriyordu. 400 tavuklu oyuncu kesmek
+//    istedigi KOTU basi listede HIC goremiyordu — yani 'kes' dugmesi vardi ama
+//    kesilecek hayvana ulasilmiyordu. Siralama dugmesi o kapiyi aciyor.
+let _hayvanSira = 'iyi';   // 'iyi' = kalite yuksekten · 'kotu' = kaliteden dusukten · 'yas' = yaslidan
+window.hayvanSekme = t => { if (hayvanTipVar(t)) _hayvanSekme = t; hayvanPaneli(); };
+window.hayvanSiraSec = s => { _hayvanSira = s; hayvanPaneli(); };
+// 🥩 TOPLU KESIM — tek tek 40 kez tiklamak eylem degil eziyettir. En kotu N basi keser.
+window.hayvanTopluKes = (t, n) => {
+  if (!hayvanTipVar(t)) return;
+  const T = HAYVAN_TIPLERI[t];
+  const aday = hayvanlarTur(t).slice()
+    .sort((x, y) => (kaliteSin(x.k) - kaliteSin(y.k)) || ((y.yas || 0) - (x.yas || 0)))
+    .slice(0, Math.max(1, n | 0));
+  if (!aday.length) return;
+  const etTop = aday.reduce((a, h) => a + T.et, 0);
+  const dagilim = aday.reduce((a, h) => { const k = kaliteAd(h.k); a[k] = (a[k] || 0) + 1; return a; }, {});
+  if (!confirm('En kötü ' + aday.length + ' ' + T.nmk + ' kesilecek.\n'
+    + Object.keys(dagilim).map(k => dagilim[k] + ' baş ' + k).join(' · ') + '\n\n'
+    + 'Toplam ' + fmtE(etTop) + ' ton et siloya girer. Onaylıyor musun?')) return;
+  const d = tarimD(); if (!d) return;
+  for (const h of aday) stokEkle('et', h.k, T.et, tarimSimdi());
+  const kid = new Set(aday.map(x => x.id));
+  d.hayvanlar = hayvanlar().filter(x => !kid.has(x.id));
+  toast('🥩 ' + aday.length + ' baş kesildi — ' + fmtE(etTop) + ' ton et siloya girdi', '');
+  save(); hayvanPaneli();
+};
+function hayvanPaneli() {
+  if (typeof G === 'undefined' || !G) return;
+  const liste = hayvanlar();
+  const gerek = yemIhtiyaciGun(), stok = yemStoku();
+  const gunYeter = gerek > 0 ? stok / gerek : Infinity;
+  const vet = vetGiderGun();
+  const ciroGun = Math.round(liste.reduce((a, h) => {
+    if (!hayvanTipVar(h.t)) return a;
+    const T = HAYVAN_TIPLERI[h.t];
+    return a + T.urunGun * urunBilgi(T.urun).taban * (TARIM_AYAR.kaliteCarpan[kaliteSin(h.k)] || 1);
+  }, 0));
+  const yemBedel = Math.round(gerek * urunBilgi('bugday').taban);
+  if (!hayvanTipVar(_hayvanSekme)) _hayvanSekme = 'inek';
+  const h = [];
+  h.push('<h2>🐄 Hayvancılık</h2>');
+  h.push('<div class="qline"><span>🐾 Sürü</span><span><b>' + fmtN(liste.length) + ' baş</b> <span class="sub">'
+    + HAYVAN_TUR.map(t => HAYVAN_TIPLERI[t].ico + ' ' + hayvanlarTur(t).length).join(' · ') + '</span></span></div>');
+  h.push('<div class="qline"><span>🌾 Yem stoku</span><span><b>' + fmtE(stok) + ' ton</b> <span class="'
+    + (gunYeter < 1 ? 'neg' : gunYeter < 3 ? 'sub' : 'pos') + '">'
+    + (gerek > 0 ? (gunYeter >= 99 ? 'bol' : fmtE(gunYeter) + ' gün yeter') : 'ihtiyaç yok') + '</span></span></div>');
+  h.push('<div class="qline"><span>📈 Günlük ciro <span class="sub">(tam doyumda)</span></span><span><b>'
+    + fmt(ciroGun) + '</b></span></div>');
+  h.push('<div class="qline"><span>💸 Günlük gider</span><span>🌾 ' + fmt(yemBedel)
+    + ' yem <span class="sub">+</span> 🩺 ' + fmt(vet) + ' veteriner</span></div>');
+  if (typeof siloBos === 'function' && siloBos() < 1 && liste.length)
+    h.push('<p class="sub" style="color:var(--warn)">🏚️ <b>Silo dolu</b> — hayvanlar bugün '
+      + 'sağılamıyor/toplanamıyor. Ürün kaybolmuyor, üretim duruyor: sat veya siloyu büyüt.</p>');
+  if (gerek > stok) h.push('<p class="sub" style="color:var(--warn)">⚠️ Yem yetmiyor — '
+    + 'hayvanlar yarı doyumda üretir; doyum %50 altına inerse <b>doğum durur</b>, '
+    + 'ömrü dolan hayvandan <b>et de alınmaz</b>. Buğday veya mısır ek.</p>');
+  h.push('<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🥬 YEM TERCİHİ '
+    + '<span class="sub">yavrunun kalite tavanını bu belirler</span></div><div class="catrow">'
+    + '<button class="' + (yemTercihi() === 'ucuz' ? 'on' : '') + '" onclick="yemTercihSec(\'ucuz\')">'
+    + '🌾 Önce kötü yem <span class="sub">(iyi ürünü sat)</span></button>'
+    + '<button class="' + (yemTercihi() === 'iyi' ? 'on' : '') + '" onclick="yemTercihSec(\'iyi\')">'
+    + '🥬 Önce iyi yem <span class="sub">(sürüyü yükselt)</span></button></div>');
+  h.push('<div class="catrow" style="margin:10px 0 4px">' + HAYVAN_TUR.map(t => {
+    const kap = barinakKapasite(t), ad = hayvanlarTur(t).length;
+    return '<button class="' + (t === _hayvanSekme ? 'on' : '') + '" onclick="hayvanSekme(\'' + t + '\')">'
+      + HAYVAN_TIPLERI[t].ico + ' ' + HAYVAN_TIPLERI[t].nm + ' <span class="sub">' + ad + '/' + kap + '</span></button>';
+  }).join('') + '</div>');
+  const T = HAYVAN_TIPLERI[_hayvanSekme];
+  const BT = TARIM_TIPLERI[T.bina][T.bina];
+  const kap = barinakKapasite(_hayvanSekme);
+  const mine = hayvanlarTur(_hayvanSekme);
+  h.push('<table class="ledger">'
+    + '<tr><td>🏠 Barınak</td><td><b>' + barinaklar(_hayvanSekme).length + ' ' + BT.nm
+      + '</b> <span class="sub">· ' + mine.length + '/' + kap + ' baş</span></td></tr>'
+    + '<tr><td>' + urunBilgi(T.urun).ico + ' Baş başına günlük</td><td><b>' + fmtE(T.urunGun)
+      + ' ton ' + urunBilgi(T.urun).ad + '</b></td></tr>'
+    + '<tr><td>🌾 Baş başına yem</td><td>' + fmtE(T.yemGun) + ' ton/gün</td></tr>'
+    + '<tr><td>🩺 Baş başına veteriner</td><td>' + fmt(T.vet) + '/gün</td></tr>'
+    + '<tr><td>🍼 Doğum aralığı</td><td>' + T.dogumGun + ' gün</td></tr>'
+    + '<tr><td>⏳ Ömür</td><td>' + T.omur + ' gün <span class="sub">sonunda ' + fmtE(T.et) + ' ton et</span></td></tr>'
+    + '<tr><td>🏅 Sürü kalitesi</td><td><b>' + (mine.length ? kaliteAd(suruKalitesi(T.urun)) : '—') + '</b></td></tr>'
+    + '</table>');
+  if (kap <= 0) {
+    h.push('<p class="sub">🏠 Önce <b>' + BT.nm + '</b> kur — ' + fmt(BT.cost)
+      + ', her biri ' + T.tavan + ' baş alır.</p>');
+    h.push('<button class="bigsell" onclick="closeModal();doBuild(\'' + T.bina + '\',\'' + T.bina + '\')">'
+      + T.ico + ' ' + BT.nm + ' kur — ' + fmt(BT.cost) + '</button>');
+  } else {
+    const bos = kap - mine.length;
+    h.push('<div class="catrow" style="margin:6px 0">'
+      + [1, 10, bos].filter((v, i, ar) => v > 0 && ar.indexOf(v) === i).map(nn =>
+        '<button onclick="hayvanAl(\'' + _hayvanSekme + '\',' + nn + ')"'
+        + (bos <= 0 || G.cash < T.alis ? ' disabled' : '') + '>' + T.ico + ' '
+        + (nn === bos && nn > 1 ? 'Boşluğu doldur (' + nn + ')' : nn + ' al')
+        + ' — ' + fmt(T.alis * Math.min(nn, bos)) + '</button>').join('')
+      + '</div>');
+    h.push('<p class="sub">Satın alınan hayvan <b>her zaman E kalite</b>. '
+      + 'A kaliteye yalnız <b>iyi yemle nesil nesil</b> çıkılır — satın alınamaz.</p>');
+  }
+  if (mine.length) {
+    h.push('<h3 style="margin:10px 0 2px">' + T.ico + ' Sürü <span class="sub">(' + mine.length + ')</span></h3>');
+    h.push('<div class="catrow" style="margin:0 0 4px">'
+      + [['iyi', '🏅 En iyiler'], ['kotu', '🥀 En kötüler'], ['yas', '⏳ En yaşlılar']].map(s =>
+        '<button class="' + (_hayvanSira === s[0] ? 'on' : '') + '" onclick="hayvanSiraSec(\'' + s[0] + '\')">'
+        + s[1] + '</button>').join('') + '</div>');
+    const sirali = mine.slice().sort(
+      _hayvanSira === 'kotu' ? (x, y) => (kaliteSin(x.k) - kaliteSin(y.k)) || ((y.yas || 0) - (x.yas || 0))
+      : _hayvanSira === 'yas' ? (x, y) => ((y.yas || 0) - (x.yas || 0)) || (kaliteSin(x.k) - kaliteSin(y.k))
+      : (x, y) => (kaliteSin(y.k) - kaliteSin(x.k)) || ((x.yas || 0) - (y.yas || 0)));
+    // ⚠️ Satir TEK SATIRDA kalmali: 430 px ekranda 'kotu yem 2/3' rozeti satiri ikiye
+    //    boluyordu. Rozet artik ikon, ayrinti `title` icinde.
+    h.push(sirali.slice(0, 40).map(a => {
+      const kalanOmur = Math.max(0, T.omur - (a.yas || 0));
+      const dogum = T.dogumGun - ((a.yas || 0) % T.dogumGun);
+      return '<div class="qline" style="align-items:center">'
+        + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + T.ico
+        + ' <b onclick="hayvanAdiDegistir(' + a.id + ')" style="cursor:pointer;'
+        + 'border-bottom:1px dotted var(--dim)">' + (a.ad || '#' + a.id) + '</b>'
+        + ' <span class="sub">' + kaliteAd(a.k) + '</span>'
+        + (a.kv ? ' <span style="color:var(--warn)" title="Üst üste ' + a.kv
+            + ' gün kötü yem — 3 olursa kalitesi düşer">⚠️' + a.kv + '</span>' : '')
+        + '</span>'
+        + '<span class="sub" style="flex:0 0 auto;white-space:nowrap">'
+        + (a.yas || 0) + 'g · 🍼' + dogum + ' · ⏳' + kalanOmur
+        + ' <button onclick="hayvanKes(' + a.id + ')" style="padding:2px 6px;margin-left:4px" '
+        + 'title="Kes — ' + fmtE(T.et) + ' ton et siloya girer">🥩</button></span></div>';
+    }).join(''));
+    if (sirali.length > 40) h.push('<p class="sub">… ve ' + (sirali.length - 40)
+      + ' baş daha. Listede ilk 40 baş var — sıralamayı değiştirerek diğerlerine ulaş.</p>');
+    // ⚠️ Once SUZ sonra yaz: 8 baslik suruda ne 10 ne 50 geciyordu ve geriye BOS bir
+    //    dugme seridi kaliyordu.
+    const kesAdet = [10, 50].filter(n => n < mine.length);
+    if (kesAdet.length) h.push('<div class="catrow" style="margin:6px 0">'
+      + kesAdet.map(n => '<button onclick="hayvanTopluKes(\'' + _hayvanSekme + '\',' + n + ')">'
+        + '🥩 En kötü ' + n + ' başı kes</button>').join('') + '</div>');
+  }
+  h.push('<button class="primary ghostbtn" onclick="tarimPanel()">← Tarım</button>');
+  $('modal').innerHTML = h.join('');
+  $('overlay').classList.add('show');
+}
+window.hayvanPaneli = hayvanPaneli;
+
 // ═══════════ 🚜 MAKİNE FİLOSU (98. yama) ═══════════
 // PATRON KARARI — C seçeneği (melez), gerekçesiyle birlikte:
 //   A) rakibin 7 durumlu zinciri → "işçi varken uyurken de hasat olur" SÖZÜNÜ bozardı
@@ -16877,10 +17344,23 @@ function tarimBirimPanel(u) {
       + ' <span class="sub">(' + TARIM_AYAR.gubreHasat + ' hasat +%' + Math.round((gk - 1) * 100) + ')</span></button>');
     h.push('<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🌱 EKİM <span class="sub">'
       + (u.urun ? 'değiştirmek bekleyen hasadı yakar' : 'ne ekeceğini seç') + '</span></div><div class="catrow">'
-      + Object.keys(TARIM_URUN).map(id => '<button onclick="tarimEkUygula(' + u.id + ',\'' + id + '\')"'
+      + EKILIR_URUNLER.map(id => '<button onclick="tarimEkUygula(' + u.id + ',\'' + id + '\')"'
           + ' style="padding:3px 4px;line-height:0"' + (id === u.urun ? ' class="on"' : '')
           + ' title="' + TARIM_URUN[id].ad + '">' + urunKare(id, 34) + '</button>').join('') + '</div>');
     return h.join('');
+  }
+  // 🐄 99. yama — BARINAK KUNYESI
+  if (typeof hayvanBinasiMi === 'function' && hayvanBinasiMi(u)) {
+    const bt = binaTuru(u.kind), BH = HAYVAN_TIPLERI[bt], BT = TARIM_TIPLERI[BH.bina][BH.bina];
+    const insa = (u.buildDone || 0) > tarimSimdi();
+    const mine = hayvanlarTur(bt), kap = barinakKapasite(bt);
+    return '<div class="prow"><span class="l">' + BH.ico + ' Barınak</span><b>' + BT.nm
+        + (insa ? ' <span class="sub">🏗️ inşa ediliyor</span>' : '') + '</b></div>'
+      + '<div class="prow"><span class="l">🐾 Kapasite</span><b>' + BH.tavan + ' baş</b> <span class="sub">(bu barınak)</span></div>'
+      + '<div class="prow"><span class="l">🏢 Şirket geneli</span><b>' + mine.length + ' / ' + kap + ' baş</b></div>'
+      + '<div class="prow"><span class="l">🏅 Sürü kalitesi</span><b>' + (mine.length ? kaliteAd(suruKalitesi(BH.urun)) : '—') + '</b></div>'
+      + '<p class="sub">' + BH.d + '</p>'
+      + '<button class="bigsell" onclick="closeModal();hayvanPaneli()">🐄 Hayvancılık ekranı</button>';
   }
   if (lojmanMi(u)) return '<p class="sub">🏘️ Bu lojman <b>' + TARIM_AYAR.lojmanKapasite + ' işçi</b> barındırıyor.'
     + '<br>Şirket geneli: <b>' + isciCalisan() + '</b> / ' + isciKapasite() + ' · günlük ' + fmt(tarimGunlukGider()) + '</p>';
@@ -16946,6 +17426,17 @@ function tarimAkis(dtSec) {
     const ton = tarlaTick();            // işçili tarlaları topla
     const maas = isciMaasIsle();        // gün döndüyse maaşı kes
     if (maas > 0) toast('👷 Günlük işçi maaşı ödendi — ' + fmt(maas), '', 'tarimmaas', 8000);
+    // 🐄 99. yama — HAYVAN GUNU. Ayni gun donumu desenine takiliyor, kendi anahtari var.
+    const hr = (typeof hayvanGunluk === 'function') ? hayvanGunluk() : null;
+    if (hr && hr.gun > 0) {
+      const ur = Object.keys(hr.urun).map(k => urunBilgi(k).ico + ' ' + fmtE(hr.urun[k]) + ' ton').join(' · ');
+      toast('🐄 Hayvan günü' + (hr.gun > 1 ? ' ×' + hr.gun : '') + ' — ' + (ur || 'üretim yok')
+        + (hr.dogan ? ' · 🍼 ' + hr.dogan + ' yavru' : '')
+        + (hr.kesilen ? ' · 🥩 ' + fmtE(hr.etTon) + ' ton et' : '')
+        + (hr.olen ? ' · ☠️ ' + hr.olen + ' baş aç öldü' : '')
+        + (hr.siloAtlanan > 0 ? ' · 🏚️ silo dolu, ' + fmtE(hr.siloAtlanan) + ' ton toplanamadı' : '')
+        + ' · 🩺 ' + fmt(hr.vet), (hr.olen || hr.siloAtlanan > 0) ? 'warn' : '', 'hayvangun', 10000);
+    }
     if (ton > 0 && $('overlay').classList.contains('show') && typeof tarimPanel === 'function') {
       // panel açıksa canlı tazele (oyuncu hasadın geldiğini görsün)
       if (($('modal').innerHTML || '').indexOf('🌾 Tarım') >= 0) tarimPanel();
@@ -19327,11 +19818,14 @@ function migrate(s) {
   //    `starterClaimed` false kalır ve bankanın 24 saat koruması kalıcı muaf olur.
   if (s.sektor && s.sektor !== 'enerji') s.starterClaimed = true;
   s.tarim = Object.assign({ std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0,
-                            ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} }, siloLvl: 0, makineler: [] }, s.tarim);
+                            ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} }, siloLvl: 0, makineler: [], hayvanlar: [], hayvanGun: 0, yemKalite: 'ucuz' }, s.tarim);
   for (const k4 of ['std', 'dnm', 'arge']) if (!s.tarim[k4] || typeof s.tarim[k4] !== 'object') s.tarim[k4] = {};
   if (!Array.isArray(s.tarim.stok)) s.tarim.stok = [];
   // 🚜 98. yama — Firebase boş diziyi SAKLAMAZ; makine listesi bulut turunda düşer.
   if (!Array.isArray(s.tarim.makineler)) s.tarim.makineler = [];
+  // 🔴 Firebase bos diziyi SAKLAMAZ — bulut turundan sonra alan yok olur ve
+  //    `hayvanlar.filter` cokerdi. Bu satir o sinifin tek kalkani.
+  if (!Array.isArray(s.tarim.hayvanlar)) s.tarim.hayvanlar = [];
   if (!s.tarim.satim || typeof s.tarim.satim !== 'object') s.tarim.satim = { gun: 0, v: {} };
   if (!s.tarim.satim.v || typeof s.tarim.satim.v !== 'object') s.tarim.satim.v = {};
   s.prodByCat = (s.prodByCat && typeof s.prodByCat === 'object') ? s.prodByCat : {};
