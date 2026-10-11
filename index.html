@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 03:35) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 03:40) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,14 +891,14 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 03:35)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 03:40)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11j',
+  etiket: '2026-10-11k',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
     '⚖️ <b>Tarim ekonomisi duzeltildi.</b> Ilk surumde tohum bedeli sabitti ve dusuk kalitede ciroyu asiyordu — yani yeni ciftci kacinilmaz olarak zarar ediyordu. Artik tohum, hasadin degerinin sabit bir yuzdesi. Olctuk: artik <b>her kalitede kar var</b>.',
@@ -21742,7 +21742,23 @@ window.sektorBasla = (id) => {
   //    KALICI oluyordu — çiftçi ilk dakikadan itibaren sonsuza dek kredi çekebiliyordu.
   // Doğru çözüm: enerji dışı sektörde enerji eğitimi hiç çalışmayacağı için onu
   //    BİTMİŞ say. Hem banka kuralı normale döner, hem `tutGuide` zaten false kalır.
-  if (id !== 'enerji') G.starterClaimed = true;
+  // 🔴 76. yama — 74'ün YAN ETKİSİ ölçüldü: `starterClaimed`i true yapınca tarım
+  //    oyuncusu eğitim ÖDÜLÜNÜ de kaybediyordu (ödülü veren tek satır `tutTick`in
+  //    `tutGuide()` kapısının arkasında). Sonuç sermaye eşitsizliği:
+  //      enerji oyuncusu : 10M başlangıç + 10M ödül = 20M
+  //      tarım oyuncusu  : 10M                       = 10M
+  //    Tarla 2,5M + lojman 4M = 6,5M olduğu için çiftçi YARI sermayeyle başlıyordu —
+  //    tasarımdan gelen bir zorluk değil, benim yamamın kazası.
+  // Çözüm: enerji dışı sektörde eğitim hiç çalışmayacağı için ödülü SEÇİM ANINDA ver.
+  //    `starterClaimed` zaten "ödül verildi" bayrağı; önce bakıp sonra set ediyoruz ki
+  //    rebirth geldiğinde her sektör değişiminde tekrar ödenmesin.
+  if (id !== 'enerji') {
+    if (!G.starterClaimed) {
+      G.cash = (G.cash || 0) + STARTER_REWARD;
+      toast('🎁 Başlangıç desteği: ' + fmt(STARTER_REWARD) + ' — bu sektörde eğitim görevleri yok.', '', 'sektorodul', 9000);
+    }
+    G.starterClaimed = true;
+  }
   const sonra = SEKTOR_SONRA; SEKTOR_SONRA = null;
   closeModal();
   if (sonra) { sonra(id); return; }
