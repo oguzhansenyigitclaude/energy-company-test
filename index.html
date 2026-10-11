@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 05:57) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 09:04) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,16 +891,19 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 05:57)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 09:04)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11l',
+  etiket: '2026-10-11m',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '⏫ <b>TESIS GELISTIRME geldi.</b> Artik yuzlerce tesis kurmak yerine var olani <b>yerinde buyutuyorsun</b>. Tek seferlik Ar-Ge bedelinden sonra her santral Sv5e kadar cikar: her kademe uretimi <b>2 katina</b> (Sv5 = 16 kat). Altin kural bozulmadi — yakit, emisyon ve kapasite lisansi payi da ayni oranda artar, yani bedava olcek yok. Odedigin buyutme bedeli <b>Tesis Degerine sayilir</b>.',
+    '🔄 <b>REBIRTH yurutmesi hazir.</b> Ust cubuga dokununca rebirth ekrani acilir: hedefin, engellerin ve devrin ne getirip ne goturecegi tek ekranda. Rebirth atinca sirketin <b>yok olmaz</b> — devlet kayyum atar, tesisler %10 verimle calismaya devam eder ve geliri sana akar. Sen baska bir sektorde sifirdan kurarsin. Imtiyaz Puanin, postan, arkadaslarin, kredi sicilin <b>sende kalir</b>.',
+    '🌾 <b>Ciftciye artik enerji ekrani acilmiyor.</b> Uzaktan donunce gosterilen rapor enerjiye gomuluydu; tarim oyuncusuna her seferinde <b>sifir MWh</b> yaziyordu. Artik sektore gore dallaniyor.',
     '🖼️ <b>Tarim artik GERCEK gorsellerle.</b> Tarlalar, urunler ve isci lojmani emoji degil fotograf — haritaya bakinca hangi tarlaya ne ektigini taniyorsun, stok tablosunda urunu goruyorsun. Enerji tesislerindeki gorsel dilin aynisi.',
     '⚖️ <b>Tarim ekonomisi duzeltildi.</b> Ilk surumde tohum bedeli sabitti ve dusuk kalitede ciroyu asiyordu — yani yeni ciftci kacinilmaz olarak zarar ediyordu. Artik tohum, hasadin degerinin sabit bir yuzdesi. Olctuk: artik <b>her kalitede kar var</b>.',
     '🌾 <b>TARIM SEKTORU geldi (ilk surum).</b> Yeni oyuna baslarken artik <b>sektor seciyorsun</b>. Tarimi secersen tarla kurar, isci tutar, urun eker ve sehirlere satarsin. Enerji oynayanlar icin hicbir sey degismedi.',
@@ -4622,6 +4625,36 @@ const PLANT_TYPES = (() => {
   return P;
 })();
 
+// ═══════════ ⏫ TESİS GELİŞTİRME (TEVSİ) — 80. yama ═══════════
+// PLAN.md Faz 3 "Tesis Büyütme". Patron 11 Eki: "10 milyar param var ama rebirth için
+// yüzlerce yeni tesis kurmam gerek — bir araştırmayla tesis gelişiminin kilidini aç."
+//
+// 🔑 ALTIN KURAL (PLAN, patronun kendi yakaladığı hata): **maliyet ×N ise ÜRETİM de ×N.**
+//    Değer artıp üretim artmazsa bu puan şişirmedir — rakibin öldüğü yer tam burası
+//    (hangar 2 milyar → 4 milyar, slot gelir getirmiyor).
+// 🔑 Bu bir YOĞUNLAŞTIRMA: 16 adet Sv1 türbin ≈ 1 adet Sv5 türbin. Aynı üretim, ama
+//    16'da 1 slot · 16'da 1 kayıt · 16'da 1 tıklama. Harita dolmadan ölçek büyür.
+// ⚠️ ÜRETİM GİBİ **MALİYET DE** BÜYÜR: emisyon, yakıt tüketimi ve kapasite lisansı
+//    kademeyle aynı oranda sayılır. Yoksa büyütme "bedava ölçek" olurdu.
+const TEVSI_MAX = 5;            // Sv1 → Sv5
+const TEVSI_ACILIS = 1e9;       // tek seferlik Ar-Ge bedeli (patron: 1 milyar)
+// 📐 Kademe başına üretim ×2 → Sv5 = ×16. Bedel katsayısı 0,9375 seçildi ki Sv5'e kadar
+//    ödenen toplam = taban × 14,06; ilk inşa dahil ×15,06 maliyete ×16 üretim —
+//    PLAN'ın "büyütme yeni inşaya göre BİRAZCIK avantajlı olsun" şartı birebir.
+const TEVSI_ORAN = 0.9375;
+const TEVSI_YIPRANMA = 0.25;    // kademe başına +%25 yıpranma hızı (PLAN: doğal fren)
+const tevsiLvl = u => Math.max(1, Math.min(TEVSI_MAX, Math.round((u && u.lvl) || 1)));
+const tevsiCarpan = u => Math.pow(2, tevsiLvl(u) - 1);
+// ⚡ TEK KAPI: bir SANTRAL BİRİMİNİN gücü. Tür bağlamında (katalog, inşa ekranı, kapasite
+//    kademeleri) hâlâ `T.mw` kullanılır — yeni kurulan tesis her zaman Sv1'dir.
+const unitMW = u => { const T = PLANT_TYPES[u && u.t]; return T ? T.mw * tevsiCarpan(u) : 0; };
+const tevsiBedel = u => { const T = PLANT_TYPES[u && u.t]; return T ? Math.round(T.cost * tevsiCarpan(u) * TEVSI_ORAN) : 0; };
+// 💰 Bugüne kadar bu tesise ÖDENMİŞ büyütme bedeli — Tesis Değerine girer (patron:
+//    "tesis gelişimleri tesis değerini arttırsın, az ama yüksek seviyeli tesisle de
+//    rebirth atabilelim").
+const tevsiOdenen = u => { const T = PLANT_TYPES[u && u.t]; return T ? Math.round(T.cost * TEVSI_ORAN * (tevsiCarpan(u) - 1)) : 0; };
+const tevsiAcikMi = () => !!(typeof G !== 'undefined' && G && G.tevsiAcik);
+
 // ── GERÇEK NÜFUS → KARE TALEBİ: enerji ihtiyacı nüfusa bağlı. Çölde talep ~0 → fazla enerji yok pahasına.
 const TR_POP = { 'İstanbul':15900,'Ankara':5800,'İzmir':4500,'Bursa':3200,'Antalya':2700,'Konya':2320,'Adana':2270,'Şanlıurfa':2170,'Gaziantep':2154,'Kocaeli':2100,'Mersin':1920,'Diyarbakır':1800,'Hatay':1670,'Manisa':1470,'Kayseri':1440,'Samsun':1370,'Balıkesir':1250,'Kahramanmaraş':1170,'Aydın':1150,'Tekirdağ':1140,'Van':1130,'Sakarya':1080,'Denizli':1060,'Muğla':1050,'Eskişehir':910,'Mardin':870,'Trabzon':820,'Ordu':760,'Erzurum':750,'Malatya':740,'Afyonkarahisar':740,'Sivas':640,'Adıyaman':640,'Batman':640,'Tokat':590,'Elazığ':590,'Zonguldak':590,'Şırnak':570,'Kütahya':570,'Çanakkale':560,'Osmaniye':560,'Çorum':520,'Ağrı':510,'Giresun':450,'Isparta':450,'Aksaray':430,'Yozgat':420,'Edirne':410,'Düzce':410,'Muş':400,'Kırklareli':380,'Kastamonu':380,'Uşak':375,'Niğde':365,'Bitlis':350,'Rize':345,'Amasya':340,'Siirt':330,'Bolu':320,'Nevşehir':310,'Yalova':300,'Kars':285,'Bingöl':280,'Kırıkkale':277,'Hakkari':275,'Burdur':273,'Karaman':260,'Karabük':250,'Kırşehir':245,'Erzincan':240,'Bilecik':230,'Sinop':220,'Bartın':200,'Iğdır':200,'Çankırı':195,'Artvin':170,'Gümüşhane':145,'Kilis':145,'Ardahan':95,'Bayburt':85,'Tunceli':85 };
 const STATE_POP = { 'Bavyera':1500,'K. Ren-Vestfalya':1100,'Baden-Württemberg':630,'Aşağı Saksonya':540,'Schleswig-Holstein':250,'Berlin':3700,'Teksas':2300,'Kaliforniya':3900,'Florida':950,'New York':8500,'Washington':750,'Arizona':1600,'Endülüs':690,'Katalonya':1620,'Galiçya':500,'Madrid':3300,'Valensiya':790,'Hokkaido':1900,'Tokyo':13900,'Kyushu':1600,'Tohoku':1060,'São Paulo':12300,'Bahia':2900,'Amazonas':2200,'Rio de Janeiro':6700,'Ceará':2700 };
@@ -6360,7 +6393,7 @@ const trafoKat = () => gnd('g3') ? .85 : 1;
 const GP_GUN_ODUL = 2, GP_GUN_ADET = 3, GP_HAFTA_ODUL = 15;
 // tür bazlı kurulu güç — görev hedefleri oyuncunun ölçeğiyle büyüsün (sabit hedef ya küçük
 // oyuncuya imkânsız ya büyük oyuncuya bedava gelirdi)
-const catMW = cat => plants().reduce((s, u) => s + (PLANT_TYPES[u.t] && PLANT_TYPES[u.t].cat === cat ? PLANT_TYPES[u.t].mw : 0), 0);
+const catMW = cat => plants().reduce((s, u) => s + (PLANT_TYPES[u.t] && PLANT_TYPES[u.t].cat === cat ? unitMW(u) : 0), 0);
 const YENIL_CAT = ['Güneş', 'Rüzgar', 'Hidro', 'Jeotermal'];
 const yenilMW = () => YENIL_CAT.reduce((s, c) => s + catMW(c), 0);
 const fosilMW = () => catMW('Kömür') + catMW('Gaz');
@@ -6721,7 +6754,7 @@ function consumeFuel(f, tons) {
 }
 const fuelOf = u => u.t.startsWith('coal') ? 'coal' : u.t.startsWith('gas') ? 'gas' : null; // nükleer → null (direkt para)
 // 🧬 AĞAÇ: yakitKat — 'Yanma Optimizasyonu' (f2) −%10, 'CCS' (f5) +%15, 'Yakıt Geri Dönüşümü' (n1) −%15
-const tonsFor = (u, hours) => PLANT_TYPES[u.t].fuel * PLANT_TYPES[u.t].mw * hours * yakitKat(PLANT_TYPES[u.t]) / FUEL_TYPES[fuelOf(u)].price;
+const tonsFor = (u, hours) => PLANT_TYPES[u.t].fuel * unitMW(u) * hours * yakitKat(PLANT_TYPES[u.t]) / FUEL_TYPES[fuelOf(u)].price;
 const maxOffices = () => OFFICE.baseLimit + ((G.research && G.research.lvl.office) || 0) * 5;
 // 📜 RUHSAT LİMİTİ (patron 18 Ağu): ofis sayısından BAĞIMSIZ, sabit 20. Limitin üstünde ruhsatı
 // olan eski oyuncu mağdur edilmez — yalnız YENİ alım engellenir.
@@ -7254,7 +7287,20 @@ function freshState() {
     //    freshState'in her anahtarını `undefined` olanlara kendiliğinden ekliyor.
     // ⚠️ `rb` = TAMAMLANMIŞ DÖNGÜ sayısı, "kaç sektör bitti" DEĞİL. PLAN.md §2: "6 sektörün
     //    hepsi bitince → Rebirth +1, hedef büyür". Bitmiş sektörler ayrı tutulur: rbBitti.
-    rb: 0, rbAt: 0, sektor: 'enerji', rbBitti: {},
+    // ⚠️ `sektor: null` = "sektör sihirbazı gerekiyor" demektir (rebirth bayrağı). Yeni
+    //    oyunda da öyle başlar; `sektorBasla` doldurur. `rbSay` = TOPLAM sektör değişimi
+    //    (rb ile KARIŞTIRMA: rb yalnız altı sektör bitince artar). Firebase kuralı
+    //    totalEarned/totalSold azalmasına ancak rbSay ARTMIŞSA izin verir.
+    // 🔴 79. yama — `rbBekleyen` AYRI BİR BOOLEAN olmak ZORUNDA. İlk hâlimde bayrak
+    //    `sektor: null` idi; Firebase'de **null YAZMAK SİLMEKTİR** (kodun kendi notu:
+    //    satır ~13831). Bulut turunda `sektor` anahtarı tamamen düşer, `migrate()` onu
+    //    freshState'ten 'enerji' diye geri doldurur ve rebirth atan oyuncu sektör ekranı
+    //    yerine BOŞ BİR ENERJİ ŞİRKETİNE düşerdi. Boolean hem null değil hem de
+    //    `false` olarak da saklanıyor — bayrak bulut turunu sağ geçiyor.
+    // ⏫ Tesis Geliştirme kilidi SEKTÖRE AİT (PLAN: "araştırma sektöre aittir") — HOLDING
+    //    beyaz listesinde YOK, yani rebirth'te kayyumda kalır ve yeni sektörde yeniden alınır.
+    tevsiAcik: false,
+    rb: 0, rbAt: 0, sektor: 'enerji', rbBitti: {}, rbSay: 0, sektorler: {}, rbBekleyen: false,
     // 🌾 TARIM (57. yama) — sektör verisi tek bir alt nesnede. Enerji oynayan oyuncuda
     //    boş durur, yer kaplamaz. `migrate()` eski kayıtlara kendiliğinden ekler.
     //    std  : ürün → ÜRETİM STANDARDI (1=E … 5=A). Tesise değil ŞİRKETE ait (madde 20).
@@ -7906,7 +7952,7 @@ function plantOutput(u, atMin) {
   // dersini parası varken, eğitim BİTTİKTEN sonra alır (bitişte Enerji Bakanlığı postası uyarır).
   // Diğer türlerde eski %35 tabanı sürer (gece güneşi 0'a düşmesin, eğitim 10 dk'da bitsin).
   if (tutActive()) f = Math.max(f, T.kind === 'wind' ? 1 : .35);
-  return T.mw * f * (u.cond / 100) * ipProdBoost(); // 💠 Üretim Takviyesi (İmtiyaz Mağazası, 24 sa)
+  return unitMW(u) * f * (u.cond / 100) * ipProdBoost(); // 💠 Üretim Takviyesi + ⏫ tevsi kademesi
 }
 function co2Avg() {
   let prod = 0, emit = 0;
@@ -7949,7 +7995,7 @@ const emMuaf = () => tutActive() || (Date.now() - (G.founded || Date.now())) < 3
 // onunla denetim yapılsa "12 saatte tedbir al, ceza yok" sözü imkânsız olurdu (ceza kaçınılmaz).
 // Denetim gerçek hayatta da ANLIK ölçer: çalışan kurulu gücün karbon yoğunluğu ve salım hızı.
 const emPortfoy = () => { let mw = 0, g = 0;
-  for (const u of plants()) if (u.on && u.buildDone <= Date.now()) { const T = PLANT_TYPES[u.t]; mw += T.mw; g += T.mw * unitEm(T); }
+  for (const u of plants()) if (u.on && u.buildDone <= Date.now()) { const T = PLANT_TYPES[u.t], w = unitMW(u); mw += w; g += w * unitEm(T); }
   return mw > .01 ? Math.round(g / mw) : 0; };
 const emRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() ? PLANT_TYPES[u.t].mw * unitEm(PLANT_TYPES[u.t]) / 1000 : 0), 0); // ton/saat (tam güçte)
 // ⚖️ ADALET KURALI (patron, 21 Ağu — haklı itiraz): "3 rüzgar kurdum, yoğunluğu düşürdüm ama
@@ -7960,11 +8006,11 @@ const emRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.
 //   2) Salım HIZI        — mevcut hızla haftalık projeksiyon (geçmiş salım DEĞİL), kota ile kıyaslanır
 // Ömür bütçesi ve "bu hafta salınan" artık BİLGİ satırıdır; ceza kesmez (geçmiş geri alınamaz).
 // Kota da üretim hacmine göre ölçeklenir: temiz üretim ekleyen oyuncunun kotası büyür.
-const emTemizRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() && unitEm(PLANT_TYPES[u.t]) < 300 ? PLANT_TYPES[u.t].mw : 0), 0);
+const emTemizRate = () => plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() && unitEm(PLANT_TYPES[u.t]) < 300 ? unitMW(u) : 0), 0);
 function emDurum() {
   const yog = emPortfoy(), ton = emWeekTon(), rate = emRate();
   const hizHaftalik = rate * 168;                       // mevcut hızla bir hafta çalışsa (ton)
-  const uretimHaftalik = (emTemizRate() + plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() && unitEm(PLANT_TYPES[u.t]) >= 300 ? PLANT_TYPES[u.t].mw : 0), 0)) * 168;
+  const uretimHaftalik = (emTemizRate() + plants().reduce((a, u) => a + (u.on && u.buildDone <= Date.now() && unitEm(PLANT_TYPES[u.t]) >= 300 ? unitMW(u) : 0), 0)) * 168;
   // kota = ölçek tabanı VEYA üretim hacminin %40'ı (hangisi büyükse) — temiz kapasite kotayı BÜYÜTÜR
   const kota = Math.max(EM_QUOTA[Math.max(0, Math.min(EM_QUOTA.length - 1, G.olcek || 0))], Math.round(uretimHaftalik * .4));
   const butce = emButce(), butceAcik = emButceAcik();
@@ -8000,10 +8046,10 @@ function emMuhurle() {
 }
 // 🚨 MUVAZAA: ihtarda santralini durdurup ihtar biter bitmez geri açan / yeni fosil kuran
 function emMuvazaa(sebep) {
-  const fosil = plants().filter(emKirli).sort((a, b) => PLANT_TYPES[b.t].mw - PLANT_TYPES[a.t].mw);
+  const fosil = plants().filter(emKirli).sort((a, b) => unitMW(b) - unitMW(a));
   const alinan = fosil.slice(0, Math.ceil(fosil.length / 2)); // fosil kapasitesinin ~%50'si
   let mw = 0;
-  for (const u of alinan) { mw += PLANT_TYPES[u.t].mw; if (unitMarkers[u.id]) { unitMarkers[u.id].remove(); delete unitMarkers[u.id]; } }
+  for (const u of alinan) { mw += unitMW(u); if (unitMarkers[u.id]) { unitMarkers[u.id].remove(); delete unitMarkers[u.id]; } }
   G.units = G.units.filter(x => !alinan.some(a => a.id === x.id));
   const para = Math.round(Math.max(5e6, G.cash * .35));
   G.cash = Math.max(0, G.cash - para); gider('ceza', para);
@@ -8098,7 +8144,7 @@ const readyStores = c => G.units.filter(u => u.kind === 'store' && u.cell === c 
 const totalOutput = () => plants().reduce((s, u) => s + plantOutput(u), 0);
 const totalStored = () => stores().reduce((s, u) => s + u.stored, 0);
 const totalCap = () => stores().reduce((s, u) => s + STORE_TYPES[u.t].cap, 0);
-const installedMW = () => plants().reduce((s, u) => s + PLANT_TYPES[u.t].mw, 0);
+const installedMW = () => plants().reduce((s, u) => s + unitMW(u), 0);
 
 // ── Simülasyon ──
 function step(dtMin, silent, atMin) {
@@ -8155,7 +8201,7 @@ function step(dtMin, silent, atMin) {
     }
     // 🧰 AĞAÇ: yıpranma çarpanı tür bazlı (s1 güneş · w1 rüzgar · f4 fosil · n3 nükleer)
     // 🆕 İlk 24 saat yıpranma YOK (patron 11 Eyl) — bkz. yeniCihazMuaf. İkinci el hariç.
-    if (u.on && u.buildDone <= Date.now() && !yeniCihazMuaf(u)) u.cond = Math.max(25, u.cond - (6 / 1440) * dtMin * (PLANT_TYPES[u.t].decay || 1) * yipranmaKat(PLANT_TYPES[u.t]));
+    if (u.on && u.buildDone <= Date.now() && !yeniCihazMuaf(u)) u.cond = Math.max(25, u.cond - (6 / 1440) * dtMin * (PLANT_TYPES[u.t].decay || 1) * yipranmaKat(PLANT_TYPES[u.t]) * (1 + (tevsiLvl(u) - 1) * TEVSI_YIPRANMA));
   }
   const price = priceAt(atMin ?? nowMin());
   return { produced, wasted, fuelCost, price };
@@ -8678,7 +8724,7 @@ window.refuelUnit = id => {
   if (missH < .2) return;
   const f = fuelOf(u);
   if (!f) { // NÜKLEER: yakıt çubuğu değişimi — depo gerekmez, direkt para (minik gider)
-    const c = Math.round(PLANT_TYPES[u.t].fuel * PLANT_TYPES[u.t].mw * missH * yakitKat(PLANT_TYPES[u.t]));
+    const c = Math.round(PLANT_TYPES[u.t].fuel * unitMW(u) * missH * yakitKat(PLANT_TYPES[u.t]));
     if (G.cash < c) { toast('Yakıt çubuğu için ' + fmt(c) + ' gerekli', 'warn'); return; }
     G.cash -= c; gider('yakit', c);
     G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + c;
@@ -8992,7 +9038,7 @@ const CAP_TIERS = {
 };
 const capTierIdx = cat => Math.min((G.capLic && G.capLic[cat]) || 0, CAP_TIERS[cat].length - 1);
 const capMWOf = cat => CAP_TIERS[cat][capTierIdx(cat)].mw;
-const catUsedMW = cat => G.units.filter(u => u.kind === 'plant' && PLANT_TYPES[u.t].cat === cat).reduce((s, u) => s + PLANT_TYPES[u.t].mw, 0);
+const catUsedMW = cat => G.units.filter(u => u.kind === 'plant' && PLANT_TYPES[u.t].cat === cat).reduce((s, u) => s + unitMW(u), 0);
 const nextCapTier = cat => CAP_TIERS[cat][capTierIdx(cat) + 1] || null;
 const capBlocked = t => { const T = PLANT_TYPES[t]; return catUsedMW(T.cat) + T.mw > capMWOf(T.cat); };
 window.buyCapLic = cat => {
@@ -14392,7 +14438,7 @@ function aucAssets() { // satılabilir varlıkların listesi
     if (!T) continue;
     // 📍 KONUM (patron: "bilmediğim yerdeki santrali almam") — ilanda taşınır; cell/ll HAM
     // olarak da taşınır ki kartta bölge adına tıklayınca bilgi ekranı açılabilsin (loc geri çevrilemez)
-    out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, loc: placeName(u.cell) + ' · ' + cellCode(u.cell), cell: u.cell, ll: u.ll, note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? T.mw + ' MW' : '' });
+    out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, loc: placeName(u.cell) + ' · ' + cellCode(u.cell), cell: u.cell, ll: u.ll, note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? unitMW(u) + ' MW' : '' });
   }
   for (const l of (G.lines || [])) if (lineReady(l) && !aucListed('line', l.id))
     out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs, lineKat(l)) * .5 * (1 - lineOmurFrac(l)) + lineCost(l.km, l.hubs, lineKat(l)) * .05), loc: placeName(l.from) + ' → ' + placeName(l.to), note: fmtN(l.km) + ' km' });
@@ -15468,7 +15514,9 @@ const tesisDegeri = () => ((typeof G !== 'undefined' && G && G.units) ? G.units 
   //     diğer türlerde 0 olduğu için terim kendiliğinden düşer.)
   //    ⚠️ İNŞA HÂLİNDEKİ kademe (u.upgAdd) sayılmaz — yeni tesiste olduğu gibi,
   //       para çıkmış olsa da kapasite henüz KURULU değil.
-  return t + T.cost + (u.capLvl || 0) * T.cost / 2;
+  // ⏫ 80. yama — ÖDENEN BÜYÜTME BEDELİ DE TESİS YATIRIMIDIR (patron: "az ama yüksek
+  //    seviyeli tesislerle de rebirth atabilelim"). Depo kademesindeki desenin aynısı.
+  return t + T.cost + (u.capLvl || 0) * T.cost / 2 + (u.kind === 'plant' ? tevsiOdenen(u) : 0);
 }, 0);
 
 // ═══════════════════════ 🌾 TARIM — VERİ KATMANI (57. yama) ═══════════════════════
@@ -16169,7 +16217,7 @@ const REBIRTH_HEDEF = [10e9, 50e9];   // döngü 0 → $10B · döngü 1 → $50
 // 🔴 $50B tesadüf değil, ÖLÇÜLDÜ: LIC_MAX=20 + liccap (20 kademe × +2) = 60 karo, karo başına
 //    13 birim → mutlak tavan 780 birim ≈ $50B. Yani döngü 1 hedefi tam kapasiteye denk geliyor;
 //    üstü ancak **Tesis Büyütme** ile mümkün (PLAN.md Faz 3).
-function rebirthHedef() {
+function rebirthHedefTam() {
   const n = Math.max(0, Math.min(500, Math.round((typeof G !== 'undefined' && G && G.rb) || 0)));
   if (n < REBIRTH_HEDEF.length) return REBIRTH_HEDEF[n];
   // ⚠️ Merdivenin 3. basamağı HENÜZ TASARLANMADI — PLAN.md açık maddesi: "$10B → $50B → ?
@@ -16181,20 +16229,260 @@ function rebirthHedef() {
   //    kabul ettiği en büyük Tesis Değeri. Üstünde bir hedef zaten ölçülemez.
   return Math.min(1e15, REBIRTH_HEDEF[REBIRTH_HEDEF.length - 1] * Math.pow(5, n - REBIRTH_HEDEF.length + 1));
 }
+// ⏩ TEST EŞİĞİ — PLAN.md'nin kendi şartı: "Demo ×60 olmadan rebirth TEST EDİLEMEZ."
+//    ÖLÇÜLDÜ: en pahalı tesis nükleer çift ünite ($420M); $10B için ~24 adet, yani önce
+//    $10B nakit gerekir. Gerçek hedefle rebirth döngüsü günler sürmeden denenemez.
+//    Demo KAPALIYKEN hedef aynen $10B — gerçek oyunda hiçbir şey değişmez.
+const REBIRTH_DEMO_BOL = 1000;
+const rebirthDemoMu = () => !!(typeof G !== 'undefined' && G && G.demo);
+function rebirthHedef() { return rebirthHedefTam() / (rebirthDemoMu() ? REBIRTH_DEMO_BOL : 1); }
 const rebirthOran = () => { const h = rebirthHedef(); return h > 0 ? Math.max(0, Math.min(1, tesisDegeri() / h)) : 0; };
 // 🚧 ENGELLER — PLAN.md: "Rebirth engelleri: banka borcu · aktif ihale". İkisinin de ortak
 //    gerekçesi var: başkasına karşı yükümlülük. Borçluyken şirketi kayyuma park etmek
 //    alacaklıyı, ihalenin ortasında çekilmek ittifakı yakar.
 function rebirthEngelleri() {
   const e = [];
-  if (typeof borcToplam === 'function' && borcToplam() > 0) e.push('🏦 Banka borcun var — rebirth için önce borcu kapat');
-  if (typeof G !== 'undefined' && G && G.ally && G.ally.tender) e.push('🚨 İttifakının aktif ihalesi var — bitmesini bekle');
+  if (typeof G === 'undefined' || !G) return ['Oyun yüklenmedi'];
+  // 🔴 78. yama — ESKİ HÂLİ YALNIZ İKİ MADDEYE BAKIYORDU. Denetim turu beş açık kapı
+  //    daha ölçtü; hepsinin ortak gerekçesi AYNI: başkasına karşı açık bir yükümlülük.
+  //    Rebirth park etmektir, kaçmak değil — kapıda duran her şey kapanmış olmalı.
+  if (typeof borcToplam === 'function' && borcToplam() > 0) e.push('🏦 Banka borcun var — önce borcu kapat');
+  if (typeof allyKrediVar === 'function' && allyKrediVar()) e.push('🤝 İttifak kredisi borcu duruyor — rebirth ittifakı yakardı');
+  if (G.ally && G.ally.tender) e.push('🚨 İttifakının aktif ihalesi var — bitmesini bekle');
+  if (G.blocked) e.push('🚫 Hesabın kısıtlı — kısıt kalkmadan rebirth atılamaz');
+  if (G.inv) e.push('💱 Açık yatırım pozisyonun var — önce kapat');
+  // 💰 EMANET: para kasadan ÇIKMIŞ ama iş bitmemiş. Sıfırlanırsa yanar, taşınırsa
+  //    yeni şirkete bedava tesis yazar. İkisi de yanlış — oyuncu önce sonucu beklesin.
+  const bekleyen = Object.keys(G.teklifBekleyen || {}).length;
+  if (bekleyen) e.push('💰 ' + bekleyen + ' satın alma teklifin emanette — cevabı bekle ya da süresi dolsun');
+  const ihaleEmanet = Object.values(G.auctions || {}).filter(a => a && (a.myEscrow || 0) > 0).length;
+  if (ihaleEmanet) e.push('🏛️ ' + ihaleEmanet + ' alım garantisi ihalesinde bloken var — ihale bitsin');
+  const mkt = (G.auctionsMkt || []).filter(a => a && !a.done && (a.mine || (a.myEscrow || 0) > 0)).length;
+  if (mkt) e.push('🔨 ' + mkt + ' açık müzayede işlemin var — ilan bitsin ya da teklifin iade olsun');
+  if (Object.keys(G.kiraBekleyen || {}).length) e.push('📜 Ödenmemiş karo kiran var — sicile işlenmesini bekle');
+  // 🌍 EMİSYON: ceza merdiveninin ortasındayken rebirth bir AF olurdu (yeni şirketin
+  //    3 günlük muafiyeti vardır). Yaptırım açıkken kapı kapalı.
+  if (G.emis && (G.emis.stage || 0) > 0) e.push('🌫️ Emisyon yaptırımı sürüyor (kademe ' + G.emis.stage + ') — önce temizle');
   return e;
 }
 // Hedefe ulaşmak ile rebirth ATILABİLMEK ayrı iki şey: çubuk hedefte dolar (oyuncu emeğini
 // görmeli), düğme ise engeller temizlenmeden açılmaz.
 const rebirthHedefte = () => tesisDegeri() >= rebirthHedef();
 const rebirthHazir = () => rebirthHedefte() && rebirthEngelleri().length === 0;
+
+// ═══════════════════ 🔄 REBIRTH YÜRÜTMESİ (78. yama) ═══════════════════
+// PLAN.md §2: rebirth atılınca şirket YOK EDİLMEZ — devlet KAYYUM atar, %10 verimle
+// çalışmaya devam eder; oyuncu BAŞKA bir sektörde sıfırdan kurar.
+//
+// 🔴 MİMARİ KARARI — "sektör alanlarını SIFIRLA" DEĞİL, "holding alanlarını KOPYALA".
+//    ÖLÇÜLDÜ (11 Eki): kayıtta `freshState()`te HİÇ OLMAYAN **27 alan** var — blocked
+//    (ban), krediTemerrutSayi (temerrüt yasağı), renameSay, vergiKuyruk, wonWeek,
+//    consRights, kiraBekleyen, auctions, _ban*, _tut*, bildKapali… Kara liste
+//    (freshState anahtarlarını gez) bunların HEPSİNİ kaçırırdı: ban rebirth'le silinir,
+//    enerjinin vergi kuyruğu tarım şirketine sızardı.
+//    Beyaz listede UNUTULAN alan SIZMAZ — yalnız varsayılanına döner. Hata yönü bilerek
+//    güvenli tarafa çevrildi.
+const KAYYUM_VERIM = 0.10;      // PLAN: "en hassas ayar düğmesi — koda SABİT GÖMÜLMEMELİ"
+const REBIRTH_BASLANGIC = 1e7;  // 🧑‍💼 patron 11 Eki: "yeni sektör için 10M yeterli, 20 çok —
+                                //    arsa fiyatları ne kadar ki Türkiye'de". Yeni oyuncunun aldığı
+                                //    10M+10M'den BİLEREK az: rebirth atan oyuncu acemi değil, ve
+                                //    tarlanın bedeli 2,5M — 10M bir tarla + lojmanı rahat karşılıyor.
+
+// 🏛️ HOLDİNG ALANLARI — rebirth'te yeni duruma AYNEN taşınır.
+const HOLDING_ALANLARI = [
+  'company',                                              // holding adı — kayyumun "Sahibi" bu
+  'rb', 'rbAt', 'rbBitti', 'rbSay', 'sektorler',          // rebirth defteri
+  // 💠 GERÇEK PARA / İMTİYAZ PUANI İLE ALINMIŞ HER ŞEY — yanması düşünülemez
+  'ip', 'ipBoost', 'bakimAnlasma', 'maintDiscount', 'canta',
+  'adFreeUntil', 'adFreeLife', 'renameSay', 'offers',
+  'olcekMax',          // ömürde BİR KEZ ödenen 150 💠 terfi ikramiyesinin tek kalkanı
+  'starterClaimed',    // eğitim bir kez ÖDENİR + bankanın 24 saat kapısı
+  'foundedBanka', 'saatEn', 'saatSupheli',                // korumalı saat çıpası
+  'krediNot', 'krediNo', 'notGun', 'krediTemerrutSayi',   // bankacılık sicili KİŞİYE ait
+  'mail', 'friends', 'friendReqs', 'chat', 'chatSeen',    // sosyal katman holding düzeyinde
+  'ally', 'allyId', 'allyBasvuru',
+  'blocked', '_banAdim', '_banGoruldu', '_banTs',         // ban PEŞİNDEN GELİR (PLAN §2)
+  'muted', 'demo', 'demoOffsetMin', 'notifAsked', 'notifOn', 'bildKapali', '_bild', '_bildSeen',
+  'mgDate', 'mgPlays', 'adDate', 'adUses',                // günlük kota sayaçları tazelenmesin
+  'sonSurumNotu', '_sonDuyuru', '_mailSeeded', '_grup2', '_reported',
+  '_tutDepoBase', '_tutDepoUyarildi', '_tutT2Base', '_tutT2Uyarildi',
+  'nextId',            // birim kimliği ASLA geri sarmaz — kayyum birimleriyle çakışmasın
+  'lastSeen',
+];
+
+// 💵 KAYYUM GELİR ORANI — park ANINDA ölçülür ve DONAR.
+// Neden ölçüm: oyunda otomatik satış YOK, yani parkedilmiş şirketin geliri simüle
+// edilemez. Devlet işletiyorsa satar; o satışın hızını şirketin KENDİ geçmiş ortalaması
+// kadar varsayıyoruz ve %10'a indiriyoruz. Uydurma bir sayı değil, şirketin kendi karnesi.
+function kayyumSaatlik(s) {
+  const yasSaat = Math.max(1, (Date.now() - (s.founded || Date.now())) / 36e5);
+  const ciro = (s.totalEarned || 0) + ((s.tarim && s.tarim.ciro) || 0);
+  return Math.max(0, KAYYUM_VERIM * ciro / yasSaat);
+}
+
+// 📦 Park anlık görüntüsü. ⚠️ `sektorler` BİLEREK dışarıda bırakılıyor — içeride kalsaydı
+//    her rebirth bir öncekini içine alır ve kayıt katlanarak büyürdü.
+function kayyumAnlikGoruntu() {
+  const { _tcd, _aucT, _started, sektorler, ...tam } = G;
+  tam.units = (G.units || []).map(({ _lastIcon, ...u }) => u);
+  return {
+    sektor: G.sektor || 'enerji', park: Date.now(), company: G.company,
+    country: G.country, il: G.il,
+    tesis: Math.round(tesisDegeri()), birim: (G.units || []).length,
+    kasa: Math.round(G.cash || 0), saatlik: Math.round(kayyumSaatlik(G)),
+    odenen: 0, sonAkis: Date.now(), demoyla: !!G.demo,
+    tam,   // Rebirth+1 dönüşü için TAM durum (PLAN Faz 3)
+  };
+}
+
+// 🆕 Yeni sektörün başlangıç durumu = freshState + holding beyaz listesi.
+function yeniSektorDurumu(eski) {
+  const y = freshState();
+  for (const k of HOLDING_ALANLARI) if (eski[k] !== undefined) y[k] = eski[k];
+  // 🧬 Gelişim ağacı SEKTÖRE ait (5 dalın hepsi enerji) ama sıfırlama hakkı PREMIUM bir
+  //    kapı: taşınmazsa her rebirth 200 💠 değerinde bedava sıfırlama + bekleme affı doğar.
+  if (eski.gelisim) {
+    y.gelisim.respecUsed = eski.gelisim.respecUsed || 0;
+    y.gelisim.respecAt = eski.gelisim.respecAt || 0;
+  }
+  y.cash = REBIRTH_BASLANGIC;   // starterClaimed taşındığı için sektorBasla ödülü ÖDEMEZ
+  y.founded = Date.now();
+  // ⚠️ İKİ BAYRAK BİRDEN, bilerek: `rbBekleyen` ASIL ölçüt (boolean, bulutta yaşar),
+  //    `sektor: ''` ise aynı şeyi söyleyen ikinci kalkan. `null` KULLANILMIYOR — Firebase
+  //    null'ı SİLME sayar ve anahtar düşünce migrate onu 'enerji'ye çevirirdi.
+  y.rbBekleyen = true;
+  y.sektor = '';
+  y.country = null; y.il = null;
+  y.rbSay = (eski.rbSay || 0) + 1;
+  y.lastSeen = Date.now();
+  return y;
+}
+
+// ☁️ Park durumunu buluta YAZ ve SONUCU DÖNDÜR.
+// NET.cloudSave hatayı yutuyor; burada yutulamaz: Google oyuncusunda açılış `afterLogin`
+// BULUTU esas alır (ölçüldü) — bulut yazılmazsa reload rebirth'ü GERİ ALIR.
+async function rebirthBulutaYaz() {
+  if (!NET.on()) return true;                 // çevrimdışı: yerel kayıt yeter
+  try {
+    const { _tcd, _aucT, _started, ...s } = G;
+    s.units = (G.units || []).map(({ _lastIcon, ...u }) => u);
+    s._sv = NET.zaman(); s._dev = CIHAZ_ID;
+    const r = await NET.put('saves/' + NET.id, s);
+    return r != null;
+  } catch (e) { return false; }
+}
+
+let _rbCalisiyor = false;
+window.rebirthUygula = async () => {
+  if (_rbCalisiyor) return;
+  const eng = rebirthEngelleri();
+  if (!rebirthHedefte() || eng.length) { toast('🔄 Rebirth şartları sağlanmıyor', 'warn'); return; }
+  _rbCalisiyor = true;
+  const eskiSektor = G.sektor || 'enerji';
+  $('modal').innerHTML = '<h2>🔄 Devir işlemi</h2><p>Şirket kayyuma devrediliyor, kayıt sunucuya yazılıyor...</p>';
+  $('overlay').classList.add('show');
+  try { await NET.cloudSave(true); } catch (e) {}   // park ÖNCESİ son hâl
+  const eski = G;
+  const kayyum = kayyumAnlikGoruntu();
+  const y = yeniSektorDurumu(eski);
+  y.sektorler = Object.assign({}, eski.sektorler || {});
+  y.sektorler[eskiSektor] = kayyum;
+  y.rbBitti = Object.assign({}, eski.rbBitti || {});
+  y.rbBitti[eskiSektor] = true;
+  // 🔁 Açık sektörlerin HEPSİ bitti mi → Rebirth +1, hepsi yeniden açılır (PLAN §2 madde 5).
+  //    Ölçüt `hazir` sektörler: bugün ikisi var. Bu aynı zamanda ÖLÜ NOKTAYI kapatır —
+  //    seçilebilir sektör kalmazsa sektör ekranı ne tıklanır ne kapanır, hesap kilitlenirdi.
+  const acik = SEKTORLER.filter(s => s.hazir).map(s => s.id);
+  if (acik.length && acik.every(id => y.rbBitti[id])) {
+    y.rb = (eski.rb || 0) + 1; y.rbAt = Date.now(); y.rbBitti = {};
+  }
+  G = y;
+  save();
+  const ok = await rebirthBulutaYaz();
+  if (!ok) {
+    // 🛡️ Buluta yazılamadı: reload YAPMA. Yerelde rebirth duruyor ama Google oyuncusunda
+    //    açılış bulutu esas alır ve rebirth'ü geri alır. Oyuncu bağlantıyı düzeltip
+    //    tekrar denesin; bu arada oyun yeni durumda çalışmaya devam eder.
+    _rbCalisiyor = false;
+    $('modal').innerHTML = '<h2>☁️ Sunucuya yazılamadı</h2>'
+      + '<p>Devir yerelde yapıldı ama <b>sunucuya yazılamadı</b>. Şimdi uygulamayı kapatırsan '
+      + 'eski şirketin geri gelebilir.</p>'
+      + '<p class="sub">Bağlantını kontrol et ve tekrar dene. Tekrar denemek güvenli — devir iki kez yapılmaz.</p>'
+      + '<button class="primary" onclick="rebirthTekrarYaz()">🔄 Tekrar Dene</button>';
+    return;
+  }
+  location.reload();
+};
+window.rebirthTekrarYaz = async () => {
+  const ok = await rebirthBulutaYaz();
+  if (ok) location.reload();
+  else toast('☁️ Hâlâ yazılamıyor — bağlantını kontrol et', 'warn');
+};
+
+// 💵 KAYYUM GELİRİ AKIŞI (79. yama) — PLAN: "bir sektördeyken diğerleri de çalışır, gelir akar".
+// ⏱️ Saat `guvenliZaman()`: cihaz saatini ileri almakla kayyum sağılamaz.
+// ⚠️ Çıpa reload'dan sonra GERİYE gidebilir (bellekte duruyor, performance.now() sıfırlanıyor) —
+//    o yüzden `sonAkis > simdi` ise ödeme YAPILMAZ, yalnız damga tazelenir. Asla iki kez ödemez.
+// 🔴 `G.totalEarned`e YAZILMAZ — o bir istatistik değil KAPI değişkeni (×10 bonus, newbieAid,
+//    kampanyalar onu okuyor). Pasif gelir yeni şirketin acemi takviyesini yakamaz.
+const KAYYUM_MIN_SAAT = 1 / 60;    // 1 dakikadan kısa aralıkları biriktir (her kare ödeme yok)
+const KAYYUM_TAVAN_SAAT = 24;      // çevrimdışı telafisiyle AYNI tavan
+function kayyumAkis() {
+  if (!G || !G.sektorler) return 0;
+  const simdi = (typeof guvenliZaman === 'function') ? guvenliZaman() : Date.now();
+  let toplam = 0;
+  for (const k of Object.values(G.sektorler)) {
+    if (!k || !(k.saatlik > 0)) continue;
+    if (!(k.sonAkis > 0) || k.sonAkis > simdi) { k.sonAkis = simdi; continue; }
+    const gecenSaat = (simdi - k.sonAkis) / 36e5;
+    if (gecenSaat < KAYYUM_MIN_SAAT) continue;
+    const kazanc = Math.floor(k.saatlik * Math.min(gecenSaat, KAYYUM_TAVAN_SAAT));
+    k.sonAkis = simdi;
+    if (kazanc > 0) { k.odenen = (k.odenen || 0) + kazanc; toplam += kazanc; }
+  }
+  if (toplam > 0) G.cash = (G.cash || 0) + toplam;
+  return toplam;
+}
+const kayyumToplamSaatlik = () => Object.values((G && G.sektorler) || {}).reduce((a, k) => a + ((k && k.saatlik) || 0), 0);
+
+// 🖥️ REBIRTH EKRANI — üstteki Tesis Değeri çubuğuna dokununca açılır.
+window.rebirthEkrani = () => {
+  if (!G || !G._started) return;
+  hideSheets();
+  const hedef = rebirthHedef(), simdi = tesisDegeri(), oran = rebirthOran();
+  const eng = rebirthEngelleri(), hedefte = rebirthHedefte();
+  const parkli = Object.values(G.sektorler || {});
+  const sb = sektorBilgi(G.sektor || 'enerji');
+  $('modal').innerHTML = '<h2>🔄 Rebirth</h2>'
+    + (rebirthDemoMu() ? '<p class="sub" style="color:var(--gold)">⏩ <b>DEMO AÇIK — TEST EŞİĞİ.</b> Hedef '
+        + REBIRTH_DEMO_BOL + '\'e bölündü. Demoyu kapatırsan gerçek hedef ' + fmt(rebirthHedefTam()) + ' olur.</p>' : '')
+    + '<div class="qline"><span>' + sb.ico + ' Şu anki sektör</span><span><b>' + sb.ad + '</b></span></div>'
+    + '<div class="qline"><span>🏭 Tesis Değeri</span><span><b>' + fmt(simdi) + '</b> / ' + fmt(hedef) + '</span></div>'
+    + '<div id="lvlbar" style="margin:6px 0"><div style="height:100%;border-radius:inherit;background:'
+    + (hedefte ? 'var(--gold)' : 'var(--acc2)') + ';width:' + Math.round(oran * 100) + '%"></div></div>'
+    + '<p>Rebirth atarsan şirketin <b>yok olmaz</b>: devlet <b>kayyum</b> atar, tesislerin '
+    + '<b>%' + Math.round(KAYYUM_VERIM * 100) + ' verimle</b> çalışmaya devam eder ve geliri sana akar. '
+    + 'Sen başka bir sektörde <b>' + fmt(REBIRTH_BASLANGIC) + '</b> ile sıfırdan kurarsın.</p>'
+    + '<table class="ledger">'
+    + '<tr><td>🏛️ Kayyuma devredilecek</td><td>' + (G.units || []).length + ' tesis · ' + fmt(simdi) + '</td></tr>'
+    + '<tr><td>💼 Kayyumda kalan kasa</td><td>' + fmt(G.cash || 0) + '</td></tr>'
+    + '<tr><td>💵 Tahmini kayyum geliri</td><td>' + fmt(Math.round(kayyumSaatlik(G))) + ' / saat</td></tr>'
+    + '<tr><td>💠 İmtiyaz Puanın</td><td>SENDE KALIR (' + (G.ip || 0) + ')</td></tr>'
+    + '<tr><td>📬 Posta · arkadaş · ittifak</td><td>SENDE KALIR</td></tr>'
+    + '<tr><td>🧪 Araştırma · 🧬 ağaç · 📜 ruhsat</td><td>kayyumda kalır</td></tr>'
+    + '</table>'
+    + (parkli.length ? '<h3 style="font-size:13px;margin:10px 0 2px">🏛️ Kayyum şirketlerin</h3>'
+        + parkli.map(k => '<div class="qline"><span>' + sektorBilgi(k.sektor).ico + ' ' + sektorBilgi(k.sektor).ad
+          + ' <span class="sub">· ' + (k.il || '—') + '</span></span><span>' + fmt(k.saatlik) + '/saat</span></div>').join('') : '')
+    + (eng.length ? '<h3 style="font-size:13px;margin:10px 0 2px">🚧 Önce bunları kapat</h3>'
+        + eng.map(x => '<p class="neg" style="margin:2px 0;font-size:12px">' + x + '</p>').join('') : '')
+    + (hedefte && !eng.length
+        ? '<button class="primary" onclick="rebirthUygula()">🔄 Yeniden Doğ — şirketi kayyuma devret</button>'
+        : '<button class="primary" disabled>' + (hedefte ? '🚧 Açık yükümlülüğün var' : '🏭 Hedefe ulaşmadın') + '</button>')
+    + '<p class="sub" style="text-align:center">Rebirth <b>zorunlu değil</b> — hedefi geçtikten sonra istediğin kadar oynayabilirsin.</p>'
+    + '<button class="primary ghostbtn" onclick="closeModal()">Kapat</button>';
+  $('overlay').classList.add('show');
+};
 // 💸 GİDER DEFTERİ (patron: "653M ciro, 306M tesis, 8M kasa — geri kalan nerede?")
 // Ciro GELİRDİR, kâr değil: para tesise, yakıta, bakıma, ruhsata, hatta, ihaleye gider.
 // Bu defter olmadan oyuncu parasının nereye gittiğini göremiyordu. Her kasa çıkışı kalemlenir;
@@ -16460,7 +16748,7 @@ function krediUygula(tutar) {
     if (missH < .2) continue;
     const f = fuelOf(u);
     if (!f) {
-      const c = Math.round(T.fuel * T.mw * missH * yakitKat(T));
+      const c = Math.round(T.fuel * unitMW(u) * missH * yakitKat(T));
       if (c > kalan) continue;
       kalan -= c; rapor.yakit += c; rapor.ikmal++;
       G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + c;
@@ -17933,6 +18221,17 @@ function offlineProgress() {
     remainMin -= d;
   }
   G.lastSeen = Date.now();
+  // 🏛️ 79. yama — park edilmiş şirketlerin geliri dönüşte TEK SEFERDE akar (tavan 24 saat,
+  //    çevrimdişı telafisiyle aynı). Ayrı döngüye gerek yok: `sonAkis` damgası zaten boşluğu taşıyor.
+  const kayyumGelen = kayyumAkis();
+  // 🔴 79. yama — ÇEVRİMDIŞI RAPORU ENERJİYE GÖMÜLÜ: MWh, santral yıpranması, yakıt, depo.
+  //    Tarım oyuncusuna her dönüşte "0 MWh üretildi" raporu açılıyordu — yalan bilgi.
+  //    Enerji dışı sektörde rapor GÖSTERİLMEZ; kayyum geliri varsa onu bildir, o kadar.
+  if (G.sektor !== 'enerji') {
+    if (kayyumGelen > 0) toast('🏛️ Kayyum şirketlerinden ' + fmt(kayyumGelen) + ' geldi', '', 'kayyum', 9000);
+    save();
+    return;
+  }
   if (produced < 1 && gapSec < 300 && !dischN) return; // kısacık aralıklarda rapor açma
   // ── 👋 HOŞGELDİNİZ EKRANI (patron isteği): detaylı yönetim raporu + Giriş Yap ──
   const ps = plants().filter(p => p.buildDone <= Date.now());
@@ -17950,6 +18249,7 @@ function offlineProgress() {
       ${fuelOut ? `<tr><td>⛽ Yakıtı biten santral</td><td class="neg">${fuelOut} adet — ikmal bekliyor!</td></tr>` : ''}
       ${wasted > 1 ? `<tr><td>⚠️ Depo doluyken boşa giden</td><td class="neg">${fmtE(wasted)} MWh</td></tr>` : ''}
       ${dischN ? `<tr><td>💰 Yarım kalan satışlar tamamlandı</td><td class="pos">+${fmt(dischGain)}</td></tr>` : ''}
+      ${kayyumGelen > 0 ? `<tr><td>🏛️ Kayyum şirketlerinden</td><td class="pos">+${fmt(kayyumGelen)}</td></tr>` : ''}
       <tr><td>💼 Kasa</td><td class="pos">${fmt(G.cash)}</td></tr>
     </table>
     ${wasted > 1 ? '<p class="sub">💡 Depon dolunca üretim boşa gider — daha büyük depo kur ya da 🔔 bildirim açıp dolunca gel sat.</p>' : ''}
@@ -18177,7 +18477,7 @@ function migrate(s) {
   if (s.hideLines === undefined) s.hideLines = false;
   // kapasite lisansı sonradan geldi: eski kayıtların mevcut kurulu gücü hangi kademeyi gerektiriyorsa BEDAVA verilir
   for (const cat2 of Object.keys(CAP_TIERS)) {
-    const used = s.units.filter(u => u.kind === 'plant' && PLANT_TYPES[u.t] && PLANT_TYPES[u.t].cat === cat2).reduce((s2, u) => s2 + PLANT_TYPES[u.t].mw, 0);
+    const used = s.units.filter(u => u.kind === 'plant' && PLANT_TYPES[u.t] && PLANT_TYPES[u.t].cat === cat2).reduce((s2, u) => s2 + unitMW(u), 0);
     while (CAP_TIERS[cat2][Math.min(s.capLic[cat2] || 0, CAP_TIERS[cat2].length - 1)].mw < used && (s.capLic[cat2] || 0) < CAP_TIERS[cat2].length - 1)
       s.capLic[cat2] = (s.capLic[cat2] || 0) + 1;
   }
@@ -20595,7 +20895,7 @@ function openUnitSheet(id) {
     $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` + adFinishBtnHTML(u) : `
       <table class="ledger">
         <tr><td>Anlık üretim</td><td>${out.toFixed(1)} MW</td></tr>
-        <tr><td>Kapasite</td><td>${T.mw} MW</td></tr>
+        <tr><td>Kapasite</td><td>${unitMW(u)} MW${tevsiLvl(u) > 1 ? ` <span class="pos">⏫ Sv${tevsiLvl(u)} (taban ${T.mw})</span>` : ''}</td></tr>
         <tr><td>Ömür üretimi</td><td>${fmtN(u.lifeProd || 0)} MWh</td></tr>
         <tr><td>Emisyon</td><td>${unitEm(T)} g/kWh${unitEm(T) !== (T.em || 0) ? ` <span class="pos">🧬 ${T.em} → ${unitEm(T)}</span>` : ''}</td></tr>
         <tr><td>Yıpranma</td><td class="${u.cond < 50 ? 'neg' : ''}">%${Math.round(100 - u.cond)}${yeniCihazMuaf(u) ? ' <span class="pos">🆕 yeni cihaz — ' + fmtHrs((u.buildDone + YIPRANMA_MUAF_MS - Date.now()) / 36e5) + ' yıpranmaz</span>' : ''}</td></tr>
@@ -20659,7 +20959,7 @@ function openUnitSheet(id) {
       })()}
       ${T.fuel && (u.fuelH || 0) < yakitSaat() - .2 ? (() => {
         const f = fuelOf(u);
-        if (!f) { const c2 = Math.round(T.fuel * T.mw * (yakitSaat() - (u.fuelH || 0)) * yakitKat(T)); return `<button class="bigsell" onclick="refuelUnit(${u.id})" ${G.cash < c2 ? 'disabled' : ''}>⚛️ Yakıt Çubuğu Değişimi — ${fmt(c2)} (${yakitSaat()} saatlik)</button>`; }
+        if (!f) { const c2 = Math.round(T.fuel * unitMW(u) * (yakitSaat() - (u.fuelH || 0)) * yakitKat(T)); return `<button class="bigsell" onclick="refuelUnit(${u.id})" ${G.cash < c2 ? 'disabled' : ''}>⚛️ Yakıt Çubuğu Değişimi — ${fmt(c2)} (${yakitSaat()} saatlik)</button>`; }
         const F = FUEL_TYPES[f], need = tonsFor(u, yakitSaat() - (u.fuelH || 0)), have = fuelStock(f);
         return `<button class="bigsell" onclick="refuelUnit(${u.id})" ${have < .5 ? 'disabled' : ''}>⛽ ${F.nm} İkmali — ${fmtN(Math.min(need, have))} / ${fmtN(need)} ton (şirket stoğu: ${fmtN(have)})</button>
         ${have < .5 ? `<p style="color:var(--warn);font-size:12px">${F.ico} Stok yok — 🏗️ İnşa &gt; <b>Yakıt</b> sekmesinden <b>${f === 'coal' ? 'Kömür Deposu' : 'LNG Tankı'}</b> kur, depoya dokunup yakıt al.</p>` : ''}`;
@@ -20678,6 +20978,18 @@ function openUnitSheet(id) {
         else h += `<button class="bigsell half" onclick="startPlantLink(${u.id})" ${bosAday.length ? '' : 'disabled'}>🔗 Bağlan${bosAday.length ? '' : ' — boş slot yok'}</button>
           ${bosAday.length ? '<p class="sub">Basınca harita açılır — bağlanacağın istasyona dokun.</p>' : '<p class="sub">Karedeki istasyonların bağlantı slotları dolu.</p>'}`;
         return h;
+      })()}
+      ${(() => { // ⏫ TESİS GELİŞTİRME
+        const lv = tevsiLvl(u);
+        let h = '<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">⏫ TESİS GELİŞTİRME <span class="sub">kademe ' + lv + '/' + TEVSI_MAX + '</span></div>';
+        if (!tevsiAcikMi()) return h + `<button class="bigsell" onclick="tevsiAcAsk()" ${G.cash < TEVSI_ACILIS ? 'disabled' : ''}>🧪 Ar-Ge: Tesis Geliştirme — ${fmt(TEVSI_ACILIS)}</button>
+          <p class="sub">Tek seferlik. Açılınca <b>her santralini</b> kademe kademe büyütebilirsin: her kademe üretimi <b>×2</b> yapar (Sv5 = ×16). Yüzlerce tesis kurmak yerine az tesisi büyütürsün — Tesis Değerin de aynı oranda artar.</p>`;
+        if (lv >= TEVSI_MAX) return h + '<p class="sub">✅ Bu tesis en üst kademede (Sv' + TEVSI_MAX + ' — taban gücün 16 katı).</p>';
+        const bedel = tevsiBedel(u), eklenen = unitMW(u);
+        const limitAsiyor = catUsedMW(T.cat) + eklenen > capMWOf(T.cat);
+        return h + `<button class="bigsell" onclick="tevsiYapAsk(${u.id})" ${G.cash < bedel || limitAsiyor ? 'disabled' : ''}>⏫ Sv${lv} → Sv${lv + 1} — ${fmt(bedel)} <span class="sub">(${unitMW(u)} → ${unitMW(u) * 2} MW)</span></button>
+          ${limitAsiyor ? `<p class="sub neg">🔒 ${T.cat} kurulu güç limitin yetmiyor: ${fmtN(catUsedMW(T.cat))} + ${fmtN(eklenen)} > ${fmtN(capMWOf(T.cat))} MW. Önce İnşa ekranından lisans yükselt.</p>`
+            : `<p class="sub">⚠️ Üretim ×2 olurken <b>yakıt, emisyon ve kapasite lisansı payı da ×2</b> olur — büyütme bedava ölçek değildir. Yıpranma da %${Math.round(TEVSI_YIPRANMA * 100)} hızlanır.</p>`}`;
       })()}
       ${repairCost >= 1 ? `<button class="bigsell" onclick="repairUnit(${u.id})" ${G.cash < repairCost ? 'disabled' : ''}>🔧 Onar — ${fmt(repairCost)}</button>` : ''}
       <button class="bigsell half" onclick="toggleUnit(${u.id})">${u.on ? '⏸ Durdur' : '▶ Çalıştır'}</button>
@@ -20715,8 +21027,62 @@ function resaleValue(u) {
   }
   const base = .10 + .60 * siteP;
   const wear = u.kind === 'plant' ? (.5 + .5 * u.cond / 100) : 1;
-  return { value: Math.round(T.cost * base * wear), pct: Math.round(base * wear * 100) };
+  // ⏫ 80. yama — büyütülmüş tesis daha pahalıya satılır; yoksa Sv5 bir türbini satmak
+  //    14 kat yatırımı yakardı ve büyütme tuzak olurdu.
+  const yatirim = T.cost + (u.kind === 'plant' ? tevsiOdenen(u) : 0);
+  return { value: Math.round(yatirim * base * wear), pct: Math.round(base * wear * 100) };
 }
+// ⏫ TESİS GELİŞTİRME İŞLEVLERİ (80. yama)
+window.tevsiAcAsk = () => {
+  if (tevsiAcikMi()) return;
+  if (krediKilidi('Ar-Ge yatırımı')) return;
+  if (G.cash < TEVSI_ACILIS) { toast('Tesis Geliştirme Ar-Ge bedeli ' + fmt(TEVSI_ACILIS), 'warn'); return; }
+  $('modal').innerHTML = '<h2>🧪 Ar-Ge: Tesis Geliştirme</h2>'
+    + '<p>Mühendislik ekibin <b>tevsi</b> (tesis büyütme) yetkinliğini kazanır. Bundan sonra '
+    + '<b>her santralini</b> yerinde kademe kademe büyütebilirsin.</p>'
+    + '<table class="ledger">'
+    + '<tr><td>Kademe başına üretim</td><td><b>×2</b></td></tr>'
+    + '<tr><td>En üst kademe</td><td>Sv' + TEVSI_MAX + ' — taban gücün <b>16 katı</b></td></tr>'
+    + '<tr><td>Toplam bedel (Sv5)</td><td>tesis bedelinin ~<b>15 katı</b> → üretim <b>16 kat</b></td></tr>'
+    + '<tr><td>Tesis Değeri</td><td class="pos">ödenen büyütme bedeli <b>sayılır</b></td></tr>'
+    + '<tr><td>Yakıt · emisyon · lisans</td><td class="neg">aynı oranda <b>artar</b></td></tr>'
+    + '<tr><td>Yıpranma</td><td class="neg">kademe başına <b>+%' + Math.round(TEVSI_YIPRANMA * 100) + '</b></td></tr>'
+    + '</table>'
+    + '<p class="sub">Bu yetkinlik <b>bu sektöre</b> aittir — rebirth sonrası yeni sektörde yeniden alınır.</p>'
+    + '<button class="primary" onclick="tevsiAc()">🧪 Ar-Ge Yatırımı Yap — ' + fmt(TEVSI_ACILIS) + '</button>'
+    + '<button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>';
+  $('overlay').classList.add('show');
+};
+window.tevsiAc = () => {
+  if (tevsiAcikMi() || G.cash < TEVSI_ACILIS) { closeModal(); return; }
+  G.cash -= TEVSI_ACILIS; gider('arastirma', TEVSI_ACILIS);
+  G.tevsiAcik = true;
+  closeModal();
+  toast('🧪 Tesis Geliştirme açıldı — her santralin sayfasında ⏫ düğmesi var', '', null, 0, true);
+  beep(700, .12);
+  save(); if (window.__lastUnit) openUnitSheet(window.__lastUnit);
+};
+window.tevsiYapAsk = id => {
+  const u = G.units.find(x => x.id === id);
+  if (!u || u.kind !== 'plant' || !tevsiAcikMi()) return;
+  if (krediKilidi('tesis büyütme')) return;
+  const T = PLANT_TYPES[u.t], lv = tevsiLvl(u);
+  if (lv >= TEVSI_MAX) return;
+  const bedel = tevsiBedel(u), eklenen = unitMW(u);
+  if (G.cash < bedel) { toast('Yetersiz bakiye — ' + fmt(bedel) + ' gerekli', 'warn'); return; }
+  // 🔒 KAPASİTE LİSANSI: büyütme tam olarak mevcut gücü kadar EKLER. Bu kapı olmasaydı
+  //    oyuncu lisans limitini büyütmeyle sınırsız aşardı — "bedava ölçek" deliği.
+  if (catUsedMW(T.cat) + eklenen > capMWOf(T.cat)) {
+    toast('🔒 ' + T.cat + ' kurulu güç limitin yetmiyor — önce lisans yükselt', 'warn', null, 7000);
+    return;
+  }
+  G.cash -= bedel; gider('yatirim', bedel);
+  G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + bedel;
+  u.lvl = lv + 1;
+  toast('⏫ ' + T.nm + ' Sv' + u.lvl + ' — ' + fmtN(unitMW(u)) + ' MW (' + fmt(bedel) + ')', '', null, 0, true);
+  beep(760, .12);
+  save(); refreshUnitMarkers(); openUnitSheet(id);
+};
 window.repairUnit = id => {
   const u = G.units.find(x => x.id === id);
   if (!u) return;
@@ -21728,6 +22094,15 @@ function sektorDurum(id) {
   return sektorBilgi(id).hazir ? 'acik' : 'yapimda';
 }
 let SEKTOR_SONRA = null;   // seçimden sonra çalışacak iş (null = yeni oyun akışı)
+// 🔄 Rebirth sonrası açılış: sektör ekranı. `app.wiz` sınıfı BİLEREK burada kuruluyor —
+//    `sektorSec` onu kendisi kurmuyor ve kurulmazsa HUD açıkta kalır (ölçüldü).
+//    Geri kalan akış YENİ OYUNUN AYNISI: sektör → ülke → il. Ad adımı `wizNameModal`
+//    içinde kendiliğinden ayrışıyor: holding adı zaten dolu olduğu için sorulmuyor.
+function rebirthSihirbazi() {
+  $('app').classList.add('wiz');
+  try { hideSheets(); } catch (e) {}
+  sektorSec();
+}
 function sektorSec(sonra) {
   SEKTOR_SONRA = typeof sonra === 'function' ? sonra : null;
   const kart = s => {
@@ -21750,6 +22125,7 @@ function sektorSec(sonra) {
 window.sektorBasla = (id) => {
   if (sektorDurum(id) !== 'acik') return;   // kilitli karta basılsa bile hiçbir şey olmasın
   G.sektor = id;
+  G.rbBekleyen = false;   // 79. yama — sektör seçildi, rebirth ara durumu kapandı
   // 🔴 74. yama — DENETİM BULGUSU: 68. yamada `tutGuide`a sektör şartı eklenince
   //    `G.starterClaimed` tarım oyuncusunda ASLA true olmuyordu (onu yazan tek yer
   //    `tutTick`in `tutGuide()` kapısının ARKASINDA). Zincirin ucu bankaya çıkıyor:
@@ -21918,8 +22294,11 @@ function wizNameModal(il) {
   $('modal').innerHTML = `
     <h2>Şirketini Kur</h2>
     <p>📍 ${il}, ${G.country} ${ulkeBayrak(G.country)} — merkez ofisin burada.</p>
-    <input id="nameinput" placeholder="Şirket adı..." maxlength="24">
-    <button class="choice" onclick="document.getElementById('nameinput').value = ['Enerji A.Ş.','Volt Holding','Şimşek Enerji','Poyraz Elektrik','TeraWatt','Kıvılcım Enerji'][Math.floor(Math.random()*6)]">🎲 Rastgele isim</button>
+    ${G.company
+      ? `<p>🏛️ Holding adınla devam ediyorsun: <b>${G.company}</b><br><span class="sub">Kayyum şirketlerin de bu adla görünür — holding tek isimdir.</span></p>
+         <input id="nameinput" value="${String(G.company).replace(/"/g, '&quot;')}" readonly style="opacity:.7">`
+      : `<input id="nameinput" placeholder="Şirket adı..." maxlength="24">
+         <button class="choice" onclick="document.getElementById('nameinput').value = ['Enerji A.Ş.','Volt Holding','Şimşek Enerji','Poyraz Elektrik','TeraWatt','Kıvılcım Enerji'][Math.floor(Math.random()*6)]">🎲 Rastgele isim</button>`}
     <button class="primary" onclick="wizDone()">🏢 Şirketi Kur ve Başla</button>
     <button class="primary ghostbtn" onclick="closeModal()">← Haritaya dön</button>`;
   $('overlay').classList.add('show');
@@ -21965,6 +22344,17 @@ window.wizDone = async () => {
     return aday;
   })();
   // hediye kit: haritada BAŞKALARINA görünmez (hidden) — kalabalık önleme (patron kararı)
+  // 🔴 78. yama — kit SEKTÖRE BAKMIYORDU: tarım oyuncusuna rüzgar türbini + pil deposu
+  //    veriliyordu. Üç ayrı zarar ölçüldü: (1) çiftçi anlamadığı iki tesisle başlıyor,
+  //    (2) merkez karosundaki 8 birimlik yerleşim limitinden 2 slot yiyor, (3) çiftçide
+  //    `boostFactor()` süresiz ×10 kaldığı için o türbin kalıcı hızlı üretim kazanıyor.
+  //    Tarımda hediye ÜRETİM BİRİMİ YOK — sermaye zaten tarla+lojmanı rahat karşılıyor;
+  //    merkez ofis ise ŞART (ruhsatın ön şartı, ruhsat da satışın kapısı).
+  if (G.sektor === 'tarim') {
+    const hqT = addUnit('office', 'office', [cc[0] - .022, cc[1] - .022], 0); hqT.hq = true;
+    startGame(false);
+    return;
+  }
   addUnit('plant', 'wind_2', [cc[0] + .012, cc[1] - .015], 0).hidden = true;
   const kitPil = addUnit('store', 'bat', [cc[0] - .01, cc[1] + .015], 0); kitPil.hidden = true;
   // 🔋 patron 28 Ağu (C): hediye pil YARI DOLU başlar — gece giren / rüzgarsız bölge seçen
@@ -21977,6 +22367,11 @@ window.wizDone = async () => {
 
 // ── Başlat ──
 function startGame(resumed) {
+  // 🔄 78. yama — REBIRTH ARA DURUMU. `G.sektor` boşsa oyuncu rebirth attı ama henüz
+  //    yeni sektörünü seçmedi. Kanca BİLEREK burada: `wizardStart` ve `afterLogin`
+  //    (Google oyuncusunun TEK yolu — ölçüldü, wizardStart'a hiç girmiyor) ikisi de
+  //    burada buluşuyor. Tek kanca iki yolu birden kapatıyor.
+  if (G && G.company && (G.rbBekleyen || !G.sektor)) { rebirthSihirbazi(); return; }
   $('app').classList.remove('wiz'); // oyun başladı — HUD ve alt bar geri gelir
   migrateStoreGroups(); // 🔄 Bileşik depo 2.0: fazla/uzak üyeleri kopar (tek sefer)
   migratePlantLinks(); // 🔄 kural değişimi: köle depoya bağlı eski santralleri merkeze taşı
@@ -22093,6 +22488,15 @@ $('cash').style.cursor = 'pointer';
 $('cash').title = 'Banka';
 $('cash').addEventListener('click', () => { if (G && G._started) openBank(); });
 $('iphandle').addEventListener('click', () => { if (G && G._started) openImtiyazShop(); });
+// 🔄 Rebirth ekranının girişi: üstteki Tesis Değeri çubuğu. Oyuncu ilerlemesini zaten
+//    oradan izliyor — hedefin kapısı da orada olmalı, ayrı menü maddesi gerekmiyor.
+(() => {
+  const r = document.querySelector('.lvlrow');
+  if (!r) return;
+  r.style.cursor = 'pointer';
+  r.title = 'Rebirth';
+  r.addEventListener('click', () => { if (G && G._started && typeof rebirthEkrani === 'function') rebirthEkrani(); });
+})();
 $('mgbtn2').addEventListener('click', startMinigame);
 $('demolink').addEventListener('click', () => {
   G.demo = !G.demo;
@@ -22267,6 +22671,7 @@ function frameBody(ts) {
       step(dtMin, false);
       dischargeTick(dtSec); // süreli depo boşaltmaları GERÇEK saniyeyle akar (para satışla birlikte gelir)
       if (G.sektor === 'tarim') tarimAkis(dtSec);   // 🌾 63. yama — kısılmış tik
+      kayyumAkis();                                // 🏛️ 79. yama — park edilmiş şirketlerin %10 geliri
       G.lastSeen = Date.now(); // yalnız sim GERÇEKTEN ilerleyince güncellenir (çevrimdışı telafi bozulmasın)
       histAcc += dtSec;
       if (histAcc > (G.demo ? .5 : 20)) { histAcc = 0; G.priceHist.push(priceNow()); if (G.priceHist.length > 240) G.priceHist.shift(); }

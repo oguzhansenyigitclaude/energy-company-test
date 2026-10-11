@@ -1,5 +1,14 @@
 # 🌾 Tarım — Katalog Görsel Listesi
 
+> ✅ **DİLİM 1 BİTTİ (11 Eki 2026, 2026-10-11l sürümü).** Listedeki **12 görselin 12si de**
+> üretildi, dönüştürüldü, koda bağlandı ve **canlıda ölçüldü** (13/13 → 200, 512×512,
+> 82–112 KB). Ek olarak `tarla.webp` yazıldı: katalog kartı `baseTypeOf('tarla')` ile
+> onu arıyor, `tarla_bos`un kopyası.
+>
+> ⚠️ Dosyaları koymak **yetmedi**: `urun_*.webp` kodda hiçbir yerden çağrılmıyordu ve
+> harita işaretinde fotoğraf emojinin yanına düşüyordu. İkisi de **77. yamada** kapandı —
+> yeni görsel eklerken `tarimKare` / `urunKare` yardımcılarını kullan, elle `<img>` yazma.
+
 **Nasıl çalışır:** `prototype/img/` klasörüne `<kod>.webp` adıyla at. Oyun otomatik algılar —
 kartta küçük, "İncele" sayfasında büyük gösterilir. **Görsel yoksa emoji yedeği görünür**,
 yani parça parça eklenebilir, hiçbir aşamada oyun bozulmaz.
