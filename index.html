@@ -756,7 +756,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 10:25) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 11:38) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -935,16 +935,17 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 10:25)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 11:38)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11o',
+  etiket: '2026-10-11p',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🔴 <b>Rebirth HATASI duzeltildi.</b> Rebirth atmaya calisanlara haksiz yere <b>Hesabin kisitli</b> uyarisi cikiyordu. Sebep bizim hatamizdi: kod ban bayragi yerine <b>engelledigin kisiler listesini</b> okuyordu — listeye bir kez dokunan herkeste rebirth kapaniyordu. Ayni gozden gecirmede iki yanlis uyari daha bulundu: <b>suresi gecmis</b> ittifak ihalesi ve <b>omru dolmus</b> satin alma teklifi de rebirth i kilitliyordu. Ucu de acildi.',
     '🌾 <b>Acilis ekrani artik SEKTORUNE gore.</b> Tarim oynayanlar icin oyun <b>FARMING COMPANY</b> adiyla ve bugday basagi simgesiyle aciliyor; yuklenme ekraninda dort yeni tarim fotografi donuyor (tarla, hasat, sera, ciftlik). Enerji oynayanlar icin hicbir sey degismedi.',
     '🔋 <b>DEPO TEKNOLOJISI geldi.</b> Tek seferlik Ar-Ge bedelinden sonra her depon <b>5 katı kapasiteye</b> kadar cikar. Ama ucuz degil: her kademe bir oncekinin <b>2 katina</b> mal olur, Sv5 depo bedelinin 30 kati eder. Satin aldigin sey para degil <b>KARO SLOTU</b> — karo basina birim limitin doldugunda tek cikis yolu budur.',
     '🏛️ <b>Kayyum geliri kendi kasasinda birikiyor.</b> Park ettigin sirketin kazanci aktif sirkete AKMAZ; o sektore geri dondugunde kasada seni bekler. Birikim tesis degerinin <b>yuzde 20 sinde</b> durur — sirketi iki yil park etmek 70 gun park etmekten fazla kazandirmaz.',
@@ -16322,12 +16323,25 @@ function rebirthEngelleri() {
   //    Rebirth park etmektir, kaçmak değil — kapıda duran her şey kapanmış olmalı.
   if (typeof borcToplam === 'function' && borcToplam() > 0) e.push('🏦 Banka borcun var — önce borcu kapat');
   if (typeof allyKrediVar === 'function' && allyKrediVar()) e.push('🤝 İttifak kredisi borcu duruyor — rebirth ittifakı yakardı');
-  if (G.ally && G.ally.tender) e.push('🚨 İttifakının aktif ihalesi var — bitmesini bekle');
-  if (G.blocked) e.push('🚫 Hesabın kısıtlı — kısıt kalkmadan rebirth atılamaz');
+  // 🔴 87. yama — SÜRE KONTROLÜ YOKTU: `tender` nesnesi bitince silinmiyorsa (çevrimdışı
+  //    kapanış, senkron gelmemesi) engel KALICI oluyordu. `until` alanı zaten var.
+  if (G.ally && G.ally.tender && (G.ally.tender.until || 0) > Date.now()) e.push('🚨 İttifakının aktif ihalesi var — bitmesini bekle');
+  // 🔴 87. yama — BURASI `G.blocked` OKUYORDU VE TAMAMEN YANLIŞTI. `G.blocked` bir ban
+  //    bayrağı DEĞİL, oyuncunun ENGELLEDİĞİ KİŞİLERİN DİZİSİ (sohbette sustur). Kodun
+  //    kendisi öyle diyor: `toggleBlock` içinde `G.blocked = G.blocked || []`.
+  //    JavaScript'te BOŞ DİZİ TRUTHY'dir — yani engelleme ekranına bir kez dokunan
+  //    oyuncuda `[]` oluşuyor ve rebirth SONSUZA DEK kapanıyordu. Patron bunu yaşadı.
+  // ⚠️ Ders: ajan bulgusundaki "blocked (ban)" notunu DOĞRULAMADAN aldım. Alan adı
+  //    anlamını garanti etmez; okuyan kodu görmeden ölçüt yapma.
+  // Gerçek ban ölçütü: `GM.aktif(GM.ban)` — `banUygula`/`NET.kilit` de bunu kullanıyor.
+  if (typeof GM !== 'undefined' && GM.aktif && GM.aktif(GM.ban)) e.push('🚫 Hesabın kısıtlı — kısıt kalkmadan rebirth atılamaz');
   if (G.inv) e.push('💱 Açık yatırım pozisyonun var — önce kapat');
   // 💰 EMANET: para kasadan ÇIKMIŞ ama iş bitmemiş. Sıfırlanırsa yanar, taşınırsa
   //    yeni şirkete bedava tesis yazar. İkisi de yanlış — oyuncu önce sonucu beklesin.
-  const bekleyen = Object.keys(G.teklifBekleyen || {}).length;
+  // 🔴 87. yama — ÖMRÜ DOLMUŞ teklifler de sayılıyordu. `TEKLIF_OMUR` (7 gün) dolduktan
+  //    sonra kutuda kalan ölü kayıt rebirth'ü kalıcı kilitlerdi.
+  const bekleyen = Object.values(G.teklifBekleyen || {})
+    .filter(t => t && (Date.now() - (t.ts || 0)) <= TEKLIF_OMUR).length;
   if (bekleyen) e.push('💰 ' + bekleyen + ' satın alma teklifin emanette — cevabı bekle ya da süresi dolsun');
   const ihaleEmanet = Object.values(G.auctions || {}).filter(a => a && (a.myEscrow || 0) > 0).length;
   if (ihaleEmanet) e.push('🏛️ ' + ihaleEmanet + ' alım garantisi ihalesinde bloken var — ihale bitsin');
