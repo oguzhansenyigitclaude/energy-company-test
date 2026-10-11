@@ -756,7 +756,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 11:38) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 11:58) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -935,16 +935,18 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 11:38)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 11:58)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11p',
+  etiket: '2026-10-11r',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🏛️ <b>Kayyumdan DEVRALMA geldi — dongu tamamlandi.</b> Alti sektorun hepsini bitirince <b>Rebirth +1</b> olur ve hepsi yeniden acilir; park ettigin sirketi sectiginde artik sifirdan kurmuyorsun, <b>geri devraliyorsun</b>. Kasasi, tesisleri, ruhsatlari, arastirmalari aynen yerinde. Sektor ekraninda hangi sirketin kayyumda oldugu ve kasasinda ne kadar birikti gorunur.',
+    '🔧 <b>Kayyum tesisleri yipranir — ama harap etmez.</b> Devlet uretimi surdurur, yatirim yapmaz: park edilen her gun saglamliktan 1 puan duser ve <b>yuzde 45 in altina asla inmez</b>. Donunce <b>Devir Raporu</b> postasi hangi tesiste bakim gerektigini yazar. Curume kayip degil, <b>is</b> uretir.',
     '🔴 <b>Rebirth HATASI duzeltildi.</b> Rebirth atmaya calisanlara haksiz yere <b>Hesabin kisitli</b> uyarisi cikiyordu. Sebep bizim hatamizdi: kod ban bayragi yerine <b>engelledigin kisiler listesini</b> okuyordu — listeye bir kez dokunan herkeste rebirth kapaniyordu. Ayni gozden gecirmede iki yanlis uyari daha bulundu: <b>suresi gecmis</b> ittifak ihalesi ve <b>omru dolmus</b> satin alma teklifi de rebirth i kilitliyordu. Ucu de acildi.',
     '🌾 <b>Acilis ekrani artik SEKTORUNE gore.</b> Tarim oynayanlar icin oyun <b>FARMING COMPANY</b> adiyla ve bugday basagi simgesiyle aciliyor; yuklenme ekraninda dort yeni tarim fotografi donuyor (tarla, hasat, sera, ciftlik). Enerji oynayanlar icin hicbir sey degismedi.',
     '🔋 <b>DEPO TEKNOLOJISI geldi.</b> Tek seferlik Ar-Ge bedelinden sonra her depon <b>5 katı kapasiteye</b> kadar cikar. Ama ucuz degil: her kademe bir oncekinin <b>2 katina</b> mal olur, Sv5 depo bedelinin 30 kati eder. Satin aldigin sey para degil <b>KARO SLOTU</b> — karo basina birim limitin doldugunda tek cikis yolu budur.',
@@ -16574,6 +16576,76 @@ function kayyumAkis() {
 }
 const kayyumToplamSaatlik = () => Object.values((G && G.sektorler) || {}).reduce((a, k) => a + ((k && k.saatlik) || 0), 0);
 
+// ═══════════ 🏛️ KAYYUMDAN DEVRALMA (88. yama) ═══════════
+// PLAN: "Dönüşteki 'eski koltuğa oturma' mutluluğu kendiliğinden gelmez: kayyumun bıraktığı
+//        DEVİR RAPORU, yıpranmış tesisler, düşmüş sözleşmeler GEREKİR.
+//        ⚠️ Çürüme İŞ yaratmalı, KAYIP değil — oyuncu şirketini harap bulursa bir daha
+//        rebirth atmaz."
+// Bu yüzden yıpranma YAVAŞ ve TABANLI: devlet %10 verimle de olsa bakımı sürdürüyor.
+const KAYYUM_YIPRANMA_GUN = 1.0;   // park edilen her gün için sağlamlıktan düşen puan
+const KAYYUM_COND_TABAN = 45;      // bunun altına İNMEZ — 6 ay da park etsen tamir edilebilir kalır
+
+// Bu sektörde park edilmiş bir şirket var mı?
+const kayyumVar = id => !!(G && G.sektorler && G.sektorler[id] && G.sektorler[id].tam);
+
+// 🔁 DEVRAL: park edilmiş durumu geri yükle, holding katmanını KORU, yıpranmayı uygula.
+// ⚠️ Beyaz liste BURADA DA ölçüt: park anındaki durum holding alanlarını da taşıyor ama
+//    onlar BAYAT (o günkü posta, o günkü İmtiyaz Puanı). Güncel holding üste yazılır.
+function kayyumDevral(id) {
+  const k = G.sektorler[id];
+  if (!k || !k.tam) return null;
+  const holding = {};
+  for (const f of HOLDING_ALANLARI) if (G[f] !== undefined) holding[f] = G[f];
+  const y = Object.assign(freshState(), k.tam);          // park anındaki sektör durumu
+  for (const f of HOLDING_ALANLARI) if (holding[f] !== undefined) y[f] = holding[f];
+
+  const parkMs = Math.max(0, Date.now() - (k.park || Date.now()));
+  const parkGun = parkMs / 864e5;
+  const dusus = Math.min(100 - KAYYUM_COND_TABAN, parkGun * KAYYUM_YIPRANMA_GUN);
+  let yipranan = 0, enKotu = null;
+  for (const u of (y.units || [])) {
+    if (u.kind !== 'plant' && u.kind !== 'store') continue;
+    const eski = (typeof u.cond === 'number') ? u.cond : 100;
+    const yeni = Math.max(KAYYUM_COND_TABAN, eski - dusus);
+    if (yeni < eski) { u.cond = yeni; yipranan++; if (!enKotu || yeni < enKotu.cond) enKotu = u; }
+  }
+  y.cash = Math.max(0, Math.round(k.kasa || 0));          // park kasası + biriken kayyum geliri
+  y.sektor = id;
+  y.rbBekleyen = false;
+  // 🔴 ZORUNLU: damga TAZELENMELİ. Bayat `lastSeen` ile `offlineProgress` park süresinin
+  //    TAMAMINI (24 saat tavanıyla) simüle eder ve devir raporunun üstüne ikinci bir
+  //    "uzaktaydın" raporu açardı.
+  y.lastSeen = Date.now();
+  y.sektorler = Object.assign({}, G.sektorler || {});
+  delete y.sektorler[id];                                  // kayyum görevi bitti
+  G = y;
+  return { parkGun, dusus, yipranan, enKotu, kasa: y.cash, odenen: k.odenen || 0,
+           birim: (y.units || []).length, tesis: k.tesis || 0 };
+}
+
+// 📬 DEVİR RAPORU — PLAN'daki "aynı gönderici, aynı biçim, ama artık geri döndün" postası.
+// ⚠️ Gönderici alanı Firebase kuralında 28 karakter — "🏛️ Kayyum Yönetimi" sığıyor.
+function devirRaporu(id, d) {
+  if (!d) return;
+  const sb = sektorBilgi(id);
+  const gun = d.parkGun < 1 ? '1 günden az' : Math.round(d.parkGun) + ' gün';
+  const sat = [];
+  sat.push('<b>' + sb.ico + ' ' + sb.ad + '</b> sektöründeki şirketiniz <b>' + gun + '</b> kayyum yönetiminde kaldı.');
+  sat.push('');
+  sat.push('💼 <b>Devredilen kasa: ' + fmt(d.kasa) + '</b>' + (d.odenen > 0 ? ' <span style="opacity:.8">(bunun ' + fmt(d.odenen) + ' kadarı kayyum döneminde kazanıldı)</span>' : ''));
+  sat.push('🏭 Tesis: ' + d.birim + ' birim · kayıt değeri ' + fmt(d.tesis));
+  if (d.yipranan > 0) {
+    sat.push('🔧 <b>' + d.yipranan + ' tesiste bakım gecikmesi var</b> — sağlamlık ortalama %' + Math.round(d.dusus) + ' düştü'
+      + (d.enKotu ? ' (en kötüsü: ' + unitName(d.enKotu) + ', %' + Math.round(d.enKotu.cond) + ')' : '') + '.');
+    sat.push('Devlet işletmesi üretimi sürdürdü ama yatırım yapmadı. <b>Toplu Bakım</b> ekranından hepsini tek seferde onarabilirsiniz.');
+  } else {
+    sat.push('✅ Tesislerde bakım gecikmesi yok.');
+  }
+  sat.push('');
+  sat.push('<span style="opacity:.8">Ruhsatlarınız, araştırmalarınız ve bölge ofisleriniz aynen korunmuştur. Kayyum görevi sona ermiştir; şirket yeniden sizin yönetiminizdedir.</span>');
+  addMail('🏛️ Kayyum Yönetimi', 'Devir raporu — ' + sb.ad, sat.join('<br>'), true);
+}
+
 // 🖥️ REBIRTH EKRANI — üstteki Tesis Değeri çubuğuna dokununca açılır.
 window.rebirthEkrani = () => {
   if (!G || !G._started) return;
@@ -22303,8 +22375,12 @@ function sektorSec(sonra) {
   SEKTOR_SONRA = typeof sonra === 'function' ? sonra : null;
   const kart = s => {
     const d = sektorDurum(s.id), kilit = d !== 'acik';
+    // 🏛️ 88. yama — park edilmiş şirket varsa oyuncu BUNU GÖRMELİ; yoksa "sıfırdan mı
+    //    başlayacağım, şirketim geri mi gelecek" belirsizliği kalır.
+    const kyy = (typeof G !== 'undefined' && G && G.sektorler && G.sektorler[s.id]) || null;
     const etiket = d === 'bitti' ? ' <small style="color:var(--acc)">✅ bu döngüde bitirdin</small>'
-      : d === 'yapimda' ? ' <small style="color:var(--gold)">🚧 yapım aşamasında</small>' : '';
+      : d === 'yapimda' ? ' <small style="color:var(--gold)">🚧 yapım aşamasında</small>'
+      : kyy ? ' <small style="color:var(--gold)">🏛️ kayyumda — devralırsın (kasa ' + fmt(kyy.kasa || 0) + ')</small>' : '';
     return '<button class="choice"' + (kilit ? ' disabled style="opacity:.45;cursor:default"'
       : ' onclick="sektorBasla(\'' + s.id + '\')"') + '>'
       + '<b>' + s.ico + ' ' + s.ad + '</b>' + etiket
@@ -22349,6 +22425,20 @@ window.sektorBasla = (id) => {
   }
   const sonra = SEKTOR_SONRA; SEKTOR_SONRA = null;
   closeModal();
+  // 🏛️ 88. yama — BU SEKTÖRDE PARK EDİLMİŞ ŞİRKET VARSA sıfırdan kurma, DEVRAL.
+  //    Döngünün eksik yarısı buydu: rebirth şirketi park ediyordu ama geri almanın
+  //    yolu yoktu. Ülke/il sihirbazı da ATLANIR — şirketin yeri zaten belli.
+  if (kayyumVar(id)) {
+    const d = kayyumDevral(id);
+    if (d) {
+      save();
+      $('app').classList.remove('wiz');
+      startGame(true);            // lastSeen tazelendiği için offlineProgress boş döner
+      devirRaporu(id, d);
+      toast('🏛️ ' + sektorBilgi(id).ad + ' şirketini kayyumdan devraldın — kasa ' + fmt(d.cash || d.kasa), '', null, 0, true);
+      return;
+    }
+  }
   if (sonra) { sonra(id); return; }
   initMap([28, 20], 2);
   wizStep1();
