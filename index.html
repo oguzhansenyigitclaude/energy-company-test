@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 03:40) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 05:57) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,16 +891,17 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 03:40)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 05:57)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11k',
+  etiket: '2026-10-11l',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🖼️ <b>Tarim artik GERCEK gorsellerle.</b> Tarlalar, urunler ve isci lojmani emoji degil fotograf — haritaya bakinca hangi tarlaya ne ektigini taniyorsun, stok tablosunda urunu goruyorsun. Enerji tesislerindeki gorsel dilin aynisi.',
     '⚖️ <b>Tarim ekonomisi duzeltildi.</b> Ilk surumde tohum bedeli sabitti ve dusuk kalitede ciroyu asiyordu — yani yeni ciftci kacinilmaz olarak zarar ediyordu. Artik tohum, hasadin degerinin sabit bir yuzdesi. Olctuk: artik <b>her kalitede kar var</b>.',
     '🌾 <b>TARIM SEKTORU geldi (ilk surum).</b> Yeni oyuna baslarken artik <b>sektor seciyorsun</b>. Tarimi secersen tarla kurar, isci tutar, urun eker ve sehirlere satarsin. Enerji oynayanlar icin hicbir sey degismedi.',
     '👷 <b>Isci calisinca sen uyurken de hasat olur.</b> Tarlana isci dustuyse biriken hasatlarin hepsini toplar. Iscisiz tarla olgunlasip bekler, elle toplarsin. Yani oyuna girmedin diye urunun <b>curumez ve yanmaz</b>.',
@@ -15532,6 +15533,22 @@ const urunVar = id => Object.prototype.hasOwnProperty.call(TARIM_URUN, id);
 const URUN_BILINMEYEN = { ad: '—', ico: '❓', aile: 'ham', sure: 3600, verim: 0, taban: 0 };
 const urunBilgi = id => TARIM_URUN[id] || URUN_BILINMEYEN;
 
+// ── 🖼️ TARIM GÖRSEL KABI ───────────────────────────────────────────────────────
+// Enerji setindeki `.detimg` deseninin BİREBİR aynısı: kare kabın içinde emoji durur,
+// görsel dosyası varsa ÜSTÜNE mutlak konumla biner. Dosya yoksa `onerror` img'yi siler
+// ve emoji görünür — hiçbir aşamada boşluk kalmaz, görseller parça parça eklenebilir.
+// 🔴 77. yama — ESKİ HÂLİ YANLIŞTI ve ölçüldü: img ile emoji akışta YAN YANA duruyordu,
+//    harita işareti 34 px yerine 71 px genişliyordu. Mutlak konum bunu kapatır.
+// `.ic` sınıfı yalnız `.umark` içinde tanımlı olduğu için konum stilleri SATIR İÇİ
+//    veriliyor — aynı yardımcı hem haritada hem modalda çalışsın.
+const tarimKare = (kod, ico, px) =>
+  '<span class="ic" style="display:inline-block;position:relative;vertical-align:middle;width:'
+  + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * .78) + 'px;line-height:' + px + 'px">'
+  + '<img src="img/' + kod + '.webp" onerror="this.remove()" style="position:absolute;inset:0;'
+  + 'width:100%;height:100%;object-fit:cover;border-radius:6px">'
+  + ico + '</span>';
+const urunKare = (id, px) => tarimKare('urun_' + id, urunBilgi(id).ico, px);
+
 // ── 🏅 KALİTE ──────────────────────────────────────────────────────────────────
 // Sayı olarak tutuluyor (1=E … 5=A) ki karşılaştırma ve aritmetik yapılabilsin.
 const KALITE_AD = { 1: 'E', 2: 'D', 3: 'C', 4: 'B', 5: 'A' };
@@ -16001,10 +16018,10 @@ function tarimTarlaSatir(u) {
   if (!u.urun) {
     return '<div class="qline"><span>🌱 Tarla #' + u.id + ' <span class="sub">— boş</span></span>'
       + '<span>' + Object.keys(TARIM_URUN).map(id =>
-          '<button onclick="tarimEkUygula(' + u.id + ',\'' + id + '\')" style="font-size:16px;padding:2px 5px" title="' + TARIM_URUN[id].ad + '">' + TARIM_URUN[id].ico + '</button>').join('')
+          '<button onclick="tarimEkUygula(' + u.id + ',\'' + id + '\')" style="padding:3px 4px;line-height:0" title="' + TARIM_URUN[id].ad + '">' + urunKare(id, 34) + '</button>').join('')
       + '</span></div>';
   }
-  return '<div class="qline"><span>' + B.ico + ' <b>' + B.ad + '</b> #' + u.id
+  return '<div class="qline"><span>' + urunKare(u.urun, 26) + ' <b>' + B.ad + '</b> #' + u.id
     + (isci ? ' <span style="color:var(--acc)" title="işçi bakıyor">👷</span>' : ' <span class="sub" title="işçi yok — elle toplanır">✋</span>')
     + '<br><span class="sub">olgunluk %' + oran + (dongu > 0 ? ' · bekleyen ' + dongu + ' hasat' : '') + '</span></span>'
     + '<span>' + (hazir
@@ -16027,7 +16044,7 @@ function tarimStokTablosu(cell) {
       const fy = band ? band.fiyat : urunFiyat(urun, k, false);
       const durum = !band ? '' : band.yok ? ' <span class="sub">(almıyor)</span>'
         : band.sert ? ' <span class="sub">(kota ' + Math.round(band.kalan) + ')</span>' : '';
-      html += '<tr><td>' + urunBilgi(urun).ico + ' ' + urunBilgi(urun).ad + '</td>'
+      html += '<tr><td>' + urunKare(urun, 30) + ' ' + urunBilgi(urun).ad + '</td>'
         + '<td><b>' + kaliteAd(k) + '</b></td><td>' + fmtE(ton) + '</td>'
         + '<td>' + fmt(fy) + durum + '</td>'
         + '<td>' + (cell ? '<button onclick="tarimSatUygula(\'' + urun + '\',' + k + ')">💰 Sat</button>' : '') + '</td></tr>';
@@ -18530,14 +18547,13 @@ function unitIconHTML(u) {
     // Ekili ürünün KENDİ emojisi — oyuncu haritaya bakınca nerede ne ektiğini görsün.
     // Görsel dosyası (img/tarla_<urun>.webp) gelince onerror yedeği devreye girip
     // bunun yerini alır; yeni kod gerekmeyecek.
+    // 🔴 77. yama — görsel ile emoji YAN YANA duruyordu (ölçüldü: işaret 71 px).
+    //    `tarimKare` ikisini üst üste bindirir; ayrıca `.ic` sınıfı sayesinde inşa/kapalı/
+    //    eğitim vurgusu filtreleri artık FOTOĞRAFA da uygulanır — enerji tesisleriyle aynı.
     const ek = u.urun ? urunBilgi(u.urun).ico : '🌱';
-    visual = '<img src="img/tarla_' + (u.urun || 'bos') + '.webp" onerror="this.remove()"'
-      + ' style="width:' + px + 'px;height:' + px + 'px;object-fit:cover;border-radius:6px">'
-      + '<span style="font-size:' + Math.round(px * .8) + 'px">' + ek + '</span>';
+    visual = tarimKare('tarla_' + (u.urun || 'bos'), ek, px);
   } else if (u.kind === 'lojman') {
-    visual = '<img src="img/lojman.webp" onerror="this.remove()"'
-      + ' style="width:' + px + 'px;height:' + px + 'px;object-fit:cover;border-radius:6px">'
-      + '<span style="font-size:' + Math.round(px * .8) + 'px">🏘️</span>';
+    visual = tarimKare('lojman', '🏘️', px);
   } else if (u.kind === 'plant' && T.kind === 'wind') {
     visual = turbineSVG(px, producing, producing && out > T.mw * 0.5, noconn ? '#ff5c5c' : null);
   } else if (u.kind === 'plant' && u.t.startsWith('coal')) {
