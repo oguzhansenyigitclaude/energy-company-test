@@ -25,6 +25,15 @@
     --ink:#eef3fa; --dim:#93a3bd; --acc:#5ab0ff; --acc2:#8ec9ff;
     --warn:#ffb347; --danger:#ff5c5c; --gold:#ffd166; --cream:#f0e6d2;
   }
+  /* 🌾 90. yama — TARIM TEMASI. Patron: "bu sektore gectigimde TEMA RENGINE KADAR degismeli."
+     Butun oyun zaten bu degiskenlerle boyandigi icin TEK blok butun ekranlari cevirir —
+     panel, dugme, cizgi, vurgu. Enerjinin mavi/krem kimligi aynen duruyor.
+     Secim: toprak-yesili zemin + canli yesil vurgu + bugday altini. */
+  #app[data-sektor="tarim"] {
+    --bg:#0e1a11; --panel:#16271a; --panel2:#1f3625; --line:#2f4f36;
+    --ink:#eef6ec; --dim:#9db79f; --acc:#5fcf6a; --acc2:#9ae3a0;
+    --warn:#ffb347; --danger:#ff6b6b; --gold:#ffc83d; --cream:#f3ecd9;
+  }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
   body{background:#070a0f;color:var(--ink);font-family:'Segoe UI',system-ui,sans-serif;display:flex;justify-content:center;user-select:none;-webkit-user-select:none}
@@ -186,6 +195,12 @@
 
   .umark{text-align:center;line-height:1;filter:drop-shadow(0 1px 3px #0008);position:relative}
   .umark .ic{display:inline-block;position:relative}
+  /* 🌾 91. yama — tarla durum rozeti: referanstaki yuvarlak iş göstergesinin karşılığı */
+  .tarlaroz{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+    border-radius:50%;background:#16271aee;border:2px solid #e8e2cf;font-size:16px;line-height:1;
+    box-shadow:0 2px 6px #0007}
+  .tarlaroz.hazir{border-color:#5fcf6a;box-shadow:0 0 10px #5fcf6a99}
+  .tarlaroz b{font-size:11px;font-weight:800;color:#f3ecd9}
   .umark .bd{font-size:8.5px;background:#000d;color:#ffd166;border-radius:6px;padding:0 4px;white-space:nowrap;font-weight:700}
   .umark.off .ic{filter:grayscale(1) brightness(.55)}
   .umark.building .ic{opacity:.55}
@@ -756,7 +771,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 12:38) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 14:40) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -901,6 +916,7 @@
   <!-- ALT BAR SADELEŞTİ (patron): diğer her şey sağ çekmecede — burada sadece 4 ana eylem -->
   <div id="bottombar">
     <button id="buildbtn">🏗️ İnşa</button>
+    <button id="farmbtn" style="display:none">🌾 Çiftlik</button>
     <button id="infobtn">ℹ️ Bilgi</button>
     <button id="viewbtn">🗺️ Görünüm</button>
     <button id="allybtn">🤝 İttifak</button>
@@ -935,16 +951,18 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 12:38)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 14:40)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11s',
+  etiket: '2026-10-11t',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🎨 <b>TARIM ARTIK KENDI OYUNU GIBI GORUNUYOR.</b> Sektore gecince <b>tema rengine kadar</b> degisiyor: toprak yesili zemin, bugday altini vurgular. Haritada tarlalar artik kare isaret degil, <b>duzensiz arazi parcalari</b> — ve icleri ektigin urunun gercek dokusuyla dolu (bugday, patates, aycicek, misir, domates, surulmus toprak). Tarlalar karo icinde yan yana diziliyor, ust uste binmiyor. Hazir tarla yesil cerceveyle kendini belli ediyor, olgunlasmakta olanin uzerinde <b>geri sayim</b> var.',
+    '🧹 <b>Enerji artiklari temizlendi.</b> Tarim oyuncusunda artik MWh fiyati, emisyon rozeti, gunluk enerji etkinligi bandi, nakil hatti tutamagi ve saha cekmecesi YOK. Alt barda <b>🌾 Ciftlik</b> dugmesi var. Haftalik hedef enerji MWh yerine tarim cirosunu gosteriyor. Acilista ruzgar turbini anlatilmiyor.',
     '🌾 <b>CIFTCI TOPARLANDI — para yakan alti delik kapandi.</b> Tarim oynayan oyuncuya enerji oyunu goruniyordu. Artik: 🏗️ Insa katalogu <b>tarla ve lojman</b> gosteriyor (eskiden yalnizca enerji vardi, ustelik <b>100 milyon ile 20 milyar arasi</b> kapasite lisansi satin alinabiliyordu, tarimda hicbir karsiligi yok). Tarim sirketinde enerji tesisi <b>kurulamaz</b>. Alim garantisi ihalesi tarimda kapali — eskiden <b>en az 5 milyonu</b> karsiliksiz yakabiliyordun. Haritada baska oyuncunun enerji santrali <b>cizilmiyor ve satin alinamiyor</b>. Muzayede botlari artik komur santrali degil <b>tarla ve lojman</b> satiyor.',
     '🔴 <b>Tesis satisinda VERI KAYBI duzeltildi.</b> Bir oyuncu tesisin icin teklif verip kabul ettiginde, devredilen birim <b>kimlikle degil tur ve karo ile</b> araniyordu. Tarimda butun tarlalar birbirinin tipki esi oldugu icin ayni karodaki <b>yanlis tarla</b> gidebiliyordu — olgunlasmis tarlani kaybedip bos tarlayi sattigini sanabilirdin. Artik kimlikle araniyor.',
     '🏛️ <b>Kayyumdan DEVRALMA geldi — dongu tamamlandi.</b> Alti sektorun hepsini bitirince <b>Rebirth +1</b> olur ve hepsi yeniden acilir; park ettigin sirketi sectiginde artik sifirdan kurmuyorsun, <b>geri devraliyorsun</b>. Kasasi, tesisleri, ruhsatlari, arastirmalari aynen yerinde. Sektor ekraninda hangi sirketin kayyumda oldugu ve kasasinda ne kadar birikti gorunur.',
@@ -9240,6 +9258,20 @@ function placeAt(c, ll) {
   //    yani kurulan türbin tarımda gerçekten üretir ve çiftçi tarla kurmadan enerji oynar.
   // ⚠️ `office` ZORUNLU İSTİSNA: ruhsatın ön şartı merkez ofistir, engellenirse çiftçi
   //    ruhsat alamaz ve oyun kilitlenir (tarım açılışı da ofisi addUnit ile kuruyor).
+  // 🌾 91. yama — TARLA BOŞ YUVAYA OTURUR. Oyuncu karonun neresine dokunursa dokunsun,
+  //    tarla o karodaki ilk BOŞ ızgara yuvasına yerleşir; üst üste binme biter ve harita
+  //    referanstaki gibi yan yana dizili tarlalar gösterir.
+  if (tarimSektoru() && kind === 'tarla') {
+    const b0 = cellBounds(c), g0 = CELL / TARLA_IZGARA;
+    const dolu = new Set((G.units || []).filter(u => u.kind === 'tarla' && u.cell === c)
+      .map(u => { const mz = tarlaYuvaMerkez(u);
+        return Math.floor((mz[0] - b0[0][0]) / g0) + ',' + Math.floor((mz[1] - b0[0][1]) / g0); }));
+    for (let iy = 0; iy < TARLA_IZGARA && ll; iy++) for (let ix = 0; ix < TARLA_IZGARA; ix++) {
+      if (dolu.has(iy + ',' + ix)) continue;
+      ll = [b0[0][0] + (iy + .5) * g0, b0[0][1] + (ix + .5) * g0];
+      iy = TARLA_IZGARA; break;
+    }
+  }
   if (tarimSektoru() && !tarimKindMi(kind) && kind !== 'office') {
     toast('🌾 Tarım şirketinde enerji tesisi kurulamaz', 'warn'); PENDING = null; setMode(null); return;
   }
@@ -18834,7 +18866,10 @@ function initMap(center, zoom) {
   if (map) { map.setView(center, zoom); setTimeout(() => map.invalidateSize(), 80); return; }
   map = L.map('mapdiv', {
     zoomControl: false, attributionControl: false,
-    minZoom: 2, maxZoom: 12,
+    // 🌾 92. yama — maxZoom 12 -> 14. Tarla poligonlari zoom 12'de ancak 90 px oluyordu;
+    //    referansta tarla ekranin onemli bir kismini kapliyor. Raster dosemesi YOK
+    //    (kara GeoJSON'dan ciziliyor), yani yakinlasmak bulanik doseme uretmez.
+    minZoom: 2, maxZoom: 14,
     maxBounds: [[-85, -200], [85, 200]], maxBoundsViscosity: .8,
     // 🚀 AKICILIK (patron: "rakipte kasma yok, bizde o akıcılık yok"): zoom animasyonunda
     // DOM işaretçilerini tek tek dönüştürmek telefonda kare düşürüyordu — animasyon boyunca
@@ -18951,6 +18986,7 @@ function unitIconPx(u) {
   // 🔴 TUZAK 3 KAPANDI (58. yama): burası `kind==='plant' ? PLANT_TYPES : STORE_TYPES`
   //    diyordu. 'tarla' gelince STORE_TYPES['tarla'] undefined oluyor ve aşağıdaki
   //    `T.kind` okumasında TypeError atıyordu — haritada tarla çizilirken oyun çökerdi.
+  if (u.kind === 'tarla') return 30;           // 🌾 91. yama — arazi poligon, işaret küçük rozet
   if (tarimKindMi(u.kind)) return 34;          // tarım birimleri sabit boy (mw/cap yok)
   const T = TYPE_OF(u.kind, u.t);
   if (u.kind === 'store') return Math.min(56, Math.round(26 + storeCap(u) * 0.05));
@@ -19111,8 +19147,15 @@ function unitIconHTML(u) {
     // 🔴 77. yama — görsel ile emoji YAN YANA duruyordu (ölçüldü: işaret 71 px).
     //    `tarimKare` ikisini üst üste bindirir; ayrıca `.ic` sınıfı sayesinde inşa/kapalı/
     //    eğitim vurgusu filtreleri artık FOTOĞRAFA da uygulanır — enerji tesisleriyle aynı.
+    // 🔴 91. yama — tarla artık haritaya POLİGON olarak çiziliyor; üstüne bir de 34 px
+    //    fotoğraf karesi basmak araziyi kapatıyordu. Referanstaki desen: arazi + ÜSTÜNDE
+    //    küçük yuvarlak durum rozeti (hazırsa ürün simgesi, değilse geri sayım).
     const ek = u.urun ? urunBilgi(u.urun).ico : '🌱';
-    visual = tarimKare('tarla_' + (u.urun || 'bos'), ek, px);
+    const hz = typeof tarlaHazirMi === 'function' && tarlaHazirMi(u);
+    const kalanSa = (!u.urun || hz) ? 0 : Math.max(0, (1 - tarlaOran(u)) * tarlaSure(u) / 36e5);
+    visual = '<span class="tarlaroz' + (hz ? ' hazir' : '') + '">'
+      + (hz || !u.urun ? ek : '<b>' + (kalanSa >= 1 ? Math.ceil(kalanSa) + 's' : Math.max(1, Math.ceil(kalanSa * 60)) + 'd') + '</b>')
+      + '</span>';
   } else if (u.kind === 'lojman') {
     visual = tarimKare('lojman', '🏘️', px);
   } else if (u.kind === 'plant' && T.kind === 'wind') {
@@ -19158,10 +19201,144 @@ window.openOthersHere = (ll, cell) => {
     <button class="primary ghostbtn" onclick="closeModal()">Kapat</button>`;
   $('overlay').classList.add('show');
 };
+// ═══════════ 🌾 TARIM KABUĞU (90. yama) ═══════════
+// Patron: "haritadaki tarlalar dikdörtgen şeklinde bile değil" — rakipte tarla, haritaya
+// çizilmiş DÜZENSİZ BİR POLİGON. Bizde tarla 34 px'lik kare bir işaretçiydi; aynı karoya
+// 20 tarla kurunca hepsi üst üste binen özdeş karelerdi, hangisi hangisi belli olmuyordu.
+//
+// Poligon ÜRETİLİYOR, veri olarak saklanmıyor: `u.id` tohumuyla deterministik — aynı tarla
+// her açılışta AYNI şekli alır, kayıt büyümez, eski kayıtlar da kendiliğinden şekil kazanır.
+// 🔴 91. yama — ÖLÇÜLDÜ: ilk poligonlar ekranda **41 piksel** çıktı, yani görünmüyorlardı.
+//    Referansta tarla ekranın önemli bir kısmını kaplayan bir ARAZİ PARÇASI.
+// 📐 IZGARA: tarlalar artık karo içinde 4×4'lük bir ızgaraya OTURUYOR. Sebep sadece görsel
+//    değil — oyuncu aynı karoya 13 tarlaya kadar kurabiliyor ve serbest konumda hepsi üst
+//    üste biniyordu. Izgara hem referanstaki "yan yana dizili tarlalar" görüntüsünü verir
+//    hem de hangi tarlaya dokunduğunu netleştirir.
+const TARLA_IZGARA = 4;                         // karo başına 4×4 = 16 yuva (limit 13)
+const TARLA_YARICAP = CELL / TARLA_IZGARA * .44; // yuvanın %88'i — komşular değmeden yan yana
+const TARLA_KOSE = 7;                            // 7 düzensiz kenar: tarla gibi, altıgen gibi değil
+// Tarlanın ızgaradaki YUVA MERKEZİ. `u.ll` yerleştirme anındaki serbest noktadır; onu
+// içinde bulunduğu yuvanın ortasına çekiyoruz — kayıt değişmez, çizim hizalanır.
+function tarlaYuvaMerkez(u) {
+  const ll = u.ll || cellCenter(u.cell);
+  const b = cellBounds(u.cell);
+  const g = CELL / TARLA_IZGARA;
+  const iy = Math.max(0, Math.min(TARLA_IZGARA - 1, Math.floor((ll[0] - b[0][0]) / g)));
+  const ix = Math.max(0, Math.min(TARLA_IZGARA - 1, Math.floor((ll[1] - b[0][1]) / g)));
+  return [b[0][0] + (iy + .5) * g, b[0][1] + (ix + .5) * g];
+}
+function tarlaPoligon(u) {
+  const ll = tarlaYuvaMerkez(u);
+  const enlemKat = Math.max(.25, Math.cos(ll[0] * Math.PI / 180));  // boylam enlemle daralır
+  const pts = [];
+  for (let i = 0; i < TARLA_KOSE; i++) {
+    const a = (i / TARLA_KOSE) * 2 * Math.PI + hash01(u.id, i, 17) * .45;
+    const r = TARLA_YARICAP * (.72 + hash01(u.id, i, 23) * .52);
+    pts.push([ll[0] + Math.sin(a) * r, ll[1] + Math.cos(a) * r / enlemKat]);
+  }
+  return pts;
+}
+// 🎨 Ürüne ve olgunluğa göre renk — oyuncu haritaya bakınca NE ektiğini ve HAZIR MI olduğunu
+//    tek bakışta görsün. Boş tarla sürülmüş toprak kahvesi.
+const TARLA_RENK = { bugday: '#d9a441', patates: '#8a9a5b', aycicek: '#e8b93a', misir: '#c9a227', domates: '#b5422f' };
+// 🖼️ 91. yama — ÜRÜN DOKUSU: poligonun içi düz renk değil, ektiğin ürünün FOTOĞRAFI.
+//    Leaflet'in SVG katmanına bir kez <pattern> enjekte ediliyor; poligon `fill: url(#...)`
+//    ile onu kullanıyor. Görsel yoksa düz renk zaten altta duruyor — kırılmaz.
+let _dokuKuruldu = false;
+function tarlaDokuKur() {
+  if (_dokuKuruldu || !map) return;
+  const svg = document.querySelector('.leaflet-overlay-pane svg');
+  if (!svg) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  let defs = svg.querySelector('defs');
+  if (!defs) { defs = document.createElementNS(NS, 'defs'); svg.insertBefore(defs, svg.firstChild); }
+  for (const k of Object.keys(TARLA_RENK).concat(['bos'])) {
+    if (defs.querySelector('#tdoku_' + k)) continue;
+    const p = document.createElementNS(NS, 'pattern');
+    p.setAttribute('id', 'tdoku_' + k);
+    p.setAttribute('patternUnits', 'userSpaceOnUse');
+    // 64 px: tarla ekranda 150-300 px geldiğinde 3-5 tekrar — doku okunur, tekrar belli olmaz
+    p.setAttribute('width', '64'); p.setAttribute('height', '64');
+    const im = document.createElementNS(NS, 'image');
+    // 🔴 93. yama — ÖLÇÜLDÜ: `tarla_*.webp` KATALOG fotoğrafıdır, içinde UFUK ve GÖKYÜZÜ var;
+    //    desen olarak tekrarlanınca tarlanın ortasından gökyüzü şeridi geçiyordu.
+    //    Desen için TEPEDEN çekilmiş, ufuksuz, kenarları birbirine yakın AYRI doku gerekir.
+    //    Dosya yoksa tarayıcı resmi hiç çizmez ve altındaki düz renk görünür — kırılmaz.
+    im.setAttribute('href', 'img/doku_' + k + '.webp');
+    im.setAttribute('width', '64'); im.setAttribute('height', '64');
+    im.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+    p.appendChild(im); defs.appendChild(p);
+  }
+  _dokuKuruldu = true;
+}
+function tarlaStil(u) {
+  const bos = !u.urun;
+  const hazir = !bos && typeof tarlaHazirMi === 'function' && tarlaHazirMi(u);
+  const col = bos ? '#6b4f33' : (TARLA_RENK[u.urun] || '#7d8f4a');
+  // HAZIR tarla parlak yeşil kalın çerçeveyle kendini belli eder — referanstaki desen.
+  return { color: hazir ? '#5fcf6a' : '#e8e2cf', weight: hazir ? 3 : 1.6, opacity: hazir ? 1 : .7,
+           fillColor: col, fillOpacity: bos ? .55 : .8 };
+}
+let tarlaKatman = {};
+function tarlaPoligonCiz(u) {
+  if (!map || u.kind !== 'tarla' || !gecerliLL(u.ll || cellCenter(u.cell))) return;
+  if (tarlaKatman[u.id]) { tarlaKatman[u.id].remove(); delete tarlaKatman[u.id]; }
+  tarlaDokuKur();
+  const p = L.polygon(tarlaPoligon(u), tarlaStil(u)).addTo(map);
+  // dokuyu doğrudan SVG yoluna uygula (Leaflet `fillColor` yalnız düz renk kabul eder)
+  const el = p.getElement && p.getElement();
+  if (el && _dokuKuruldu) {
+    el.setAttribute('fill', 'url(#tdoku_' + (u.urun || 'bos') + ')');
+    // 🔴 93. yama — doku varken ALTTAKI duz renk sizmamali: `fillOpacity` .55-.8 idi ve
+    //    bos tarla kahverengi doku yerine yesilimsi goruniyordu. Doku bagliysa TAM opak.
+    el.setAttribute('fill-opacity', '1');
+  }
+  p.on('click', () => { try { openUnitSheet(u.id); } catch (e) {} });
+  tarlaKatman[u.id] = p;
+}
+function tarlaPoligonTazele() {
+  if (!map) return;
+  const canli = {};
+  for (const u of (G.units || [])) if (u.kind === 'tarla') { canli[u.id] = 1; tarlaPoligonCiz(u); }
+  for (const id of Object.keys(tarlaKatman)) if (!canli[id]) { tarlaKatman[id].remove(); delete tarlaKatman[id]; }
+}
+
+// 🎨 SEKTÖR KABUĞU — tema, üst bar ve alt bar tek yerden. `renderHUD` her karede çağırıyor,
+//    bu yüzden iş yapmadan önce DEĞİŞTİ Mİ diye bakıyor (her karede DOM yazmak pahalı).
+let _kabukSektor = null;
+function sektorKabugu() {
+  const s = (G && G.sektor) || 'enerji';
+  if (s === _kabukSektor) return;
+  _kabukSektor = s;
+  const tar = s === 'tarim';
+  const app = document.getElementById('app');
+  if (app) app.setAttribute('data-sektor', s);
+  const g = (id, goster) => { const e = document.getElementById(id); if (e) e.style.display = goster ? '' : 'none'; };
+  // ℹ️ Bilgi = enerji saha raporu (rüzgar/güneş/talep MWh) — tarımda baştan sona anlamsız.
+  //    Yerine 🌾 Çiftlik: tarla, işçi, stok ve satış tek ekranda.
+  g('infobtn', !tar); g('farmbtn', tar);
+  // ⚡ Enerji Nakil Hattı tutamağı tarımda hiçbir şey yapmıyor.
+  g('linehandle', !tar);
+  // 💰 $/MWh fiyatı tarımda hiç okunmuyor — HUD'un sabit satırında yalan duruyordu.
+  g('hudprice', !tar);
+  // 🌾 92. yama — gunluk etkinlik bandi: 12 etkinligin TAMAMI enerji carpani
+  //    (ruzgar, bulut, talep, fiyat). Tarimda hicbiri islemiyor, bant YALAN soyluyor.
+  g('evbanner', !tar);
+  // 🗼 nakil hatti ve 🧭 saha cekmecesi de enerjiye ait
+  g('navhandle', !tar);
+  // ⚡ menü tutamağı tarımda da ZORUNLU (tarım ipucu ona atıf yapıyor) ama simgesi enerji
+  const dh = document.getElementById('drawerhandle');
+  if (dh) dh.textContent = tar ? '🌾' : '⚡';
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.setAttribute('content', tar ? '#16271a' : '#13213a');
+  if (map) tarlaPoligonTazele();
+}
+
 function addUnitMarker(u) {
   if (!map) return;
   if (!gecerliLL(u.ll)) return; // ⚠️ bozuk koordinat: işaretçi çizme, açılışı düşürme (NET.unitsInCell'deki süzgeçle aynı sebep)
   if (unitMarkers[u.id]) unitMarkers[u.id].remove(); // çift işaretçi bug'ı: eski marker haritada donuk kalıyordu
+  if (u.kind === 'tarla') tarlaPoligonCiz(u);   // 🌾 90. yama — tarlanın kendi alanı
   const m = L.marker(u.ll, { icon: divIcon(unitIconHTML(u), unitIconSize(u)), zIndexOffset: 600 }).addTo(map);
   // uzun basış: aynı noktadaki komşu tesisleri aç (kendi tesisin üstte kaldığı için tek yol bu)
   let lpT = null, lpFired = false;
@@ -19205,6 +19382,7 @@ function addUnitMarker(u) {
 const zoomNow = () => (map ? map.getZoom() : 11);
 const unitVisibleAtZoom = u => { const z = zoomNow(); return z >= 8 || u.kind === 'office'; };
 function refreshUnitMarkers() {
+  tarlaPoligonTazele();   // 🌾 90. yama — ekim/hasat sonrası tarla rengi değişir
   if (!map) return;
   for (const u of G.units) {
     const vis = unitVisibleAtZoom(u);
@@ -22036,11 +22214,22 @@ function renderMenu() {
   renderStarter(); renderCompany(); renderAlly();
   checkWeek();
   const t = weekTarget();
+  // 🌾 90. yama — tarımda `weekSold` (MWh) hiç artmıyor: hedef matematiksel olarak
+  //    tamamlanamaz ve çubuk sonsuza dek %0. Çiftçiye kendi ölçüsünü göster.
+  if (G.sektor === 'tarim') {
+    const ts = Math.round(((G.tarim && G.tarim.ciro) || 0));
+    $('goaltxt').textContent = '🌾 Tarım cirosu — bu şirkette toplam';
+    $('goalprog').textContent = fmt(ts);
+    $('goalfill').style.width = '0%';
+    $('goalreward').textContent = '';
+    $('claimbtn').style.display = 'none';
+  } else {
   $('goaltxt').textContent = CEV('Bu hafta {0} MWh enerji sat', fmtN(t)) + (G.weekClaimed ? CEV(' — ✅ tamamlandı!') : '');
   $('goalfill').style.width = Math.min(100, 100 * G.weekSold / t) + '%';
   $('goalprog').textContent = fmtN(Math.min(G.weekSold, t)) + ' / ' + fmtN(t) + ' MWh';
   $('goalreward').textContent = '🎁 ' + fmt(t * 15000);
   $('claimbtn').style.display = (!G.weekClaimed && G.weekSold >= t) ? 'block' : 'none';
+  }
   // 🧬 GELİŞİM ÖZETİ — tam sayfa sağ çekmecede; burada yalnız durum + giriş bağlantısı
   const gpTamam = ((G.gpGorev && G.gpGorev.ids) || []).filter(id => gpBitti(id)).length;
   $('gprow').innerHTML = `
@@ -22093,8 +22282,11 @@ function openHelp() {
 
 // ── HUD ──
 function renderHUD() {
+  sektorKabugu();  // 🌾 90. yama — tema + üst/alt bar sektöre göre (değişmediyse iş yapmaz)
   ipRozetTazele(); // 💠 bakiye rozetini canlı tut
-  $('coname').innerHTML = (G.company || '—') + ' <span style="font-size:10px;font-weight:600">' + emBadge().ico + '</span>';
+  // 🌾 90. yama — emisyon rozeti tarımda YALAN: tarım satışı emisyon/yeşil teşvik yolundan
+  //    hiç geçmiyor, rozet 0 g/kWh görünüp olmayan bir avantaj vaat ediyordu.
+  $('coname').innerHTML = (G.company || '—') + (G.sektor === 'tarim' ? '' : ' <span style="font-size:10px;font-weight:600">' + emBadge().ico + '</span>');
   // 🛡️ 53. tur: burası KORUMASIZDI ve renderHUD sürekli çağrılıyor — bilinmeyen bir
   //    ülke adı her karede TypeError atıp oyuncuyu kalıcı olarak dışarıda bırakırdı.
   $('coloc').textContent = G.country ? `${ulkeBayrak(G.country)} ${G.il}, ${G.country}` : '—';
@@ -22738,7 +22930,8 @@ function startGame(resumed) {
   ensureConnections(); // eski kayıtlar / yeni birimler için bağlantıları kur
   ensureGridLinks(); // 🗼 kayıtta kalmış kaymış/başka karodaki merkez anahtarlarını yükleme anında onar
   const hc = IL_COORD[G.il] || [39, 35];
-  initMap(hc, 11);
+  // 🌾 92. yama — tarimda tarlalar gorunsun diye daha yakin acilir
+  initMap(hc, (G && G.sektor === 'tarim') ? 13 : 11);
   // ⚠️ SIRA BİLEREK BÖYLE: bayrak çizimlerden ÖNCE kalkar. Eskiden en sonda kalktığı için
   // tek bir çizim istisnası (bozuk ruhsat anahtarı → Leaflet NaN) oyuncuyu hesabından
   // tamamen kilitliyordu. Harita hazır olduktan sonra çizim başarısız olsa bile oyuncu
@@ -22764,6 +22957,10 @@ function startGame(resumed) {
   if (resumed) offlineProgress();
   else {
     setTimeout(askNotifPermission, 9000); // oyunu bir görsün, sonra kibarca soralım
+    // 🌾 92. yama — ciftcide ruzgar turbini YOK; onun yerine tarim yonlendirmesi
+    if (G.sektor === 'tarim') {
+      toast('🌾 Çiftliğin hazır. Alttan 🌾 <b>Çiftlik</b>e dokun → tarla kur, ürün ek, hasadı şehre sat.', '', null, 0, true);
+    } else
     toast(CEV('👋 Rüzgar türbinin depoya bağlı çalışıyor. 🔋 Depoya dokun → enerjiyi SAT!'), '', null, 0, true);
     toast(CEV('🔲 Boş bir yere dokun → o kareye yeni santral/depo kur. 🚀 Bonus ×10 aktif!'), '', null, 0, true);
     save();
@@ -22920,6 +23117,8 @@ $('demolink').addEventListener('click', () => {
   toast(G.demo ? '⏩ Zaman ×60 (test) — bonus devre dışı' : 'Gerçek zaman', '');
   save(); renderMenu();
 });
+// 🌾 90. yama — Çiftlik düğmesi: tarımda ℹ️ Bilgi'nin yerini alır
+{ const fb = document.getElementById('farmbtn'); if (fb) fb.addEventListener('click', () => { if (G && G._started) tarimPanel(); }); }
 $('resetlink').addEventListener('click', () => {
   if (confirm('Tüm ilerleme silinsin mi?')) { G = null; localStorage.removeItem(SAVE_KEY); location.reload(); } // G=null: otokayıt geri yazmasın
 });
