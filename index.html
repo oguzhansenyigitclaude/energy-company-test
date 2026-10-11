@@ -833,7 +833,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 16:03) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 16:08) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -1013,16 +1013,18 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 16:03)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 16:08)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11y',
+  etiket: '2026-10-11z',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🌱 <b>TARLA KARTI geldi.</b> Haritada bir tarlaya dokununca artik kendi kunyesi aciliyor: arazinin <b>gercek sekli</b> (haritadaki poligonun aynisi, urun dokusuyla), alani hektar olarak, durumu, gubresi, iscisi; altinda uretim standardin, hasat basina kac ton aldigi, olgunlasma suresi, bekleyen hasat ve <b>siloda kac hasatlik yer kaldigi</b>.',
+    '🧪 <b>GUBRE geldi.</b> Tarlayi gubreleyince <b>5 hasat boyunca verim yuzde 25 fazla</b>. Bedel tarlanin hektarina gore — 360 hektarlik tarla icin yaklasik 7 bin dolar. Gubre kalite yukseldikce degerleniyor: C kalitede kari az, A kalitede cok. Arastirmaya yatirim yapan oyuncu iki kez kazaniyor.',
     '🏢 <b>CIFTLIK PROFILI geldi.</b> Tarimda sirket adina dokununca artik enerji ekrani degil kendi profilin aciliyor: ustte ciftlik fotografi ve sirket adi, ne zaman kuruldugu, <b>ana urunun ve payi</b>; uc kutuda tarla sayisi + toplam hektar + ciftlik, ortada <b>rebirth ilerleme halkasi</b>, sagda satilan ton ve urun cesidi. Altinda bolgelerin, tarla seridin ve HOLDING ozeti (rebirth, kayyum sirketleri ve kasalari, Imtiyaz Puani).',
     '🏅 <b>KALITE KARNESI.</b> Profilde E den A ya uzanan bir cubuk: butun urunlerindeki uretim standardinin ortalamasi. Tek bakista <b>ne kadar kaliteli bir ureticisin</b> gorunuyor — bu eksen rakip oyunlarda yok.',
     '🏚️ <b>SILO ARTIK DOLUYOR.</b> Stok sinirsiz degil: baslangic <b>400 ton</b>, her genisletme <b>+400 ton</b> ve bedeli bir oncekinin <b>2 kati</b> (Sv10 = 4.400 ton). ⚠️ En onemli kural: <b>silo dolunca hasat DURUR, urun KAYBOLMAZ</b> — tarlada bekler, sattiktan sonra kaldigi yerden devam eder. Tohum parasi da odenmez. Silonun ustundeki cubuk yuzde 70 te sariya, yuzde 90 da kirmiziya doner.',
@@ -15807,7 +15809,15 @@ const TARIM_AYAR = {
   siloTaban: 400,        // ton — başlangıç kapasitesi (~13 tarlalık 3 günlük üretim)
   siloAdim: 400,         // kademe başına +400 ton
   siloMaxLvl: 10,        // Sv10 = 4.400 ton
-  siloBedel: 4e6,        // 1. kademe; her kademe bir öncekinin 2 KATI (depo deseniyle aynı)
+  siloBedel: 4e6,
+  // 🧪 97. yama — GÜBRE. Rakibin tarla künyesindeki "Fertilizer" satırının gerçek karşılığı.
+  //    Tek seferlik yatırım, belirli sayıda hasat boyunca verimi artırır.
+  // ÖLÇÜLDÜ: 400 ha tarla × $20 = $8.000 → 5 hasatta +%25 verim = +10 ton.
+  //    C kalitede +$17.000 (kâr ~$9.000), A kalitede +$51.000. Yani gübre KALİTE
+  //    yükseldikçe değerleniyor — araştırmaya yatırım yapan oyuncu iki kez kazanıyor.
+  gubreBedelHa: 20,      // $/hektar
+  gubreKat: 1.25,        // verim çarpanı
+  gubreHasat: 5,         // kaç hasat boyunca geçerli        // 1. kademe; her kademe bir öncekinin 2 KATI (depo deseniyle aynı)
 };
 
 // ── 🌱 ÜRÜN KATALOĞU ───────────────────────────────────────────────────────────
@@ -16098,7 +16108,9 @@ function tarlaHasat(u, elle, simdi) {
   //    siloya sığmayacak döngünün tohum parası ÖDENMESİN. Sığmayan döngü tarlada bekler,
   //    damga ilerlemez — ürün kaybolmaz (§4 kuralı).
   if (typeof siloBos === 'function' && (B.verim || 0) > 0) {
-    const sigacak = Math.floor(siloBos() / B.verim);
+    // 🧪 gübreli tarla daha ÇOK ürün verir — fren onu saymalı, yoksa silo taşardı
+    const verimEtkin = (B.verim || 0) * (gubreliMi(u) ? TARIM_AYAR.gubreKat : 1);
+    const sigacak = Math.floor(siloBos() / verimEtkin);
     if (sigacak < n) n = Math.max(0, sigacak);
     if (n < 1) {
       if (elle) toast('🏚️ Silo dolu — hasat yapılamıyor. Önce ürün sat ya da siloyu genişlet.', 'warn', 'silodolu', 9000);
@@ -16125,7 +16137,12 @@ function tarlaHasat(u, elle, simdi) {
   //    ÖNCE uygulamak gerekirdi — ama ödeme zaten `n`e göre yapılıyor, bu yüzden `n`i
   //    BURADA değil YUKARIDA kısmak şart. Aşağıdaki satır o yüzden sadece EMNİYET:
   //    normal akışta hiç tetiklenmez.
-  const ton = n * (B.verim || 0);
+  // 🧪 97. yama — gübre çarpanı ve sayacı. Gübre HASAT BAŞINA tükenir; tüketilen döngü
+  //    kadar düşer, böylece çevrimdışı toplu hasatta da doğru sayıda hasat gübreli olur.
+  const gKal = gubreKalan(u);
+  const gUyg = Math.min(n, gKal);                       // kaç döngü gübreli hasat edildi
+  const ton = (n - gUyg) * (B.verim || 0) + gUyg * (B.verim || 0) * TARIM_AYAR.gubreKat;
+  if (gUyg > 0) u.gubre = Math.max(0, gKal - gUyg);
   if (ton > 0) stokEkle(u.urun, urunStd(u.urun), ton, s);
   // Damgayı TÜKETİLEN döngü kadar ilerlet — `s`e çekersek artan süre yanar ve
   // oyuncu her girişte birkaç dakikalık ilerlemesini kaybeder.
@@ -16403,7 +16420,7 @@ function tarimTarlaSatir(u) {
   }
   return '<div class="qline"><span>' + urunKare(u.urun, 26) + ' <b>' + B.ad + '</b> #' + u.id
     + (isci ? ' <span style="color:var(--acc)" title="işçi bakıyor">👷</span>' : ' <span class="sub" title="işçi yok — elle toplanır">✋</span>')
-    + '<br><span class="sub">' + (tarlaHektar(u) > 0 ? fmtN(Math.round(tarlaHektar(u))) + ' ha · ' : '')
+    + '<br><span class="sub">' + (gubreliMi(u) ? '🧪 ' : '') + (tarlaHektar(u) > 0 ? fmtN(Math.round(tarlaHektar(u))) + ' ha · ' : '')
         + 'olgunluk %' + oran + (dongu > 0 ? ' · bekleyen ' + dongu + ' hasat' : '') + '</span></span>'
     + '<span>' + (hazir
         ? '<button onclick="tarimTopla(' + u.id + ')">🧺 Topla</button>'
@@ -16647,10 +16664,99 @@ function tarimPanel() {
 }
 
 // ── Birim sayfasından çağrılan küçük panel (58. yamadaki soket bunu arıyor) ──
+// ═══════════ 🧪 GÜBRE (97. yama) ═══════════
+// ⚠️ 7 DURUMLU ZİNCİR (ham→temiz→sürülmüş→gübrelenmiş→ekilmiş→olgun→hasat) BİLEREK
+//    ALINMADI. Rakipte her hasattan sonra tarla yeniden SÜRÜLÜP EKİLİYOR; bizde ise
+//    yayınlanmış bir söz var: "👷 İşçi çalışınca sen uyurken de hasat olur."
+//    Zinciri birebir kopyalamak o sözü bozar ve çevrimdışı oyuncuyu cezalandırır.
+//    Zincirin TEK anlamlı kolunu — gübreleme — isteğe bağlı bir yatırım olarak aldık.
+const gubreKalan = u => Math.max(0, Math.round((u && u.gubre) || 0));
+const gubreliMi = u => gubreKalan(u) > 0;
+const gubreBedel = u => Math.max(1000, Math.round(tarlaHektar(u) * TARIM_AYAR.gubreBedelHa));
+window.gubreUygula = id => {
+  const u = (G.units || []).find(x => x.id === id);
+  if (!u || !tarlaMi(u)) return;
+  if (typeof krediKilidi === 'function' && krediKilidi('gübreleme')) return;
+  if (gubreliMi(u)) { toast('🧪 Bu tarla zaten gübreli — ' + gubreKalan(u) + ' hasat kaldı', ''); return; }
+  const bedel = gubreBedel(u);
+  if (G.cash < bedel) { toast('Yetersiz bakiye — ' + fmt(bedel) + ' gerekli', 'warn'); return; }
+  G.cash -= bedel;
+  if (typeof gider === 'function') { try { gider('tohum', bedel); } catch (e) {} }
+  u.gubre = TARIM_AYAR.gubreHasat;
+  toast('🧪 Gübrelendi — ' + TARIM_AYAR.gubreHasat + ' hasat boyunca verim %'
+    + Math.round((TARIM_AYAR.gubreKat - 1) * 100) + ' fazla', '', null, 0, true);
+  beep(700, .1);
+  save(); refreshUnitMarkers(); openUnitSheet(id);
+};
+
+// 🗺️ Tarlanın KENDİ ŞEKLİ — rakibin künyesindeki arazi çizimi. Haritadaki poligonun
+//    aynısı (aynı `tarlaPoligon` tohumundan), kart içinde küçük SVG olarak.
+function tarlaSekilSVG(u, px) {
+  const pts = (typeof tarlaPoligon === 'function') ? tarlaPoligon(u) : [];
+  if (pts.length < 3) return '';
+  const ys = pts.map(p => p[0]), xs = pts.map(p => p[1]);
+  const y0 = Math.min(...ys), y1 = Math.max(...ys), x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const w = Math.max(1e-9, x1 - x0), h = Math.max(1e-9, y1 - y0);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + ((p[1] - x0) / w * 92 + 4).toFixed(1) + ' '
+    + ((y1 - p[0]) / h * 92 + 4).toFixed(1)).join('') + 'Z';
+  const doku = 'url(#kdoku_' + (u.urun || 'bos') + ')';
+  return '<svg viewBox="0 0 100 100" width="' + px + '" height="' + px + '" style="flex:0 0 auto">'
+    + '<defs><pattern id="kdoku_' + (u.urun || 'bos') + '" patternUnits="userSpaceOnUse" width="40" height="40">'
+    + '<image href="img/doku_' + (u.urun || 'bos') + '.webp" width="40" height="40" preserveAspectRatio="xMidYMid slice"/>'
+    + '</pattern></defs>'
+    + '<path d="' + d + '" fill="' + doku + '" stroke="#9ae3a0" stroke-width="2" stroke-linejoin="round"/></svg>';
+}
+
 function tarimBirimPanel(u) {
-  if (tarlaMi(u)) return '<div>' + tarimTarlaSatir(u) + '</div>'
-    + '<p class="sub">👷 İşçi: ' + (tarlaIsciliMi(u) ? 'var — kendisi topluyor' : 'yok — elle toplaman gerekiyor')
-    + '<br>💸 İşçi günlük maaşı: ' + fmt(TARIM_AYAR.isciMaas) + '</p>';
+  if (tarlaMi(u)) {
+    // 🌾 97. yama — TARLA KÜNYESİ, rakibin "Harvest land" kartı taban alınarak:
+    //    arazi çizimi + Alan/Durum/Gübre/İşçi künyesi + ürün bloğu + eylemler.
+    const B = u.urun ? urunBilgi(u.urun) : null;
+    const ha = tarlaHektar(u);
+    const hazir = tarlaHazirMi(u);
+    const dongu = tarlaDongu(u);
+    const oran = Math.round(tarlaOran(u) * 100);
+    const gk = TARIM_AYAR.gubreKat, gKalan = gubreKalan(u);
+    const birimTon = B ? (B.verim || 0) * (gKalan > 0 ? gk : 1) : 0;
+    const std = u.urun ? urunStd(u.urun) : 1;
+    const sigar = (typeof siloBos === 'function' && birimTon > 0) ? Math.floor(siloBos() / birimTon) : 99;
+    const h = [];
+    h.push('<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">'
+      + tarlaSekilSVG(u, 96)
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:15px;font-weight:800;color:var(--cream)">' + (B ? B.ico + ' ' + B.ad : '🌱 Boş tarla') + '</div>'
+      + '<div class="sub">' + (placeName(u.cell) || cellCode(u.cell)) + ' · Tarla #' + u.id + '</div>'
+      + '<div class="prow" style="border:0;padding:3px 0"><span class="l">📐 Alan</span><b>' + fmtN(Math.round(ha)) + ' ha</b></div>'
+      + '<div class="prow" style="border:0;padding:3px 0"><span class="l">🌱 Durum</span><b>'
+        + (!u.urun ? 'boş' : hazir ? '<span class="pos">hasada hazır</span>' : 'olgunlaşıyor %' + oran) + '</b></div>'
+      + '<div class="prow" style="border:0;padding:3px 0"><span class="l">🧪 Gübre</span><b>'
+        + (gKalan > 0 ? '<span class="pos">' + gKalan + ' hasat · +%' + Math.round((gk - 1) * 100) + '</span>' : 'yok') + '</b></div>'
+      + '<div class="prow" style="border:0;padding:3px 0"><span class="l">👷 İşçi</span><b>'
+        + (tarlaIsciliMi(u) ? '<span class="pos">var — kendi topluyor</span>' : 'yok — elle') + '</b></div>'
+      + '</div></div>');
+    if (B) {
+      h.push('<table class="ledger">'
+        + '<tr><td>🏅 Üretim standardın</td><td><b>' + kaliteAd(std) + '</b></td></tr>'
+        + '<tr><td>🧺 Hasat başına</td><td><b>' + fmtE(birimTon) + ' ton</b>'
+          + (gKalan > 0 ? ' <span class="pos">🧪 gübreli</span>' : '') + '</td></tr>'
+        + '<tr><td>⏳ Olgunlaşma</td><td>' + fmtHrs(tarlaSure(u) / 36e5) + '</td></tr>'
+        + '<tr><td>📦 Bekleyen hasat</td><td>' + (dongu > 0 ? '<b>' + dongu + '</b>' : '—') + '</td></tr>'
+        + '<tr><td>🏚️ Siloda yer</td><td>' + (sigar >= 99 ? 'bol' : sigar < 1
+            ? '<span class="neg">DOLU — hasat durdu</span>' : '<b>' + sigar + '</b> hasatlık') + '</td></tr>'
+        + '</table>');
+    }
+    // eylemler
+    if (hazir) h.push('<button class="bigsell" onclick="tarimTopla(' + u.id + ')">🧺 Hasadı Topla</button>');
+    if (u.urun && !gubreliMi(u)) h.push('<button class="bigsell half" onclick="gubreUygula(' + u.id + ')"'
+      + (G.cash < gubreBedel(u) ? ' disabled' : '') + '>🧪 Gübrele — ' + fmt(gubreBedel(u))
+      + ' <span class="sub">(' + TARIM_AYAR.gubreHasat + ' hasat +%' + Math.round((gk - 1) * 100) + ')</span></button>');
+    h.push('<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🌱 EKİM <span class="sub">'
+      + (u.urun ? 'değiştirmek bekleyen hasadı yakar' : 'ne ekeceğini seç') + '</span></div><div class="catrow">'
+      + Object.keys(TARIM_URUN).map(id => '<button onclick="tarimEkUygula(' + u.id + ',\'' + id + '\')"'
+          + ' style="padding:3px 4px;line-height:0"' + (id === u.urun ? ' class="on"' : '')
+          + ' title="' + TARIM_URUN[id].ad + '">' + urunKare(id, 34) + '</button>').join('') + '</div>');
+    return h.join('');
+  }
   if (lojmanMi(u)) return '<p class="sub">🏘️ Bu lojman <b>' + TARIM_AYAR.lojmanKapasite + ' işçi</b> barındırıyor.'
     + '<br>Şirket geneli: <b>' + isciCalisan() + '</b> / ' + isciKapasite() + ' · günlük ' + fmt(tarimGunlukGider()) + '</p>';
   return '<p class="sub">—</p>';
