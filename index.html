@@ -195,6 +195,34 @@
 
   .umark{text-align:center;line-height:1;filter:drop-shadow(0 1px 3px #0008);position:relative}
   .umark .ic{display:inline-block;position:relative}
+  /* ═══ 🌾 SİLO KARTI (94. yama) — rakibin ürün satırı düzeni, bizim kalite sistemimizle ═══ */
+  .silok{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:9px 10px;margin:7px 0}
+  .silok .ust{display:flex;align-items:center;gap:9px}
+  .silok .ad{flex:1;min-width:0}
+  .silok .ad b{font-size:14px;display:block;line-height:1.15}
+  .silok .ad .sub{font-size:10.5px}
+  .silok .mik{text-align:right;font-size:15px;font-weight:800;color:var(--cream);white-space:nowrap}
+  .silok .mik small{display:block;font-size:10px;font-weight:600;color:var(--dim)}
+  /* kalite şeridi: A altın → E soluk. Rakipte tek renk doluluk; bizde KALİTE DAĞILIMI. */
+  .kserit{display:flex;height:9px;border-radius:5px;overflow:hidden;margin:7px 0 3px;background:#0005}
+  .kserit i{display:block;height:100%}
+  .kserit i.k5{background:#ffc83d}.kserit i.k4{background:#9ae3a0}.kserit i.k3{background:#5a8f63}
+  .kserit i.k2{background:#4a6b50}.kserit i.k1{background:#3a4f3f}
+  .kleg{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:10px;color:var(--dim)}
+  .kleg b{color:var(--cream)}
+  /* satış satırı: kalite · ton · şehir fiyatı · düğme */
+  .ksat{display:flex;align-items:center;gap:7px;margin-top:6px;font-size:12px}
+  .ksat .rz{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:11px;color:#0d1a10;flex:0 0 auto}
+  .ksat .rz.k5{background:#ffc83d}.ksat .rz.k4{background:#9ae3a0}.ksat .rz.k3{background:#5a8f63;color:#eef6ec}
+  .ksat .rz.k2{background:#4a6b50;color:#eef6ec}.ksat .rz.k1{background:#3a4f3f;color:#cfe0d2}
+  .ksat .tn{width:46px;color:var(--cream);font-weight:700;font-size:11.5px}
+  .ksat .fy{flex:1;min-width:0;font-size:11px;line-height:1.25;white-space:normal}
+  .ksat button{padding:6px 11px;border-radius:9px;border:none;background:var(--acc);color:#0d1a10;
+    font-weight:800;font-size:11.5px;cursor:pointer;white-space:nowrap}
+  .ksat button:disabled{background:var(--line);color:var(--dim);cursor:default}
+  .yuk{color:#9ae3a0}.dus{color:#ff9b7a}
+
   /* 🌾 91. yama — tarla durum rozeti: referanstaki yuvarlak iş göstergesinin karşılığı */
   .tarlaroz{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
     border-radius:50%;background:#16271aee;border:2px solid #e8e2cf;font-size:16px;line-height:1;
@@ -771,7 +799,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 14:40) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 15:01) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -951,16 +979,18 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 14:40)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 15:01)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11t',
+  etiket: '2026-10-11u',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🏚️ <b>SILO EKRANI yeniden yazildi.</b> Stok artik duz tablo degil: her urun kendi kartinda, fotografi, toplam tonu ve bir <b>KALITE SERIDI</b> ile — altin A dan soluk E ye, elinde ne oldugunu tek bakista gorursun. Her kalite satirinda ton, sehir fiyati ve satis tutari dugmenin uzerinde yazili. Ustte silo ozeti: toplam stok ve guncel degeri.',
+    '🧭 <b>Fiyat oku artik gercek bir karar veriyor.</b> Satir basinda <b>▲ en iyi</b> ya da <b>▼ Karasu yuzde 18 fazla</b> yaziyor — ruhsatli sehirlerin icinde o urunu en iyi kimin aldigini soyluyor. Pazar rotasi bu oyunda olculmus bir beceri: ayni uc tarla, buyuk sehre once satinca C kalite 12. gunde, kucuk sehre once satinca 27. gunde geliyor.',
     '🎨 <b>TARIM ARTIK KENDI OYUNU GIBI GORUNUYOR.</b> Sektore gecince <b>tema rengine kadar</b> degisiyor: toprak yesili zemin, bugday altini vurgular. Haritada tarlalar artik kare isaret degil, <b>duzensiz arazi parcalari</b> — ve icleri ektigin urunun gercek dokusuyla dolu (bugday, patates, aycicek, misir, domates, surulmus toprak). Tarlalar karo icinde yan yana diziliyor, ust uste binmiyor. Hazir tarla yesil cerceveyle kendini belli ediyor, olgunlasmakta olanin uzerinde <b>geri sayim</b> var.',
     '🧹 <b>Enerji artiklari temizlendi.</b> Tarim oyuncusunda artik MWh fiyati, emisyon rozeti, gunluk enerji etkinligi bandi, nakil hatti tutamagi ve saha cekmecesi YOK. Alt barda <b>🌾 Ciftlik</b> dugmesi var. Haftalik hedef enerji MWh yerine tarim cirosunu gosteriyor. Acilista ruzgar turbini anlatilmiyor.',
     '🌾 <b>CIFTCI TOPARLANDI — para yakan alti delik kapandi.</b> Tarim oynayan oyuncuya enerji oyunu goruniyordu. Artik: 🏗️ Insa katalogu <b>tarla ve lojman</b> gosteriyor (eskiden yalnizca enerji vardi, ustelik <b>100 milyon ile 20 milyar arasi</b> kapasite lisansi satin alinabiliyordu, tarimda hicbir karsiligi yok). Tarim sirketinde enerji tesisi <b>kurulamaz</b>. Alim garantisi ihalesi tarimda kapali — eskiden <b>en az 5 milyonu</b> karsiliksiz yakabiliyordun. Haritada baska oyuncunun enerji santrali <b>cizilmiyor ve satin alinamiyor</b>. Muzayede botlari artik komur santrali degil <b>tarla ve lojman</b> satiyor.',
@@ -16242,26 +16272,80 @@ function tarimTarlaSatir(u) {
 }
 
 // ── Stok tablosu ────────────────────────────────────────────────────────────
+// ═══ 🌾 SİLO / PAZAR (94. yama) ═══
+// Rakibin ürün satırı düzeni taban alındı: ürün · miktar · fiyat YÖNÜ · doluluk çubuğu ·
+// satış düğmesi. İki yerde BİLEREK ayrıldık:
+//  1) Rakipte çubuk silo DOLULUĞUNU gösteriyor; bizde silo kapasitesi yok ama KALİTE var.
+//     Çubuk artık kalite dağılımı: altın A'dan soluk E'ye. Tek bakışta "elimde ne var".
+//  2) Fiyat oku rakipte piyasa trendidir; bizde ürün fiyatı kaliteyle sabit çarpanlı, trend
+//     YOK. Uydurma trend göstermek yerine GERÇEĞİ gösteriyoruz: bu şehir standart fiyatın
+//     üstünde mi ödüyor, altında mı. Oyuncunun kararını değiştiren bilgi bu.
 function tarimStokTablosu(cell) {
   const t = tarimD();
-  if (!t || !Array.isArray(t.stok) || !t.stok.length) return '<p class="sub">📦 Stok boş — hasat yapınca burada görünür.</p>';
-  let html = '<table class="ledger"><tr><th>Ürün</th><th>Kalite</th><th>Ton</th><th>Şehir fiyatı</th><th></th></tr>';
+  if (!t || !Array.isArray(t.stok) || !t.stok.length)
+    return '<div class="silok" style="text-align:center;padding:16px 10px">'
+      + '<div style="font-size:28px">📦</div>'
+      + '<p class="sub" style="margin-top:4px">Silo boş — tarlaların olgunlaşınca hasat et, ürün burada birikir.</p></div>';
+  let html = '';
+  let toplamTon = 0, toplamDeger = 0;
+  const kartlar = [];
+  const rs = (typeof tarimRuhsatli === 'function') ? tarimRuhsatli() : [];
   for (const urun of Object.keys(TARIM_URUN)) {
     const d = stokDagilim(urun);
-    for (const k of Object.keys(d).sort((a, b) => b - a)) {
+    const kaliteler = Object.keys(d).filter(k => d[k] > 0.01).sort((a, b) => b - a);
+    if (!kaliteler.length) continue;
+    const B = urunBilgi(urun);
+    const top = kaliteler.reduce((s, k) => s + d[k], 0);
+    toplamTon += top;
+    // ── kalite şeridi
+    let serit = '';
+    for (const k of [5, 4, 3, 2, 1]) if (d[k] > 0.01) serit += '<i class="k' + k + '" style="width:' + (100 * d[k] / top) + '%"></i>';
+    // ── satış satırları
+    let satirlar = '';
+    for (const k of kaliteler) {
       const ton = d[k];
-      if (!(ton > 0.01)) continue;
       const band = cell ? sehirUrunTalep(cell, urun)[k] : null;
       const fy = band ? band.fiyat : urunFiyat(urun, k, false);
-      const durum = !band ? '' : band.yok ? ' <span class="sub">(almıyor)</span>'
-        : band.sert ? ' <span class="sub">(kota ' + Math.round(band.kalan) + ')</span>' : '';
-      html += '<tr><td>' + urunKare(urun, 30) + ' ' + urunBilgi(urun).ad + '</td>'
-        + '<td><b>' + kaliteAd(k) + '</b></td><td>' + fmtE(ton) + '</td>'
-        + '<td>' + fmt(fy) + durum + '</td>'
-        + '<td>' + (cell ? '<button onclick="tarimSatUygula(\'' + urun + '\',' + k + ')">💰 Sat</button>' : '') + '</td></tr>';
+      toplamDeger += ton * fy;
+      // 🔴 94. yama düzeltmesi — ÖLÇÜLDÜ: ok HİÇ çıkmıyordu. Şehir fiyatı ile taban fiyat
+      //    (`urunFiyat(...,false)`) çoğu durumda AYNI sayı; karşılaştırma ölüydü.
+      // Doğru ölçüt oyuncunun GERÇEK kararı: ruhsatlı şehirlerin içinde BU şehir en iyisi mi?
+      //    Pazar rotası bu oyunda ölçülmüş bir beceri (aynı 3 tarla, büyük şehre önce satınca
+      //    C kalite 12. günde, küçük şehre önce satınca 27. günde geliyor) — ok onu söylesin.
+      let yon = '', enIyiAd = '';
+      if (band && !band.yok) {
+        let enIyi = fy;
+        for (const c2 of rs) {
+          if (c2 === cell) continue;
+          const b2 = sehirUrunTalep(c2, urun)[k];
+          if (b2 && !b2.yok && b2.fiyat > enIyi) { enIyi = b2.fiyat; enIyiAd = placeName(c2); }
+        }
+        if (enIyiAd && enIyi > fy * 1.02) yon = ' <span class="dus">▼ ' + enIyiAd + ' %' + Math.round((enIyi / fy - 1) * 100) + ' fazla</span>';
+        else if (rs.length > 1) yon = ' <span class="yuk">▲ en iyi</span>';
+      }
+      const durum = !band ? '' : band.yok ? ' <span class="dus">almıyor</span>'
+        : band.sert ? ' <span class="sub">kota ' + Math.round(band.kalan) + 't</span>' : '';
+      satirlar += '<div class="ksat">'
+        + '<span class="rz k' + k + '">' + kaliteAd(k) + '</span>'
+        + '<span class="tn">' + fmtE(ton) + ' t</span>'
+        + '<span class="fy">' + fmt(fy) + yon + durum + '</span>'
+        + (cell ? '<button onclick="tarimSatUygula(\'' + urun + '\',' + k + ')"'
+            + (band && band.yok ? ' disabled' : '') + '>💰 ' + fmt(Math.round(ton * fy)) + '</button>' : '')
+        + '</div>';
     }
+    kartlar.push('<div class="silok">'
+      + '<div class="ust">' + urunKare(urun, 38)
+      + '<span class="ad"><b>' + B.ad + '</b><span class="sub">' + kaliteler.length + ' kalite · '
+      + (cell ? placeName(cell) : 'satış yeri yok') + '</span></span>'
+      + '<span class="mik">' + fmtE(top) + ' t<small>' + B.aile + '</small></span></div>'
+      + '<div class="kserit">' + serit + '</div>'
+      + satirlar + '</div>');
   }
-  return html + '</table>';
+  // ── üst özet: rakipteki "Silos — toplam kg" bandının karşılığı
+  html += '<div class="silok" style="background:var(--panel);padding:8px 10px">'
+    + '<div class="ust"><span class="ad"><b>🏚️ Silo</b><span class="sub">toplam stok ve güncel değeri</span></span>'
+    + '<span class="mik">' + fmtE(toplamTon) + ' t<small>' + fmt(Math.round(toplamDeger)) + '</small></span></div></div>';
+  return html + kartlar.join('');
 }
 
 // ── ANA PANEL ───────────────────────────────────────────────────────────────
