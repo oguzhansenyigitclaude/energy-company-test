@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 00:11) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 00:40) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,14 +891,14 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 00:11)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 00:40)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11e',
+  etiket: '2026-10-11f',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
     '⚖️ <b>Tarim ekonomisi duzeltildi.</b> Ilk surumde tohum bedeli sabitti ve dusuk kalitede ciroyu asiyordu — yani yeni ciftci kacinilmaz olarak zarar ediyordu. Artik tohum, hasadin degerinin sabit bir yuzdesi. Olctuk: artik <b>her kalitede kar var</b>.',
@@ -9024,6 +9024,9 @@ window.buildHere = (kind, t) => {
     <h2>🛒 Satın alma onayı</h2>
     <div class="detimg" style="background:${CAT_GRAD[T.cat || 'Depo']};height:110px;font-size:52px"><img src="img/${baseTypeOf(t)}.webp" onerror="this.remove()">${T.ico}</div>
     <p><b>${T.nm}</b> — <b style="color:var(--acc)">${fmt(T.cost)}</b><br>Onaydan sonra haritada <b>kurmak istediğin yere dokunacaksın</b> — ödeme yerleştirme anında alınır.</p>
+    ${tarimKindMi(kind) ? `<p class="sub">💸 <b>Günlük gider:</b> ${kind === 'tarla'
+        ? fmt(TARIM_AYAR.isciMaas) + ' <span class="sub">(bu tarlaya işçi düşerse)</span>'
+        : '0 <span class="sub">— lojmanın kendisi gider yazmaz; maaşı ÇALIŞAN işçi doğurur (' + fmt(TARIM_AYAR.isciMaas) + '/gün)</span>'}</p>` : ''}
     <button class="primary" onclick="closeModal();doBuild('${kind}','${t}')">✅ Evet, Satın Al — ${fmt(T.cost)}</button>
     <button class="primary" style="background:#8a6cff" onclick="closeModal();adPlay('izleyene bu alışverişte %10 indirim.', () => doBuild('${kind}','${t}', .9))">${adVerb()} — %10 İndirimli Al (${fmt(Math.round(T.cost * .9))})</button>
     <button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>`;
@@ -15710,7 +15713,7 @@ function tarlaHasat(u, elle, simdi) {
     const bedel = n * birim;
     G.cash -= bedel;
     t.tohum = (t.tohum || 0) + bedel;
-    if (typeof gider === 'function') { try { gider('tarim', bedel); } catch (e) {} }
+    if (typeof gider === 'function') { try { gider('tohum', bedel); } catch (e) {} }
   }
 
   const ton = n * (B.verim || 0);
@@ -15823,7 +15826,7 @@ function isciMaasIsle() {
   if (tutar <= 0) return 0;
   G.cash -= tutar;                                  // kasa eksiye düşebilir: borç değil, uyarı
   t.maas = (t.maas || 0) + tutar;
-  if (typeof gider === 'function') { try { gider('tarim', tutar); } catch (e) {} }
+  if (typeof gider === 'function') { try { gider('maas', tutar); } catch (e) {} }
   return tutar;
 }
 // İnşa ekranında gösterilecek rakam (patron: "tesisi kurarken günlük masrafı yazsın").
@@ -16172,7 +16175,12 @@ const GIDER_ADI = { yatirim: '🏭 Tesis yatırımı', yakit: '⛽ Yakıt', baki
   ruhsat: '📜 Ruhsat · ofis · lisans', altyapi: '⚡ Nakil hattı', arastirma: '🔬 Araştırma',
   ihale: '🏛️ İhale / alım garantisi', muzayede: '🔨 Müzayede', ittifak: '🤝 İttifak / konsorsiyum', ceza: '⚖️ Cezalar',
   borsa: '💱 Yatırım işlem bedeli ve vergi',
-  kredi: '🏦 Kredi taksiti, faiz ve haciz' };
+  kredi: '🏦 Kredi taksiti, faiz ve haciz',
+  // 🌾 TARIM (70. yama) — ÖLÇÜLDÜ: defter `Object.keys(GIDER_ADI)` ile geziliyor, yani
+  //    burada adı olmayan kalem kasadan çıkıyor ama ekranda HİÇ GÖRÜNMÜYOR. Tohum ve maaş
+  //    tam bu durumdaydı. Patronun açık isteği: "gelir gider tablosu olacak".
+  //    İkisi AYRI tutuluyor: biri değişken (üretimle artar), diğeri sabit (atıl tesis de öder).
+  tohum: '🌰 Tohum ve ekim', maas: '👷 İşçi maaşı' };
 function gider(k, n) { if (!G || !n) return; G.spend = G.spend || {}; G.spend[k] = Math.max(0, (G.spend[k] || 0) + n); }
 const giderToplam = () => Object.values((G && G.spend) || {}).reduce((a, b) => a + b, 0);
 
@@ -21081,7 +21089,12 @@ function openCompanySheet() {
         const sp = G.spend || {}, top = giderToplam();
         const kalemler = Object.keys(GIDER_ADI).filter(k => (sp[k] || 0) > 0).sort((a, b) => sp[b] - sp[a]);
         // izlenmeyen fark: gider defteri bu sürümle başladı; eski harcamalar + ödüller burada toplanır
-        const fark = G.totalEarned - top - G.cash;
+        // 🌾 70. yama: tarım cirosu bilerek `G.totalEarned`e YAZILMIYOR (o bir kapı
+        //    değişkeni — bkz. docs/tarim-kod-sozlesmesi.md §8). Ama bu denge satırı
+        //    "ciro − gider = kasa" iddiasında bulunuyor; tarım cirosunu saymazsa
+        //    çiftçi oyuncuda kocaman ve yanlış bir "🎁 ödül geliri" satırı çıkıyordu.
+        const tarimCiro = (G.tarim && G.tarim.ciro) || 0;
+        const fark = (G.totalEarned + tarimCiro) - top - G.cash;
         return `<tr><td colspan="2" style="padding-top:8px"><b style="color:var(--acc2);font-size:11px">💸 PARAN NEREYE GİTTİ?</b> <span class="sub">— ciro eksi giderler = kasa</span></td></tr>
         ${kalemler.map(k => `<tr><td class="sub">${CEV(GIDER_ADI[k])}</td><td class="neg">−${fmt(sp[k])}</td></tr>`).join('')}
         ${Math.abs(fark) > 1000 ? `<tr><td class="sub">${fark > 0 ? '📦 Bu sürüm öncesi harcamalar <span class="sub">(defter yeni açıldı)</span>' : '🎁 Ödül · tesis satışı · iade gelirleri'}</td><td class="${fark > 0 ? 'neg' : 'pos'}">${fark > 0 ? '−' : '+'}${fmt(Math.abs(fark))}</td></tr>` : ''}
