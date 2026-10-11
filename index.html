@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 09:04) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 10:12) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,16 +891,18 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 09:04)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 10:12)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11m',
+  etiket: '2026-10-11n',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🔋 <b>DEPO TEKNOLOJISI geldi.</b> Tek seferlik Ar-Ge bedelinden sonra her depon <b>5 katı kapasiteye</b> kadar cikar. Ama ucuz degil: her kademe bir oncekinin <b>2 katina</b> mal olur, Sv5 depo bedelinin 30 kati eder. Satin aldigin sey para degil <b>KARO SLOTU</b> — karo basina birim limitin doldugunda tek cikis yolu budur.',
+    '🏛️ <b>Kayyum geliri kendi kasasinda birikiyor.</b> Park ettigin sirketin kazanci aktif sirkete AKMAZ; o sektore geri dondugunde kasada seni bekler. Birikim tesis degerinin <b>yuzde 20 sinde</b> durur — sirketi iki yil park etmek 70 gun park etmekten fazla kazandirmaz.',
     '⏫ <b>TESIS GELISTIRME geldi.</b> Artik yuzlerce tesis kurmak yerine var olani <b>yerinde buyutuyorsun</b>. Tek seferlik Ar-Ge bedelinden sonra her santral Sv5e kadar cikar: her kademe uretimi <b>2 katina</b> (Sv5 = 16 kat). Altin kural bozulmadi — yakit, emisyon ve kapasite lisansi payi da ayni oranda artar, yani bedava olcek yok. Odedigin buyutme bedeli <b>Tesis Degerine sayilir</b>.',
     '🔄 <b>REBIRTH yurutmesi hazir.</b> Ust cubuga dokununca rebirth ekrani acilir: hedefin, engellerin ve devrin ne getirip ne goturecegi tek ekranda. Rebirth atinca sirketin <b>yok olmaz</b> — devlet kayyum atar, tesisler %10 verimle calismaya devam eder ve geliri sana akar. Sen baska bir sektorde sifirdan kurarsin. Imtiyaz Puanin, postan, arkadaslarin, kredi sicilin <b>sende kalir</b>.',
     '🌾 <b>Ciftciye artik enerji ekrani acilmiyor.</b> Uzaktan donunce gosterilen rapor enerjiye gomuluydu; tarim oyuncusuna her seferinde <b>sifir MWh</b> yaziyordu. Artik sektore gore dallaniyor.',
@@ -6875,7 +6877,7 @@ function storeMaster(s) { // zinciri yukarı yürü: bağlının bağlısı da a
   return m || s;
 }
 function storeGroup(s) { if (!s) return []; const m = storeMaster(s); return stores().filter(x => storeMaster(x).id === m.id); }
-const groupCap = s => storeGroup(s).reduce((a, x) => a + STORE_TYPES[x.t].cap, 0);
+const groupCap = s => storeGroup(s).reduce((a, x) => a + storeCap(x), 0);
 const groupStored = s => storeGroup(s).reduce((a, x) => a + x.stored, 0);
 const groupCells = s => [...new Set(storeGroup(s).map(x => x.cell))]; // çapraz satış bu karelere açılır
 const isLinked = s => !!(s && (s.link || G.units.some(x => x.kind === 'store' && x.link === s.id)));
@@ -7299,7 +7301,7 @@ function freshState() {
     //    `false` olarak da saklanıyor — bayrak bulut turunu sağ geçiyor.
     // ⏫ Tesis Geliştirme kilidi SEKTÖRE AİT (PLAN: "araştırma sektöre aittir") — HOLDING
     //    beyaz listesinde YOK, yani rebirth'te kayyumda kalır ve yeni sektörde yeniden alınır.
-    tevsiAcik: false,
+    tevsiAcik: false, depoTekAcik: false,
     rb: 0, rbAt: 0, sektor: 'enerji', rbBitti: {}, rbSay: 0, sektorler: {}, rbBekleyen: false,
     // 🌾 TARIM (57. yama) — sektör verisi tek bir alt nesnede. Enerji oynayan oyuncuda
     //    boş durur, yer kaplamaz. `migrate()` eski kayıtlara kendiliğinden ekler.
@@ -8143,7 +8145,7 @@ const stores = () => { birimIdx(); return _depoIdx || []; };
 const readyStores = c => G.units.filter(u => u.kind === 'store' && u.cell === c && u.buildDone <= Date.now());
 const totalOutput = () => plants().reduce((s, u) => s + plantOutput(u), 0);
 const totalStored = () => stores().reduce((s, u) => s + u.stored, 0);
-const totalCap = () => stores().reduce((s, u) => s + STORE_TYPES[u.t].cap, 0);
+const totalCap = () => stores().reduce((s, u) => s + storeCap(u), 0);
 const installedMW = () => plants().reduce((s, u) => s + unitMW(u), 0);
 
 // ── Simülasyon ──
@@ -8183,14 +8185,14 @@ function step(dtMin, silent, atMin) {
       if (st) {
         // ⚡ trafo kaybı: santralden çıkan enerjinin tamamı depoya GİRMEZ
         const eff = storeEff(st, T); // 🔥 s4: güneşten depoya giden enerjinin kaybı azalır
-        const put = Math.min((STORE_TYPES[st.t].cap - st.stored) / (eff || 1), rem);
+        const put = Math.min((storeCap(st) - st.stored) / (eff || 1), rem);
         st.stored += put * eff; rem -= put;
         // 🔗 KAPASİTE BİRLEŞİMİ: bağlı depolar tek tank gibi çalışır — taşan enerji gruptaki
         // boş depolara akar. Bağlantı yoksa storeGroup tek elemanlı döner, davranış değişmez.
         if (rem > 0) for (const g2 of storeGroup(st)) {
           if (g2.id === st.id || rem <= 0) continue;
           const e2 = storeEff(g2, T);
-          const p2 = Math.min((STORE_TYPES[g2.t].cap - g2.stored) / (e2 || 1), rem);
+          const p2 = Math.min((storeCap(g2) - g2.stored) / (e2 || 1), rem);
           if (p2 > 0) { g2.stored += p2 * e2; rem -= p2; }
         }
         if (rem > 0 && !silent) toast('⚠️ ' + (isLinked(st) ? 'Bağlı depoların HEPSİ' : STORE_TYPES[st.t].nm) + ' DOLU — ' + T.nm + ' üretimi boşa gidiyor!', 'warn', 'full' + st.id, 30000);
@@ -8226,7 +8228,7 @@ function adAvail() {
 }
 window.sellUnitAd = id => {
   const u = G.units.find(x => x.id === id);
-  if (!u || adAvail() <= 0 || u.stored < STORE_TYPES[u.t].cap * .9) return;
+  if (!u || adAvail() <= 0 || u.stored < storeCap(u) * .9) return;
   if (u.disch) { toast('⚡ Bu depo zaten boşaltılıyor', 'warn'); return; }
   if (adFreeActive() || ilkSaatReklamsiz()) { // VIP ya da ilk 1 saat: reklam İZLETMEDEN aynı bonus
     G.adUses = (G.adUses || 0) + 1;
@@ -8410,6 +8412,29 @@ window.adFinishDischarge = id => {
 };
 // ── BOŞALTMA SÜRELİ SATIŞ (patron tasarımı): SAT'a basınca depo süre içinde boşalır —
 // en küçük depo ~35 sn, en büyüğü TAM dolulukta 2 dk. Para akan enerjiyle birlikte akar.
+// ═══════════ 🔋 DEPO TEKNOLOJİSİ (83. yama) ═══════════
+// Patron 11 Eki: "Depo kapasitesini 5 katına kadar yükseltebilir, fakat bu araştırma bedeli
+// 15 milyar ve her gelişim 2'ye katlanarak — 100M depoyu 1'den 2'ye 200M, 3'e 400M, 4'e 800M,
+// 5'e 1,6B. Depolar tesisler gibi değil, ZOR gelişecek."
+//
+// ⚖️ TESİS GELİŞTİRMEDEN BİLEREK FARKLI — karşılaştırma:
+//      tesis : ×15,06 bedele ×16 üretim  → büyütmek yeni inşadan birazcık KÂRLI
+//      depo  : ×30 bedele  × 5 kapasite  → büyütmek yeni depodan 6 KAT PAHALI
+//    Yani depoyu büyütmek para kazandırmaz; satın aldığın şey **KARO SLOTU**.
+//    Karo başına birim limiti 8 (araştırmayla 13) ve toplam 60 karo var — ileri oyunda
+//    kıt olan para değil YER. 5 katı kapasiteyi tek slotta tutmanın bedeli budur.
+const DEPOTEK_ACILIS = 15e9;    // tek seferlik Ar-Ge (patron: 15 milyar)
+const DEPOTEK_MAX = 5;          // Sv5 = taban kapasitenin 5 KATI (doğrusal, tesisteki gibi üstel DEĞİL)
+const depoLvl = u => Math.max(1, Math.min(DEPOTEK_MAX, Math.round((u && u.depoLvl) || 1)));
+// 🔋 TEK KAPI: bir DEPO BİRİMİNİN kapasitesi. Tür bağlamı (katalog, inşa ekranı, başka
+//    oyuncunun deposu) taban `T.cap`ta kalır — yeni kurulan depo her zaman Sv1'dir.
+const storeCap = u => { const T = STORE_TYPES[u && u.t]; return T ? T.cap * depoLvl(u) : 0; };
+// 💰 Kademe bedeli taban bedelin 2^L katı: Sv1→2 ×2, 2→3 ×4, 3→4 ×8, 4→5 ×16.
+const depoTekBedel = u => { const T = STORE_TYPES[u && u.t]; return T ? Math.round(T.cost * Math.pow(2, depoLvl(u))) : 0; };
+// Bugüne kadar ÖDENEN toplam: taban × (2^L − 2). Sv5'te ×30 — Tesis Değerine girer.
+const depoTekOdenen = u => { const T = STORE_TYPES[u && u.t]; return T ? Math.round(T.cost * (Math.pow(2, depoLvl(u)) - 2)) : 0; };
+const depoTekAcikMi = () => !!(typeof G !== 'undefined' && G && G.depoTekAcik);
+
 const dischSecOf = T => Math.round(30 + 90 * Math.min(1, T.cap / 500));
 // UZAK PAZARA SATIŞ İZNİ — tek kapı. Hayalet aktarımı burada kesiyoruz:
 // ⛔ KOMŞU PAZAR KALDIRILDI (patron 25 Ağu): "hat yoksa satış yok."
@@ -8565,7 +8590,7 @@ window.startDischarge = (id, frac, adMult, targetCell, quiet) => {
   // _autoOff: OYUN kapattı (oyuncu değil) — boşaltma bitince/çevrimdışı dönüşte otomatik geri açılır
   plants().forEach(p => { if (p.st === st.id && p.on) { p.on = false; p._autoOff = true; } });
   const T = STORE_TYPES[st.t];
-  if (!quiet) toast('⚡ Boşaltma başladı: ' + fmtE(amt) + ' MWh — ~' + Math.max(1, Math.ceil(dischSecOf(T) * amt / T.cap)) + ' sn' + (targetCell ? ' · 🔁 ' + cellCode(targetCell) + ' pazarına (-%10 aktarım)' : ''), '');
+  if (!quiet) toast('⚡ Boşaltma başladı: ' + fmtE(amt) + ' MWh — ~' + Math.max(1, Math.ceil(dischSecOf(T) * amt / storeCap(st))) + ' sn' + (targetCell ? ' · 🔁 ' + cellCode(targetCell) + ' pazarına (-%10 aktarım)' : ''), '');
   if (quiet) beep(600, .08); else kaching(); // 💰 SAT tuşuna basınca yazarkasa (toplu satış tek sefer çalar)
   // 🔴 47. tur: BU İKİSİ KOŞULSUZDU. sellAll 60 merkez depo için bunu 60 KEZ çağırıyordu:
   //    60 TAM kayıt (780 birimde ~172 KB × 60 ≈ 10 MB JSON) + 60 Leaflet işaretçi geçişi.
@@ -8599,7 +8624,7 @@ function dischargeTick(dtSec) {
       const al = Math.min(g2.stored, d.left - st.stored);
       if (al > 0) { g2.stored -= al; st.stored += al; }
     }
-    const chunk = Math.min(d.left, st.stored, (T.cap / dischSecOf(T)) * dtSec);
+    const chunk = Math.min(d.left, st.stored, (storeCap(st) / dischSecOf(T)) * dtSec);
     if (chunk > 0) {
       d.gain += sellChunk(st, chunk, d.target, d.mult);
       d.left -= chunk; d.sold += chunk;
@@ -14438,7 +14463,7 @@ function aucAssets() { // satılabilir varlıkların listesi
     if (!T) continue;
     // 📍 KONUM (patron: "bilmediğim yerdeki santrali almam") — ilanda taşınır; cell/ll HAM
     // olarak da taşınır ki kartta bölge adına tıklayınca bilgi ekranı açılabilsin (loc geri çevrilemez)
-    out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, loc: placeName(u.cell) + ' · ' + cellCode(u.cell), cell: u.cell, ll: u.ll, note: u.kind === 'store' ? T.cap + ' MWh' : u.kind === 'plant' ? unitMW(u) + ' MW' : '' });
+    out.push({ kind: 'unit', id: u.id, nm: unitName(u), ico: T.ico, base: resaleValue(u).value, loc: placeName(u.cell) + ' · ' + cellCode(u.cell), cell: u.cell, ll: u.ll, note: u.kind === 'store' ? storeCap(u) + ' MWh' : u.kind === 'plant' ? unitMW(u) + ' MW' : '' });
   }
   for (const l of (G.lines || [])) if (lineReady(l) && !aucListed('line', l.id))
     out.push({ kind: 'line', id: l.id, nm: (placeName(l.from)) + ' → ' + (placeName(l.to)) + ' hattı', ico: '⚡', base: Math.round(lineCost(l.km, l.hubs, lineKat(l)) * .5 * (1 - lineOmurFrac(l)) + lineCost(l.km, l.hubs, lineKat(l)) * .05), loc: placeName(l.from) + ' → ' + placeName(l.to), note: fmtN(l.km) + ' km' });
@@ -15516,7 +15541,10 @@ const tesisDegeri = () => ((typeof G !== 'undefined' && G && G.units) ? G.units 
   //       para çıkmış olsa da kapasite henüz KURULU değil.
   // ⏫ 80. yama — ÖDENEN BÜYÜTME BEDELİ DE TESİS YATIRIMIDIR (patron: "az ama yüksek
   //    seviyeli tesislerle de rebirth atabilelim"). Depo kademesindeki desenin aynısı.
-  return t + T.cost + (u.capLvl || 0) * T.cost / 2 + (u.kind === 'plant' ? tevsiOdenen(u) : 0);
+  // 🔋 83. yama — depo teknolojisi kademeleri de tesis yatırımıdır (aynı desen).
+  return t + T.cost + (u.capLvl || 0) * T.cost / 2
+    + (u.kind === 'plant' ? tevsiOdenen(u) : 0)
+    + (u.kind === 'store' ? depoTekOdenen(u) : 0);
 }, 0);
 
 // ═══════════════════════ 🌾 TARIM — VERİ KATMANI (57. yama) ═══════════════════════
@@ -16307,6 +16335,20 @@ const HOLDING_ALANLARI = [
   'sonSurumNotu', '_sonDuyuru', '_mailSeeded', '_grup2', '_reported',
   '_tutDepoBase', '_tutDepoUyarildi', '_tutT2Base', '_tutT2Uyarildi',
   'nextId',            // birim kimliği ASLA geri sarmaz — kayyum birimleriyle çakışmasın
+  // 💰 81. yama — `totalEarned` / `totalSold` HOLDİNG oldu. ÜÇ ayrı gerekçe, üçü de ölçüldü:
+  //  1) 🔴 FIREBASE KURALI: `saves/$uid` altında ikisi de MONOTON —
+  //     `.validate: newData.val() >= data.val()`. Canlıda ölçtüm: 5 yazıp sonra 0 yazmak
+  //     **HTTP 401**. Sıfırlanınca rebirth sonrası HER bulut kaydı reddedilir; oyuncunun
+  //     ilerlemesi o andan sonra sunucuya hiç yazılmaz. Sessiz veri kaybı.
+  //     Holding alanı yapınca sayaç hiç azalmıyor ve kuralı GEVŞETMEYE GEREK KALMIYOR.
+  //  2) `checkOffers` kampanyaları yalnız `G.offers[id]` + `totalEarned` eşiğine bakıyor.
+  //     Sıfırlansaydı gerçek parayla alınan "İlk Milyon" paketi her döngüde YENİDEN
+  //     tetiklenir ve kalıcı %50 bakım indirimini tekrar basardı.
+  //  3) ×10 acemi bonusu ve 🌱 hava takviyesi bu sayaçtan okunuyor. $10B'lik bir kayyumu
+  //     olan oyuncu acemi DEĞİL; 6. rebirth'te altıncı kez ×10 almak sömürü olurdu.
+  // ⚠️ Bedeli: yeni sektörde "toplam ciro" holdingin ömrünü gösterir, o sektörünkini değil.
+  //    Sektör bazlı ciro gerekirse kayyum anlık görüntüsünden okunur (`sektorler[x].tam`).
+  'totalEarned', 'totalSold',
   'lastSeen',
 ];
 
@@ -16314,10 +16356,23 @@ const HOLDING_ALANLARI = [
 // Neden ölçüm: oyunda otomatik satış YOK, yani parkedilmiş şirketin geliri simüle
 // edilemez. Devlet işletiyorsa satar; o satışın hızını şirketin KENDİ geçmiş ortalaması
 // kadar varsayıyoruz ve %10'a indiriyoruz. Uydurma bir sayı değil, şirketin kendi karnesi.
+// 🔴 83. yama — İKİ FREN, ölçümle eklendi. Test şirketinde oran **$507M/saat** çıktı:
+//    `ciro / yaş` dakikalık bir şirkette patlıyor. Patron oranın BÜYÜKLÜĞÜNDEN memnun
+//    ("$10B şirket için $28M/gün ufak para") — sorun büyüklük değil, formülün SAĞLAMLIĞI.
+//  1) YAŞ TABANI 24 saat: bir günden genç şirketin "ömür ortalaması" diye bir şeyi yoktur.
+//  2) TAVAN: saatlik gelir, kayyumun kendi tesis değerinin %1'ini geçemez. Gerçek veride
+//     oran ~%0,012/saat ($10B tesis → $1,19M/saat), yani tavan 80 kat uzakta — normal
+//     oyunda ASLA devreye girmez, yalnız bozuk/uç kaydı yakalar.
+const KAYYUM_YAS_TABAN_SAAT = 24;
+const KAYYUM_TAVAN_ORAN = 0.01;
+// 🏛️ 84. yama — kayyumun ömür boyu biriktirebileceği TOPLAM tavan (tesis değerinin oranı).
+const KAYYUM_BIRIKIM_ORAN = 0.20;
 function kayyumSaatlik(s) {
-  const yasSaat = Math.max(1, (Date.now() - (s.founded || Date.now())) / 36e5);
+  const yasSaat = Math.max(KAYYUM_YAS_TABAN_SAAT, (Date.now() - (s.founded || Date.now())) / 36e5);
   const ciro = (s.totalEarned || 0) + ((s.tarim && s.tarim.ciro) || 0);
-  return Math.max(0, KAYYUM_VERIM * ciro / yasSaat);
+  const ham = KAYYUM_VERIM * ciro / yasSaat;
+  const tavan = Math.max(0, tesisDegeri()) * KAYYUM_TAVAN_ORAN;
+  return Math.max(0, tavan > 0 ? Math.min(ham, tavan) : ham);
 }
 
 // 📦 Park anlık görüntüsü. ⚠️ `sektorler` BİLEREK dışarıda bırakılıyor — içeride kalsaydı
@@ -16436,12 +16491,26 @@ function kayyumAkis() {
     if (!(k.sonAkis > 0) || k.sonAkis > simdi) { k.sonAkis = simdi; continue; }
     const gecenSaat = (simdi - k.sonAkis) / 36e5;
     if (gecenSaat < KAYYUM_MIN_SAAT) continue;
-    const kazanc = Math.floor(k.saatlik * Math.min(gecenSaat, KAYYUM_TAVAN_SAAT));
+    // 🔴 84. yama — PATRON KARARI: kayyumun TOPLAM birikimi tesis değerinin %20'sini geçemez.
+    //    ⚠️ "Saatlik gelir %20'yi geçmesin" okuması ANLAMSIZ olurdu: gerçek oran saatte
+    //    ~%0,012, yani o tavan 1.600 kat uzakta kalır ve hiç devreye girmez. Anlamlı fren
+    //    TOPLAM birikimde: $10B'lik kayyum en fazla $2B biriktirir, sonra DURUR.
+    //    Gerçek hızda dolması ~70 gün — bir rebirth turu (~1 ay) birikimin ~%43'ünü doldurur,
+    //    yani dönüş ödülü var ama şirketi iki yıl park etmek fazladan hiçbir şey kazandırmaz.
+    const birikimTavan = Math.max(0, (k.tesis || 0) * KAYYUM_BIRIKIM_ORAN);
+    const kalanHak = Math.max(0, birikimTavan - (k.odenen || 0));
+    let kazanc = Math.floor(k.saatlik * Math.min(gecenSaat, KAYYUM_TAVAN_SAAT));
+    if (kazanc > kalanHak) kazanc = Math.floor(kalanHak);
     k.sonAkis = simdi;
-    if (kazanc > 0) { k.odenen = (k.odenen || 0) + kazanc; toplam += kazanc; }
+    // 🔴 82. yama — PATRON KARARI: gelir AKTİF şirkete AKMAZ, kayyumun KENDİ kasasında
+    //    birikir. "Ben enerjiyi bırakıp tarıma geçtim; kayyum enerjide, onun geliri de
+    //    enerjiye. Geri döndüğümde kasada olacak."
+    // 👉 Bu aynı zamanda ölçülen bir denge sorununu kapatıyor: $10B'lik bir şirketin
+    //    %10'u ~$28M/gün ederdi ve $10M ile başlayan yeni sektörü anlamsız kılardı.
+    //    Artık kayyum yeni sektörü EZEMEZ; biriken para dönüşün ödülü olur.
+    if (kazanc > 0) { k.odenen = (k.odenen || 0) + kazanc; k.kasa = (k.kasa || 0) + kazanc; toplam += kazanc; }
   }
-  if (toplam > 0) G.cash = (G.cash || 0) + toplam;
-  return toplam;
+  return toplam;   // yalnız RAPOR içindir — aktif kasaya tek kuruş girmez
 }
 const kayyumToplamSaatlik = () => Object.values((G && G.sektorler) || {}).reduce((a, k) => a + ((k && k.saatlik) || 0), 0);
 
@@ -16460,20 +16529,26 @@ window.rebirthEkrani = () => {
     + '<div class="qline"><span>🏭 Tesis Değeri</span><span><b>' + fmt(simdi) + '</b> / ' + fmt(hedef) + '</span></div>'
     + '<div id="lvlbar" style="margin:6px 0"><div style="height:100%;border-radius:inherit;background:'
     + (hedefte ? 'var(--gold)' : 'var(--acc2)') + ';width:' + Math.round(oran * 100) + '%"></div></div>'
-    + '<p>Rebirth atarsan şirketin <b>yok olmaz</b>: devlet <b>kayyum</b> atar, tesislerin '
-    + '<b>%' + Math.round(KAYYUM_VERIM * 100) + ' verimle</b> çalışmaya devam eder ve geliri sana akar. '
-    + 'Sen başka bir sektörde <b>' + fmt(REBIRTH_BASLANGIC) + '</b> ile sıfırdan kurarsın.</p>'
+    + '<p>Rebirth atarsan şirketin <b>yok olmaz</b>: devlet <b>kayyum</b> atar ve tesislerin '
+    + '<b>%' + Math.round(KAYYUM_VERIM * 100) + ' verimle</b> çalışmaya devam eder. '
+    + 'Kazandığı para <b>o şirketin kendi kasasında birikir</b> — bu sektöre geri döndüğünde '
+    + 'kasa seni bekliyor olur. Sen başka bir sektörde <b>' + fmt(REBIRTH_BASLANGIC)
+    + '</b> ile sıfırdan kurarsın; eski şirketten <b>tek kuruş taşınmaz</b>.</p>'
     + '<table class="ledger">'
     + '<tr><td>🏛️ Kayyuma devredilecek</td><td>' + (G.units || []).length + ' tesis · ' + fmt(simdi) + '</td></tr>'
     + '<tr><td>💼 Kayyumda kalan kasa</td><td>' + fmt(G.cash || 0) + '</td></tr>'
-    + '<tr><td>💵 Tahmini kayyum geliri</td><td>' + fmt(Math.round(kayyumSaatlik(G))) + ' / saat</td></tr>'
+    + '<tr><td>💵 Kayyum geliri</td><td>' + fmt(Math.round(kayyumSaatlik(G))) + ' / saat <span class="sub">kendi kasasına</span></td></tr>'
+    + '<tr><td>🏛️ Kayyum birikim tavanı</td><td>' + fmt(Math.round(simdi * KAYYUM_BIRIKIM_ORAN))
+      + ' <span class="sub">(tesis degerinin yuzde ' + Math.round(KAYYUM_BIRIKIM_ORAN * 100) + ' kadari — dolunca durur)</span></td></tr>'
     + '<tr><td>💠 İmtiyaz Puanın</td><td>SENDE KALIR (' + (G.ip || 0) + ')</td></tr>'
     + '<tr><td>📬 Posta · arkadaş · ittifak</td><td>SENDE KALIR</td></tr>'
     + '<tr><td>🧪 Araştırma · 🧬 ağaç · 📜 ruhsat</td><td>kayyumda kalır</td></tr>'
     + '</table>'
     + (parkli.length ? '<h3 style="font-size:13px;margin:10px 0 2px">🏛️ Kayyum şirketlerin</h3>'
         + parkli.map(k => '<div class="qline"><span>' + sektorBilgi(k.sektor).ico + ' ' + sektorBilgi(k.sektor).ad
-          + ' <span class="sub">· ' + (k.il || '—') + '</span></span><span>' + fmt(k.saatlik) + '/saat</span></div>').join('') : '')
+          + ' <span class="sub">· ' + (k.il || '—') + '</span></span><span>💼 ' + fmt(k.kasa || 0)
+          + ' <span class="sub">· birikim %' + Math.round(100 * Math.min(1, (k.odenen || 0) / Math.max(1, (k.tesis || 0) * KAYYUM_BIRIKIM_ORAN)))
+          + '</span></span></div>').join('') : '')
     + (eng.length ? '<h3 style="font-size:13px;margin:10px 0 2px">🚧 Önce bunları kapat</h3>'
         + eng.map(x => '<p class="neg" style="margin:2px 0;font-size:12px">' + x + '</p>').join('') : '')
     + (hedefte && !eng.length
@@ -18228,7 +18303,7 @@ function offlineProgress() {
   //    Tarım oyuncusuna her dönüşte "0 MWh üretildi" raporu açılıyordu — yalan bilgi.
   //    Enerji dışı sektörde rapor GÖSTERİLMEZ; kayyum geliri varsa onu bildir, o kadar.
   if (G.sektor !== 'enerji') {
-    if (kayyumGelen > 0) toast('🏛️ Kayyum şirketlerinden ' + fmt(kayyumGelen) + ' geldi', '', 'kayyum', 9000);
+    if (kayyumGelen > 0) toast('🏛️ Kayyum şirketlerinin kasasında ' + fmt(kayyumGelen) + ' birikti', '', 'kayyum', 9000);
     save();
     return;
   }
@@ -18249,7 +18324,7 @@ function offlineProgress() {
       ${fuelOut ? `<tr><td>⛽ Yakıtı biten santral</td><td class="neg">${fuelOut} adet — ikmal bekliyor!</td></tr>` : ''}
       ${wasted > 1 ? `<tr><td>⚠️ Depo doluyken boşa giden</td><td class="neg">${fmtE(wasted)} MWh</td></tr>` : ''}
       ${dischN ? `<tr><td>💰 Yarım kalan satışlar tamamlandı</td><td class="pos">+${fmt(dischGain)}</td></tr>` : ''}
-      ${kayyumGelen > 0 ? `<tr><td>🏛️ Kayyum şirketlerinden</td><td class="pos">+${fmt(kayyumGelen)}</td></tr>` : ''}
+      ${kayyumGelen > 0 ? `<tr><td>🏛️ Kayyum kasalarında biriken</td><td class="pos">+${fmt(kayyumGelen)} <span class="sub">(o sektöre döndüğünde alırsın)</span></td></tr>` : ''}
       <tr><td>💼 Kasa</td><td class="pos">${fmt(G.cash)}</td></tr>
     </table>
     ${wasted > 1 ? '<p class="sub">💡 Depon dolunca üretim boşa gider — daha büyük depo kur ya da 🔔 bildirim açıp dolunca gel sat.</p>' : ''}
@@ -18353,7 +18428,7 @@ function scheduleFillNotifs() {
   for (const st of stores()) {
     const T = STORE_TYPES[st.t];
     const inflow = plants().filter(p => assignedStoreOf(p) === st).reduce((s, p) => s + plantOutput(p), 0) * speedMult();
-    const space = T.cap - st.stored;
+    const space = storeCap(st) - st.stored;
     if (inflow > .05 && space > .5) {
       const ms = Math.min(12 * 3600e3, space / inflow * 3600e3);
       if (ln && lnIdx < LN_ID_MAX) {
@@ -18692,7 +18767,7 @@ function unitIconPx(u) {
   //    `T.kind` okumasında TypeError atıyordu — haritada tarla çizilirken oyun çökerdi.
   if (tarimKindMi(u.kind)) return 34;          // tarım birimleri sabit boy (mw/cap yok)
   const T = TYPE_OF(u.kind, u.t);
-  if (u.kind === 'store') return Math.min(56, Math.round(26 + T.cap * 0.05));
+  if (u.kind === 'store') return Math.min(56, Math.round(26 + storeCap(u) * 0.05));
   if (T.kind === 'wind') return Math.min(78, Math.round(42 + T.mw * 0.8)); // türbinler büyük ve net
   return Math.min(64, Math.round(28 + T.mw * 0.6));
 }
@@ -18818,7 +18893,7 @@ function unitIconHTML(u) {
     const merkez = !bagliDepo && G.units.some(x => x.kind === 'store' && x.link === u.id);
     badge = bagliDepo ? '🔗'
       : (u.disch ? '💰 ' : '') + (merkez ? '🏛️ ' : '') +
-        (merkez ? fmtE(groupStored(u)) + '/' + groupCap(u) : fmtE(u.stored) + '/' + STORE_TYPES[u.t].cap);
+        (merkez ? fmtE(groupStored(u)) + '/' + groupCap(u) : fmtE(u.stored) + '/' + storeCap(u));
   }
   else if (u.kind === 'tarla') {
     // 🌾 Haritada bütün tarlalar aynı görünüyordu — ne ekildiği de, hasadın hazır olduğu
@@ -18840,7 +18915,7 @@ function unitIconHTML(u) {
   const px = unitIconPx(u);
   let visual;
   if (u.kind === 'store') {
-    visual = containerSVG(px, u.stored / T.cap, T.tip); // konteyner bina — pil emojisi değil
+    visual = containerSVG(px, u.stored / storeCap(u), T.tip); // konteyner bina — pil emojisi değil
   } else if (u.kind === 'fueldepot') {
     visual = fuelDepotSVG(px, (u.fuel || 0) / depotCap(u), T.fuel); // kömür/LNG konteyneri — kazma emojisi değil
   } else if (u.kind === 'tarla') {
@@ -20236,7 +20311,7 @@ function renderStorePanel() {
   // Bağlıysa GRUP toplamı gösterilir; satış MERKEZ DEPO'nun KENDİ karesinin fiyatından yapılır
   // (başka bölgeye satmak için depo ekranına girip oradaki bölge butonu kullanılır).
   const dolu = s => isLinked(s) ? groupStored(s) : s.stored;
-  const kapa = s => isLinked(s) ? groupCap(s) : STORE_TYPES[s.t].cap;
+  const kapa = s => isLinked(s) ? groupCap(s) : storeCap(s);
   const rows = sts.slice().sort((a, b) => (dolu(b) / kapa(b)) - (dolu(a) / kapa(a))).map(s => {
     const T = STORE_TYPES[s.t];
     const mwh = dolu(s), cap = kapa(s);
@@ -20674,7 +20749,7 @@ function openUnitSheet(id) {
     // 🔗 MERKEZ DEPO grup adına satar — SAT butonları ve kazanç tahminleri GRUP toplamıyla
     // hesaplanır (patron bildirdi: merkezde "0.4 MWh" yazıp satışta grubun tamamı akıyordu).
     const satMwh = isLinked(u) && !u.link ? groupStored(u) : u.stored;
-    const satCap = isLinked(u) && !u.link ? groupCap(u) : T.cap;
+    const satCap = isLinked(u) && !u.link ? groupCap(u) : storeCap(u);
     const rAll = sellRevenue(u.cell, satMwh);
     const rHalf = sellRevenue(u.cell, satMwh * .5);
     const base = rAll.price; // BU BÖLGENİN anlık alım fiyatı (bölge çarpanı + imtiyaz dahil)
@@ -20686,27 +20761,27 @@ function openUnitSheet(id) {
     const grupUye = isLinked(u) ? storeGroup(u) : [u];
     const inflow = plants().filter(p2 => { const s2 = assignedStoreOf(p2); return s2 && grupUye.some(g2 => g2.id === s2.id); })
       .reduce((s, p2) => s + plantOutput(p2), 0) * speedMult();
-    const space = (isLinked(u) ? groupCap(u) : T.cap) - (isLinked(u) ? groupStored(u) : u.stored);
+    const space = (isLinked(u) ? groupCap(u) : storeCap(u)) - (isLinked(u) ? groupStored(u) : u.stored);
     const fut = priceAt(nowMin() + 60) * cellPriceFactor(u.cell) * (myLease(u.cell) ? 1 + LEASE_PRIM : 1);
     const up = fut > base * 1.03, dn = fut < base * .97;
     // ⛔ KOMŞU PAZAR KALDIRILDI (patron 25 Ağu) — burada yalnız 🚨 ACİL İHALE teslimatı kaldı.
     const at = G.ally && G.ally.tender && Date.now() < G.ally.tender.until ? G.ally.tender : null;
     const alt = at && at.cell !== u.cell ? { c: at.cell, p: cellPriceNow(at.cell), emergency: true } : null;
     const wasOpen = !!($('us_det') && $('us_det').open); // canlı tazelemede Ayrıntılar açık kalsın
-    $('us_title').innerHTML = `<b>${T.cap} MWh</b> <span style="font-weight:600">${unitName(u)}</span> <span style="cursor:pointer;font-size:13px;opacity:.8" onclick="renameUnit(${u.id})" title="Yeniden isimlendir">✏️</span>`;
+    $('us_title').innerHTML = `<b>${storeCap(u)} MWh</b>${depoLvl(u) > 1 ? ` <span class="pos" style="font-size:11px">🔋Sv${depoLvl(u)}</span>` : ''} <span style="font-weight:600">${unitName(u)}</span> <span style="cursor:pointer;font-size:13px;opacity:.8" onclick="renameUnit(${u.id})" title="Yeniden isimlendir">✏️</span>`;
     $('us_body').innerHTML = building ? `<p class="sub">🏗️ İnşa ediliyor — ${Math.ceil((u.buildDone - now) / 1000)} sn</p>` + adFinishBtnHTML(u) : `
       <div class="detcols">
-        <div><div class="l">⚡ ${isLinked(u) ? 'Grup dolum hızı' : 'Dolum hızı'}${T.loss ? ' <span class="sub">(⚡kayıp %' + Math.round(storeLoss(u) * 100) + ')</span>' : ''}</div><div class="v">${(inflow * (1 - storeLoss(u))).toFixed(1)} <span style="font-size:11px">MW</span>${speedMult() > 1 ? ' 🚀' : ''}<span style="font-size:10.5px;font-weight:600">${dolumTxt((isLinked(u) ? groupCap(u) : T.cap) - (isLinked(u) ? groupStored(u) : u.stored), inflow)}</span></div></div>
+        <div><div class="l">⚡ ${isLinked(u) ? 'Grup dolum hızı' : 'Dolum hızı'}${T.loss ? ' <span class="sub">(⚡kayıp %' + Math.round(storeLoss(u) * 100) + ')</span>' : ''}</div><div class="v">${(inflow * (1 - storeLoss(u))).toFixed(1)} <span style="font-size:11px">MW</span>${speedMult() > 1 ? ' 🚀' : ''}<span style="font-size:10.5px;font-weight:600">${dolumTxt((isLinked(u) ? groupCap(u) : storeCap(u)) - (isLinked(u) ? groupStored(u) : u.stored), inflow)}</span></div></div>
         ${isLinked(u)
           ? `<div><div class="l">🔗 Ortak depo (%${Math.round(100 * groupStored(u) / (groupCap(u) || 1))})</div><div class="v">${fmtE(groupStored(u))} <span style="font-size:11px">/ ${groupCap(u)} MWh</span></div></div>`
-          : `<div><div class="l">🔋 Doluluk (%${Math.round(100 * u.stored / T.cap)})</div><div class="v">${fmtE(u.stored)} <span style="font-size:11px">/ ${T.cap} MWh</span></div></div>`}
+          : `<div><div class="l">🔋 Doluluk (%${Math.round(100 * u.stored / storeCap(u))})</div><div class="v">${fmtE(u.stored)} <span style="font-size:11px">/ ${storeCap(u)} MWh</span></div></div>`}
       </div>
       ${isLinked(u) ? (() => { // 🔗 bağlı depo listesi (patron: "bağlı depo — diğer depo adı yazsın")
         const grup = storeGroup(u), mst = storeMaster(u);
         return `<div style="border:1px solid var(--acc2);border-radius:10px;padding:8px 10px;margin:6px 0">
           <div style="font-size:11px;color:var(--acc2)">🔗 DEPO GRUBU <span class="sub">kapasite birleşik</span></div>
           ${grup.map(g2 => `<div class="sub" style="margin-top:3px">${g2.id === mst.id ? '🏛️ <b>Merkez depo</b>' : '🏢 Bağlı depo'} ·
-            <b>${unitName(g2)}</b> — ${placeName(g2.cell)} · ${fmtE(g2.stored)}/${STORE_TYPES[g2.t].cap} MWh${g2.id === u.id ? ' <span style="color:var(--gold)">(bu depo)</span>' : ''}</div>`).join('')}
+            <b>${unitName(g2)}</b> — ${placeName(g2.cell)} · ${fmtE(g2.stored)}/${storeCap(g2)} MWh${g2.id === u.id ? ' <span style="color:var(--gold)">(bu depo)</span>' : ''}</div>`).join('')}
           <div class="sub" style="margin-top:4px">🌍 Satış yapılabilen bölgeler: <b>${[...new Set(groupCells(u).map(c => placeName(c) + ' ' + cellCode(c)))].join(' · ')}</b></div>
         </div>`;
       })() : ''}
@@ -20733,7 +20808,7 @@ function openUnitSheet(id) {
         <div class="sub">Satılan: ${fmtE(u.disch.sold)} MWh · +${fmt(u.disch.gain)} · kalan ${fmtE(u.disch.left)} MWh</div>
         <button class="bigsell" style="background:#8a6cff;color:#0d0a1a;margin-top:8px" onclick="adFinishDischarge(${u.id})">${adVerb()} — Satışı HEMEN Bitir (kalan ${fmtE(u.disch.left)} MWh)</button>
       </div>` : `
-      <button class="bigsell" onclick="sellUnit(${u.id},1)" ${satMwh < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(satMwh)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * satMwh / T.cap))} sn)</button>
+      <button class="bigsell" onclick="sellUnit(${u.id},1)" ${satMwh < .005 ? 'disabled' : ''}>💰 SAT — ~${fmt(rAll.gain)} (${fmtE(satMwh)} MWh · ~${Math.max(1, Math.ceil(dischSecOf(T) * satMwh / storeCap(u)))} sn)</button>
       <p class="sub" style="margin:2px 0 6px;text-align:center">⚡ Tutara <b>kayıp-kaçak bedeli −%${LOSS_LEAK * 100}</b> dahildir (iletim/dağıtım kaybı). Boşaltma boyunca birim fiyat <b>sabitlenir</b> — gördüğün tutarı alırsın.</p>
       ${rAll.leaseTaxRate ? `<p class="sub neg" style="margin:2px 0 6px;text-align:center">🏛️ Bu karonun alım garantisi <b>${rAll.leaseOwner || 'rakipte'}</b> — tutardan <b>%${LEASE_PRIM * 100} karo vergisi düşülmüştür</b> (karo sahibine ödenir).</p>` : ''}
       ${alt ? (() => { // 🚨 acil ihale teslimatı — aktarım kesintisi yok; rakip kiralı karoda karo vergisi düşer
@@ -20805,7 +20880,17 @@ function openUnitSheet(id) {
         // direkt en altta kırmızı buton olsun") — 🔗 GRUP KİLİDİ korunur: bağlantılı depo
         // (merkez ya da bağlı) bağlantı kesilmeden SATILAMAZ, uyarı butonun kendisinde.
         if (isLinked(u)) return `<button class="bigsell" style="color:var(--dim)" onclick="toast('🔗 Bu depo bir depo grubuna bağlı — bağlantı kesilmeden satılamaz ve müzayedeye konulamaz. Önce yukarıdan 🔌 Bağlantıyı Kes.','warn',null,0,true)">🔒 Depoyu Sat — önce bağlantıyı kes</button>`;
-        const r = resaleValue(u); return `<button class="bigsell" onclick="demolishUnit(${u.id})" style="background:var(--danger);color:#fff">🗑️ Depoyu Sat — ${fmt(r.value)} iade (%${100 - r.pct} zarar edilecek)</button>`; })()}`;
+        const r = resaleValue(u); return `<button class="bigsell" onclick="demolishUnit(${u.id})" style="background:var(--danger);color:#fff">🗑️ Depoyu Sat — ${fmt(r.value)} iade (%${100 - r.pct} zarar edilecek)</button>`; })()}
+      ${(() => { // 🔋 DEPO TEKNOLOJİSİ
+        const lv = depoLvl(u);
+        let h = '<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🔋 DEPO TEKNOLOJİSİ <span class="sub">kademe ' + lv + '/' + DEPOTEK_MAX + '</span></div>';
+        if (!depoTekAcikMi()) return h + `<button class="bigsell" onclick="depoTekAcAsk()" ${G.cash < DEPOTEK_ACILIS ? 'disabled' : ''}>🧪 Ar-Ge: Depo Teknolojisi — ${fmt(DEPOTEK_ACILIS)}</button>
+          <p class="sub">Tek seferlik. Açılınca her depon <b>5 katı kapasiteye</b> kadar çıkar. ⚠️ Pahalıdır ve her kademe bir öncekinin <b>2 katına</b> mal olur — depolar tesisler gibi kolay gelişmez. Kazandığın şey para değil <b>karo slotu</b>: 5 katı kapasiteyi tek birimde tutarsın.</p>`;
+        if (lv >= DEPOTEK_MAX) return h + '<p class="sub">✅ Bu depo en üst kademede (Sv' + DEPOTEK_MAX + ' — taban kapasitenin 5 katı).</p>';
+        const bedel = depoTekBedel(u);
+        return h + `<button class="bigsell" onclick="depoTekYapAsk(${u.id})" ${G.cash < bedel ? 'disabled' : ''}>🔋 Sv${lv} → Sv${lv + 1} — ${fmt(bedel)} <span class="sub">(${storeCap(u)} → ${STORE_TYPES[u.t].cap * (lv + 1)} MWh)</span></button>
+          <p class="sub">Sonraki kademe <b>${fmt(bedel * 2)}</b> olacak. Sv${DEPOTEK_MAX}'e kadar toplam <b>${fmt(STORE_TYPES[u.t].cost * 30)}</b> — depo bedelinin 30 katı. Ödediğin her kuruş <b>Tesis Değerine sayılır</b>.</p>`;
+      })()}`;
     if (wasOpen) { const d = $('us_det'); if (d) d.open = true; }
   } else if (u.kind === 'office') {
     // ── OFİS: bölge raporu (patron isteği — net kazanç/zarar + cihaz sayısı) ──
@@ -21029,9 +21114,55 @@ function resaleValue(u) {
   const wear = u.kind === 'plant' ? (.5 + .5 * u.cond / 100) : 1;
   // ⏫ 80. yama — büyütülmüş tesis daha pahalıya satılır; yoksa Sv5 bir türbini satmak
   //    14 kat yatırımı yakardı ve büyütme tuzak olurdu.
-  const yatirim = T.cost + (u.kind === 'plant' ? tevsiOdenen(u) : 0);
+  const yatirim = T.cost + (u.kind === 'plant' ? tevsiOdenen(u) : 0) + (u.kind === 'store' ? depoTekOdenen(u) : 0);
   return { value: Math.round(yatirim * base * wear), pct: Math.round(base * wear * 100) };
 }
+// 🔋 DEPO TEKNOLOJİSİ İŞLEVLERİ (83. yama)
+window.depoTekAcAsk = () => {
+  if (depoTekAcikMi()) return;
+  if (krediKilidi('Ar-Ge yatırımı')) return;
+  if (G.cash < DEPOTEK_ACILIS) { toast('Depo Teknolojisi Ar-Ge bedeli ' + fmt(DEPOTEK_ACILIS), 'warn'); return; }
+  $('modal').innerHTML = '<h2>🧪 Ar-Ge: Depo Teknolojisi</h2>'
+    + '<p>Depolarının hücre yoğunluğunu arttırır. Bundan sonra <b>her depon</b> kademe kademe '
+    + 'büyür — en üstte taban kapasitenin <b>5 katı</b>.</p>'
+    + '<table class="ledger">'
+    + '<tr><td>Kademe başına kapasite</td><td><b>+1 kat</b> (Sv5 = 5 kat)</td></tr>'
+    + '<tr><td>Kademe bedeli</td><td>her kademe bir öncekinin <b>2 katı</b></td></tr>'
+    + '<tr><td>Sv5 toplam bedeli</td><td>depo bedelinin <b>30 katı</b></td></tr>'
+    + '<tr><td>Tesis Değeri</td><td class="pos">ödenen bedel <b>sayılır</b></td></tr>'
+    + '</table>'
+    + '<p class="sub">⚠️ Bu <b>kârlı bir yatırım değil</b> — 5 kat kapasite için 30 kat öde demek. '
+    + 'Satın aldığın şey <b>karo slotu</b>: karo başına birim limitin dolduğunda tek çıkış yolu budur.</p>'
+    + '<p class="sub">Bu yetkinlik <b>bu sektöre</b> aittir — rebirth sonrası yeniden alınır.</p>'
+    + '<button class="primary" onclick="depoTekAc()">🧪 Ar-Ge Yatırımı Yap — ' + fmt(DEPOTEK_ACILIS) + '</button>'
+    + '<button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>';
+  $('overlay').classList.add('show');
+};
+window.depoTekAc = () => {
+  if (depoTekAcikMi() || G.cash < DEPOTEK_ACILIS) { closeModal(); return; }
+  G.cash -= DEPOTEK_ACILIS; gider('arastirma', DEPOTEK_ACILIS);
+  G.depoTekAcik = true;
+  closeModal();
+  toast('🧪 Depo Teknolojisi açıldı — her deponun sayfasında 🔋 düğmesi var', '', null, 0, true);
+  beep(700, .12);
+  save(); if (window.__lastUnit) openUnitSheet(window.__lastUnit);
+};
+window.depoTekYapAsk = id => {
+  const u = G.units.find(x => x.id === id);
+  if (!u || u.kind !== 'store' || !depoTekAcikMi()) return;
+  if (krediKilidi('depo geliştirme')) return;
+  const lv = depoLvl(u);
+  if (lv >= DEPOTEK_MAX) return;
+  const bedel = depoTekBedel(u);
+  if (G.cash < bedel) { toast('Yetersiz bakiye — ' + fmt(bedel) + ' gerekli', 'warn'); return; }
+  G.cash -= bedel; gider('yatirim', bedel);
+  G.cellSpent[u.cell] = (G.cellSpent[u.cell] || 0) + bedel;
+  u.depoLvl = lv + 1;
+  toast('🔋 ' + unitName(u) + ' Sv' + u.depoLvl + ' — ' + fmtN(storeCap(u)) + ' MWh (' + fmt(bedel) + ')', '', null, 0, true);
+  beep(760, .12);
+  save(); refreshUnitMarkers(); openUnitSheet(id);
+};
+
 // ⏫ TESİS GELİŞTİRME İŞLEVLERİ (80. yama)
 window.tevsiAcAsk = () => {
   if (tevsiAcikMi()) return;
