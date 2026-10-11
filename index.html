@@ -592,12 +592,41 @@
     // WebView önbelleğinde bayat kalabilir. Açılış fotoğrafları DEĞİŞTİĞİNDE bu sayıyı
     // bir artır, telefonlar yenisini çeksin. (27 Ağu v2: gömülü bantlar kırpıldı, rüzgar eski
     // fotoğrafa döndü, jeotermale yıldız eklendi. v3: 5 görsel 9:16 olarak YENİDEN ÜRETİLDİ.)
-    var SV = '?v=3';
-    var t = ['solar', 'wind', 'coal', 'gas', 'hydro', 'geo', 'nuke'];
+    var SV = '?v=4';
+    // 🏭 85. yama — SEKTÖRE ÖZEL AÇILIŞ (patron: "tarıma girerken Farming Company ekranı
+    //    gelecek; hangi sektöre giriyorsak o sektörün ismi ve yüklenme ekranı olacak").
+    // ⚠️ Sektörü BURADA, ana betikten ~22.000 satır önce bilmemiz gerekiyor; `G` daha yok.
+    //    Kayıttan REGEX ile okunuyor — 90 KB'lık kaydı açılışta JSON.parse etmek pahalı ve
+    //    bozuk kayıtta çökerdi. Regex bulamazsa enerjiye düşer: eski davranış aynen korunur.
+    var SEKTOR = 'enerji';
+    try {
+      var ham = localStorage.getItem('enerjioyunu_proto_v8');
+      var mm = ham && ham.match(/"sektor"\s*:\s*"([a-z]{2,12})"/);
+      if (mm && mm[1]) SEKTOR = mm[1];
+    } catch (e) {}
+    var MARKA = {
+      enerji: { nm: 'ENERGY COMPANY', tag: 'ENERJİ İMPARATORLUĞUNU KUR<br>GERÇEK HARİTA · GERÇEK VERİ',
+        t: ['solar', 'wind', 'coal', 'gas', 'hydro', 'geo', 'nuke'],
+        ikon: '<path d="M60 4.8 L26.2 55.6 H45.6 L39.8 95.2 L73.8 44.4 H54.4 Z" fill="url(#bbolt)"/>' },
+      tarim: { nm: 'FARMING COMPANY', tag: 'TARIM İMPARATORLUĞUNU KUR<br>GERÇEK HARİTA · GERÇEK VERİ',
+        t: ['tarim-tarla', 'tarim-hasat', 'tarim-sera', 'tarim-ciftlik'],
+        // 🌾 Emoji SVG içinde <text> ile — elle çizilmiş kötü bir buğday yolundan daha güvenli
+        ikon: '<text x="60" y="80" font-size="76" text-anchor="middle">🌾</text>' },
+    };
+    var MK = MARKA[SEKTOR] || MARKA.enerji;
+    var t = MK.t.slice();
     for (var i = t.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), k = t[i]; t[i] = t[j]; t[j] = k; }
+    // ⛓️ 404 ZİNCİRİ: sektörün kendi görselleri → eski genel splash. Tarım görselleri henüz
+    //    yüklenmemişse oyun KIRILMAZ, genel fotoğrafa düşer.
     var sira = t.map(function (x) { return 'img/splash-' + x + '.webp' + SV; }).concat(['img/splash.webp' + SV]);
     var n = 0, el = document.getElementById('bootphoto');
     window.BOOT_TUR = t[0];                              // gösterilen tür — açılış ipucu seçimi bunu okur
+    window.BOOT_SEKTOR = SEKTOR;
+    // 🔴 ÖLÇÜLDÜ: marka yazısını BURADA yazmak ÇALIŞMIYOR — bu betik `#bootbrand`dan ÖNCE
+    //    ayrıştırılıyor, element henüz YOK ve querySelector null dönüyordu (foto çalışıyordu
+    //    çünkü `#bootphoto` bu betikten ÖNCE geliyor). Marka, elementin HEMEN ARDINDAKİ
+    //    ikinci küçük betikte uygulanıyor — ayrıştırma sırasında, yani yanıp sönme YOK.
+    window.BOOT_MARKA = MK;
     el.onerror = function () {
       n++;
       if (n >= sira.length) {                            // hiçbiri yok → çizim sahnesine düş
@@ -623,6 +652,21 @@
       <div class="nm">ENERGY COMPANY</div>
       <div class="tag">ENERJİ İMPARATORLUĞUNU KUR<br>GERÇEK HARİTA · GERÇEK VERİ</div>
     </div>
+    <script>
+    /* 🏭 SEKTÖR MARKASI — elementin HEMEN ardında, ayrıştırma sırasında uygulanır.
+       HTML'de enerji metni DURUYOR: betik çalışmazsa (ya da sektör enerjiyse) eski
+       davranış aynen korunur. Ayrı betik olmasının sebebi yukarıda yazılı. */
+    (function () {
+      var MK = window.BOOT_MARKA;
+      if (!MK || window.BOOT_SEKTOR === 'enerji') return;
+      var b = document.getElementById('bootbrand');
+      if (!b) return;
+      var nm = b.querySelector('.nm'), tg = b.querySelector('.tag'), bo = b.querySelector('.bolt');
+      if (nm) nm.textContent = MK.nm;
+      if (tg) tg.innerHTML = MK.tag;
+      if (bo && MK.ikon) bo.innerHTML = MK.ikon;
+    })();
+    </script>
     <div id="bootfoot">
       <!-- 🏢 patron: "yükleniyor yazısı koy — insanlar oyun açılmıyor zanneder" -->
       <div id="bootloading">YÜKLENİYOR<span>.</span><span>.</span><span>.</span></div>
@@ -712,7 +756,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 10:12) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 10:25) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,16 +935,17 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 10:12)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 10:25)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11n',
+  etiket: '2026-10-11o',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🌾 <b>Acilis ekrani artik SEKTORUNE gore.</b> Tarim oynayanlar icin oyun <b>FARMING COMPANY</b> adiyla ve bugday basagi simgesiyle aciliyor; yuklenme ekraninda dort yeni tarim fotografi donuyor (tarla, hasat, sera, ciftlik). Enerji oynayanlar icin hicbir sey degismedi.',
     '🔋 <b>DEPO TEKNOLOJISI geldi.</b> Tek seferlik Ar-Ge bedelinden sonra her depon <b>5 katı kapasiteye</b> kadar cikar. Ama ucuz degil: her kademe bir oncekinin <b>2 katina</b> mal olur, Sv5 depo bedelinin 30 kati eder. Satin aldigin sey para degil <b>KARO SLOTU</b> — karo basina birim limitin doldugunda tek cikis yolu budur.',
     '🏛️ <b>Kayyum geliri kendi kasasinda birikiyor.</b> Park ettigin sirketin kazanci aktif sirkete AKMAZ; o sektore geri dondugunde kasada seni bekler. Birikim tesis degerinin <b>yuzde 20 sinde</b> durur — sirketi iki yil park etmek 70 gun park etmekten fazla kazandirmaz.',
     '⏫ <b>TESIS GELISTIRME geldi.</b> Artik yuzlerce tesis kurmak yerine var olani <b>yerinde buyutuyorsun</b>. Tek seferlik Ar-Ge bedelinden sonra her santral Sv5e kadar cikar: her kademe uretimi <b>2 katina</b> (Sv5 = 16 kat). Altin kural bozulmadi — yakit, emisyon ve kapasite lisansi payi da ayni oranda artar, yani bedava olcek yok. Odedigin buyutme bedeli <b>Tesis Degerine sayilir</b>.',
@@ -1036,6 +1081,7 @@ en: {
   'Bildirim izni verilmedi (menüden tekrar deneyebilirsin)': 'Notification permission not granted (you can retry from the menu)',
   'Henüz bildirim yok. Oyundaki uyarılar, satış ve kazanç bildirimleri burada birikir.': 'No notifications yet. Game alerts, sales and earnings updates collect here.',
   'ENERJİ İMPARATORLUĞUNU KUR': 'BUILD YOUR ENERGY EMPIRE',
+  'TARIM İMPARATORLUĞUNU KUR': 'BUILD YOUR FARMING EMPIRE',
   'GERÇEK HARİTA · GERÇEK VERİ': 'REAL MAP · REAL DATA',
   'Gerçek dünya haritasında enerji imparatorluğunu kur.': 'Build your energy empire on a real world map.',
   'Adil · Şeffaf · Günde ~2 saat yeter.': 'Fair · Transparent · ~2 hours a day is enough.',
@@ -22208,6 +22254,11 @@ async function afterLogin() {
 // ═══════════════════════ 🏭 SEKTÖR SEÇİMİ (56. yama) ═══════════════════════
 // PLAN.md §2 döngüsünün 1. ADIMI: "Oyuncu sektör seçer (6 sektör)". Aynı ekran iki yerde
 // çalışır: yeni oyunun ilk adımı ve rebirth sonrası sektör değişimi.
+// 🏭 85. yama — AÇILIŞ MARKASI sektöre göre değişiyor (sayfanın en başındaki erken betik
+//    kayıttan okuyor). Buradaki tablo oyun İÇİNDEKİ adlar; açılış ekranındaki marka adları
+//    erken betiğin kendi `MARKA` tablosunda — ikisi BİLEREK ayrı, çünkü erken betik ana
+//    betikten 22.000 satır önce çalışır ve bu tabloyu göremez. Yeni sektör eklerken İKİSİNE
+//    de yazılmalı; eksik kalırsa açılış enerjiye düşer (kırılmaz, yalnız markası yanlış olur).
 const SEKTORLER = [
   { id: 'enerji', ico: '⚡', ad: 'Enerji',        not: 'Santral kur · üret · şehirlere sat',               hazir: true },
   { id: 'tarim',  ico: '🌾', ad: 'Tarım',         not: 'Tarla · işçi · ürün kalitesi · şehre satış',       hazir: true },
