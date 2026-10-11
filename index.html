@@ -799,7 +799,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 15:01) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 15:50) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -979,16 +979,18 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 15:01)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 15:50)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11u',
+  etiket: '2026-10-11v',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🏚️ <b>SILO ARTIK DOLUYOR.</b> Stok sinirsiz degil: baslangic <b>400 ton</b>, her genisletme <b>+400 ton</b> ve bedeli bir oncekinin <b>2 kati</b> (Sv10 = 4.400 ton). ⚠️ En onemli kural: <b>silo dolunca hasat DURUR, urun KAYBOLMAZ</b> — tarlada bekler, sattiktan sonra kaldigi yerden devam eder. Tohum parasi da odenmez. Silonun ustundeki cubuk yuzde 70 te sariya, yuzde 90 da kirmiziya doner.',
+    '📐 <b>Tarlalarin artik HEKTARI var.</b> Her tarla haritadaki kendi poligonundan olculuyor; panelde toplam arazin ve her tarlanin alani yaziyor. Yeni kayit alani eklenmedi, eski ciftlikler de kendiliginden hektar kazandi.',
     '🏚️ <b>SILO EKRANI yeniden yazildi.</b> Stok artik duz tablo degil: her urun kendi kartinda, fotografi, toplam tonu ve bir <b>KALITE SERIDI</b> ile — altin A dan soluk E ye, elinde ne oldugunu tek bakista gorursun. Her kalite satirinda ton, sehir fiyati ve satis tutari dugmenin uzerinde yazili. Ustte silo ozeti: toplam stok ve guncel degeri.',
     '🧭 <b>Fiyat oku artik gercek bir karar veriyor.</b> Satir basinda <b>▲ en iyi</b> ya da <b>▼ Karasu yuzde 18 fazla</b> yaziyor — ruhsatli sehirlerin icinde o urunu en iyi kimin aldigini soyluyor. Pazar rotasi bu oyunda olculmus bir beceri: ayni uc tarla, buyuk sehre once satinca C kalite 12. gunde, kucuk sehre once satinca 27. gunde geliyor.',
     '🎨 <b>TARIM ARTIK KENDI OYUNU GIBI GORUNUYOR.</b> Sektore gecince <b>tema rengine kadar</b> degisiyor: toprak yesili zemin, bugday altini vurgular. Haritada tarlalar artik kare isaret degil, <b>duzensiz arazi parcalari</b> — ve icleri ektigin urunun gercek dokusuyla dolu (bugday, patates, aycicek, misir, domates, surulmus toprak). Tarlalar karo icinde yan yana diziliyor, ust uste binmiyor. Hazir tarla yesil cerceveyle kendini belli ediyor, olgunlasmakta olanin uzerinde <b>geri sayim</b> var.',
@@ -7427,7 +7429,7 @@ function freshState() {
     // tohum: ödenen toplam tohum bedeli — gelir-gider tablosunda ayrı kalem
     // satim: BUGUN hangi sehre/urune/kaliteye kac ton satildigi. Gun donunce komple
     //        sifirlanir — boylece defter kendiliginden budanir, sonsuz buyumez.
-    tarim: { std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0, ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} } },
+    tarim: { std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0, ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} }, siloLvl: 0 },
     tarimIpucu: false,   // 🌾 ilk yönlendirme gösterildi mi (68. yama)
     lastSeen: Date.now(), muted: false, demo: false,
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
@@ -15692,7 +15694,10 @@ const myWorth = () => G.cash + G.units.reduce((s, u) => s + TYPE_OF(u.kind, u.t)
 // halindekiler sayılmaz, ikinci el indirimi (×0,7) YOK — "10 milyarlık tesis kurdum" sezgisi
 // doğru olsun. Bilinmeyen tür gelirse 0 sayılır (eski kayıt katalogdan düşmüş tür taşıyabilir).
 // ⚠️ Bu tanım henüz rebirth KAPISI değil, yalnız ÖLÇÜM — hedef merdiveniyle birlikte kesinleşecek.
-const tesisDegeri = () => ((typeof G !== 'undefined' && G && G.units) ? G.units : []).reduce((t, u) => {
+// 🏚️ 95. yama — silo genişletmeye ödenen para da tesis yatırımıdır; ama silo bir BİRİM
+//    değil ŞİRKET düzeyinde olduğu için döngünün dışından ekleniyor.
+const siloOdenenToplam = () => { const t = (typeof tarimD === 'function') ? tarimD() : null; return Math.max(0, (t && t.siloOdenen) || 0); };
+const tesisDegeri = () => siloOdenenToplam() + ((typeof G !== 'undefined' && G && G.units) ? G.units : []).reduce((t, u) => {
   if ((u.buildDone || 0) > Date.now()) return t;            // inşaat sürüyor: sayma
   const T = TYPE_OF(u.kind, u.t);
   if (!T || !T.cost) return t;                              // katalogdan düşmüş tür: 0 say, çökme
@@ -15755,6 +15760,16 @@ const TARIM_AYAR = {
   //    Sebep: tohum sabit, fiyat kaliteyle düşüyor — E'de tohum cironun %87'si oluyordu.
   //    Çözüm: tohum, hasadın C kalitedeki değerinin sabit yüzdesi olsun; oran her kalitede korunur.
   tohumOran: .10,
+  // 🏚️ 95. yama — SİLO KAPASİTESİ. Rakipte var, bizde stok SINIRSIZDI.
+  //    İki iş birden yapıyor: (a) "harcayacak yer kalmıyor" sorununa para kuyusu,
+  //    (b) oyuncuyu satmaya zorlayan gerçek bir fren.
+  // ⚠️ KURAL (§4 ve 67. yamanın kendi yorumu): "Ambar dolunca üretim DURUR, ürün
+  //    KAYBOLMAZ." Dolu siloda hasat yapılmaz, ürün tarlada bekler. Rakibin en pahalı
+  //    hatası sessiz imha — ona düşmüyoruz.
+  siloTaban: 400,        // ton — başlangıç kapasitesi (~13 tarlalık 3 günlük üretim)
+  siloAdim: 400,         // kademe başına +400 ton
+  siloMaxLvl: 10,        // Sv10 = 4.400 ton
+  siloBedel: 4e6,        // 1. kademe; her kademe bir öncekinin 2 KATI (depo deseniyle aynı)
 };
 
 // ── 🌱 ÜRÜN KATALOĞU ───────────────────────────────────────────────────────────
@@ -15896,6 +15911,72 @@ function stokDagilim(urun, soguk) {
 }
 const stokToplam = urun => Object.values(stokDagilim(urun)).reduce((a, b) => a + b, 0);
 
+// ═══════════ 🏚️ SİLO KAPASİTESİ (95. yama) ═══════════
+const siloLvl = () => { const t = tarimD(); return Math.max(0, Math.min(TARIM_AYAR.siloMaxLvl, Math.round((t && t.siloLvl) || 0))); };
+const siloKapasite = () => TARIM_AYAR.siloTaban + siloLvl() * TARIM_AYAR.siloAdim;
+// ⚠️ TEK KAYNAK: bütün lotların toplamı. `stokDagilim` ürün bazlı; burada ÜRÜN AYRIMI YOK —
+//    silo ortak, hangi ürün olursa olsun aynı hacmi doldurur.
+const siloDolu = () => { const t = tarimD(); return (t && Array.isArray(t.stok) ? t.stok : []).reduce((a, l) => a + (+(l && l.t) || 0), 0); };
+const siloBos = () => Math.max(0, siloKapasite() - siloDolu());
+const siloOran = () => { const k = siloKapasite(); return k > 0 ? Math.min(1, siloDolu() / k) : 0; };
+// Kademe bedeli bir öncekinin 2 KATI — patronun depo teknolojisinde onayladığı desen.
+const siloYukseltBedel = () => Math.round(TARIM_AYAR.siloBedel * Math.pow(2, siloLvl()));
+
+window.siloYukseltAsk = () => {
+  if (siloLvl() >= TARIM_AYAR.siloMaxLvl) { toast('🏚️ Silo en üst kademede', ''); return; }
+  if (typeof krediKilidi === 'function' && krediKilidi('silo genişletme')) return;
+  const bedel = siloYukseltBedel();
+  $('modal').innerHTML = '<h2>🏚️ Siloyu Genişlet</h2>'
+    + '<p>Silo <b>ortak</b>tır: hangi ürün olursa olsun aynı hacmi doldurur. '
+    + 'Dolduğunda <b>hasat durur</b> — ürün tarlada bekler, <b>kaybolmaz</b>.</p>'
+    + '<table class="ledger">'
+    + '<tr><td>Şu anki kapasite</td><td><b>' + fmtN(siloKapasite()) + ' ton</b> (Sv' + siloLvl() + ')</td></tr>'
+    + '<tr><td>Yeni kapasite</td><td class="pos"><b>' + fmtN(siloKapasite() + TARIM_AYAR.siloAdim) + ' ton</b></td></tr>'
+    + '<tr><td>Bedel</td><td><b>' + fmt(bedel) + '</b></td></tr>'
+    + '<tr><td>Sonraki kademe</td><td>' + (siloLvl() + 1 < TARIM_AYAR.siloMaxLvl ? fmt(bedel * 2) : 'son kademe') + '</td></tr>'
+    + '<tr><td>Tesis Değeri</td><td class="pos">ödenen bedel <b>sayılır</b></td></tr>'
+    + '</table>'
+    + '<button class="primary" onclick="siloYukselt()"' + (G.cash < bedel ? ' disabled' : '') + '>🏚️ Genişlet — ' + fmt(bedel) + '</button>'
+    + '<button class="primary ghostbtn" onclick="closeModal()">Vazgeç</button>';
+  $('overlay').classList.add('show');
+};
+window.siloYukselt = () => {
+  const t = tarimD();
+  if (!t || siloLvl() >= TARIM_AYAR.siloMaxLvl) { closeModal(); return; }
+  const bedel = siloYukseltBedel();
+  if (G.cash < bedel) { closeModal(); return; }
+  G.cash -= bedel;
+  if (typeof gider === 'function') { try { gider('yatirim', bedel); } catch (e) {} }
+  t.siloLvl = siloLvl() + 1;
+  t.siloOdenen = (t.siloOdenen || 0) + bedel;   // Tesis Değerine sayılır
+  closeModal();
+  toast('🏚️ Silo Sv' + t.siloLvl + ' — ' + fmtN(siloKapasite()) + ' ton', '', null, 0, true);
+  beep(700, .12);
+  save(); if (typeof tarimPanel === 'function') tarimPanel();
+};
+
+// ═══════════ 📐 HEKTAR (95. yama) ═══════════
+// Rakibin profil hiyerarşisinde EN BÜYÜK rakam hektardır; bizde tarlanın alan ölçüsü yoktu.
+// ⚠️ Yeni VERİ ALANI eklenmiyor: alan `tarlaPoligon(u)`dan hesaplanıyor ve poligon zaten
+//    `u.id` tohumuyla deterministik. Yani eski kayıtlar da kendiliğinden hektar kazanıyor,
+//    kayıt büyümüyor, göç gerekmiyor.
+// Hesap: eşuzaklık izdüşümünde ayakkabı bağı (shoelace); boylam enlem kosinüsüyle daraltılır.
+function poligonHektar(pts) {
+  if (!Array.isArray(pts) || pts.length < 3) return 0;
+  const lat0 = pts.reduce((a, p) => a + p[0], 0) / pts.length;
+  const kx = 111320 * Math.cos(lat0 * Math.PI / 180);   // metre / derece boylam
+  const ky = 110540;                                     // metre / derece enlem
+  let a = 0;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const x1 = pts[j][1] * kx, y1 = pts[j][0] * ky;
+    const x2 = pts[i][1] * kx, y2 = pts[i][0] * ky;
+    a += x1 * y2 - x2 * y1;
+  }
+  return Math.abs(a) / 2 / 10000;                        // m² -> hektar
+}
+const tarlaHektar = u => (u && u.kind === 'tarla' && typeof tarlaPoligon === 'function') ? poligonHektar(tarlaPoligon(u)) : 0;
+const tarlaToplamHektar = () => (typeof tarlalar === 'function' ? tarlalar() : []).reduce((a, u) => a + tarlaHektar(u), 0);
+
 // ── 💵 FİYAT ───────────────────────────────────────────────────────────────────
 // Kalite kademesi fiyat BANDINI belirler (patron kararı: kalite = fiyat bandı,
 // itibar = kotaya erişim sırası). Kotası dolmuş / kotasız fazlalık ATIL fiyata düşer.
@@ -15975,6 +16056,17 @@ function tarlaHasat(u, elle, simdi) {
   //    Parası yetmeyen oyuncu için döngü sayısı ÖDEYEBİLDİĞİ kadarına iner — borç yazmıyoruz.
   // Tohum bedeli ORANSAL: hasadın C kalitedeki değerinin tohumOran kadarı.
   // Sabit olsaydı düşük kalitede ciroyu aşar, yeni oyuncuyu batırırdı (ölçüldü).
+  // 🏚️ 95. yama — SİLO FRENİ, tohum ödemesinden ÖNCE. Sıra kritik: önce kısıyoruz ki
+  //    siloya sığmayacak döngünün tohum parası ÖDENMESİN. Sığmayan döngü tarlada bekler,
+  //    damga ilerlemez — ürün kaybolmaz (§4 kuralı).
+  if (typeof siloBos === 'function' && (B.verim || 0) > 0) {
+    const sigacak = Math.floor(siloBos() / B.verim);
+    if (sigacak < n) n = Math.max(0, sigacak);
+    if (n < 1) {
+      if (elle) toast('🏚️ Silo dolu — hasat yapılamıyor. Önce ürün sat ya da siloyu genişlet.', 'warn', 'silodolu', 9000);
+      return 0;                                 // damga İLERLEMEZ: ürün tarlada bekler
+    }
+  }
   const birim = Math.max(0, Math.round((B.verim || 0) * (B.taban || 0) * TARIM_AYAR.tohumOran));
   if (birim > 0) {
     const alinabilir = Math.max(0, Math.floor((G.cash || 0) / birim));
@@ -15986,6 +16078,15 @@ function tarlaHasat(u, elle, simdi) {
     if (typeof gider === 'function') { try { gider('tohum', bedel); } catch (e) {} }
   }
 
+  // 🏚️ 95. yama — SİLO FRENİ. Bu satırların üstündeki 67. yama yorumu zaten şunu yazıyordu:
+  //    "Ambar dolunca üretim DURUR, ürün kaybolmaz. Ambar freni Tarıma HENÜZ GELMEDİ."
+  //    İşte geldi. Siloya sığmayan döngü HASAT EDİLMEZ; damga ilerlemez, ürün tarlada bekler.
+  // ⚠️ Tohum parası HENÜZ ÖDENMEDİ bu noktada mı? HAYIR — ödeme yukarıda yapıldı. Bu yüzden
+  //    fren ödemeden ÖNCE değil SONRA olsaydı oyuncunun tohum parası boşa giderdi.
+  //    Çözüm: freni tohum hesabının İÇİNE değil, `n` belirlendikten hemen SONRA ve ödemeden
+  //    ÖNCE uygulamak gerekirdi — ama ödeme zaten `n`e göre yapılıyor, bu yüzden `n`i
+  //    BURADA değil YUKARIDA kısmak şart. Aşağıdaki satır o yüzden sadece EMNİYET:
+  //    normal akışta hiç tetiklenmez.
   const ton = n * (B.verim || 0);
   if (ton > 0) stokEkle(u.urun, urunStd(u.urun), ton, s);
   // Damgayı TÜKETİLEN döngü kadar ilerlet — `s`e çekersek artan süre yanar ve
@@ -16264,7 +16365,8 @@ function tarimTarlaSatir(u) {
   }
   return '<div class="qline"><span>' + urunKare(u.urun, 26) + ' <b>' + B.ad + '</b> #' + u.id
     + (isci ? ' <span style="color:var(--acc)" title="işçi bakıyor">👷</span>' : ' <span class="sub" title="işçi yok — elle toplanır">✋</span>')
-    + '<br><span class="sub">olgunluk %' + oran + (dongu > 0 ? ' · bekleyen ' + dongu + ' hasat' : '') + '</span></span>'
+    + '<br><span class="sub">' + (tarlaHektar(u) > 0 ? fmtN(Math.round(tarlaHektar(u))) + ' ha · ' : '')
+        + 'olgunluk %' + oran + (dongu > 0 ? ' · bekleyen ' + dongu + ' hasat' : '') + '</span></span>'
     + '<span>' + (hazir
         ? '<button onclick="tarimTopla(' + u.id + ')">🧺 Topla</button>'
         : '<span class="sub">⏳ ' + fmtHrs((1 - tarlaOran(u)) * tarlaSure(u) / 36e5) + '</span>')
@@ -16342,9 +16444,24 @@ function tarimStokTablosu(cell) {
       + satirlar + '</div>');
   }
   // ── üst özet: rakipteki "Silos — toplam kg" bandının karşılığı
-  html += '<div class="silok" style="background:var(--panel);padding:8px 10px">'
-    + '<div class="ust"><span class="ad"><b>🏚️ Silo</b><span class="sub">toplam stok ve güncel değeri</span></span>'
-    + '<span class="mik">' + fmtE(toplamTon) + ' t<small>' + fmt(Math.round(toplamDeger)) + '</small></span></div></div>';
+  // 🏚️ 95. yama — SİLO KAPASİTESİ: rakibin "Silo capacity / Silo holding" kutusunun karşılığı.
+  //    Dolunca hasat DURUR (ürün tarlada bekler) — bu yüzden çubuk bir uyarı aracıdır.
+  const kap = siloKapasite(), dol = siloDolu(), or = siloOran();
+  const kritik = or >= .9, uyari = or >= .7;
+  html += '<div class="silok" style="background:var(--panel);padding:9px 10px">'
+    + '<div class="ust"><span class="ad"><b>🏚️ Silo</b><span class="sub">Sv' + siloLvl()
+    + (toplamDeger > 0 ? ' · stok değeri ' + fmt(Math.round(toplamDeger)) : '') + '</span></span>'
+    + '<span class="mik ' + (kritik ? 'dus' : '') + '">' + fmtE(dol) + ' / ' + fmtN(kap)
+    + ' t<small>' + (kritik ? 'DOLDU — hasat durdu' : uyari ? 'doluyor' : 'yer var') + '</small></span></div>'
+    + '<div class="kserit"><i style="width:' + Math.round(or * 100) + '%;background:'
+    + (kritik ? '#ff6b6b' : uyari ? '#ffc83d' : '#5fcf6a') + '"></i></div>'
+    + (siloLvl() < TARIM_AYAR.siloMaxLvl
+        ? '<div class="ksat"><span class="fy">Genişlet: <b>+' + fmtN(TARIM_AYAR.siloAdim) + ' t</b></span>'
+          + '<button onclick="siloYukseltAsk()"' + (G.cash < siloYukseltBedel() ? ' disabled' : '')
+          + '>🏚️ ' + fmt(siloYukseltBedel()) + '</button></div>'
+        : '<p class="sub" style="margin:4px 0 0">✅ Silo en üst kademede (Sv' + TARIM_AYAR.siloMaxLvl + ').</p>')
+    + (kritik ? '<p class="sub dus" style="margin:4px 0 0">⚠️ Silo doldu — <b>hasat durdu</b>. Ürün tarlada bekliyor, kaybolmuyor. Sat ya da genişlet.</p>' : '')
+    + '</div>';
   return html + kartlar.join('');
 }
 
@@ -16356,6 +16473,7 @@ function tarimPanel() {
   const gunluk = tarimGunlukGider();
   const rs = tarimRuhsatli();
   $('modal').innerHTML = '<h2>🌾 Tarım</h2>'
+    + '<div class="qline"><span>📐 Arazi</span><span><b>' + fmtN(Math.round(tarlaToplamHektar())) + ' ha</b> <span class="sub">' + ts.length + ' tarla</span></span></div>'
     + '<div class="qline"><span>👷 İşçi</span><span><b>' + isciCalisan() + '</b> / ' + isciKapasite() + ' kapasite</span></div>'
     + '<div class="qline"><span>💸 Günlük gider</span><span><b>' + fmt(gunluk) + '</b></span></div>'
     + '<div class="qline"><span>📈 Tarım cirosu</span><span>' + fmt((tarimD() && tarimD().ciro) || 0) + '</span></div>'
@@ -18826,7 +18944,7 @@ function migrate(s) {
   //    `starterClaimed` false kalır ve bankanın 24 saat koruması kalıcı muaf olur.
   if (s.sektor && s.sektor !== 'enerji') s.starterClaimed = true;
   s.tarim = Object.assign({ std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0,
-                            ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} } }, s.tarim);
+                            ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} }, siloLvl: 0 }, s.tarim);
   for (const k4 of ['std', 'dnm', 'arge']) if (!s.tarim[k4] || typeof s.tarim[k4] !== 'object') s.tarim[k4] = {};
   if (!Array.isArray(s.tarim.stok)) s.tarim.stok = [];
   if (!s.tarim.satim || typeof s.tarim.satim !== 'object') s.tarim.satim = { gun: 0, v: {} };
