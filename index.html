@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 02:00) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 02:11) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,14 +891,14 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 02:00)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 02:11)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11h',
+  etiket: '2026-10-11i',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
     '⚖️ <b>Tarim ekonomisi duzeltildi.</b> Ilk surumde tohum bedeli sabitti ve dusuk kalitede ciroyu asiyordu — yani yeni ciftci kacinilmaz olarak zarar ediyordu. Artik tohum, hasadin degerinin sabit bir yuzdesi. Olctuk: artik <b>her kalitede kar var</b>.',
@@ -18128,6 +18128,9 @@ function migrate(s) {
   //    bulut turunda bu alanlar kayıttan DÜŞER; `tarim` düğümü ise `isci/ciro/tohum/maas`
   //    sayı oldukları için hayatta kalır. Sonuç: `t` truthy, `t.dnm` undefined.
   //    (Aynı sınıf zaten biliniyor — yukarıdaki "Firebase seyrek dizi" notuna bak.)
+  // 🔴 74. yama: enerji dışı sektördeki kayıtlarda eğitim BİTMİŞ sayılır — yoksa
+  //    `starterClaimed` false kalır ve bankanın 24 saat koruması kalıcı muaf olur.
+  if (s.sektor && s.sektor !== 'enerji') s.starterClaimed = true;
   s.tarim = Object.assign({ std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0,
                             ciro: 0, tohum: 0, maasGun: '', maas: 0, satim: { gun: '', v: {} } }, s.tarim);
   for (const k4 of ['std', 'dnm', 'arge']) if (!s.tarim[k4] || typeof s.tarim[k4] !== 'object') s.tarim[k4] = {};
@@ -21731,6 +21734,15 @@ function sektorSec(sonra) {
 window.sektorBasla = (id) => {
   if (sektorDurum(id) !== 'acik') return;   // kilitli karta basılsa bile hiçbir şey olmasın
   G.sektor = id;
+  // 🔴 74. yama — DENETİM BULGUSU: 68. yamada `tutGuide`a sektör şartı eklenince
+  //    `G.starterClaimed` tarım oyuncusunda ASLA true olmuyordu (onu yazan tek yer
+  //    `tutTick`in `tutGuide()` kapısının ARKASINDA). Zincirin ucu bankaya çıkıyor:
+  //    `bankaGuvenKalan()` → `if (!G.starterClaimed) return 0;` yani eğitim bitmemişken
+  //    bankanın **24 saatlik yeni şirket koruması MUAF**. Tarım oyuncusunda bu muafiyet
+  //    KALICI oluyordu — çiftçi ilk dakikadan itibaren sonsuza dek kredi çekebiliyordu.
+  // Doğru çözüm: enerji dışı sektörde enerji eğitimi hiç çalışmayacağı için onu
+  //    BİTMİŞ say. Hem banka kuralı normale döner, hem `tutGuide` zaten false kalır.
+  if (id !== 'enerji') G.starterClaimed = true;
   const sonra = SEKTOR_SONRA; SEKTOR_SONRA = null;
   closeModal();
   if (sonra) { sonra(id); return; }
@@ -22079,6 +22091,20 @@ $('demolink').addEventListener('click', () => {
         const st = (G.tarim && Array.isArray(G.tarim.stok)) ? G.tarim.stok : [];
         for (const l of st) if (l && l.ts) l.ts -= demoKaymaMs;
       }
+      // 🔴 74. yama — DENETİM BULGUSU: gün anahtarları kırpılmıyordu. `tarimGun()` demo
+      //    açılınca ileri, kapanınca GERİ atlıyor; `tarimSatimDefteri` gün değişince
+      //    defteri SİLİYOR. Yani her demo aç/kapa çifti, A/B **sert kotasına** aynı gerçek
+      //    gün içinde İKİ ek tur açıyordu — 61. yamanın kıtlık kolu delinmişti.
+      //    Maaşta da gün geriye atlayınca `t.maasGun` gelecekte kalıp sayacı bozuyordu.
+      // Defteri SİLMEDEN yalnız anahtarı gerçek güne taşıyoruz: kota tazelenmez.
+      try {
+        const gR = trGun(simdiReel);
+        const tt = G.tarim;
+        if (tt) {
+          if (Number(tt.maasGun) > gR) tt.maasGun = String(gR);
+          if (tt.satim && Number(tt.satim.gun) > gR) tt.satim.gun = String(gR);
+        }
+      } catch (e) {}
       // Emniyet: kaydırmaya rağmen gelecekte kalan damga varsa (saat çıpası oynadıysa) kırp.
       for (const u of (G.units || [])) if (u && u.kind === 'tarla' && u.ekildi > simdiReel) u.ekildi = simdiReel;
       const st2 = (G.tarim && Array.isArray(G.tarim.stok)) ? G.tarim.stok : [];
