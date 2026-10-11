@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 01:12) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 02:00) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,14 +891,14 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 01:12)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 02:00)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11g',
+  etiket: '2026-10-11h',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
     '⚖️ <b>Tarim ekonomisi duzeltildi.</b> Ilk surumde tohum bedeli sabitti ve dusuk kalitede ciroyu asiyordu — yani yeni ciftci kacinilmaz olarak zarar ediyordu. Artik tohum, hasadin degerinin sabit bir yuzdesi. Olctuk: artik <b>her kalitede kar var</b>.',
@@ -15703,10 +15703,13 @@ function tarlaHasat(u, elle, simdi) {
   const t = tarimD();
   if (!t || !tarlaMi(u) || !u.urun || !urunVar(u.urun)) return 0;
   const s = simdi || tarimSimdi();
-  let n = tarlaDongu(u, s);
-  if (n < 1) return 0;
-  if (elle) n = 1;
-  else n = Math.min(n, TARLA_OTO_TAVAN);
+  // 🔴 72. yama: tam döngü sayısı KIRPMADAN ÖNCE saklanıyor. 67. yamada tavan kırpması
+  //    koşulsuz çalışıyordu ve tohum parası yetmediği için kısılan döngüleri de SİLİYORDU.
+  //    Asimetri kanıttı: parası hiç yetmeyen (n<1) erken dönüp döngülerini KORUYOR,
+  //    kısmen yetmeyen ise kaybediyordu. Tam tersi olmalı.
+  const tamDongu = tarlaDongu(u, s);
+  if (tamDongu < 1) return 0;
+  let n = elle ? 1 : Math.min(tamDongu, TARLA_OTO_TAVAN);
 
   const B = urunBilgi(u.urun);
   // 🌰 TOHUM BEDELİ: her yeniden ekim tohum ister. Bedava sayılırsa tarlanın günlük
@@ -15729,7 +15732,6 @@ function tarlaHasat(u, elle, simdi) {
   if (ton > 0) stokEkle(u.urun, urunStd(u.urun), ton, s);
   // Damgayı TÜKETİLEN döngü kadar ilerlet — `s`e çekersek artan süre yanar ve
   // oyuncu her girişte birkaç dakikalık ilerlemesini kaybeder.
-  u.ekildi = (+u.ekildi || s) + n * tarlaSure(u);
   // 🔴 TAVAN GERÇEKTEN TAVAN OLSUN (67. yama). Denetim yakaladı ve DOĞRULANDI:
   //    damga yalnız tüketilen döngü kadar ilerlediği için AŞAN döngüler silinmiyordu,
   //    bekliyordu. 30 gün girmeyen oyuncuda 360 döngü birikiyor ve 5 saniyelik tik
@@ -15738,10 +15740,10 @@ function tarlaHasat(u, elle, simdi) {
   // Artık tavanı aşan kısım ÜRETİLMEMİŞ sayılıyor (yok edilmiyor — hiç olmadı).
   //    Gerekçe §4: "Ambar dolunca üretim DURUR, ürün kaybolmaz." Ambar freni Tarıma
   //    henüz gelmedi; tavan o frenin yerini tutuyor.
-  if (!elle) {
-    const sure = tarlaSure(u), ek0 = +u.ekildi || s;
-    if (s - ek0 >= sure) u.ekildi = s - ((s - ek0) % sure);   // biriken artığı DÜŞÜR
-  }
+  // Yalnız TAVANI AŞAN döngüler yanar (üretilmemiş sayılır); tohum parası yetmediği
+  // için toplanamayan döngüler TARLADA BEKLER — oyuncu parası olunca toplar.
+  const yakilan = elle ? 0 : Math.max(0, tamDongu - TARLA_OTO_TAVAN);
+  u.ekildi = (+u.ekildi || s) + (n + yakilan) * tarlaSure(u);
   if (u.ekildi > s) u.ekildi = s;              // elle hasatta ileri kaçmasın
   return ton;
 }
@@ -22052,16 +22054,35 @@ $('demolink').addEventListener('click', () => {
   G.demo = !G.demo;
   if (!G.demo) {
     // BUGFIX: demo kapanınca saat GERÇEK zamana döner — kalıcı kayma + şişik kira sömürüsü kapandı
+    // 🔴 72. yama: kayma SIFIRLANMADAN ÖNCE yakalanmalı. 71. yamada damgalar düz
+    //    kırpılıyordu (`ts = simdiReel`) ve bu, partinin YAŞINI sıfırlıyordu — demo
+    //    içinde çürüyüp C'ye düşmüş A ürünü, demo kapatılınca yeniden A oluyordu.
+    //    Tekrarlanabilir bir fiyat istismarıydı (A = taban ×3).
+    const demoKaymaMs = Math.max(0, (G.demoOffsetMin || 0) * 60000);
     G.demoOffsetMin = 0;
     for (const c of Object.keys(G.leases)) G.leases[c] = Math.min(G.leases[c], Date.now() + LEASE_MS);
     // 🌾 TARIM DAMGALARI (71. yama): demo kapanınca saat GERİYE gidiyor. Kırpılmazsa
     //    ekim ve stok damgaları GELECEKTE kalır; `tarlaDongu` (s <= ek) 0 döner ve tarlalar
     //    demo süresi kadar donmuş görünür. Kira satırının hemen üstündeki kırpmanın aynısı.
     try {
+      // 🔴 73. yama — 72'deki düzeltme YANLIŞ ŞARTTA çalışıyordu: yalnız `ts > simdiReel`
+      //    olanlara dokunuyordu. Oysa demo BAŞLAMADAN ÖNCE damgalanmış bir parti geçmişte
+      //    kalır, şarta hiç girmez — ve demo kapanınca `tarimSimdi()` geri sıçradığı için
+      //    o partinin YAŞI da sıfırlanırdı. Ölçüldü: A → (demo 5 gün) → C → demo kapat → A.
+      //    Tekrarlanabilir fiyat istismarı (A = taban ×3).
+      // DOĞRU KURAL, koşulsuz: yaş = saat − damga. Saat `demoKaymaMs` kadar geri gidiyorsa
+      //    damga da aynı kadar geri gitmeli — yaş böylece BİREBİR korunur. Hangi damganın
+      //    gelecekte olduğu önemli değil; ölçüt yaşın kendisi.
       const simdiReel = guvenliZaman();
+      if (demoKaymaMs > 0) {
+        for (const u of (G.units || [])) if (u && u.kind === 'tarla' && u.ekildi) u.ekildi -= demoKaymaMs;
+        const st = (G.tarim && Array.isArray(G.tarim.stok)) ? G.tarim.stok : [];
+        for (const l of st) if (l && l.ts) l.ts -= demoKaymaMs;
+      }
+      // Emniyet: kaydırmaya rağmen gelecekte kalan damga varsa (saat çıpası oynadıysa) kırp.
       for (const u of (G.units || [])) if (u && u.kind === 'tarla' && u.ekildi > simdiReel) u.ekildi = simdiReel;
-      const st = (G.tarim && Array.isArray(G.tarim.stok)) ? G.tarim.stok : [];
-      for (const l of st) if (l && l.ts > simdiReel) l.ts = simdiReel;
+      const st2 = (G.tarim && Array.isArray(G.tarim.stok)) ? G.tarim.stok : [];
+      for (const l of st2) if (l && l.ts > simdiReel) l.ts = simdiReel;
     } catch (e) {}
   }
   $('demolink').textContent = '⏩ Demo: ' + (G.demo ? 'AÇIK ×60' : 'KAPALI');
