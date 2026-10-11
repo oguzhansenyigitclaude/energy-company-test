@@ -195,6 +195,40 @@
 
   .umark{text-align:center;line-height:1;filter:drop-shadow(0 1px 3px #0008);position:relative}
   .umark .ic{display:inline-block;position:relative}
+  /* ═══ 🏢 ŞİRKET PROFİLİ (96. yama) — rakibin Corporate düzeni ═══ */
+  .phero{position:relative;height:118px;border-radius:14px;overflow:hidden;margin-bottom:9px;
+    background:linear-gradient(135deg,#1f3625,#16271a)}
+  .phero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
+  .phero .ic{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:8px;
+    background:linear-gradient(180deg,#0e1a1166,#0e1a11dd)}
+  .phero .nm{font-size:21px;font-weight:800;color:#fff;text-shadow:0 2px 8px #000a;line-height:1.1}
+  .phero .alt{font-size:11px;color:#dfeadf;margin-top:2px}
+  .phero .odak{font-size:12px;color:var(--gold);font-weight:700;margin-top:4px}
+  .pkut{display:flex;gap:7px;margin:9px 0}
+  .pkut > div{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+    padding:9px 7px;text-align:center;min-width:0}
+  .pkut b{display:block;font-size:17px;color:var(--cream);line-height:1.15}
+  .pkut span{display:block;font-size:10px;color:var(--dim);margin-top:1px}
+  /* skor halkası — conic-gradient, ek kütüphane yok */
+  .phalka{width:62px;height:62px;border-radius:50%;margin:0 auto;display:flex;align-items:center;
+    justify-content:center;font-size:17px;font-weight:800;color:var(--cream)}
+  .phalka i{width:48px;height:48px;border-radius:50%;background:var(--panel2);display:flex;
+    align-items:center;justify-content:center;font-style:normal}
+  /* kalite karnesi — rakibin eco rating gradyanının karşılığı, GERÇEK veriyle */
+  .pgrad{height:10px;border-radius:6px;background:linear-gradient(90deg,#6b4f33,#8a7a3a,#5a8f63,#9ae3a0,#ffc83d);
+    position:relative;margin:7px 0 3px}
+  .pgrad i{position:absolute;top:-4px;width:3px;height:18px;background:#fff;border-radius:2px;
+    box-shadow:0 0 6px #000a;transform:translateX(-1.5px)}
+  .prow{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px dashed var(--line);font-size:12.5px}
+  .prow .l{flex:1;min-width:0}
+  .pyatay{display:flex;gap:7px;overflow-x:auto;padding:2px 0 6px}
+  .pyatay > div{flex:0 0 96px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;
+    padding:7px;text-align:center}
+  .pyatay img{width:100%;height:52px;object-fit:cover;border-radius:7px;display:block}
+  .pyatay b{display:block;font-size:11px;margin-top:4px;color:var(--cream)}
+  .pyatay span{display:block;font-size:9.5px;color:var(--dim)}
+
   /* ═══ 🌾 SİLO KARTI (94. yama) — rakibin ürün satırı düzeni, bizim kalite sistemimizle ═══ */
   .silok{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:9px 10px;margin:7px 0}
   .silok .ust{display:flex;align-items:center;gap:9px}
@@ -799,7 +833,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 15:50) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 16:03) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -979,16 +1013,18 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 15:50)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 16:03)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11v',
+  etiket: '2026-10-11y',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🏢 <b>CIFTLIK PROFILI geldi.</b> Tarimda sirket adina dokununca artik enerji ekrani degil kendi profilin aciliyor: ustte ciftlik fotografi ve sirket adi, ne zaman kuruldugu, <b>ana urunun ve payi</b>; uc kutuda tarla sayisi + toplam hektar + ciftlik, ortada <b>rebirth ilerleme halkasi</b>, sagda satilan ton ve urun cesidi. Altinda bolgelerin, tarla seridin ve HOLDING ozeti (rebirth, kayyum sirketleri ve kasalari, Imtiyaz Puani).',
+    '🏅 <b>KALITE KARNESI.</b> Profilde E den A ya uzanan bir cubuk: butun urunlerindeki uretim standardinin ortalamasi. Tek bakista <b>ne kadar kaliteli bir ureticisin</b> gorunuyor — bu eksen rakip oyunlarda yok.',
     '🏚️ <b>SILO ARTIK DOLUYOR.</b> Stok sinirsiz degil: baslangic <b>400 ton</b>, her genisletme <b>+400 ton</b> ve bedeli bir oncekinin <b>2 kati</b> (Sv10 = 4.400 ton). ⚠️ En onemli kural: <b>silo dolunca hasat DURUR, urun KAYBOLMAZ</b> — tarlada bekler, sattiktan sonra kaldigi yerden devam eder. Tohum parasi da odenmez. Silonun ustundeki cubuk yuzde 70 te sariya, yuzde 90 da kirmiziya doner.',
     '📐 <b>Tarlalarin artik HEKTARI var.</b> Her tarla haritadaki kendi poligonundan olculuyor; panelde toplam arazin ve her tarlanin alani yaziyor. Yeni kayit alani eklenmedi, eski ciftlikler de kendiliginden hektar kazandi.',
     '🏚️ <b>SILO EKRANI yeniden yazildi.</b> Stok artik duz tablo degil: her urun kendi kartinda, fotografi, toplam tonu ve bir <b>KALITE SERIDI</b> ile — altin A dan soluk E ye, elinde ne oldugunu tek bakista gorursun. Her kalite satirinda ton, sehir fiyati ve satis tutari dugmenin uzerinde yazili. Ustte silo ozeti: toplam stok ve guncel degeri.',
@@ -15226,7 +15262,9 @@ window.openPlayerCard = (nm, geriSekme) => {
   if (!nm || !G) return;
   // 🔙 patron: "sıralamadan girdim, kapatınca haritaya atıyor — listeye dönmeli"
   const geri = geriSekme ? `openLeaderboard('${geriSekme}')` : 'closeModal()';
-  if (nm === G.company) { hideSheets(); openCompanySheet(); return; } // kendi şirketin: tam ekran
+  // 🌾 96. yama — tarımda kendi şirketine dokunmak ÇİFTLİK PROFİLİNİ açar; enerjinin
+  //    şirket ekranı (araştırma, mali durum) tarımda baştan sona anlamsızdı.
+  if (nm === G.company) { hideSheets(); if (G.sektor === 'tarim') ciftlikProfili(); else openCompanySheet(); return; }
   const net = NET.on() ? NET.list().find(x => x.nm === nm) : null;
   const wi = WORLD_PLAYERS.indexOf(nm);
   const c = net
@@ -16464,6 +16502,120 @@ function tarimStokTablosu(cell) {
     + '</div>';
   return html + kartlar.join('');
 }
+
+// ═══════════ 🏢 ŞİRKET PROFİLİ (96. yama) ═══════════
+// Rakibin "Corporate > Company" düzeni taban alındı: hero + kuruluş + ana ürün yüzdesi +
+// üç istatistik kutusu + skor halkası + gradyan karne + odak listesi + yatay kart şeridi.
+//
+// 🔴 İKİ YERDE BİLEREK AYRILDIK — sebebi "ekran vaat ediyor, kod vermiyor" dersi:
+//  1) SKOR: rakipte neye dayandığı bilinmiyor. Uydurmak yerine oyunun KENDİ ilerleme
+//     eksenini koyduk: rebirth hedefine yüzde kaç yaklaştın. Zaten HUD çubuğundaki sayı.
+//  2) ECO RATING: rakipte var ama bizim tarımda emisyon/gübre/rotasyon verisi YOK.
+//     Boş bir çubuk çizmek yerine aynı bileşeni KENDİ eksenimizle doldurduk:
+//     KALİTE KARNESİ (E→A üretim standardı ortalaması). Bu bizim farkımız, rakipte yok.
+const kurulusSuresi = (ts) => {
+  const g = Math.max(0, (Date.now() - (ts || Date.now())) / 864e5);
+  if (g < 1) return 'bugün kuruldu';
+  if (g < 30) return Math.round(g) + ' gün önce kuruldu';
+  if (g < 365) return Math.max(1, Math.round(g / 30)) + ' ay önce kuruldu';
+  return (Math.round(g / 36.5) / 10) + ' yıl önce kuruldu';
+};
+// Çiftlik = içinde tarla olan ruhsatlı karo. Rakipteki "farms" ara katmanının karşılığı;
+// yeni veri gerekmiyor, zaten karo bazlı çalışıyoruz.
+function ciftlikler() {
+  const h = {};
+  for (const u of (typeof tarlalar === 'function' ? tarlalar() : [])) {
+    if (!h[u.cell]) h[u.cell] = { cell: u.cell, tarla: 0, ha: 0, urun: {} };
+    h[u.cell].tarla++;
+    h[u.cell].ha += tarlaHektar(u);
+    if (u.urun) h[u.cell].urun[u.urun] = (h[u.cell].urun[u.urun] || 0) + 1;
+  }
+  return Object.values(h);
+}
+// Ana ürün ve payı — SATILAN tondan (deneyim defteri), yeni alan gerekmiyor.
+function anaUrun() {
+  let top = 0, en = null, enTon = 0;
+  for (const id of Object.keys(TARIM_URUN)) { const d = urunDnm(id); top += d; if (d > enTon) { enTon = d; en = id; } }
+  if (!en || top <= 0) return null;
+  return { id: en, pay: Math.round(100 * enTon / top) };
+}
+// Kalite karnesi: üretim standardının ortalaması (1=E … 5=A), 0-1 arası orana çevrilir.
+function kaliteKarnesi() {
+  const ids = Object.keys(TARIM_URUN).filter(id => urunDnm(id) > 0 || urunStd(id) > 1);
+  if (!ids.length) return { oran: 0, ort: 1, ad: 'E', say: 0 };
+  const ort = ids.reduce((a, id) => a + urunStd(id), 0) / ids.length;
+  return { oran: Math.max(0, Math.min(1, (ort - 1) / 4)), ort, ad: kaliteAd(Math.round(ort)), say: ids.length };
+}
+
+window.ciftlikProfili = () => {
+  if (!G || !G._started) return;
+  hideSheets();
+  const ts = (typeof tarlalar === 'function') ? tarlalar() : [];
+  const cf = ciftlikler();
+  const au = anaUrun();
+  const kk = kaliteKarnesi();
+  const skor = Math.round((typeof rebirthOran === 'function' ? rebirthOran() : 0) * 100);
+  const uretilen = Object.keys(TARIM_URUN).reduce((a, id) => a + urunDnm(id), 0);
+  const cesit = Object.keys(TARIM_URUN).filter(id => urunDnm(id) > 0).length;
+  const parkli = Object.values((G.sektorler) || {});
+  const h = [];
+  h.push('<div class="phero"><img src="img/splash-tarim-ciftlik.webp" onerror="this.remove()">'
+    + '<div class="ic"><div class="nm">' + (G.company || '—') + '</div>'
+    + '<div class="alt">' + ulkeBayrak(G.country) + ' ' + (G.il || '—') + ', ' + (G.country || '—')
+    + ' · ' + kurulusSuresi(G.founded) + '</div>'
+    + (au ? '<div class="odak">' + urunBilgi(au.id).ico + ' ' + urunBilgi(au.id).ad + ' (%' + au.pay + ')</div>'
+          : '<div class="odak" style="color:var(--dim)">henüz satış yok</div>')
+    + '</div></div>');
+  // üç kutu
+  h.push('<div class="pkut">'
+    + '<div><b>' + ts.length + '</b><span>tarla</span><b style="font-size:13px;margin-top:3px">'
+      + fmtN(Math.round(tarlaToplamHektar())) + ' ha</b><span>' + cf.length + ' çiftlik</span></div>'
+    + '<div><div class="phalka" style="background:conic-gradient(var(--acc) ' + (skor * 3.6) + 'deg,#0004 0)">'
+      + '<i>' + skor + '</i></div><span style="margin-top:4px">rebirth ilerlemesi</span></div>'
+    + '<div><b>' + fmtE(uretilen) + ' t</b><span>satılan</span><b style="font-size:13px;margin-top:3px">'
+      + cesit + '</b><span>ürün çeşidi</span></div>'
+    + '</div>');
+  // kalite karnesi
+  h.push('<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🏅 KALİTE KARNESİ '
+    + '<span class="sub">üretim standardının ortalaması</span></div>'
+    + '<div class="pgrad"><i style="left:' + Math.round(kk.oran * 100) + '%"></i></div>'
+    + '<div class="kleg"><span>E</span><span style="margin-left:auto">ortalama <b>' + kk.ad + '</b>'
+    + (kk.say ? ' · ' + kk.say + ' üründe' : '') + '</span><span style="margin-left:auto">A</span></div>');
+  // odak: ciftlik basina ana urun
+  if (cf.length) {
+    h.push('<div style="font-size:11px;color:var(--acc2);margin:12px 0 2px">🚜 ÇİFTLİKLER <span class="sub">'
+      + cf.length + ' bölge</span></div>');
+    for (const c of cf.sort((a, b) => b.ha - a.ha)) {
+      const en = Object.keys(c.urun).sort((a, b) => c.urun[b] - c.urun[a])[0];
+      h.push('<div class="prow"><span class="l"><b>' + (placeName(c.cell) || cellCode(c.cell)) + '</b>'
+        + '<span class="sub"> · ' + c.tarla + ' tarla · ' + fmtN(Math.round(c.ha)) + ' ha</span></span>'
+        + '<span>' + (en ? urunBilgi(en).ico + ' ' + urunBilgi(en).ad : '<span class="sub">boş</span>') + '</span></div>');
+    }
+  }
+  // tesisler (rakipteki "Machinery owned" seridinin yeri — makine filosu gelince burasi dolacak)
+  if (ts.length) {
+    h.push('<div style="font-size:11px;color:var(--acc2);margin:12px 0 2px">🌱 TARLALAR <span class="sub">('
+      + ts.length + ')</span></div><div class="pyatay">');
+    for (const u of ts.slice(0, 12)) {
+      h.push('<div><img src="img/tarla_' + (u.urun || 'bos') + '.webp" onerror="this.remove()">'
+        + '<b>' + (u.urun ? urunBilgi(u.urun).ad : 'Boş') + '</b>'
+        + '<span>#' + u.id + ' · ' + fmtN(Math.round(tarlaHektar(u))) + ' ha</span></div>');
+    }
+    h.push('</div>');
+    if (ts.length > 12) h.push('<p class="sub">… ve ' + (ts.length - 12) + ' tarla daha</p>');
+  }
+  // holding
+  h.push('<div style="font-size:11px;color:var(--acc2);margin:12px 0 2px">🏛️ HOLDİNG</div>'
+    + '<div class="prow"><span class="l">Rebirth döngüsü</span><span><b>' + (G.rb || 0) + '</b></span></div>'
+    + '<div class="prow"><span class="l">Sektör değişimi</span><span><b>' + (G.rbSay || 0) + '</b></span></div>'
+    + '<div class="prow"><span class="l">Kayyum şirketi</span><span><b>' + parkli.length + '</b>'
+    + (parkli.length ? ' <span class="sub">' + fmt(parkli.reduce((a, k) => a + (k.kasa || 0), 0)) + ' kasada</span>' : '') + '</span></div>'
+    + '<div class="prow"><span class="l">💠 İmtiyaz Puanı</span><span><b>' + (G.ip || 0) + '</b></span></div>');
+  h.push('<button class="bigsell" style="margin-top:10px" onclick="hideSheets();tarimPanel()">🌾 Çiftlik Paneli</button>');
+  $('comp_title').innerHTML = '🏢 ' + (G.company || 'Şirket');
+  $('comp_body').innerHTML = h.join('');
+  showSheet('companysheet');
+};
 
 // ── ANA PANEL ───────────────────────────────────────────────────────────────
 function tarimPanel() {
