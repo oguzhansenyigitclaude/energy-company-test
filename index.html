@@ -833,7 +833,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 16:08) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 16:26) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -1013,16 +1013,17 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 16:08)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 16:26)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11z',
+  etiket: '2026-10-11za',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
+    '🚜 <b>MAKINE FILOSU geldi.</b> Artik traktor ve bicerdover alabiliyorsun. Bir tarlaya makine atayinca o tarlanin olgunlasma suresi <b>makinenin kati kadar kisaliyor</b>: isciyle 3 saat suren bugday, en ust bicerdoverle <b>11 dakikaya</b> iniyor. 🔑 Ama <b>bir makine ayni anda tek tarlada</b> calisir — ikinci tarlaya atadiginda birincisinden kendiliginden cozulur. Yani 3 makinen varsa 8 tarlanin sadece 3 u hizli doner; hangisine koyacagin gercek bir karar.',
     '🌱 <b>TARLA KARTI geldi.</b> Haritada bir tarlaya dokununca artik kendi kunyesi aciliyor: arazinin <b>gercek sekli</b> (haritadaki poligonun aynisi, urun dokusuyla), alani hektar olarak, durumu, gubresi, iscisi; altinda uretim standardin, hasat basina kac ton aldigi, olgunlasma suresi, bekleyen hasat ve <b>siloda kac hasatlik yer kaldigi</b>.',
     '🧪 <b>GUBRE geldi.</b> Tarlayi gubreleyince <b>5 hasat boyunca verim yuzde 25 fazla</b>. Bedel tarlanin hektarina gore — 360 hektarlik tarla icin yaklasik 7 bin dolar. Gubre kalite yukseldikce degerleniyor: C kalitede kari az, A kalitede cok. Arastirmaya yatirim yapan oyuncu iki kez kazaniyor.',
     '🏢 <b>CIFTLIK PROFILI geldi.</b> Tarimda sirket adina dokununca artik enerji ekrani degil kendi profilin aciliyor: ustte ciftlik fotografi ve sirket adi, ne zaman kuruldugu, <b>ana urunun ve payi</b>; uc kutuda tarla sayisi + toplam hektar + ciftlik, ortada <b>rebirth ilerleme halkasi</b>, sagda satilan ton ve urun cesidi. Altinda bolgelerin, tarla seridin ve HOLDING ozeti (rebirth, kayyum sirketleri ve kasalari, Imtiyaz Puani).',
@@ -7467,7 +7468,7 @@ function freshState() {
     // tohum: ödenen toplam tohum bedeli — gelir-gider tablosunda ayrı kalem
     // satim: BUGUN hangi sehre/urune/kaliteye kac ton satildigi. Gun donunce komple
     //        sifirlanir — boylece defter kendiliginden budanir, sonsuz buyumez.
-    tarim: { std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0, ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} }, siloLvl: 0 },
+    tarim: { std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0, ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} }, siloLvl: 0, makineler: [] },
     tarimIpucu: false,   // 🌾 ilk yönlendirme gösterildi mi (68. yama)
     lastSeen: Date.now(), muted: false, demo: false,
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
@@ -15737,7 +15738,7 @@ const myWorth = () => G.cash + G.units.reduce((s, u) => s + TYPE_OF(u.kind, u.t)
 // 🏚️ 95. yama — silo genişletmeye ödenen para da tesis yatırımıdır; ama silo bir BİRİM
 //    değil ŞİRKET düzeyinde olduğu için döngünün dışından ekleniyor.
 const siloOdenenToplam = () => { const t = (typeof tarimD === 'function') ? tarimD() : null; return Math.max(0, (t && t.siloOdenen) || 0); };
-const tesisDegeri = () => siloOdenenToplam() + ((typeof G !== 'undefined' && G && G.units) ? G.units : []).reduce((t, u) => {
+const tesisDegeri = () => siloOdenenToplam() + (typeof makineOdenenToplam === 'function' ? makineOdenenToplam() : 0) + ((typeof G !== 'undefined' && G && G.units) ? G.units : []).reduce((t, u) => {
   if ((u.buildDone || 0) > Date.now()) return t;            // inşaat sürüyor: sayma
   const T = TYPE_OF(u.kind, u.t);
   if (!T || !T.cost) return t;                              // katalogdan düşmüş tür: 0 say, çökme
@@ -16043,7 +16044,10 @@ function urunFiyat(urun, kalite, atil) {
 const tarlaMi = u => u && u.kind === 'tarla';
 const tarlalar = () => ((typeof G !== 'undefined' && G && Array.isArray(G.units)) ? G.units : []).filter(tarlaMi);
 // Bir döngünün ms cinsinden süresi. Bilinmeyen ürün 1 saat sayılır (çökme yok — 53. yama dersi).
-const tarlaSure = u => Math.max(60000, (urunBilgi(u && u.urun).sure || 3600) * 1000);
+// 🚜 98. yama — ürünün kendi süresi artık ELLE/İŞÇİYLE çalışmanın süresidir; atanmış
+//    makine onu BÖLER (patron: "işçi makineye oranla saatler sürsün").
+//    Taban 60 sn korunuyor: en hızlı makinede bile bir döngü anlık olmuyor.
+const tarlaSure = u => Math.max(60000, (urunBilgi(u && u.urun).sure || 3600) * 1000 / (typeof makineKat === 'function' ? makineKat(u) : 1));
 // guvenliZaman FONKSIYON BILDIRIMI (satır 16357) — hoisting ile her zaman tanımlı,
 // yedek dala gerek yok. Date.now() BILEREK kullanılmıyor: 44-45. yamalarda cihaz saati
 // sunucu jetonuna çıpalandı; buradan Date.now() çağırmak o korumayı deler.
@@ -16648,6 +16652,7 @@ function tarimPanel() {
     + '<div class="qline"><span>📈 Tarım cirosu</span><span>' + fmt((tarimD() && tarimD().ciro) || 0) + '</span></div>'
     + '<div class="catrow" style="margin:6px 0">'
     + '<button onclick="closeModal();doBuild(\'tarla\',\'tarla\')">🌱 Tarla — ' + fmt(TARIM_TIPLERI.tarla.tarla.cost) + '</button>'
+    + '<button onclick="makineFilosu()">🚜 Makineler — ' + makineler().length + '</button>'
     + '<button onclick="closeModal();doBuild(\'lojman\',\'lojman\')">🏘️ Lojman — ' + fmt(TARIM_TIPLERI.lojman.lojman.cost)
     + ' <span class="sub">(+' + TARIM_AYAR.lojmanKapasite + ' işçi)</span></button>'
     + '</div>'
@@ -16664,6 +16669,124 @@ function tarimPanel() {
 }
 
 // ── Birim sayfasından çağrılan küçük panel (58. yamadaki soket bunu arıyor) ──
+// ═══════════ 🚜 MAKİNE FİLOSU (98. yama) ═══════════
+// PATRON KARARI — C seçeneği (melez), gerekçesiyle birlikte:
+//   A) rakibin 7 durumlu zinciri → "işçi varken uyurken de hasat olur" SÖZÜNÜ bozardı
+//   B) makine yalnız verim → rakibin en iyi parçası olan "bir makine her yerde olamaz"
+//      gerilimi kaybolurdu
+//   C) ✅ işçili tarla otomatik döner (söz korunur) + makine o döngünün HIZINI artırır +
+//      BİR MAKİNE AYNI ANDA TEK TARLAYA atanır (gerilim korunur)
+//
+// 🧑‍💼 Patron: "işçi makineye oranla saatler sürsün — elle iş yapmakla traktörle iş yapmak
+//    arasında zaman farkı yüksek." Bu yüzden ürünün kendi süresi (buğday 3 sa, patates 2 sa)
+//    artık ELLE/İŞÇİYLE çalışmanın süresidir; makine onu BÖLER. En üst makine ×16 →
+//    3 saatlik buğday 11 dakikaya iner.
+// ⚠️ Makineler harita birimi DEĞİL: `G.tarim.makineler` listesinde duruyorlar. Sebep —
+//    karo başına birim limiti (8-13) makineyi tarlayla yarıştırırdı ve haritayı doldururdu.
+const MAKINE_TIPLERI = {
+  traktor_1: { nm: 'Traktör T-60',        ico: '🚜', cost: 1.2e6, kat: 3,  d: 'Küçük tarla traktörü — işçiye göre 3 kat hızlı.' },
+  traktor_2: { nm: 'Traktör T-130',       ico: '🚜', cost: 4e6,   kat: 6,  d: 'Güçlü traktör — 6 kat hız, büyük tarlada fark eder.' },
+  bicer_1:   { nm: 'Biçerdöver B-5',      ico: '🌾', cost: 12e6,  kat: 10, d: 'Biçerdöver — hasadı 10 kat hızlandırır.' },
+  bicer_2:   { nm: 'Biçerdöver B-9 Çift', ico: '🌾', cost: 30e6,  kat: 16, d: 'Çift tamburlu amiral gemisi — 16 kat.' },
+};
+const makineVar = t => Object.prototype.hasOwnProperty.call(MAKINE_TIPLERI, t);
+const makineler = () => { const d = tarimD(); return (d && Array.isArray(d.makineler)) ? d.makineler : []; };
+const makineBul = id => makineler().find(x => x && x.id === id) || null;
+// Bu tarlaya atanmış makine (yoksa null). "Bir makine her yerde olamaz" kuralının tek kapısı.
+const tarlaMakine = u => (u && u.kind === 'tarla') ? (makineler().find(x => x && x.tarla === u.id) || null) : null;
+const makineKat = u => { const k = tarlaMakine(u); return (k && makineVar(k.t)) ? MAKINE_TIPLERI[k.t].kat : 1; };
+const makineOdenenToplam = () => makineler().reduce((a, k) => a + ((makineVar(k && k.t) ? MAKINE_TIPLERI[k.t].cost : 0)), 0);
+
+window.makineAl = t => {
+  if (!makineVar(t)) return;
+  if (typeof krediKilidi === 'function' && krediKilidi('makine alımı')) return;
+  const T = MAKINE_TIPLERI[t], d = tarimD();
+  if (!d) return;
+  if (G.cash < T.cost) { toast('Yetersiz bakiye — ' + fmt(T.cost) + ' gerekli', 'warn'); return; }
+  G.cash -= T.cost;
+  if (typeof gider === 'function') { try { gider('yatirim', T.cost); } catch (e) {} }
+  if (!Array.isArray(d.makineler)) d.makineler = [];
+  d.makineler.push({ id: G.nextId++, t: t, tarla: 0 });
+  toast(T.ico + ' ' + T.nm + ' alındı — bir tarlaya ata', '', null, 0, true);
+  beep(700, .12);
+  save(); makineFilosu();
+};
+window.makineAta = (mid, tid) => {
+  const k = makineBul(mid);
+  if (!k) return;
+  const u = (G.units || []).find(x => x.id === tid && x.kind === 'tarla');
+  if (!u) { toast('Tarla bulunamadı', 'warn'); return; }
+  // 🔑 BİR MAKİNE HER YERDE OLAMAZ: hedef tarlada zaten makine varsa önce o çözülür.
+  const eski = tarlaMakine(u);
+  if (eski && eski.id !== mid) eski.tarla = 0;
+  k.tarla = tid;
+  toast(MAKINE_TIPLERI[k.t].ico + ' Tarla #' + tid + ' → ' + MAKINE_TIPLERI[k.t].nm, '');
+  save(); refreshUnitMarkers(); makineFilosu();
+};
+window.makineCoz = mid => { const k = makineBul(mid); if (!k) return; k.tarla = 0; save(); makineFilosu(); };
+window.makineSat = mid => {
+  const k = makineBul(mid), d = tarimD();
+  if (!k || !d) return;
+  const geri = Math.round((makineVar(k.t) ? MAKINE_TIPLERI[k.t].cost : 0) * .5);
+  d.makineler = makineler().filter(x => x.id !== mid);
+  G.cash += geri;
+  toast('🚜 Makine satıldı — ' + fmt(geri) + ' iade (%50)', '', null, 0, true);
+  save(); makineFilosu();
+};
+
+// 🖥️ FİLO EKRANI — rakibin "Select tractor(s)" + "Dealership" düzeni taban alındı:
+//    sahip olunan makineler yatay kartlar hâlinde, altında satın alma kataloğu.
+window.makineFilosu = () => {
+  if (!G || !G._started) return;
+  const mk = makineler(), ts = (typeof tarlalar === 'function') ? tarlalar() : [];
+  const h = [];
+  h.push('<h2>🚜 Makine Filosu</h2>');
+  h.push('<p class="sub">Bir makine <b>aynı anda tek tarlada</b> çalışır. Atanan tarlanın '
+    + 'olgunlaşma süresi makinenin katı kadar kısalır — işçiyle saatler süren iş dakikalara iner.</p>');
+  if (mk.length) {
+    h.push('<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🚜 FİLON <span class="sub">('
+      + mk.length + ')</span></div>');
+    for (const k of mk) {
+      if (!makineVar(k.t)) continue;
+      const T = MAKINE_TIPLERI[k.t];
+      const u = k.tarla ? ts.find(x => x.id === k.tarla) : null;
+      h.push('<div class="silok"><div class="ust">'
+        + '<span style="font-size:26px">' + T.ico + '</span>'
+        + '<span class="ad"><b>' + T.nm + '</b><span class="sub">×' + T.kat + ' hız · #' + k.id + '</span></span>'
+        + '<span class="mik" style="font-size:12px">' + (u
+            ? '<span class="pos">Tarla #' + u.id + '</span><small>' + (u.urun ? urunBilgi(u.urun).ad : 'boş') + '</small>'
+            : '<span class="sub">atanmadı</span>') + '</span></div>'
+        + '<div class="ksat"><span class="fy">'
+        + (ts.length ? '<select id="mksec' + k.id + '" style="width:100%;padding:5px;border-radius:7px;background:var(--panel);color:var(--ink);border:1px solid var(--line)">'
+            + '<option value="0">— tarla seç —</option>'
+            + ts.map(x => '<option value="' + x.id + '"' + (x.id === k.tarla ? ' selected' : '') + '>Tarla #' + x.id
+                + ' · ' + (x.urun ? urunBilgi(x.urun).ad : 'boş') + ' · ' + fmtN(Math.round(tarlaHektar(x))) + ' ha</option>').join('')
+            + '</select>' : '<span class="sub">önce tarla kur</span>') + '</span>'
+        + (ts.length ? '<button onclick="makineAta(' + k.id + ',+document.getElementById(\'mksec' + k.id + '\').value)">Ata</button>' : '')
+        + (k.tarla ? '<button onclick="makineCoz(' + k.id + ')" style="background:var(--line);color:var(--ink)">Çöz</button>' : '')
+        + '<button onclick="makineSat(' + k.id + ')" style="background:var(--danger);color:#fff">Sat</button>'
+        + '</div></div>');
+    }
+  } else {
+    h.push('<div class="silok" style="text-align:center;padding:16px 10px"><div style="font-size:28px">🚜</div>'
+      + '<p class="sub" style="margin-top:4px">Henüz makinen yok — tarlaların işçi hızında çalışıyor.</p></div>');
+  }
+  h.push('<div style="font-size:11px;color:var(--acc2);margin:12px 0 2px">🏪 BAYİ</div>');
+  for (const [t, T] of Object.entries(MAKINE_TIPLERI)) {
+    h.push('<div class="silok"><div class="ust">'
+      + '<span style="font-size:26px">' + T.ico + '</span>'
+      + '<span class="ad"><b>' + T.nm + '</b><span class="sub">' + T.d + '</span></span>'
+      + '<span class="mik" style="font-size:13px">×' + T.kat + '<small>hız</small></span></div>'
+      + '<div class="ksat"><span class="fy">Örnek: 3 saatlik buğday → <b>'
+        + fmtHrs(3 / T.kat) + '</b></span>'
+      + '<button onclick="makineAl(\'' + t + '\')"' + (G.cash < T.cost ? ' disabled' : '') + '>'
+      + fmt(T.cost) + '</button></div></div>');
+  }
+  h.push('<button class="primary ghostbtn" onclick="closeModal()">Kapat</button>');
+  $('modal').innerHTML = h.join('');
+  $('overlay').classList.add('show');
+};
+
 // ═══════════ 🧪 GÜBRE (97. yama) ═══════════
 // ⚠️ 7 DURUMLU ZİNCİR (ham→temiz→sürülmüş→gübrelenmiş→ekilmiş→olgun→hasat) BİLEREK
 //    ALINMADI. Rakipte her hasattan sonra tarla yeniden SÜRÜLÜP EKİLİYOR; bizde ise
@@ -16731,6 +16854,8 @@ function tarimBirimPanel(u) {
         + (!u.urun ? 'boş' : hazir ? '<span class="pos">hasada hazır</span>' : 'olgunlaşıyor %' + oran) + '</b></div>'
       + '<div class="prow" style="border:0;padding:3px 0"><span class="l">🧪 Gübre</span><b>'
         + (gKalan > 0 ? '<span class="pos">' + gKalan + ' hasat · +%' + Math.round((gk - 1) * 100) + '</span>' : 'yok') + '</b></div>'
+      + '<div class="prow" style="border:0;padding:3px 0"><span class="l">🚜 Makine</span><b>'
+        + (tarlaMakine(u) ? '<span class="pos">' + MAKINE_TIPLERI[tarlaMakine(u).t].nm + ' ×' + makineKat(u) + '</span>' : 'yok — işçi hızında') + '</b></div>'
       + '<div class="prow" style="border:0;padding:3px 0"><span class="l">👷 İşçi</span><b>'
         + (tarlaIsciliMi(u) ? '<span class="pos">var — kendi topluyor</span>' : 'yok — elle') + '</b></div>'
       + '</div></div>');
@@ -19202,9 +19327,11 @@ function migrate(s) {
   //    `starterClaimed` false kalır ve bankanın 24 saat koruması kalıcı muaf olur.
   if (s.sektor && s.sektor !== 'enerji') s.starterClaimed = true;
   s.tarim = Object.assign({ std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0,
-                            ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} }, siloLvl: 0 }, s.tarim);
+                            ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} }, siloLvl: 0, makineler: [] }, s.tarim);
   for (const k4 of ['std', 'dnm', 'arge']) if (!s.tarim[k4] || typeof s.tarim[k4] !== 'object') s.tarim[k4] = {};
   if (!Array.isArray(s.tarim.stok)) s.tarim.stok = [];
+  // 🚜 98. yama — Firebase boş diziyi SAKLAMAZ; makine listesi bulut turunda düşer.
+  if (!Array.isArray(s.tarim.makineler)) s.tarim.makineler = [];
   if (!s.tarim.satim || typeof s.tarim.satim !== 'object') s.tarim.satim = { gun: 0, v: {} };
   if (!s.tarim.satim.v || typeof s.tarim.satim.v !== 'object') s.tarim.satim.v = {};
   s.prodByCat = (s.prodByCat && typeof s.prodByCat === 'object') ? s.prodByCat : {};
