@@ -712,7 +712,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-11 02:11) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-11 03:35) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -891,14 +891,14 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-11 02:11)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-11 03:35)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-11i',
+  etiket: '2026-10-11j',
   baslik: '🌾 Güncelleme notu — 11 Ekim',
   maddeler: [
     '⚖️ <b>Tarim ekonomisi duzeltildi.</b> Ilk surumde tohum bedeli sabitti ve dusuk kalitede ciroyu asiyordu — yani yeni ciftci kacinilmaz olarak zarar ediyordu. Artik tohum, hasadin degerinin sabit bir yuzdesi. Olctuk: artik <b>her kalitede kar var</b>.',
@@ -7267,7 +7267,7 @@ function freshState() {
     // tohum: ödenen toplam tohum bedeli — gelir-gider tablosunda ayrı kalem
     // satim: BUGUN hangi sehre/urune/kaliteye kac ton satildigi. Gun donunce komple
     //        sifirlanir — boylece defter kendiliginden budanir, sonsuz buyumez.
-    tarim: { std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0, ciro: 0, tohum: 0, maasGun: '', maas: 0, satim: { gun: '', v: {} } },
+    tarim: { std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0, ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} } },
     tarimIpucu: false,   // 🌾 ilk yönlendirme gösterildi mi (68. yama)
     lastSeen: Date.now(), muted: false, demo: false,
     mgDate: '', mgPlays: 0, adDate: '', adUses: 0, notifAsked: false, notifOn: false, priceHist: [], nextId: 1,
@@ -15859,7 +15859,7 @@ function tarimSehirTon(cell) {
 function tarimSatimDefteri() {
   const t = tarimD();
   if (!t) return null;
-  if (!t.satim || typeof t.satim !== 'object') t.satim = { gun: '', v: {} };
+  if (!t.satim || typeof t.satim !== 'object') t.satim = { gun: 0, v: {} };
   const g = tarimGun();
   if (t.satim.gun !== g) { t.satim.gun = g; t.satim.v = {}; }
   return t.satim;
@@ -18132,10 +18132,10 @@ function migrate(s) {
   //    `starterClaimed` false kalır ve bankanın 24 saat koruması kalıcı muaf olur.
   if (s.sektor && s.sektor !== 'enerji') s.starterClaimed = true;
   s.tarim = Object.assign({ std: {}, dnm: {}, arge: {}, argeAktif: null, stok: [], isci: 0,
-                            ciro: 0, tohum: 0, maasGun: '', maas: 0, satim: { gun: '', v: {} } }, s.tarim);
+                            ciro: 0, tohum: 0, maasGun: 0, maas: 0, satim: { gun: 0, v: {} } }, s.tarim);
   for (const k4 of ['std', 'dnm', 'arge']) if (!s.tarim[k4] || typeof s.tarim[k4] !== 'object') s.tarim[k4] = {};
   if (!Array.isArray(s.tarim.stok)) s.tarim.stok = [];
-  if (!s.tarim.satim || typeof s.tarim.satim !== 'object') s.tarim.satim = { gun: '', v: {} };
+  if (!s.tarim.satim || typeof s.tarim.satim !== 'object') s.tarim.satim = { gun: 0, v: {} };
   if (!s.tarim.satim.v || typeof s.tarim.satim.v !== 'object') s.tarim.satim.v = {};
   s.prodByCat = (s.prodByCat && typeof s.prodByCat === 'object') ? s.prodByCat : {};
   s.canta = (s.canta && typeof s.canta === 'object') ? s.canta : {}; // 🎒 hediye envanteri
@@ -22101,8 +22101,17 @@ $('demolink').addEventListener('click', () => {
         const gR = trGun(simdiReel);
         const tt = G.tarim;
         if (tt) {
-          if (Number(tt.maasGun) > gR) tt.maasGun = String(gR);
-          if (tt.satim && Number(tt.satim.gun) > gR) tt.satim.gun = String(gR);
+          // 🔴 75. yama — 74'teki bu iki satır gün anahtarını METİN olarak yazıyordu ve
+          //    TAM BİR BOŞ İŞTİ. `trGun()` SAYI döndürür; defteri yazan tek yer de sayı
+          //    yazar; ve İKİ okuyucu da KATI eşitlik kullanır:
+          //      sehirUrunTalep    : satim.gun === tarimGun()  → metin/sayı → false
+          //      tarimSatimDefteri : t.satim.gun !== g         → true → v = {} DEFTER SİLİNİR
+          //    Yani A/B sert kotası demo aç/kapa ile YİNE tazeleniyordu.
+          //    ÖLÇÜLDÜ: demo 36 saat → A kotası 97/97 doldu → demo kapat → kalan YİNE 97.
+          //    Maaş anahtarı da metinken `t.maasGun === gun` false dönüp aynı gerçek günde
+          //    bir FAZLADAN günlük maaş kesiyordu — oyuncunun zararına ikinci hata.
+          if (Number(tt.maasGun) > gR) tt.maasGun = gR;
+          if (tt.satim && Number(tt.satim.gun) > gR) tt.satim.gun = gR;
         }
       } catch (e) {}
       // Emniyet: kaydırmaya rağmen gelecekte kalan damga varsa (saat çıpası oynadıysa) kırp.
