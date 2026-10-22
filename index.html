@@ -833,7 +833,7 @@
       <button id="helpbtn" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer">❓ Yardım ve SSS</button>
       <button id="bugbtn" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:12.5px;font-weight:700;cursor:pointer">🐞 Hata Bildir (test sürümü)</button>
       <div class="fairline">✅ Gördüğün fiyat = hesabına geçen para — tüm kesintiler şeffaf · Premium para birimi yok · Seviye/kilit yok, her şey oyun parasıyla · Enerjin asla silinmez · Günde ~2 saat için tasarlandı · 🚀 İlk $50M kazanca kadar üretim ×10, $100M'ye kadar ×3<br>
-      <span style="opacity:.7">Prototip 1.0 (2026-10-22 01:22) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
+      <span style="opacity:.7">Prototip 1.0 (2026-10-22 05:05) · <span class="lnk" id="demolink">⏩ Demo: KAPALI</span> · <span class="lnk" id="resetlink">sıfırla</span> · <span class="lnk" id="mutelink">🔊</span> · <span class="lnk" id="langlink">🌐 TR</span></span></div>
     </div>
 
     <!-- TOPLU BAKIM sayfası: cihaz listesi + tik + toplam (patron tasarımı, telefon testi) -->
@@ -965,6 +965,7 @@
       <!-- 🌾 101. yama — TARIMA OZEL CEKMECE. Alt bardan inen (Gorunum/Ittifak/Muzayede)
            ve tarima ait (Hayvancilik) girisler. Hepsi varsayilan GIZLI; sektorKabugu acar. -->
       <button data-act="hayvan" id="drawerhayvan" style="display:none"><span class="big">🐄</span>Hayvan</button>
+      <button data-act="targe" id="drawertarge" style="display:none"><span class="big">🧪</span>Araştırma</button>
       <button data-act="tally" id="draweraly" style="display:none"><span class="big">🤝</span>İttifak</button>
       <button data-act="tauc" id="draweraucn" style="display:none"><span class="big">🔨</span>Müzayede</button>
       <button data-act="tview" id="drawerview" style="display:none"><span class="big">🗺️</span>Görünüm</button>
@@ -1023,16 +1024,43 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-22 01:22)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-22 05:05)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-22',
-  baslik: '🌾 Guncelleme notu — 22 Ekim',
+  etiket: '2026-10-22a',
+  baslik: '🌾 Guncelleme notu — 22 Ekim (ikinci tur)',
   maddeler: [
+    '🏙️ <b>HARITADAKI SEHIR KARTI ARTIK GERCEK KOTAYI YAZIYOR.</b> Haritada bir sehre dokununca kart her kalite icin <b>bugun kalan alim kotasini</b> gosteriyor. Ama o sayi <b>hic degismiyordu</b>: kart var olmayan bir alani okudugu icin <b>her zaman gunun TAM kotasini</b> yaziyordu. Yani kota tamamen dolmusken bile kart <b>C 65t kalan</b> diyor, oyuncu siloya gidip satiyor ve <b>kota doldu</b> redini aliyor ya da urun atil fiyata gidiyordu. Artik gercek kalan yaziliyor ve bitmis kademe soluk gorunuyor.',
+    '👷 <b>DURAN TARLA ARTIK ISCI SLOTUNU CALMIYOR.</b> Devre disi bir tarla (muzayededen kilitli gelen ya da kendin kapattigin) isci sayisina <b>sayiliyordu</b>: gunluk maasi oduyordun ve id sirasi onde oldugu icin isciyi <b>calisan</b> tarlandan aliyordu. Artik isci yalniz <b>calisan</b> tarlalara dagitiliyor. Haritada da duran tarla ve lojman artik <b>DURDU</b> yaziyor — eskiden yuzde ya da <b>HAZIR</b> gosterip hicbir uyari vermiyordu.',
+    '🔒 <b>MUZAYEDEDEN ALINAN VARLIK ARTIK RUHSAT ALININCA ACILIYOR.</b> Muzayededen tarla, ahir ya da fabrika devralinca ekran <b>bu bolgenin ciftlik ruhsati gerekli, haritada sehre dokunup al</b> diyordu. Soyleneni yapip ruhsati odeyen oyuncuda <b>hicbir sey olmuyordu</b>: varlik kalici olarak devre disi kaliyor, hem ilan bedeli hem ruhsat parasi yaniyordu. Artik ruhsati aldigin an <b>Devralinan varlik AKTIF</b> bildirimi geliyor ve varlik calismaya basliyor.',
+    '🧪 <b>Arastirma parasi gider defterinde gorunuyor.</b> B kalite icin 25 milyon, A icin 120 milyon dolar kasadan cikiyordu ama <b>paran nereye gitti</b> dokumunde <b>hicbir satir</b> yoktu — yanlis bir defter anahtarina yaziliyordu. Artik <b>Arastirma</b> satirinda gorunuyor.',
+    '⏩ <b>Demo kapatilinca fabrikalar donup kalmiyor.</b> Hizli mod kapandiginda saat geriye donuyor; fabrikanin uretim damgasi ve arastirmanin bitis damgasi bu geri donuste <b>kirpilmiyordu</b>. Sonucu: butun fabrikalar <b>isliyor %0</b>da donuyor ve odenen arastirma demo suresi kadar uzuyordu. Ikisi de duzeldi.',
+    '🏭 <b>Fabrikanin gunluk isletme bedeli Ciftlik panelinde yaziyor.</b> Fabrika kurduktan sonra hicbir ozet ekranda bu gider gorunmuyordu, yani fabrika <b>bedava islermis</b> gibi duruyordu. Ekmek tarifinde gercek tutar gunde 130.560 dolar.',
+    '🏙️ <b>PAZAR OKU ARTIK GERCEGI SOYLUYOR.</b> Stok tablosundaki yon oku <b>her ruhsatli sehirde</b> dogru sehirdesin anlaminda <b>en iyi</b> yaziyordu — cunku ok FIYAT karsilastiriyordu ve urun fiyati sehre <b>hic bagli degil</b> (C kalite bugday Konya ve Aksaray fark etmez, ayni rakam). Oyuncunun gercek karari ise <b>gunluk alim kotasi</b>: kotayi asan ton <b>atil fiyata</b> gidiyor, un icin 3.400 dolar yerine 510 — ucte bir degil ALTI KAT fark. Ok artik kotayi karsilastiriyor: baska bir sehir anlamli olcude daha fazla aliyorsa <b>oraya yonlendiriyor</b> (orn. Aksaray 39 tonda dururken: Konya 118t, +47t alir), fark onemsizse <b>hic konusmuyor</b>. Ayrica ciftlik ruhsati il bazli oldugu icin sehir seridi ayni ismi tekrar basabiliyordu: bes dugmenin dordu <b>Konya</b> diyordu. Artik her dugme gunluk alim tonunu tasiyor — Konya 118t, Konya 109t, Aksaray 39t — yani hangisine satacagini gorebiliyorsun.',
+    '🐔 <b>HAYVANCILIK KILIDI ACILDI.</b> Kumes ya da agil kurup Hayvancilik ekranini acinca panel <b>her zaman INEK sekmesiyle</b> aciliyordu ve orada <b>Once Ahir kur — 6 milyon dolar</b> yaziyordu. Yani en ucuz girisi secen oyuncunun ekraninda <b>hayvan alma dugmesi hic gorunmuyordu</b>, ustune 6 milyon daha harcamasi soyleniyordu. Panel artik <b>sahip oldugun hayvana</b> gore aciliyor; elle sektigin sekme de ezilmiyor.',
+    '🏗️ <b>CIFTLIK TESISI KURMA KILIDI ACILDI.</b> Tarla disindaki hic bir tesis kurulamiyordu: ahir, agil, kumes, isci lojmani ve fabrika haritaya dokundugunda <b>Bu karenin ruhsati yok</b> diyip reddediliyordu, ustune de alinacak bir ruhsat ekranda yoktu. Yani <b>isci tutamiyordun</b> (lojman kurulamiyordu, dolayisiyla uyurken hasat olmuyordu) ve <b>hayvancilik tamamen erisilemezdi</b>. Artik hepsi, tarla gibi, yalnizca <b>bolgenin ciftlik ruhsatiyla</b> kuruluyor. Karo basina tesis siniri da tarimdan kalkti.',
+    '🏭 <b>FABRIKA VE ISLENMIS URUNLER GELDI.</b> Yeni bina: <b>Fabrika</b>. Ham urunu isliyor ve dokuz yeni urun aciliyor: <b>Un · Ekmek · Cips · Aycicek Yagi · Zeytinyagi · Peynir · Yogurt · Salca · Sucuk</b>. Zincir urunlerin kendisinden geliyor: bugday → un → ekmek. Fabrika <b>isci istemiyor</b>, kendi isliyor; freni <b>tedarik</b>. Saatte 20 ton girdi isliyor, yani tam kapasite icin yedi sekiz tarla gerekiyor.',
+    '🏅 <b>Fabrikanin cikti kalitesi iki seyin birlesimi: SENIN STANDARDIN ve VERDIGIN MALZEME.</b> Ve simetrik degil: kotu malzeme iyi fabrikayi <b>asagi ceker</b>, iyi malzeme kotu fabrikayi ancak <b>yari yolda</b> yukari ceker. Yeni bir hat E standardinda baslar; <b>A kalite malzeme verse bile ancak C uretir</b>, cunku deneyimi yok. <b>A ciktinin tek yolu A standardi</b> — yani para degil arastirma. Standart tesise degil <b>urun hattina</b> ait: ikinci fabrikan sifirdan baslamaz.',
+    '🥬 <b>Fabrikaya hangi malzemeyi verecegini SEN seciyorsun.</b> <b>Once kotu</b> secersen iyi hamini satabilir kalirsin, cikti duser. <b>Once iyi</b> secersen cikti yukselir ama en iyi hamini satamazsin. Fabrika paneli her iki durumda da <b>ne cikacagini onceden yaziyor</b>.',
+    '🧪 <b>Islenmis urunlerin kendi arastirma hatti var.</b> Tarim Arastirmasi ekraninda artik iki aile goruyorsun: <b>Bitkisel urunler</b> ve <b>Islenmis urunler</b>. Her ailenin tavani ayri aciliyor.',
+    '💸 <b>Muzayededen tesis devralmak artik bosa para yakmiyor.</b> Tarim sirketinde devir ani, tarimda <b>hic kullanilmayan</b> karo ruhsatina 100.000 dolar, ofis kapsam disindaysa ustune 1 milyon dolar daha odetiyordu. Ikisi de kalkti: tarimda tek kapi <b>il bazli ciftlik ruhsati</b>.',
+    'ℹ️ <b>Konum bilgisi karti artik ciftcinin dilinde.</b> Haritada bir yere dokundugunda ust seritte <b>ruzgar hizi, bulut orani, gunduz/gece</b> yaziyordu — ucu de enerji uretim verisi. Artik orada <b>arazinin hektar bedeli, bolge adi ve ruhsat durumu</b> var. Ayrica eski kart <b>sulama gucu</b> diye bir carpan gosteriyordu; o sayi aslinda hidroelektrik hesabina aitti ve <b>urun verimini hic etkilemiyordu</b>. Simdi iklim satirlarinin basinda bunu acikca yazan bir satir var: verim <b>parselin hektarina</b> baglidir. Kart basligindaki karo kodu da kalkti.',
+    '🚨 <b>ACIL TEDARIK ihalesi artik ciftlikte de CALISIYOR.</b> Ittifak ekranindaki 🚨 Ihaleye Gir dugmesi tarimda <b>kalici olarak kapaliydi</b>: kosul kurulu elektrik gucune bakiyordu, ciftcide o sifir. Artik olcut <b>gunluk ton uretimin</b>. Ihale bolgesindeki sehre sattigin her ton teslimata sayiliyor; fiyat her zamanki kota kurallariyla isliyor, odul basarinin ittifak primi.',
+    '🎨 <b>Gorselsiz urunler artik ciplak emoji degil.</b> 19 urunun yalniz besinde fotograf var; kalanlar simdiye kadar bos bir emoji olarak goruniyordu. Artik her biri <b>kendi renginde bir karonun</b> uzerinde duruyor — bugday altin, uzum mor, cay koyu yesil. Gercek fotograflar hazirlandikca bu karolarin uzerine kendiliginden dusecek.',
+    '👥 <b>Rakip sirketler ve sohbet artik TARIM konusuyor.</b> Dunyadaki diger sirketler ciftciye hala <b>Voltera Enerji</b> ve <b>Marmara Volt</b> diye gorunuyordu; ittifak botlari da <b>RuzgarKurdu</b>, <b>VoltHan</b> idi. Artik <b>Harman Tarim</b>, <b>Basak A.S.</b>, <b>Toprak Group</b> var ve sohbette bicerdoverden, hasattan, silodan soz ediliyor. Enerji sirketinde eski adlar aynen duruyor.',
+    '🏦 <b>CIFTCININ CAN HALATI GELDI.</b> Bankanin kurtarma kredisi tarimda <b>hic acilmiyordu</b> — kosulu santral bakimi ve yakit masrafina bagliydi, ciftcide ikisi de sifir. Oysa ciftcinin kendi tuzagi vardi: kasa bitince <b>tohum alinamiyor</b>, hasat duruyor, gelir kesiliyor ve oyuncu kendi basina cikamiyor. Artik banka tam bu durumda devreye giriyor. Para <b>kasana girmiyor</b>: <b>ciftlik gider fonuna</b> yaziliyor ve yalniz tohum, isci maasi ve veteriner icin harcanabiliyor — o parayla arazi ya da hayvan alinamaz.',
+    '🧪 <b>A KALITE YOLU ACILDI.</b> Urun kalitesi <b>E → D → C</b> arasinda sattigin tonajla yukseliyordu; <b>B</b> ve <b>A</b> kademeleri ise kodda HIC YOKTU — ciftci C kademesinde tikaliydi. Artik cekmecede <b>🧪 Arastirma</b> var: bitkisel urun ailesi icin <b>B kalite 25 milyon dolar ve 7 gun</b>, <b>A kalite 120 milyon dolar ve 14 gun</b>. Arastirma bitince o aileden <b>onceki kademeye ulasmis</b> urunlerin hepsi bir basamak yukseliyor.',
+    '🏅 <b>Ve A kalite yine PARAYLA ALINAMIYOR.</b> Merdiven korunuyor: C kaliteye gelmemis bir urun, A arastirmasi bitse bile yerinde kaliyor. Yani once 5.000 ton satip C olacaksin, sonra parayi ve suruyu vereceksin. Olculdu: hic satilmamis misir, A arastirmasindan sonra bile E kaldi.',
+    '📐 <b>TARLALARIN SEKLI DEGISTI — artik duz kenarli parseller.</b> Eskiden tarla yedi koseli, her kosesi rastgele yaricapta bir yuvarlak lekeydi. Artik gercek kadastro parseli gibi: <b>dortgen</b>, kendi donus acisi olan, uzun kenari kisa kenarindan 1,25 ila 2,60 kat buyuk. Kose sapmasi bilerek kucuk tutuldu — makine damgasi gibi durmasin ama kenar DUZ kalsin.',
+    '🚜 <b>Tarlalar artik YAN YANA dizilebiliyor.</b> Eski cakisma denetimi her tarlayi bir cemberin icinde sayiyordu ve dortgen parselde bu cember gereginden genis kaliyordu. Artik gercek kesisim denetimi var: iki parsel <b>bitisik durabilir</b>, yalnizca ic ice giremez. Olculdu: komsu parsel artik <b>1,6 kilometrede</b> kabul ediliyor, eskisi 3,55 kilometre dayatiyordu — yani ayni araziye iki kat daha sik ciftlik kuruluyor.',
+    '🛣️ <b>HARITAYA YOLLAR VE MEZRALAR GELDI.</b> Tarim haritasi bombos yesil bir zemindi. Artik yakinlastikca toprak yollardan orulu bir ag ve kucuk mezra kumeleri goruyorsun. Yollar cetvelle cizilmis gibi degil, hafif kivrimli — ve ayni yer her acilista <b>ayni</b> goruniyor, her seferinde yeniden rastgele uretilmiyor.',
+    '🌱 <b>URUN SAYISI UCE KATLANDI: 5 urunden 15 urune.</b> Yeni gelenler: <b>Arpa · Sogan · Karpuz · Seker Pancari · Elma · Uzum · Pamuk · Zeytin · Cay · Findik</b>. Hayvan urunleriyle birlikte toplam 19 urun.',
+    '⚖️ <b>Ve yeni urunlerin hicbiri baskin degil.</b> Onunun da saatlik getirisi bilerek ayni bandin icine yerlestirildi; fark <b>kazancta degil ritimde</b>: findik gibi az tonajli pahali urun siloyu doldurmuyor ve A kalitede cok kazandiriyor, karpuz gibi cok tonajli ucuz urun nakdi hizli getiriyor ama siloyu doldurup sehrin gunluk alim kotasina erken tosluyor. Yani yeni bir en iyi urun degil, yeni bir <b>uzmanlasma karari</b> dogdu.',
+    '🐄 <b>Arpa da yem oldu.</b> Hayvanlar artik bugday, misir ve arpa silosundan besleniyor.',
     '🗺️ <b>KAROLAR KALKTI — artik parca parca TARLALAR var.</b> Tarla eskiden karonun icindeki bir yuvaya oturuyordu ve haritada karonun mavi dikdortgeni goruntuluyordu. Artik oyle degil: <b>dokundugun noktaya</b> kendi sekli olan bir arazi parseli duser. Haritada karo dikdortgeni, kira filigrani, ruzgar ve gunes isi katmanlari, karo vurgusu ve enerji rakip santral ikonlari <b>cizilmiyor</b> — ekranda yalniz zemin ve senin tarlalarin kaliyor.',
     '📐 <b>UC PARSEL BOYU: 120 · 360 · 900 hektar.</b> Ve boy artik gercekten onemli: <b>900 hektarlik parsel, 120 hektarlik parselin 7,5 kati urun verir</b>. Eskiden butun tarlalar ayni tonaji veriyordu, hektar sayisi yalnizca susmus bir rakamdi. Tohum bedeli de ayni oranda buyur — buyuk parsel bedava degil. Kucuk parsel yeni ciftcinin giris kapisi: tek tarla artik baslangic sermayenin dortte birini yemiyor.',
     '🚫 <b>Iki parsel ust uste binemez.</b> Izgara kalkinca parsellerin birbirine girmesi gerekirdi; onun yerine gercek kural kondu: dolu bir yere dokunursan <b>hangi tarlayla kesistigi</b> yazilir ve para kesilmez. Ayni kural sayesinde bir araziyi iki kisi alamaz. Parselin <b>govdesi</b> de karada olmali: buyuk parsel kiyiya kucuk parselden daha uzaga kurulur.',
@@ -6920,6 +6948,13 @@ const TARIM_TIPLERI = {
     kumes: { cat: 'Tarım', nm: 'Kümes', ico: '🐔', cost: 15e5, build: 25,
              d: 'En çok 400 tavuk barındırır. Yumurta verir — en ucuz giriş, en hızlı döngü.' },
   },
+  // 🏭 118. yama — FABRIKA. Ham urunu islenmis urune cevirir. Ciktinin kalitesi
+  //    tesisin DEGIL sirketin o urun hattindaki standardi ile malzemenin kalitesinden
+  //    turer (tasarim §5b): yeni hat E uretir, A malzeme bile ancak C yapar.
+  fabrika: {
+    fabrika: { cat: 'Tarım', nm: 'Fabrika', ico: '🏭', cost: 12e6, build: 60,
+               d: 'Ham ürünü işler: buğday→un, un→ekmek, patates→cips, süt→peynir, domates→salça. Çıktının kalitesi ürün hattındaki standardına bağlı.' },
+  },
 };
 // 53. yama dersi: bilinmeyen kimlik ÇÖKERTMEZ, güvenli yedek döner.
 const TARIM_TIP_BILINMEYEN = { cat: 'Tarım', nm: '—', ico: '❓', cost: 0, build: 0, d: '' };
@@ -9339,7 +9374,12 @@ function placeAt(c, ll) {
   // 🏞️ 100e — TARIMDA KARO RUHSATI ARANMAZ. Parselin kapisi BOLGE (il) ruhsati.
   //    Issiz arazide (yakinda sehir yok) ruhsat gerekmez: devletin ruhsat verecegi bir
   //    idari merkez yok, ve o arazi zaten taban fiyattan satiliyor.
-  if (tarimSektoru() && kind === 'tarla') {
+  // 🔴 120. yama — MUAFIYET YALNIZ TARLAYI KAPSIYORDU. Olculdu: ahir, agil, kumes,
+  //    lojman ve fabrika "📜 Bu karenin ruhsati yok" ile reddediliyordu, ve 105'te
+  //    tarim karo kartindaki ruhsat dugmesi kaldirildigi icin ALACAK YER DE YOKTU.
+  //    Yani isci (lojman) ve hayvancilik, devirden gelen karolar disinda ERISILEMEZDI.
+  //    Dogru kural 100e'nin kendi cumlesi: tarimda kapi KARO degil BOLGE (il) ruhsati.
+  if (tarimSektoru() && tarimKindMi(kind)) {
     const bl = bolgeBul(ll);
     if (bl && !bolgeRuhsatliMi(bl.cell)) {
       ciftlikRuhsatSor(bl.cell, bl.ll[0], bl.ll[1], bl.ad, bl.pop);
@@ -9355,7 +9395,13 @@ function placeAt(c, ll) {
   //    patron karoyu ekonomiden kaldirdi. Yogunlugu artik CAKISMA YASAGI siniriyor:
   //    parseller fiziksel olarak ust uste binemedigi icin bir bolgeye sigacak parsel
   //    sayisi geometrinin kendi sinirindan geliyor. (Il bazli hektar tavani 100c'de.)
-  const parselMuaf = tarimSektoru() && kind === 'tarla';
+  // 🔴 120. yama — AYNI SINIF IKINCI FREN. Tarimda `cellcap` arastirmasi kapali
+  //    (sektor kapisi, 101) oldugu icin limit 8'de cakiliydi ve asla yukselmiyordu;
+  //    karo karti bile tarimda bu satiri artik GOSTERMIYOR ama kod uyguluyordu.
+  //    Karo tarimda ekonomik bir kavram degil (patron: "karolar artik yok") — fren de
+  //    olmamali. Yogunlugun gercek sinirlari duruyor: parselde CAKISMA YASAGI,
+  //    barinakta BAS KAPASITESI, lojmanda GUNLUK MAAS, fabrikada TEDARIK.
+  const parselMuaf = tarimSektoru() && tarimKindMi(kind);
   const mine = parselMuaf ? 0 : G.units.filter(u => u.cell === c && u.kind !== 'office').length;
   if (mine >= cellCap()) { toast(cellCap() < MAX_PER_CELL + CELLCAP_MAX
     ? 'Bu karede senin limitin doldu (' + cellCap() + ') — 🧱 Kare Yerleşim Planı araştırmasıyla limit ' + (MAX_PER_CELL + CELLCAP_MAX) + ' olur'
@@ -11379,6 +11425,34 @@ const ALLY_MEMBER_SHARE_CAP = .4;
 const allyCap = () => Math.min(50, 10 + Math.floor(((G.ally && G.ally.pts) || 0) / 3) * 5);
 const allyBuffOn = () => G.allyBuffUntil > Date.now();
 const ALLY_BOTS = ['RüzgarKurdu', 'VoltHan', 'ŞebekeReis', 'GüneşKızı', 'TeraVatt34', 'AkımUstası', 'PilBaron', 'MegaJul', 'HidroCan'];
+// 🌾 113. yama — BOT ADLARI SEKTORE GORE. Ciftcinin sohbetinde 'Marmara Volt' ve
+//    ittifak listesinde 'RüzgarKurdu' duruyordu.
+// ⚠️ Bu iki dizi UST DUZEY sabit: betik yuklenirken degerlendiriliyor ve o anda `G`
+//    HENUZ YOK. Icine `tarimSektoru() ? ... : ...` yazmak ISE YARAMAZDI — catal sessizce
+//    hep enerjiye duserdi. (104'un curutme ajani bunu dogru tespit etmisti.)
+// 🔑 Cozum: `const` diziyi yeniden ATAYAMAYIZ ama YERINDE DEGISTIREBILIRIZ. Adlar
+//    yalnizca gosterim ve her kullanim yeri diziyi INDISLE okuyor (`WORLD_PLAYERS[pi]`),
+//    ad kayitta saklanmiyor. Boylece 25 cagri yerinin hicbirine dokunmadan is bitiyor.
+const ALLY_BOTS_ENERJI = ALLY_BOTS.slice();
+const ALLY_BOTS_TARIM = ['HarmanAga', 'BasakHan', 'ToprakReis', 'SeherHanim', 'BereketCi', 'CiftciBaba', 'SilokRal', 'MeraBey', 'AsmaKiz'];
+const DUNYA_TARIM = ['Harman Tarım', 'Başak A.Ş.', 'Kuzey Bereket', 'Toprak Group', 'Anadolu Hasat', 'AgroMax Ltd', 'Ege Zeytin', 'Çiftlik Global',
+  'Boğaziçi Tarım', 'Toros Bereket', 'Deniz Harman', 'Kapadokya Bağ', 'Fırat Sulama', 'Marmara Başak', 'Trakya Ekin', 'Ararat Çiftlik',
+  'Likya Narenciye', 'Karadeniz Çay', 'İpek Pamuk', 'Selçuk Buğday'];
+let _botSektor = null;
+// Dizileri YERINDE takas et. `const` yeniden atamaya izin vermez, icerik degistirmeye verir.
+function botAdlariTakas(sektor) {
+  if (_botSektor === sektor) return;
+  _botSektor = sektor;
+  const tar = sektor === 'tarim';
+  const yeniDunya = tar ? DUNYA_TARIM : DUNYA_ENERJI;
+  const yeniBot = tar ? ALLY_BOTS_TARIM : ALLY_BOTS_ENERJI;
+  if (typeof WORLD_PLAYERS !== 'undefined' && Array.isArray(WORLD_PLAYERS)) {
+    WORLD_PLAYERS.length = 0;
+    for (const n of yeniDunya) WORLD_PLAYERS.push(n);
+  }
+  ALLY_BOTS.length = 0;
+  for (const n of yeniBot) ALLY_BOTS.push(n);
+}
 // ── 🤝 İTTİFAK RÜTBELERİ (patron: "ben kurucuyum, başkan olarak üye çıkarma veya davet edebilmeliyim") ──
 // Rütbe sadece bir unvan değil YETKİ: ülkeler arası ⚡ İTTİFAK HATTI'nı yalnız başkan ve
 // yardımcısı başlatabilir; üye çıkarma/davet/rütbe verme yalnız başkanda.
@@ -12424,7 +12498,10 @@ window.foundAlly = async () => {
 };
 // ACİL İHALE TEKLİFİ: bölge + ihtiyaç + kefalet + koşul (deterministik değil — her bakışta güncel ölçek)
 function allyOffer() {
-  const need = Math.max(100, Math.round(installedMW() * 12)); // ~yarım günlük tam kapasite; botlar %65'ini taşır
+  // 🚜 115 — esik sektore gore: enerjide kurulu MW, tarimda gunluk ton uretimi.
+  //    Eskiden `installedMW()` okuyordu; tarimda 0 oldugu icin `need` tabana cakiliyor ve
+  //    kosul HER ZAMAN saglanamiyordu — dugme kalici olarak disabled kaliyordu.
+  const need = Math.max(100, Math.round(uretimGucu() * 12)); // ~yarım günlük tam kapasite; botlar %65'ini taşır
   const stake = Math.round(need * 25000);
   const home = cellCenter(homeCell());
   const h = hash01(Math.floor(Date.now() / 864e5), 7, 3);
@@ -12434,7 +12511,7 @@ function allyOffer() {
 window.enterAllyTender = () => {
   if (!G.ally || G.ally.tender) return;
   const o = allyOffer();
-  if (installedMW() < o.minMW) { toast('🤝 Koşul: en az ' + o.minMW + (tarimSektoru() ? ' ton günlük hasat gerekli' : ' MW kurulu güç gerekli'), 'warn'); return; }
+  if (uretimGucu() < o.minMW) { toast('🤝 Koşul: en az ' + o.minMW + (tarimSektoru() ? ' ton günlük hasat gerekli' : ' MW kurulu güç gerekli'), 'warn'); return; }
   if (G.cash < o.stake) { toast('🤝 Kefalet için ' + fmt(o.stake) + ' gerekli', 'warn'); return; }
   G.cash -= o.stake; gider('ittifak', o.stake);
   const winSec = 86400 / (G.demo ? 60 : 1);
@@ -13158,7 +13235,7 @@ function allyHTML() {
       h += `<div style="border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:6px 0">
         <div style="font-size:12px;font-weight:700">📯 Devlet İhalesi: ${nearestCityName(o.cell) ? nearestCityName(o.cell) + ' · ' : ''}${cellCode(o.cell)} — ${tarimSektoru() ? 'kuraklık, acil gıda!' : 'doğal afet, acil enerji!'}</div>
         <div class="sub">24 saatte <b>${fmtN(o.need)} ${tarimSektoru() ? 'ton' : 'MWh'}</b> · kefalet <b>${fmt(o.stake)}</b> (başarıda iade, başarısızlıkta YANAR) · koşul: ≥${o.minMW} ${tarimSektoru() ? 'ton günlük hasat' : 'MW kurulu güç'}</div>
-        <button class="bigsell half" onclick="enterAllyTender()" ${G.cash < o.stake || installedMW() < o.minMW ? 'disabled' : ''}>🚨 İhaleye Gir — kefalet ${fmt(o.stake)}</button>
+        <button class="bigsell half" onclick="enterAllyTender()" ${G.cash < o.stake || uretimGucu() < o.minMW ? 'disabled' : ''}>🚨 İhaleye Gir — kefalet ${fmt(o.stake)}</button>
       </div>`;
     }
   }
@@ -14386,6 +14463,8 @@ const NET = {
 const WORLD_PLAYERS = ['Voltera Enerji', 'MegaWatt A.Ş.', 'Kuzey Rüzgarı', 'Solaris Group', 'Anadolu Elektrik', 'PowerMax Ltd', 'Ege Güneş', 'Hidro Global',
   'Bosphorus Power', 'Toros Enerji', 'Deniz Rüzgar', 'Kapadokya GES', 'Fırat Hidro', 'Marmara Volt', 'Trakya Enerji', 'Ararat Power',
   'Likya Solar', 'Karadeniz Akım', 'İpek Enerji', 'Selçuk Voltaj'];
+// 🌾 113 — enerji adlarinin degismez kopyasi; takas bunlardan geri yukluyor.
+const DUNYA_ENERJI = WORLD_PLAYERS.slice();
 const OTHER_TYPES = ['solar_2', 'solar_4', 'wind_3', 'wind_6', 'wind_9', 'coal_2', 'gas_2', 'hydro_2', 'geo_1'];
 const playerOnline = i => hash01(i, 3, Math.floor(Date.now() / 6e5)) > .45; // ~10 dk'da değişen çevrimiçi durumu
 function othersInCell(cell) {
@@ -14772,6 +14851,11 @@ window.openAucSheet = () => {
 // ekranına ek maliyet olarak yazılacak") — kazanan devir anında otomatik öder/edinir.
 function aucEkMaliyet(a) {
   if (a.assetKind !== 'unit' || a.mine || !a.cell) return { ruhsat: 0, ofis: 0, toplam: 0 };
+  // 🌾 121. yama — TARIMDA IKISI DE GECERSIZ (100e): karo ruhsati enerji kavrami,
+  //    bolge ofisi de artik ruhsatin on sarti degil. Olculdu: ciftlik ruhsati OLAN
+  //    bir bolgede bile devir $100.000 karo ruhsati yaziyordu — 105'te kaldirdigimiz
+  //    para yakan dugmenin ikizi, bu kez muzayede kapisindan.
+  if (typeof tarimSektoru === 'function' && tarimSektoru()) return { ruhsat: 0, ofis: 0, toplam: 0 };
   const ruhsat = G.licenses[a.cell] ? 0 : licenseFee(a.cell);
   // ofis LİMİTE SAYILIR: limit doluysa otomatik ofis KURULMAZ ve ücreti de alınmaz (ruhsat
   // tek başına yeter, birim ofissiz de çalışır) — yoksa müzayede "Ofis Ağı" araştırmasının
@@ -14783,7 +14867,18 @@ function aucEkMaliyet(a) {
 // 🚫 KURULUM EKSİK KİLİDİ (patron: "ofis ve ruhsat olmadan o santral aktif olmayacak, devre
 // dışı; ruhsat ve ofis alımı yapıldığında aktif olacak") — yalnız müzayededen devralınan
 // birimler (aucSetup bayrağı); eski oyuncuların ruhsatsız birimleri mağdur edilmez (tolerans ilkesi).
-const aucSetupEksik = u => !!(u && u.aucSetup && (!G.licenses[u.cell] || !officeCovers(u.cell)));
+// 🌾 116. yama — TARIMDA OLCUT BASKA. Ruhsat il bazli (`G.ciftlikRuhsat`, 100e) ve
+//    `G.licenses` bos olabilir; ofis de artik ruhsatin on sarti degil. Eski olcutle
+//    muzayededen alinan her tarla KALICI devre disi kaliyordu ve ekrandaki cozum
+//    ("bolge ruhsati al") tarimda var olmayan bir seyi isaret ediyordu.
+const aucSetupEksik = u => {
+  if (!u || !u.aucSetup) return false;
+  if (typeof tarimSektoru === 'function' && tarimSektoru()) {
+    const bl = (typeof bolgeBul === 'function') ? bolgeBul(u.ll || cellCenter(u.cell)) : null;
+    return !!(bl && typeof bolgeRuhsatliMi === 'function' && !bolgeRuhsatliMi(bl.cell));
+  }
+  return !G.licenses[u.cell] || !officeCovers(u.cell);
+};
 function aucSetupTamamla() { // ruhsat/ofis alımı sonrası: şartı sağlayan kilitli tesisleri aktive et
   let n = 0;
   for (const u of G.units) if (u.aucSetup && !aucSetupEksik(u)) { u.aucSetup = false; u.on = true; n++; }
@@ -15064,7 +15159,9 @@ function aucGrantAsset(a) {
   // OTOMATİK alınır — bedeli teklif onayında gösterildi. Para YETMİYORSA bedava verilmez:
   // tesis kurulum eksikliğiyle DEVRE DIŞI devralınır (patron kuralı, aşağıda).
   const masraf = [];
-  if (!G.licenses[nu.cell]) {
+  // 🌾 121. yama — tarimda karo ruhsati ve bolge ofisi SATIN ALINMAZ (bkz. aucEkMaliyet).
+  const tarimDevir = (typeof tarimSektoru === 'function') && tarimSektoru();
+  if (!tarimDevir && !G.licenses[nu.cell]) {
     const fee = licenseFee(nu.cell);
     if (G.cash >= fee) {
       G.cash -= fee; gider('ruhsat', fee); G.cellSpent[nu.cell] = (G.cellSpent[nu.cell] || 0) + fee;
@@ -15072,7 +15169,7 @@ function aucGrantAsset(a) {
       masraf.push('📜 bölge ruhsatı ' + fmt(fee));
     }
   }
-  if (!officeCovers(nu.cell) && offices().length < maxOffices() && G.cash >= OFFICE.cost) {
+  if (!tarimDevir && !officeCovers(nu.cell) && offices().length < maxOffices() && G.cash >= OFFICE.cost) {
     // ofis limiti DOLUYSA kurulmaz da, ücret de alınmaz (aucEkMaliyet ile aynı kural) —
     // limit üstü otomatik ofis "Ofis Ağı" araştırma kapısını baypas ediyordu
     G.cash -= OFFICE.cost; gider('ruhsat', OFFICE.cost); G.cellSpent[nu.cell] = (G.cellSpent[nu.cell] || 0) + OFFICE.cost;
@@ -15082,8 +15179,17 @@ function aucGrantAsset(a) {
   // 🚫 patron kuralı: ruhsat + ofis (menzil) TAMAM değilse tesis DEVRE DIŞI devralınır;
   // oyuncu alımları tamamlayınca aucSetupTamamla() kendiliğinden aktive eder.
   const eksik = [];
+  // 🌾 121 — olcut sektore gore. 116 `aucSetupEksik`i duzeltmisti; BURASI ise birimin
+  //    devre disi gelip gelmeyecegine karar veriyor. Ikisi ayni olcute bakmali, yoksa
+  //    ruhsati olan ciftci birimi kilitli devralir ve neden kilitli oldugunu okuyamaz.
+  if (tarimDevir) {
+    const bl = (typeof bolgeBul === 'function') ? bolgeBul(nu.ll || cellCenter(nu.cell)) : null;
+    if (bl && typeof bolgeRuhsatliMi === 'function' && !bolgeRuhsatliMi(bl.cell))
+      eksik.push('📜 ' + (bl.ad || 'bölge') + ' çiftlik ruhsatı — haritada şehre dokunup al');
+  } else {
   if (!G.licenses[nu.cell]) eksik.push('📜 bölge ruhsatı');
   if (!officeCovers(nu.cell)) eksik.push('🏢 bölge ofisi (menzil)');
+  }
   if (eksik.length) { nu.on = false; nu.aucSetup = true; }
   ensureConnections();
   const nerede = a.loc || placeName(nu.cell);
@@ -15914,6 +16020,21 @@ const TARIM_URUN = {
   aycicek: { ad: 'Ayçiçeği', ico: '🌻', aile: 'ham', sure: 4 * 3600,   verim: 6,  taban: 3000 },
   misir:   { ad: 'Mısır',    ico: '🌽', aile: 'ham', sure: 3 * 3600,   verim: 10, taban: 1450 },
   domates: { ad: 'Domates',  ico: '🍅', aile: 'ham', sure: 2.5 * 3600, verim: 9,  taban: 1600 },
+  // 🌱 110. yama — CESITLILIK. Patron: "urun cesitliligi rakibe gore cok az".
+  //    Hepsinin saatlik getirisi 4.600-5.000 bandinda, yani HICBIRI baskin degil.
+  //    Fark karda degil RITIMDE: az tonajli pahali urun siloyu doldurmaz ve A kalitede
+  //    carpani buyuk kazandirir; cok tonajli ucuz urun nakdi hizli getirir ama siloyu
+  //    doldurup sehir kotasina erken toslar. Mevcut bes urune DOKUNULMADI.
+  arpa:    { ad: 'Arpa',      ico: '🌿', aile: 'ham', sure: 2.5 * 3600, verim: 10,  taban: 1250 },
+  sogan:   { ad: 'Soğan',     ico: '🧅', aile: 'ham', sure: 2 * 3600,   verim: 12,  taban: 820 },
+  karpuz:  { ad: 'Karpuz',    ico: '🍉', aile: 'ham', sure: 3 * 3600,   verim: 16,  taban: 900 },
+  pancar:  { ad: 'Şeker Pancarı', ico: '🫒', aile: 'ham', sure: 4 * 3600, verim: 15, taban: 1300 },
+  elma:    { ad: 'Elma',      ico: '🍎', aile: 'ham', sure: 4.5 * 3600, verim: 7,   taban: 3100 },
+  uzum:    { ad: 'Üzüm',      ico: '🍇', aile: 'ham', sure: 5 * 3600,   verim: 5,   taban: 4800 },
+  pamuk:   { ad: 'Pamuk',     ico: '🪻', aile: 'ham', sure: 5 * 3600,   verim: 4,   taban: 6200 },
+  zeytin:  { ad: 'Zeytin',    ico: '🫒', aile: 'ham', sure: 6 * 3600,   verim: 3.5, taban: 8200 },
+  cay:     { ad: 'Çay',       ico: '🍵', aile: 'ham', sure: 6 * 3600,   verim: 3,   taban: 9500 },
+  findik:  { ad: 'Fındık',    ico: '🌰', aile: 'ham', sure: 7 * 3600,   verim: 2.5, taban: 13000 },
   // 🐄 99. yama — HAYVAN URUNLERI AYNI KATALOGA giriyor, ayri bir sisteme DEGIL.
   //    Gerekce: silo kapasitesi, kalite, curume, sehir kotasi ve satis zincirinin TAMAMI
   //    `TARIM_URUN` uzerinden calisiyor. Ayri tablo acmak o bes zinciri ikiye bolerdi.
@@ -15923,10 +16044,43 @@ const TARIM_URUN = {
   yumurta: { ad: 'Yumurta',  ico: '🥚', aile: 'hayvan', sure: 0, verim: 0, taban: 22000, ekilir: false },
   yun:     { ad: 'Yün',      ico: '🧶', aile: 'hayvan', sure: 0, verim: 0, taban: 48000, ekilir: false },
   et:      { ad: 'Et',       ico: '🥩', aile: 'hayvan', sure: 0, verim: 0, taban: 62000, ekilir: false },
+  // 🏭 118. yama — ISLENMIS AILE (tasarim 6. aile). Fabrikada uretilir, tarlada DEGIL:
+  //    `ekilir: false`, `sure`/`verim` 0 — tarla motoru bunlara hic dokunmaz.
+  // 💰 Taban fiyatlar tarifin GIRDI MALIYETI uzerine ~%57 marj ile hesaplandi, yani
+  //    hicbir tarif baskin degil. Asil odul marjda degil KALITE MERDIVENINDE:
+  //    A kalite carpani 3,00 ve islenmis urunun tabani zaten yuksek.
+  un:          { ad: 'Un',            ico: '🌾', aile: 'islenmis', sure: 0, verim: 0, taban: 3400,   ekilir: false },
+  ekmek:       { ad: 'Ekmek',         ico: '🍞', aile: 'islenmis', sure: 0, verim: 0, taban: 4100,   ekilir: false },
+  cips:        { ad: 'Cips',          ico: '🍟', aile: 'islenmis', sure: 0, verim: 0, taban: 8200,   ekilir: false },
+  aycicekyagi: { ad: 'Ayçiçek Yağı',  ico: '🫗', aile: 'islenmis', sure: 0, verim: 0, taban: 11800,  ekilir: false },
+  zeytinyagi:  { ad: 'Zeytinyağı',    ico: '🧴', aile: 'islenmis', sure: 0, verim: 0, taban: 64000,  ekilir: false },
+  peynir:      { ad: 'Peynir',        ico: '🧀', aile: 'islenmis', sure: 0, verim: 0, taban: 235000, ekilir: false },
+  yogurt:      { ad: 'Yoğurt',        ico: '🥛', aile: 'islenmis', sure: 0, verim: 0, taban: 26000,  ekilir: false },
+  salca:       { ad: 'Salça',         ico: '🥫', aile: 'islenmis', sure: 0, verim: 0, taban: 14800,  ekilir: false },
+  sucuk:       { ad: 'Sucuk',         ico: '🌭', aile: 'islenmis', sure: 0, verim: 0, taban: 139000, ekilir: false },
 };
 // Ekilebilir urunler — ekim seritleri ve urun secimi YALNIZ bunlari gosterir.
 const EKILIR_URUNLER = Object.keys(TARIM_URUN).filter(k => TARIM_URUN[k].ekilir !== false);
 const hayvanUrunuMu = id => (TARIM_URUN[id] || {}).aile === 'hayvan';
+// 🏭 118. yama — FABRIKA TARIFLERI. Tek girdi, tek cikti: zincir derinligi urunlerin
+//    kendisinden geliyor (bugday -> un -> ekmek), coklu girdi mekanigi GEREKMIYOR.
+//    (Tasarimdaki "hamburger fabrikasi" coklu girdi fikri ACIK SORU, karar degil.)
+// `oran`: 1 ton girdiden kac ton cikti — gercek sanayi verimlerine yakin.
+// `sure`: bir dongunun saniyesi; pahali urun yavas.
+const ISLENMIS_MI = id => (TARIM_URUN[id] || {}).aile === 'islenmis';
+const TARIF = {
+  un:          { girdi: 'bugday',  oran: .78, sure: 2 * 3600 },
+  ekmek:       { girdi: 'un',      oran: 1.3, sure: 2 * 3600 },
+  cips:        { girdi: 'patates', oran: .25, sure: 3 * 3600 },
+  aycicekyagi: { girdi: 'aycicek', oran: .40, sure: 3 * 3600 },
+  zeytinyagi:  { girdi: 'zeytin',  oran: .20, sure: 4 * 3600 },
+  peynir:      { girdi: 'sut',     oran: .10, sure: 4 * 3600 },
+  yogurt:      { girdi: 'sut',     oran: .90, sure: 2 * 3600 },
+  salca:       { girdi: 'domates', oran: .17, sure: 3 * 3600 },
+  sucuk:       { girdi: 'et',      oran: .70, sure: 4 * 3600 },
+};
+const TARIF_IDLER = Object.keys(TARIF);
+const tarifVar = id => Object.prototype.hasOwnProperty.call(TARIF, id);
 const urunVar = id => Object.prototype.hasOwnProperty.call(TARIM_URUN, id);
 // ⚠️ Bilinmeyen ürün kimliği gelirse ÇÖKME yok — 53. yamadaki COUNTRIES dersi birebir aynı:
 //    eski kayıt katalogdan düşmüş bir kimlik taşıyabilir ve her karede TypeError atardı.
@@ -15941,13 +16095,39 @@ const urunBilgi = id => TARIM_URUN[id] || URUN_BILINMEYEN;
 //    harita işareti 34 px yerine 71 px genişliyordu. Mutlak konum bunu kapatır.
 // `.ic` sınıfı yalnız `.umark` içinde tanımlı olduğu için konum stilleri SATIR İÇİ
 //    veriliyor — aynı yardımcı hem haritada hem modalda çalışsın.
-const tarimKare = (kod, ico, px) =>
+// 🎨 114. yama — GORSEL YEDEGI. 19 urunun yalniz 5'inde fotograf var; barinak, hayvan
+//    ve makine gorselleri hic yok. Dosya yoksa `onerror` img'i siliyor ve geriye CIPLAK
+//    EMOJI kaliyordu — bitmemis gibi duruyordu.
+// ⚠️ Eksik gorselleri ucuz uretimle DOLDURMADIM: TARIM-GORSEL-LISTESI.md ozellikle
+//    "oyuncu iki sektor arasinda gecerken gorsel dil DEGISMEMELI" diyor. Fotogercekci
+//    setin yanina baska dilde gorsel koymak iyilestirmez, bozar.
+// ✅ Bunun yerine YEDEK duzgunlestirildi: emoji artik kendi renginde bir karonun
+//    uzerinde duruyor. Gercek fotograf geldiginde `object-fit: cover` zemini TAMAMEN
+//    ortuyor — mevcut 5 gorsel hic etkilenmiyor, yeni fotograflar KOD DEGISMEDEN duser.
+const KARE_RENK = {
+  // ekilir urunler — tarladaki rengiyle ayni dili konussun
+  bugday: '#d9a441', patates: '#8a9a5b', aycicek: '#e8b93a', misir: '#c9a227', domates: '#b5422f',
+  arpa: '#cbb36a', sogan: '#b9a98c', karpuz: '#4f8f4a', pancar: '#7d8f6a', elma: '#a8402f',
+  uzum: '#6b4b7a', pamuk: '#e3e0d4', zeytin: '#6f7a46', cay: '#3f7a4a', findik: '#8a6a44',
+  // hayvan urunleri
+  sut: '#e8e4da', yumurta: '#e6d9a8', yun: '#d9cfc0', et: '#a8503f',
+  // barinak ve bina
+  ahir: '#8a6a44', agil: '#9a8f6a', kumes: '#c08a4a', lojman: '#7a8a9a', tarla: '#6b4f33',
+  fabrika: '#6a6f7a',
+  // 🏭 118 — islenmis urunlerin kare rengi
+  un: '#e2d8bd', ekmek: '#c9a06a', cips: '#dfc24a', aycicekyagi: '#e8c84a',
+  zeytinyagi: '#8a9a3a', peynir: '#e8d98a', yogurt: '#eeeae0', salca: '#b5422f', sucuk: '#8a4030',
+};
+const kareRenk = kod => KARE_RENK[kod] || '#6b7a5a';
+const tarimKare = (kod, ico, px, renk) =>
   '<span class="ic" style="display:inline-block;position:relative;vertical-align:middle;width:'
-  + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * .78) + 'px;line-height:' + px + 'px">'
+  + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * .78) + 'px;line-height:' + px + 'px;'
+  + 'background:' + (renk || 'transparent') + ';border-radius:6px;text-align:center;'
+  + 'text-shadow:0 1px 2px rgba(0,0,0,.45)">'
   + '<img src="img/' + kod + '.webp" onerror="this.remove()" style="position:absolute;inset:0;'
   + 'width:100%;height:100%;object-fit:cover;border-radius:6px">'
   + ico + '</span>';
-const urunKare = (id, px) => tarimKare('urun_' + id, urunBilgi(id).ico, px);
+const urunKare = (id, px) => tarimKare('urun_' + id, urunBilgi(id).ico, px, kareRenk(id));
 
 // ── 🏅 KALİTE ──────────────────────────────────────────────────────────────────
 // Sayı olarak tutuluyor (1=E … 5=A) ki karşılaştırma ve aritmetik yapılabilsin.
@@ -15984,6 +16164,130 @@ const aileTavan = aile => { const t = tarimD(); return kaliteSin((t && t.arge &&
 //    `min(anne+1, yem)` oldugu icin A hayvan ancak A yem ile olur, A yem de ham aile
 //    arastirmasini gerektirir. Yani kapi kapanmiyor, zincire baglaniyor.
 const urunTavan = id => hayvanUrunuMu(id) ? 5 : aileTavan(urunBilgi(id).aile);
+
+// ═══════════ 🧪 107. yama — TARIM ARASTIRMASI (A KALITE YOLU) ═══════════
+// Tasarim §5b: "E→D→C tonajla, C→B→A arastirmayla". Tonaj tarafi 67. yamadan beri
+// calisiyordu; arastirma tarafi HIC YAZILMAMISTI — `arge[aile]` hicbir yerde
+// yazilmiyor, `argeAktif` yalniz kayit semasinda duruyordu. Ciftci C'de tikaliydi.
+//
+// 🔑 Arastirilabilir aile: yalniz `ham`. Hayvan urunlerinin tavani ZATEN 5 — orada
+//    merdiven arastirmayla degil NESILLE cikiliyor (99. yama), freni yem kalitesinde.
+const argeAileler = () => {
+  const set = {};
+  for (const id of Object.keys(TARIM_URUN)) {
+    if (hayvanUrunuMu(id)) continue;              // hayvanda tavan nesille aciliyor
+    set[urunBilgi(id).aile] = 1;
+  }
+  return Object.keys(set);
+};
+const AILE_AD = { ham: 'Bitkisel ürünler', islenmis: 'İşlenmiş ürünler' };
+const aileAd = a => AILE_AD[a] || a;
+// Bir ailenin BIR SONRAKI arastirma kademesi (4 = B, 5 = A). Yoksa null.
+function argeSonraki(aile) {
+  const su = aileTavan(aile);                     // arastirma yoksa 3 (C)
+  const hedef = su + 1;
+  return (hedef === 4 || hedef === 5) ? hedef : null;
+}
+const argeAktifKayit = () => { const t = tarimD(); return (t && t.argeAktif && t.argeAktif.aile) ? t.argeAktif : null; };
+const argeKalanMs = () => { const a = argeAktifKayit(); return a ? Math.max(0, (a.biter || 0) - tarimSimdi()) : 0; };
+
+window.argeBasla = aile => {
+  const t = tarimD();
+  if (!t || !tarimSektoru()) return;
+  if (argeAktifKayit()) { toast('🧪 Zaten süren bir araştırma var — bitmesini bekle', 'warn'); return; }
+  const lv = argeSonraki(aile);
+  if (!lv) { toast('🧪 Bu ailede açılacak kademe kalmadı', 'warn'); return; }
+  if (typeof krediKilidi === 'function' && krediKilidi('araştırma başlatma')) return;
+  const bedel = TARIM_AYAR.argeBedel[lv] || 0;
+  if ((G.cash || 0) < bedel) { toast('Yetersiz bakiye — ' + fmt(bedel) + ' gerekli', 'warn'); return; }
+  G.cash -= bedel;
+  // 🔴 127. yama — ANAHTAR 'arge' DEGIL 'arastirma'. GIDER_ADI tablosunda 'arge' YOK,
+  //    yani B icin $25M ve A icin $120M kasadan cikiyor ama defterde HIC gorunmuyordu.
+  //    GIDER_ADI basindaki kendi notumuz bu sinifi uyariyordu: "burada adi olmayan kalem
+  //    kasadan cikiyor ama ekranda HIC GORUNMUYOR. Tohum ve maas tam bu durumdaydi."
+  if (typeof gider === 'function') { try { gider('arastirma', bedel); } catch (e) {} }
+  t.argeAktif = { aile: aile, lv: lv, biter: tarimSimdi() + (TARIM_AYAR.argeSure[lv] || 0) };
+  toast('🧪 <b>' + aileAd(aile) + '</b> — ' + kaliteAd(lv) + ' kalite araştırması başladı ('
+    + fmt(bedel) + ')<br><span class="sub">Süre: ' + Math.round((TARIM_AYAR.argeSure[lv] || 0) / 864e5)
+    + ' gün. Biterken uyaracağım.</span>', '', null, 0, true);
+  try { save(); } catch (e) {}
+  try { tarimArge(); } catch (e) {}
+};
+
+// ⏳ TIK — `tarimAkis` icinden 5 saniyede bir. Suresi dolan arastirmayi tamamlar.
+// 🔑 ZINCIRIN KAPANDIGI YER: tavani yukseltmek TEK BASINA yetmiyordu, cunku
+//    `deneyimEkle` donguSU B ve A icin `dnmEsik` bulamayip duruyor. Bu yuzden
+//    arastirma, ONCEKI TAVANA ULASMIS urunleri dogrudan bir kademe terfi ettiriyor.
+//    Merdiven korunuyor: C'ye gelmemis urun B olmuyor.
+function argeTik() {
+  const t = tarimD();
+  const a = argeAktifKayit();
+  if (!t || !a) return null;
+  if (tarimSimdi() < (a.biter || 0)) return null;
+  if (!t.arge || typeof t.arge !== 'object') t.arge = {};
+  if (!t.std || typeof t.std !== 'object') t.std = {};
+  const lv = kaliteSin(a.lv);
+  t.arge[a.aile] = Math.max(kaliteSin(t.arge[a.aile] || 3), lv);
+  // Onceki tavana ulasmis urunleri terfi ettir
+  const terfi = [];
+  for (const id of Object.keys(TARIM_URUN)) {
+    if (hayvanUrunuMu(id)) continue;
+    if (urunBilgi(id).aile !== a.aile) continue;
+    if (kaliteSin(t.std[id] || 1) >= lv - 1) { t.std[id] = lv; terfi.push(id); }
+  }
+  t.argeAktif = null;
+  return { aile: a.aile, lv: lv, terfi: terfi };
+}
+
+// 🧪 ARASTIRMA EKRANI
+window.tarimArge = () => {
+  if (!G || !G._started) return;
+  hideSheets();
+  const t = tarimD() || {};
+  const a = argeAktifKayit();
+  let h = '<h2>🧪 Tarım Araştırması</h2>'
+    + '<p class="sub">Ürün kalitesi <b>E → D → C</b> arasında <b>sattığın tonajla</b> yükselir. '
+    + '<b>B</b> ve <b>A</b> kademeleri yalnız araştırmayla açılır — bu yüzden <b>A kalite parayla alınamaz</b>: '
+    + 'önce C olmalısın.</p>';
+  if (a) {
+    const kalan = argeKalanMs();
+    const toplam = TARIM_AYAR.argeSure[a.lv] || 1;
+    const yuzde = Math.max(0, Math.min(100, Math.round((1 - kalan / toplam) * 100)));
+    h += '<div class="qline"><span>🧪 Süren araştırma</span><span><b>' + aileAd(a.aile) + ' — ' + kaliteAd(a.lv) + '</b></span></div>'
+      + '<div class="bar" style="margin:6px 0"><i style="width:' + yuzde + '%;background:linear-gradient(90deg,#3ddc97,#5ab0ff)"></i></div>'
+      + '<p class="sub">Kalan: <b>' + (kalan > 36e5 ? Math.ceil(kalan / 864e5) + ' gün' : Math.ceil(kalan / 6e4) + ' dakika') + '</b> · %' + yuzde + '</p>';
+  }
+  for (const aile of argeAileler()) {
+    const su = aileTavan(aile);
+    const sonraki = argeSonraki(aile);
+    h += '<div class="qline" style="margin-top:8px"><span>' + aileAd(aile) + '</span>'
+      + '<span>tavan <b>' + kaliteAd(su) + '</b></span></div>';
+    // Bu ailedeki urunlerin standardi
+    const satir = Object.keys(TARIM_URUN).filter(id => !hayvanUrunuMu(id) && urunBilgi(id).aile === aile)
+      .map(id => urunBilgi(id).ico + ' ' + kaliteAd(urunStd(id))).join(' · ');
+    h += '<p class="sub" style="margin:2px 0 6px">' + satir + '</p>';
+    if (!sonraki) h += '<p class="sub">✅ Bu ailede açılacak kademe kalmadı.</p>';
+    else if (a) h += '<p class="sub">⏳ Önce süren araştırma bitmeli.</p>';
+    else {
+      const bedel = TARIM_AYAR.argeBedel[sonraki] || 0;
+      const gun = Math.round((TARIM_AYAR.argeSure[sonraki] || 0) / 864e5);
+      const yeter = (G.cash || 0) >= bedel;
+      // Terfi edecek urun var mi — oyuncu parayi bosa harcamasin
+      const hazir = Object.keys(TARIM_URUN).filter(id => !hayvanUrunuMu(id)
+        && urunBilgi(id).aile === aile && urunStd(id) >= sonraki - 1);
+      h += '<button class="primary' + (yeter ? '' : ' ghostbtn') + '"' + (yeter ? '' : ' disabled')
+        + ' onclick="argeBasla(\'' + aile + '\')">🧪 ' + kaliteAd(sonraki) + ' kalite araştırması — '
+        + fmt(bedel) + ' · ' + gun + ' gün</button>'
+        + '<p class="sub">' + (hazir.length
+            ? 'Bitince şu ürünler <b>' + kaliteAd(sonraki) + '</b> olur: ' + hazir.map(id => urunBilgi(id).ico + ' ' + urunBilgi(id).ad).join(', ')
+            : '⚠️ Bu ailede <b>' + kaliteAd(sonraki - 1) + '</b> kaliteye ulaşmış ürünün yok — araştırma tavanı açar ama hiçbir ürün terfi etmez.')
+        + '</p>';
+    }
+  }
+  h += '<button class="primary ghostbtn" onclick="closeModal()">Kapat</button>';
+  $('modal').innerHTML = h;
+  $('overlay').classList.add('show');
+};
 
 // Deneyim yalnız SATIŞTAN kazanılır (patron: "üretip SATMALI") ve STANDARDA göre işler,
 // çıktıya göre DEĞİL (açık madde 22) — yoksa A malzeme alan yeni tesis D'yi atlardı.
@@ -16228,10 +16532,19 @@ const ciftlikRuhsatDefteri = () => {
   return G.ciftlikRuhsat;
 };
 // Bir konumun bagli oldugu bolge. Sehir yoksa null -> ISSIZ arazi, ruhsat gerekmez.
+// 🗺️ 116b — ONBELLEK. `araziEtkiliSehir` 200 km yaricapinda tarama yapiyor; cagri
+//    yerleri kullanici eylemi oldugu icin bugun sicak yol degil, ama `aucSetupTamamla`
+//    tum birimlerde donuyor (50 parsel = 50 tarama). `araziFiyatHa`daki desenin aynisi.
+const _bolgeMemo = Object.create(null);
 function bolgeBul(ll) {
+  if (!Array.isArray(ll)) return null;
+  const k = ll[0].toFixed(3) + ',' + ll[1].toFixed(3);
+  if (k in _bolgeMemo) return _bolgeMemo[k];
   const sh = araziEtkiliSehir(ll);
-  if (!sh || !isFinite(sh.la) || !isFinite(sh.lo)) return null;
-  return { cell: cellId([sh.la, sh.lo]), ad: sh.nm, pop: sh.pop, ll: [sh.la, sh.lo] };
+  const v = (!sh || !isFinite(sh.la) || !isFinite(sh.lo)) ? null
+    : { cell: cellId([sh.la, sh.lo]), ad: sh.nm, pop: sh.pop, ll: [sh.la, sh.lo] };
+  _bolgeMemo[k] = v;
+  return v;
 }
 const bolgeRuhsatliMi = cell => !!(cell && ciftlikRuhsatDefteri()[cell]);
 // 💵 BEDEL — bolgenin KENDI arazi fiyatindan turer: 30 hektarlik arazinin bedeli.
@@ -16261,7 +16574,25 @@ window.ciftlikRuhsatAl = (cellKey, la, lo, ad) => {
   if ((G.cash || 0) < bedel) { toast('Yetersiz bakiye — ' + fmt(bedel) + ' gerekli', 'warn'); return; }
   G.cash -= bedel;
   if (typeof gider === 'function') { try { gider('ruhsat', bedel); } catch (e) {} }
+  // 🔴 127. yama — KILITLI DEVRALINAN VARLIGI AKTIFLESTIR. `aucSetupTamamla()` yalniz
+  //    KARO ruhsati alimindan ve OFIS kurulumundan sonra cagriliyordu; tarimin gercek
+  //    ruhsat kapisi burasi ve atlanmisti. Sonuc: muzayededen tarla/ahir/fabrika
+  //    devralan ciftci "bu bolgenin ciftlik ruhsati gerekli" uyarisini okuyup ruhsati
+  //    ALIYOR ve varlik YINE devre disi kaliyordu — ekran ise "alimlari tamamlayinca
+  //    tesis kendiliginden AKTIF olur" diyor. 116 olcutu, 121 bedeli duzeltti; tetik
+  //    atlanmisti.
+  // ⚠️ SIRA: `save()`ten ONCE. Ilk denemede cagriyi save()'in ALTINA koymustum —
+  //    `aucSetupTamamla` `u.on`u ve `u.aucSetup`i degistiriyor, yani kaydedilmeden
+  //    kalirdi ve oyuncu uygulamayi kapatsa aktivasyon ucardi.
   ciftlikRuhsatVer(bolge, bedel);
+  // 🔴 127b — SIRA DUZELTMESI, TARAYICIDA OLCULDU. Cagriyi ilk denemede
+  //    `ciftlikRuhsatVer`in ONUNE koymustum; ruhsat henuz deftere yazilmadigi icin
+  //    `bolgeRuhsatliMi` hala false donuyor ve `aucSetupTamamla` HICBIR SEYI
+  //    aktiflestirmiyordu (olculdu: birim `on:false`, `aucSetup:true` kaldi, oysa
+  //    `aucSetupEksik` artik false idi — yani sart saglanmis, kilidi acan kosmamis).
+  //    Dogru sira: ruhsat YAZ -> kilidi AC -> markerlari tazele -> save().
+  try { if (typeof aucSetupTamamla === 'function') aucSetupTamamla(); } catch (e) {}
+  try { if (typeof refreshUnitMarkers === 'function') refreshUnitMarkers(); } catch (e) {}
   closeModal();
   toast('📜 <b>' + (ad || 'Bölge') + '</b> çiftlik ruhsatı alındı — ' + fmt(bedel)
     + '<br><span class="sub">Artık bu bölgede tarla kurabilir ve ürününü buraya satabilirsin.</span>',
@@ -16277,7 +16608,8 @@ window.ciftlikRuhsatSor = (cellKey, la, lo, ad, pop) => {
   const bedel = ciftlikRuhsatBedeli(bolge);
   const yeter = (G.cash || 0) >= bedel;
   $('modal').innerHTML = '<h2>📜 Çiftlik Ruhsatı — ' + (ad || 'Bölge') + '</h2>'
-    + '<p>Bu bölgede <b>tarla kurabilmek</b> ve ürününü <b>buraya satabilmek</b> için'
+    + '<p>Bu bölgede <b>tarla ve çiftlik tesisi kurabilmek</b> (ahır · ağıl · kümes · lojman · fabrika)'
+    + ' ve ürününü <b>buraya satabilmek</b> için'
     + ' tek seferlik çiftlik ruhsatı gerekir.<br>'
     + '<span class="sub">Bedel bölgenin arazi değerine göre değişir — ucuz bölge ucuz ruhsat.</span></p>'
     + '<div class="qline"><span>🏙️ Bölge</span><span><b>' + (ad || '—') + '</b>'
@@ -16296,41 +16628,87 @@ window.ciftlikRuhsatSor = (cellKey, la, lo, ad, pop) => {
 // ⚠️ Cember yaklasimi BILINCLI: poligon-poligon kesisimi yerine dis yaricap karsilastirmasi.
 //    Hata tarafi GUVENLI (gereginden fazla ayirir, az degil) ve kod okunur kalir.
 //    Yeni parselin kimligi henuz YOK; sekil sapmasi +-%12 oldugu icin payi daha comert.
-const PARSEL_PAY_YENI = 1.40;
-const PARSEL_PAY_VAR = 1.24;
-function parselDisYaricap(ha, id) {
-  if (id != null) return tarlaYaricap({ ha: ha, id: id }) * PARSEL_PAY_VAR;
-  const birim = tarlaBirimAlanOrt();
-  return ((ha > 0) ? Math.sqrt(ha / birim) : TARLA_YARICAP) * PARSEL_PAY_YENI;
+// 📏 108. yama — DIS YARICAP KATSAYISI OLCULDU: dortgen parselde kose uzakligi
+//    R'nin 1,82 katina cikiyor (eski yuvarlak sekilde 1,24 idi). Eski payi oldugu gibi
+//    biraksaydik parseller GORSEL OLARAK UST USTE binerdi.
+//    Ama payi buyutmek yanlis cozum olurdu: parseller gereginden uzaga duserdi ve
+//    rakipteki YAN YANA tarla goruntusu hic olusmazdi. Dogrusu gercek kesisim testi;
+//    cember yalnizca UCUZ KABA ELEME olarak onde duruyor.
+const PARSEL_DIS_KAT = 1.90;
+const parselDisYaricap = (ha, id) =>
+  ((id != null) ? tarlaYaricap({ ha: ha, id: id })
+                : ((ha > 0) ? Math.sqrt(ha / tarlaBirimAlanOrt()) : tarlaYedekYaricap())) * PARSEL_DIS_KAT;
+
+// Nokta poligon icinde mi (isin atma). Noktalar [enlem, boylam]; boylam OLCEKLENMEZ —
+// olcekleme x ekseninde tekduze bir donusum, kesisip kesismedigini DEGISTIRMEZ.
+function _parselIcinde(p, poly) {
+  let ic = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const yi = poly[i][0], xi = poly[i][1], yj = poly[j][0], xj = poly[j][1];
+    if (((yi > p[0]) !== (yj > p[0])) && (p[1] < (xj - xi) * (p[0] - yi) / (yj - yi) + xi)) ic = !ic;
+  }
+  return ic;
 }
+// Iki dogru parcasi kesisiyor mu
+function _parselKenarKesisir(a, b, c, d) {
+  const ax = a[1], ay = a[0], bx = b[1], by = b[0], cx = c[1], cy = c[0], dx = d[1], dy = d[0];
+  const r1 = bx - ax, r2 = by - ay, s1 = dx - cx, s2 = dy - cy;
+  const den = r1 * s2 - r2 * s1;
+  if (Math.abs(den) < 1e-15) return false;
+  const t = ((cx - ax) * s2 - (cy - ay) * s1) / den;
+  const v = ((cx - ax) * r2 - (cy - ay) * r1) / den;
+  return t >= 0 && t <= 1 && v >= 0 && v <= 1;
+}
+// Iki poligon KESISIYOR mu. Bitisik durmak serbest, IC ICE girmek yasak.
+function poligonKesisiyorMu(A, B) {
+  if (!Array.isArray(A) || !Array.isArray(B) || A.length < 3 || B.length < 3) return false;
+  for (const p of A) if (_parselIcinde(p, B)) return true;
+  for (const p of B) if (_parselIcinde(p, A)) return true;
+  for (let i = 0, j = A.length - 1; i < A.length; j = i++)
+    for (let k = 0, l = B.length - 1; k < B.length; l = k++)
+      if (_parselKenarKesisir(A[j], A[i], B[l], B[k])) return true;
+  return false;
+}
+
 // 🌊 100c — PARSEL BIR NOKTA DEGIL ALAN. Deniz kapisi (placeAt'ta) yalniz MERKEZE bakar;
 //    900 ha parselin dis yaricapi ~2,3 km oldugu icin merkez karada olup parselin yarisi
 //    denize dusebiliyordu. Cevredeki 8 nokta da denetlenir — biri denizdeyse parsel olmaz.
 // ⚠️ Ortalama yaricap kullanilir (dis yaricap degil): poligonun kosesi degil GOVDESI
 //    olcut olmali, yoksa kiyi seridinde hicbir yere tarla kurulamazdi.
-const PARSEL_KIYI_NOKTA = 8;
+// 🌊 108. yama — kiyi denetimi artik parselin GERCEK KOSELERINI ve kenar ortalarini
+//    deniyor (eskiden ortalama yaricapli bir cemberin uzerinden 8 nokta aliyordu).
+//    Dortgen parselde kose cembere gore cok daha disarida; eski test kosesi suya
+//    dusen parseli KACIRIRDI.
 function parselKaradaMi(ll, ha) {
   if (!Array.isArray(ll) || typeof isLand !== 'function') return true;
   if (!isLand(ll)) return false;
-  const birim = tarlaBirimAlanOrt();
-  const R = (ha > 0) ? Math.sqrt(ha / birim) : TARLA_YARICAP;
-  const cf = Math.max(.25, Math.cos(ll[0] * Math.PI / 180));
-  for (let i = 0; i < PARSEL_KIYI_NOKTA; i++) {
-    const a = (i / PARSEL_KIYI_NOKTA) * 2 * Math.PI;
-    if (!isLand([ll[0] + Math.sin(a) * R, ll[1] + Math.cos(a) * R / cf])) return false;
+  const hedefHa = (ha > 0) ? ha : PARSEL_VARSAYILAN_HA;
+  const yeniId = (typeof G !== 'undefined' && G && G.nextId) || 1;
+  const pts = parselKose(yeniId, ll[0], ll[1], Math.sqrt(hedefHa / tarlaBirimAlan(yeniId)));
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    if (!isLand(pts[i])) return false;
+    // kenar ortasi da denetlenir: uzun kenarin ortasi denize girebilir
+    if (!isLand([(pts[i][0] + pts[j][0]) / 2, (pts[i][1] + pts[j][1]) / 2])) return false;
   }
   return true;
 }
+// 🔑 Yeni parselin kimligi BELLI: `addUnit` ona `G.nextId` veriyor. Bu yuzden onizleme
+//    GERCEK sekli test ediyor — tahmini bir cember degil.
 function parselCakisiyorMu(ll, ha, haricId) {
   if (!Array.isArray(ll)) return null;
-  const r1 = parselDisYaricap(ha, null);
+  const hedefHa = (ha > 0) ? ha : PARSEL_VARSAYILAN_HA;
+  const yeniId = (typeof G !== 'undefined' && G && G.nextId) || 1;
+  const rYeni = Math.sqrt(hedefHa / tarlaBirimAlan(yeniId));
+  const A = parselKose(yeniId, ll[0], ll[1], rYeni);
   const cf = Math.max(.25, Math.cos(ll[0] * Math.PI / 180));
   for (const u of ((typeof G !== 'undefined' && G && G.units) || [])) {
     if (!u || u.kind !== 'tarla' || u.id === haricId) continue;
     const o = tarlaYuvaMerkez(u);
     if (!Array.isArray(o)) continue;
+    // kaba eleme: dis cemberler bile degmiyorsa kesisemez (ucuz on suzgec)
     const dy = o[0] - ll[0], dx = (o[1] - ll[1]) * cf;
-    if (Math.sqrt(dy * dy + dx * dx) < r1 + parselDisYaricap(tarlaHektar(u), u.id)) return u;
+    if (Math.sqrt(dy * dy + dx * dx) > (rYeni + tarlaYaricap(u)) * PARSEL_DIS_KAT) continue;
+    if (poligonKesisiyorMu(A, tarlaPoligon(u))) return u;
   }
   return null;
 }
@@ -16475,11 +16853,14 @@ function tarlaHasat(u, elle, simdi) {
   }
   const birim = Math.max(0, Math.round((B.verim || 0) * vk * (B.taban || 0) * TARIM_AYAR.tohumOran));
   if (birim > 0) {
-    const alinabilir = Math.max(0, Math.floor((G.cash || 0) / birim));
+    // 🏦 112. yama — kisitli kurtarma fonu da sayilir. Olum sarmalinin kapisi TAM BURASI:
+    //    kasa sifirlaninca tohum alinamiyor, hasat duruyor, gelir kesiliyor, kasa sifir
+    //    kaliyor. Oyuncunun kendi basina cikamayacagi kapali dongu.
+    const alinabilir = Math.max(0, Math.floor(tarimOdeyebilir() / birim));
     if (alinabilir < n) n = alinabilir;
     if (n < 1) return 0;                       // tohum parası yok → hasat da yok, ürün tarlada bekler
     const bedel = n * birim;
-    G.cash -= bedel;
+    tarimGiderOde(bedel);
     t.tohum = (t.tohum || 0) + bedel;
     if (typeof gider === 'function') { try { gider('tohum', bedel); } catch (e) {} }
   }
@@ -16560,7 +16941,13 @@ const isciArgeKat = () => 1;
 const isciKapasite = () => lojmanlar().length * TARIM_AYAR.lojmanKapasite * isciArgeKat();
 // Çalışan işçi = min(kapasite, tarla sayısı). Tarlası olmayan lojman maaş ÖDETMEZ:
 // işçi "işe alınmış" sayılmaz. Bina bedeli zaten ödendi.
-const isciCalisan = () => Math.min(isciKapasite(), tarlalar().length);
+// 🔴 128. yama — DURAN TARLA ISCI SLOTUNU CALIYORDU. `tarlalar()` `u.on` suzmuyor,
+//    yani devre disi bir tarla (muzayededen kilitli gelen ya da oyuncunun kapattigi)
+//    hem gunluk maasa sayiliyor hem id sirasi onde oldugu icin isci slotunu CALISAN
+//    bir tarladan aliyordu. `tarlalar()` dokuz ekranda sayim icin kullanildigi icin
+//    ONA dokunulmadi; isci hesabi ayri bir suzgecten geciyor.
+const tarlalarAktif = () => tarlalar().filter(u => u.on !== false);
+const isciCalisan = () => Math.min(isciKapasite(), tarlalarAktif().length);
 const isciMaasGunluk = () => Math.round(isciCalisan() * TARIM_AYAR.isciMaas);
 
 // ── HANGİ TARLAYA İŞÇİ DÜŞÜYOR ──────────────────────────────────────────────
@@ -16569,15 +16956,20 @@ const isciMaasGunluk = () => Math.round(isciCalisan() * TARIM_AYAR.isciMaas);
 // Kural: **en eski tarla önce** (id artan). Oyuncu "önce kurduğum çalışıyor" diye okur.
 // 🔒 Önbellek ölçütü birimIdx() deseninin aynısı: dizi kimliği + uzunluk + nextId.
 //    Tarla ya da lojman eklenip çıkınca üçünden biri mutlaka değişir.
-let _isciArr = null, _isciLen = -1, _isciNext = -1, _isciSet = null;
+let _isciArr = null, _isciLen = -1, _isciNext = -1, _isciSet = null, _isciAktif = -1;
 function isciliTarlaKimlikleri() {
   const us = (typeof G !== 'undefined' && G && Array.isArray(G.units)) ? G.units : null;
   if (!us) { _isciArr = null; _isciSet = null; return new Set(); }
-  if (us !== _isciArr || us.length !== _isciLen || G.nextId !== _isciNext) {
+  // 🔴 128 — ONBELLEK OLCUTUNE AKTIF TARLA SAYISI EKLENDI. Bir tarlayi acip kapatmak
+  //    ne dizi kimligini ne uzunlugunu ne `nextId`i degistirir; eski olcutle onbellek
+  //    BAYAT kalir ve isci yeniden dagitilmazdi — yani duzeltme gorunmezdi.
+  const aktifSayi = tarlalarAktif().length;
+  if (us !== _isciArr || us.length !== _isciLen || G.nextId !== _isciNext || aktifSayi !== _isciAktif) {
     const n = isciCalisan();
-    const sirali = tarlalar().slice().sort((a, b) => (a.id || 0) - (b.id || 0));
+    // Duran tarla isci ALMAZ: slotu calisan tarlaya biraksin.
+    const sirali = tarlalarAktif().slice().sort((a, b) => (a.id || 0) - (b.id || 0));
     _isciSet = new Set(sirali.slice(0, n).map(u => u.id));
-    _isciArr = us; _isciLen = us.length; _isciNext = G.nextId;
+    _isciArr = us; _isciLen = us.length; _isciNext = G.nextId; _isciAktif = aktifSayi;
   }
   return _isciSet;
 }
@@ -16605,11 +16997,54 @@ function isciMaasIsle() {
   t.maasGun = gun;
   const tutar = isciMaasGunluk() * gunSayisi;
   if (tutar <= 0) return 0;
-  G.cash -= tutar;                                  // kasa eksiye düşebilir: borç değil, uyarı
+  tarimGiderOde(tutar);                             // 🏦 112 — once kurtarma fonu, sonra kasa
   t.maas = (t.maas || 0) + tutar;
   if (typeof gider === 'function') { try { gider('maas', tutar); } catch (e) {} }
   return tutar;
 }
+// 🚜 115. yama — CIFTLIGIN GUNLUK URETIMI (ton). Enerjideki `installedMW()`in karsiligi:
+//    "bu sirket gunde ne kadar mal cikarabiliyor". Ittifak acil tedarik esigi bunu okuyor.
+//    Ekili tarlanin gunluk dongu sayisi x dongu basina ton.
+function tarimGunlukUretim() {
+  let ton = 0;
+  for (const u of (typeof tarlalar === 'function' ? tarlalar() : [])) {
+    if (!u || !u.urun) continue;
+    const B = urunBilgi(u.urun);
+    const sr = (typeof tarlaSure === 'function') ? tarlaSure(u) : 0;
+    if (!(sr > 0)) continue;
+    const vk = (typeof tarlaVerimKat === 'function') ? tarlaVerimKat(u) : 1;
+    ton += (B.verim || 0) * vk * (864e5 / sr);
+  }
+  return Math.round(ton);
+}
+// Sektore gore "uretim gucu": enerjide MW, tarimda gunluk ton. Tek olcut, iki sektor.
+const uretimGucu = () => (typeof tarimSektoru === 'function' && tarimSektoru())
+  ? tarimGunlukUretim() : installedMW();
+
+// ═══════════ 🏦 112. yama — CIFTLIK KURTARMA FONU (kisitli para) ═══════════
+// Enerjinin kurtarma kredisinde para KASAYA GIRMEZ, dogrudan tamire gider — istismari
+// onleyen sey bu. Tarimda tamir yok; karsiligi KISITLI FON.
+// Bu paraya YALNIZ ciftlik gideri dokunabilir: tohum · isci maasi · veteriner.
+// Arazi, hayvan, makine ALINAMAZ — cunku o harcamalar bu kapidan gecmiyor.
+const tarimKurtarmaFon = () => { const t = tarimD(); return Math.max(0, (t && t.kurtarma) || 0); };
+// Ciftlik giderini oder: ONCE kisitli fondan, kalani kasadan. Odenen tutari dondurur.
+// ⚠️ TEK KAPI: butun ciftlik giderleri buradan gecmeli, yoksa fon bir yerden sizar.
+function tarimGiderOde(tutar) {
+  const t = tarimD();
+  const n = Math.max(0, +tutar || 0);
+  if (!(n > 0)) return 0;
+  let kalan = n;
+  if (t && t.kurtarma > 0) {
+    const fondan = Math.min(t.kurtarma, kalan);
+    t.kurtarma = Math.round((t.kurtarma - fondan) * 100) / 100;
+    kalan -= fondan;
+  }
+  if (kalan > 0) G.cash -= kalan;
+  return n;
+}
+// Ciftlik gideri icin KULLANILABILIR para (kasa + kisitli fon). Tohum kapisi bunu okur.
+const tarimOdeyebilir = () => ((G && G.cash) || 0) + tarimKurtarmaFon();
+
 // İnşa ekranında gösterilecek rakam (patron: "tesisi kurarken günlük masrafı yazsın").
 // 🐄 99. yama — gider artik maas + veteriner + yemin PARA karsiligi. Yem silodan
 //    cikiyor ama oyuncunun gozunde bedeli var: satmadigi tondur. Ekran yalniz maasi
@@ -16770,6 +17205,21 @@ function tarimSat(cell, urun, kalite, ton) {
     const ak = satimAnahtar(cell, urun, 3);        // C ve altı ortak iştahtan yer
     d.v[ak] = (d.v[ak] || 0) + normal;
   }
+  // 🚨 115. yama — ACIL TEDARIK TESLIMATI. Enerjide ihale ayni zamanda FIYATI da
+  //    degistiriyor (tam bolge fiyati, aktarim kesintisi yok, karo vergisi hesabi) ve o
+  //    kanca tamamen enerjiye ozgu. Tarimda ihale FIYATA HIC KARISMIYOR: satis her zamanki
+  //    kota kurallariyla yapildi, burada yalnizca TESLIM EDILEN TON SAYILIYOR.
+  //    Odul zaten basaridaki ittifak primi; boylece 102'de tek yere indirilen satis
+  //    bolmesine dokunmadan ozellik calisiyor.
+  const _at = (G.ally && G.ally.tender) ? G.ally.tender : null;
+  if (_at && _at.cell === cell && Date.now() < _at.until && cekilen > 0) {
+    const yer = Math.max(0, _at.need * ALLY_MEMBER_SHARE_CAP - _at.mine);  // uye basina %40 tavan
+    const say = Math.min(cekilen, yer);
+    if (say > 0) {
+      _at.delivered = Math.min(_at.need, _at.delivered + say);
+      _at.mine += say;
+    }
+  }
   // 🎓 DENEYİM: yalnız NORMAL fiyattan satılan ton sayılır. Patron "atıl fiyattan satış
   //    da deneyime sayılsın" önerisini REDDETTİ — atıl, iştah bittikten sonraki dökme.
   if (normal > 0) deneyimEkle(urun, normal);
@@ -16866,16 +17316,36 @@ function tarimStokTablosu(cell) {
       // Doğru ölçüt oyuncunun GERÇEK kararı: ruhsatlı şehirlerin içinde BU şehir en iyisi mi?
       //    Pazar rotası bu oyunda ölçülmüş bir beceri (aynı 3 tarla, büyük şehre önce satınca
       //    C kalite 12. günde, küçük şehre önce satınca 27. günde geliyor) — ok onu söylesin.
-      let yon = '', enIyiAd = '';
-      if (band && !band.yok) {
-        let enIyi = fy;
+      // 🏙️ 126. yama — OK ARTIK FIYATI DEGIL KOTAYI KARSILASTIRIYOR.
+      // 🔴 OLCULDU: `urunFiyat(urun, kalite, atil)` KARO ALMIYOR — fiyat = taban x kalite
+      //    carpani, yani her sehirde BIREBIR AYNI (C bugday Konya $1.700, Aksaray $1.700).
+      //    Dolayisiyla eski `b2.fiyat > enIyi` kosulu ASLA dogru olmuyordu; `enIyiAd` hep
+      //    bos kaliyor ve else dali HER ruhsatli sehirde "▲ en iyi" yaziyordu.
+      //    (94. yama okun hic cikmadigini fark etmis ama ayni tuzaga dusmus: fiyat yerine
+      //     yine fiyat karsilastirdi. Ders: bir karsilastirmayi duzeltirken iki tarafin
+      //     GERCEKTEN farkli olabildigini once olc.)
+      // 🔑 Oyuncunun gercek karari KOTA. Olculdu: ayni adi tasiyan dort Konya karosu
+      //    gunde 109 / 101 / 89 / 118 ton aliyor, Aksaray 39. Kotayi asan ton ATIL fiyata
+      //    gidiyor (un: $3.400 yerine $510) — ucte bir degil ALTI KAT fark.
+      // ⚠️ D ve E KOTASIZ (`kalan: Infinity`); orada ok anlamsiz oldugu icin hic cikmiyor.
+      let yon = '', enIyiAd = '', enIyiKalan = 0, enIyiCell = null;
+      if (band && !band.yok && isFinite(band.kalan)) {
+        enIyiKalan = band.kalan;
         for (const c2 of rs) {
           if (c2 === cell) continue;
           const b2 = sehirUrunTalep(c2, urun)[k];
-          if (b2 && !b2.yok && b2.fiyat > enIyi) { enIyi = b2.fiyat; enIyiAd = placeName(c2); }
+          if (b2 && !b2.yok && isFinite(b2.kalan) && b2.kalan > enIyiKalan) { enIyiKalan = b2.kalan; enIyiAd = placeName(c2); enIyiCell = c2; }
         }
-        if (enIyiAd && enIyi > fy * 1.02) yon = ' <span class="dus">▼ ' + enIyiAd + ' %' + Math.round((enIyi / fy - 1) * 100) + ' fazla</span>';
-        else if (rs.length > 1) yon = ' <span class="yuk">▲ en iyi</span>';
+        // 🏙️ 126b — OLCULDU: ok "▼ Konya +5t alır" diyordu ve oyuncunun DORT Konya karosu
+        //    var; hangisi oldugu anlasilmiyordu. Hedefin gunluk tonu da yaziliyor.
+        // ⚠️ VE ONEMSIZ FARKTA OK CIKMIYOR: 65 tonluk kotada 5 ton %7,7 — her satirda
+        //    baska sehre yonlendiren gurultu. Esik: en az 2 ton VE kotanin %10'u.
+        //    Fark esigin altindaysa ok HIC cikmiyor; "neredeyse ayni" demenin dogru hali
+        //    sessizlik. (Eski kod bu durumda "en cok burasi alir" diyordu — o da yalandi.)
+        const fark = Math.round(enIyiKalan - band.kalan);
+        if (enIyiAd && fark >= Math.max(2, band.kalan * .1))
+          yon = ' <span class="dus">▼ ' + enIyiAd + ' ' + fmtN(tarimSehirTon(enIyiCell)) + 't · +' + fmtN(fark) + 't</span>';
+        else if (!enIyiAd && rs.length > 1) yon = ' <span class="yuk">▲ en çok burası alır</span>';
       }
       const durum = !band ? '' : band.yok ? ' <span class="dus">almıyor</span>'
         : band.sert ? ' <span class="sub">kota ' + Math.round(band.kalan) + 't</span>' : '';
@@ -17055,11 +17525,24 @@ function tarimPanel() {
           + '</span></span></div>'
         : '')
     + '<div class="qline"><span>💸 Günlük gider</span><span><b>' + fmt(gunluk) + '</b></span></div>'
+    // 🏭 127. yama — FABRIKA ISLETME BEDELI hicbir ozette gorunmuyordu; oyuncu
+    //    "fabrika bedava isler" saniyordu. Un tarifinde gercek gunluk tutar $65.280.
+    // ⚠️ `tarimGunlukGider()`e BILEREK eklenmedi: `ciftlikKurtarmaIhtiyaci()` o sayidan
+    //    kurtarma kredisinin ANAPARASINI turetiyor, oraya eklemek krediyi buyutur —
+    //    yani denge karari olur ve patronun onayi gerekir. Burada AYRI satir.
+    + ((typeof fabrikalar === 'function' && fabrikalar().length)
+        ? '<div class="qline"><span>🏭 Fabrika işletme</span><span><b>'
+          + fmt(fabrikalar().reduce((a, u) => a + (fabrikaTarifi(u)
+              ? fabrikaIsletmeBedel(u) * (24 / (TARIF[u.tarif].sure / 3600)) : 0), 0))
+          + '</b> <span class="sub">/gün · tarife göre</span></span></div>'
+        : '')
     + '<div class="qline"><span>📈 Tarım cirosu</span><span>' + fmt((tarimD() && tarimD().ciro) || 0) + '</span></div>'
     + '<div class="catrow" style="margin:6px 0">'
     + '<button onclick="closeModal();doBuild(\'tarla\',\'tarla\')">🌱 Tarla — ' + fmt(TARIM_TIPLERI.tarla.tarla.cost) + '</button>'
     + '<button onclick="makineFilosu()">🚜 Makineler — ' + makineler().length + '</button>'
     + '<button onclick="hayvanPaneli()">🐄 Hayvancılık — ' + hayvanlar().length + ' baş</button>'
+    + '<button onclick="closeModal();doBuild(\'fabrika\',\'fabrika\')">🏭 Fabrika — ' + fmt(TARIM_TIPLERI.fabrika.fabrika.cost)
+    + (fabrikalar().length ? ' <span class="sub">(' + fabrikalar().length + ' var)</span>' : '') + '</button>'
     + '<button onclick="closeModal();doBuild(\'lojman\',\'lojman\')">🏘️ Lojman — ' + fmt(TARIM_TIPLERI.lojman.lojman.cost)
     + ' <span class="sub">(+' + TARIM_AYAR.lojmanKapasite + ' işçi)</span></button>'
     + '</div>'
@@ -17067,7 +17550,12 @@ function tarimPanel() {
     + (ts.length ? ts.map(tarimTarlaSatir).join('') : '<p class="sub">Henüz tarlan yok — yukarıdan kur, sonra haritada yere dokun.</p>')
     + '<h3 style="margin:10px 0 2px">📦 Stok ve satış</h3>'
     + (rs.length > 1
-        ? '<div class="catrow">' + rs.map(c2 => '<button class="' + (c2 === cell ? 'on' : '') + '" onclick="tarimSehirSec(\'' + c2 + '\')">' + placeName(c2) + '</button>').join('') + '</div>'
+        // 🏙️ 126 — ETIKETE GUNLUK ALIM TONU EKLENDI. Ciftlik ruhsati IL BAZLI (100e)
+        //    oldugu icin bir ilin birden cok karosu olabiliyor ve serit ayni ismi
+        //    tekrar basiyordu. Olculdu: bes dugme "Konya · Konya · Aksaray · Konya ·
+        //    Konya" yaziyordu, oysa o dort Konya karosu gunde 109/101/89/118 ton aliyor.
+        //    Oyuncunun en onemli karari ayirt edilemez dort dugmenin arkasindaydi.
+        ? '<div class="catrow">' + rs.map(c2 => '<button class="' + (c2 === cell ? 'on' : '') + '" onclick="tarimSehirSec(\'' + c2 + '\')">' + placeName(c2) + ' <span class="sub">' + fmtN(tarimSehirTon(c2)) + 't</span></button>').join('') + '</div>'
         : '')
     + (cell ? '<p class="sub">Satış yeri: <b>' + placeName(cell) + '</b> — günlük alım ' + fmtE(tarimSehirTon(cell)) + ' ton</p>' : '<p class="sub">Ruhsatlı karen yok.</p>')
     + tarimStokTablosu(cell)
@@ -17132,7 +17620,8 @@ const hayvanAdiUret = n => HAYVAN_ADLARI[Math.abs(Math.round(n)) % HAYVAN_ADLARI
 
 // 🌾 YEM = silodaki bugday veya misir (gercek yem taneleri). Patates/ayciceği/domates yem
 //    DEGIL — yoksa 'ne ekersen yem olur' olur ve bugdayin rolu kaybolurdu.
-const YEM_URUNLERI = ['bugday', 'misir'];
+// 🐄 110. yama — ARPA da yem: gercek hayvanciligin klasik yem tahili.
+const YEM_URUNLERI = ['bugday', 'misir', 'arpa'];
 // ⚠️ Yem kalitesi yavrunun TAVANINI belirliyor, yani bu bir STRATEJI dugmesi:
 //    'ucuz' → once KOTU yemi yakar (iyi bugdayini satarsin, suru yerinde sayar)
 //    'iyi'  → once IYI yemi yakar (ciro feda, suru nesil nesil A kaliteye cikar)
@@ -17209,7 +17698,7 @@ function hayvanBirGun(d) {
   // 2 - VETERINER (bas sayisiyla dogrusal; yem olsa da olmasa da odenir)
   r.vet = vetGiderGun();
   if (r.vet > 0) {
-    G.cash -= r.vet;                                 // kasa eksiye duser: borc degil, uyari
+    tarimGiderOde(r.vet);                            // 🏦 112 — once kurtarma fonu, sonra kasa
     if (typeof gider === 'function') { try { gider('bakim', r.vet); } catch (e) {} }
   }
   // 3 - KALITE: 3 KERE ARKA ARKAYA kotu yem → bir kademe duser (patron kurali)
@@ -17352,7 +17841,20 @@ let _hayvanSekme = 'inek';
 //    istedigi KOTU basi listede HIC goremiyordu — yani 'kes' dugmesi vardi ama
 //    kesilecek hayvana ulasilmiyordu. Siralama dugmesi o kapiyi aciyor.
 let _hayvanSira = 'iyi';   // 'iyi' = kalite yuksekten · 'kotu' = kaliteden dusukten · 'yas' = yaslidan
-window.hayvanSekme = t => { if (hayvanTipVar(t)) _hayvanSekme = t; hayvanPaneli(); };
+// 🐔 125. yama — oyuncu bir kez sekme sectiyse otomatik secim bir daha karismaz.
+let _hayvanSekmeElle = false;
+window.hayvanSekme = t => { if (hayvanTipVar(t)) { _hayvanSekme = t; _hayvanSekmeElle = true; } hayvanPaneli(); };
+// 🔴 PANEL SAHIP OLUNMAYAN TURDE ACILIYORDU. Olculdu (sifirdan yeni ciftci): oyuncu
+//    panelin kendi tavsiyesine uyup Kumes kurdu (en ucuz giris), kapasite 400 olarak
+//    ekranda yaziyordu, ama panel 'inek' sekmesinde acilip "once Ahir kur — $6,00M"
+//    diyordu ve `hayvanAl` dugmesi panelde HIC YOKTU. Oyuncunun yapmasi gereken sey
+//    gorunmuyor, ustune $6M daha harcamasi soyleniyordu.
+// Sira: hayvani OLAN tur → kapasitesi olan tur → 'inek' (tanitim metni dogru kalsin).
+function hayvanSekmeSec() {
+  for (const t of HAYVAN_TUR) if (hayvanlarTur(t).length > 0) return t;
+  for (const t of HAYVAN_TUR) if (barinakKapasite(t) > 0) return t;
+  return 'inek';
+}
 window.hayvanSiraSec = s => { _hayvanSira = s; hayvanPaneli(); };
 // 🥩 TOPLU KESIM — tek tek 40 kez tiklamak eylem degil eziyettir. En kotu N basi keser.
 window.hayvanTopluKes = (t, n) => {
@@ -17387,6 +17889,11 @@ function hayvanPaneli() {
   }, 0));
   const yemBedel = Math.round(gerek * urunBilgi('bugday').taban);
   if (!hayvanTipVar(_hayvanSekme)) _hayvanSekme = 'inek';
+  // 🐔 125 — oyuncu elle secmediyse, sahip oldugu ture gec. Secili sekmede ne hayvan
+  //    ne de barinak varsa da duzelt: oyuncu ahiri yikip kumes kurmus olabilir.
+  if (!_hayvanSekmeElle || (hayvanlarTur(_hayvanSekme).length === 0 && barinakKapasite(_hayvanSekme) === 0)) {
+    _hayvanSekme = hayvanSekmeSec();
+  }
   const h = [];
   h.push('<h2>🐄 Hayvancılık</h2>');
   h.push('<div class="qline"><span>🐾 Sürü</span><span><b>' + fmtN(liste.length) + ' baş</b> <span class="sub">'
@@ -17716,6 +18223,78 @@ function tarimBirimPanel(u) {
       + '<p class="sub">' + BH.d + '</p>'
       + '<button class="bigsell" onclick="closeModal();hayvanPaneli()">🐄 Hayvancılık ekranı</button>';
   }
+  // 🏭 119. yama — FABRIKA KUNYESI. Tarla kunyesinin esi; ayni soruyu cevapliyor:
+  //    "ne uretiyor · ne kadar · hangi kalitede · neden durdu".
+  if (fabrikaMi(u)) {
+    const R = fabrikaTarifi(u);
+    const insa = (u.buildDone || 0) > tarimSimdi();
+    const h = [];
+    h.push('<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">'
+      + tarimKare('fabrika', '🏭', 84, kareRenk('fabrika'))
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:15px;font-weight:800;color:var(--cream)">'
+        + (R ? urunBilgi(u.tarif).ico + ' ' + urunBilgi(u.tarif).ad : '🏭 Boş fabrika') + '</div>'
+      + '<div class="sub">' + (placeName(u.cell) || cellCode(u.cell)) + ' · Fabrika #' + u.id
+        + (insa ? ' · 🏗️ inşa ediliyor' : '') + '</div>'
+      + '<div class="prow" style="border:0;padding:3px 0"><span class="l">⚙️ Durum</span><b>'
+        + (!R ? 'tarif seçilmedi' : !u.on ? '<span class="neg">kapalı</span>'
+            : fabrikaHazirMi(u) ? '<span class="pos">döngü tamam</span>'
+            : 'işliyor %' + Math.round(fabrikaOran(u) * 100)) + '</b></div>'
+      + '<div class="prow" style="border:0;padding:3px 0"><span class="l">👷 İşçi</span><b>gerekmez '
+        + '<span class="sub">— fabrika kendi işler</span></b></div>'
+      + '</div></div>');
+    if (R) {
+      const gB = urunBilgi(R.girdi), cB = urunBilgi(u.tarif);
+      const girdiTon = fabrikaGirdiTon(u), ciktiTon = fabrikaCiktiTon(u);
+      const std = urunStd(u.tarif);
+      const m = fabrikaMalzeme(R.girdi, girdiTon, false);     // ONIZLE — motor ayni govdeyi kullaniyor
+      const varTon = stokToplam(R.girdi);
+      const bekleyen = fabrikaDongu(u);
+      const net = fabrikaSiloNet(u);
+      const sigar = (net > 0 && typeof siloBos === 'function') ? Math.floor(siloBos() / net) : 99;
+      h.push('<div class="bar" style="margin:2px 0 8px"><i style="width:' + Math.round(fabrikaOran(u) * 100)
+        + '%;background:linear-gradient(90deg,#d9a441,#e8c84a)"></i></div>');
+      h.push('<table class="ledger">'
+        + '<tr><td>🧾 Tarif</td><td><b>' + fmtE(girdiTon) + ' ton ' + gB.ico + ' ' + gB.ad
+          + ' → ' + fmtE(ciktiTon) + ' ton ' + cB.ico + ' ' + cB.ad + '</b></td></tr>'
+        + '<tr><td>⏳ Döngü</td><td>' + fmtHrs(R.sure / 3600) + ' <span class="sub">(günde '
+          + fmtE(24 / (R.sure / 3600)) + ' döngü)</span></td></tr>'
+        + '<tr><td>🏅 Üretim standardın</td><td><b>' + kaliteAd(std) + '</b> <span class="sub">— ürün hattına ait, tesise değil</span></td></tr>'
+        + '<tr><td>🌾 Siloda malzeme</td><td>' + (varTon >= girdiTon
+            ? '<b>' + fmtE(varTon) + ' ton</b> <span class="sub">(' + Math.floor(varTon / girdiTon) + ' döngülük)</span>'
+            : '<span class="neg">' + fmtE(varTon) + ' ton — ' + fmtE(girdiTon) + ' ton gerekli</span>') + '</td></tr>'
+        + '<tr><td>🥬 Verilecek malzeme</td><td>' + (m.kalite > 0 ? '<b>' + kaliteAd(m.kalite) + '</b> kalite' : '—') + '</td></tr>'
+        + '<tr><td>🎯 Çıkacak kalite</td><td>' + (m.kalite > 0
+            ? '<b>' + kaliteAd(cikisKalite(std, m.kalite)) + '</b>'
+              + (cikisKalite(std, m.kalite) < m.kalite ? ' <span class="sub">— standardın malzemeyi aşağı çekiyor</span>' : '')
+            : '—') + '</td></tr>'
+        + '<tr><td>💸 İşletme bedeli</td><td>' + fmt(fabrikaIsletmeBedel(u)) + ' <span class="sub">/ döngü</span></td></tr>'
+        + '<tr><td>📦 Bekleyen döngü</td><td>' + (bekleyen > 0 ? '<b>' + bekleyen + '</b>' : '—') + '</td></tr>'
+        + '<tr><td>🏚️ Siloda yer</td><td>' + (net <= 0 ? '<span class="pos">bu tarif yer AÇAR</span>'
+            : sigar >= 99 ? 'bol' : sigar < 1 ? '<span class="neg">DOLU — üretim durdu</span>'
+            : '<b>' + sigar + '</b> döngülük') + '</td></tr>'
+        + '</table>');
+      if (fabrikaHazirMi(u)) h.push('<button class="bigsell" onclick="fabrikaIsle(' + u.id + ')">🏭 Bir Döngü İşle</button>');
+    } else {
+      h.push('<p class="sub">🏭 Bu fabrika ham ürünü <b>işlenmiş ürüne</b> çevirir. Önce bir tarif seç — '
+        + 'çıktının kalitesi <b>o ürün hattındaki standardına</b> ve verdiğin malzemeye bağlı olur.</p>');
+    }
+    h.push('<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🧾 TARİF <span class="sub">'
+      + (R ? 'değiştirmek süren döngüyü yakar' : 'ne üreteceğini seç') + '</span></div><div class="catrow">'
+      + TARIF_IDLER.map(id => '<button onclick="fabrikaTarifSec(' + u.id + ',\'' + id + '\')"'
+          + ' style="padding:3px 4px;line-height:0"' + (id === u.tarif ? ' class="on"' : '')
+          + ' title="' + urunBilgi(TARIF[id].girdi).ad + ' → ' + TARIM_URUN[id].ad + '">'
+          + urunKare(id, 34) + '</button>').join('') + '</div>');
+    // 🏅 MALZEME TERCIHI — yem tercihinin esi, ayni iki dugme.
+    h.push('<div style="font-size:11px;color:var(--acc2);margin:10px 0 2px">🥬 MALZEME TERCİHİ</div>'
+      + '<div class="catrow">'
+      + '<button class="' + (fabrikaTercihi() === 'ucuz' ? 'on' : '') + '" onclick="fabrikaTercihSec(\'ucuz\',' + u.id + ')">🌾 Önce kötü <span class="sub">(iyi hamını sat)</span></button>'
+      + '<button class="' + (fabrikaTercihi() === 'iyi' ? 'on' : '') + '" onclick="fabrikaTercihSec(\'iyi\',' + u.id + ')">🏅 Önce iyi <span class="sub">(çıktı yükselsin)</span></button>'
+      + '</div>'
+      + '<p class="sub">Kötü malzeme iyi fabrikayı <b>aşağı çeker</b>; iyi malzeme kötü fabrikayı ancak '
+      + '<b>yarı yolda</b> yukarı çeker. <b>A</b> çıktının tek yolu <b>A standardı</b> — yani 🧪 araştırma.</p>');
+    return h.join('');
+  }
   if (lojmanMi(u)) return '<p class="sub">🏘️ Bu lojman <b>' + TARIM_AYAR.lojmanKapasite + ' işçi</b> barındırıyor.'
     + '<br>Şirket geneli: <b>' + isciCalisan() + '</b> / ' + isciKapasite() + ' · günlük ' + fmt(tarimGunlukGider()) + '</p>';
   return '<p class="sub">—</p>';
@@ -17758,6 +18337,199 @@ window.tarimSatUygula = (urun, k) => {
   save(); tarimPanel();
 };
 
+// ═══════════════════════ 🏭 FABRIKA (119. yama) ═══════════════════════
+// 118 veriyi koydu (urunler · tarifler · bina); MOTOR burada.
+//
+// 🔑 TASARIM §5b'NIN BEKLEYEN CUMLESI: `cikisKalite(standart, malzeme)` formulu kodda
+//    uzun suredir duruyor ama HIC CAGRILMIYORDU. Ilk cagiran yer BURASI — yani
+//    "yeni fabrika A malzemeyle bile C uretir" kurali ilk kez gercekten calisiyor.
+//    Standart URUN HATTINA ait (acik madde 20), tesise degil: `urunStd(cikti)`.
+//    Yani ikinci fabrika sifirdan baslamiyor, sirketin ustaligi tasiniyor.
+//
+// 🔁 TARLA MOTORUNUN BIREBIR DESENI (59/67/72/95/100. yamalar): damga + tam dongu
+//    sayisi + cevrimdisi tavani + frenler. Yeni zamanlama mekanigi YOK.
+//      `u.tarif`   → tarladaki `u.urun`un esi
+//      `u.basladi` → tarladaki `u.ekildi`in esi
+//    Ikisi de `G.units` icinde yasiyor; `saves/$uid` beyaz liste DEGIL, goc gerekmiyor.
+//
+// 💰 DENGE (hesaplandi): saatte 20 ton girdi. Un tarifi (2 sa dongu) = 40 ton bugday,
+//    gunde 12 dongu = 480 ton bugday → 374 ton un. Girdi degeri $816k, cikti $1,27M,
+//    isletme %8 = $65k → gunluk net ~$390k. $12M fabrika ~31 gunde amorti eder ve
+//    TAM KAPASITE icin ~7,5 bugday tarlasi gerekir. Yani fabrika tek basina para
+//    basmiyor, TARLA SAYISINI odullendiriyor.
+// ⚠️ Pahali girdilerde tavan tedarikte: dolu bir ahir gunde 14 ton sut veriyor, yani
+//    peynir fabrikasi kapasitesinin ~%3'unde calisir. Tasarimin kendi sozu:
+//    "islenmis urunun degeri oran tablosuyla degil PAZARLA belirlenir."
+const FABRIKA_SAATLIK_TON = 20;    // bir fabrikanin saatte isledigi GIRDI tonu
+const FABRIKA_ISLETME = .08;       // isletme bedeli = girdi taban degerinin %8'i
+const FABRIKA_OTO_TAVAN = 24;      // cevrimdisi emniyeti — tarladaki tavanin esi
+
+const fabrikaMi = u => !!(u && u.kind === 'fabrika');
+const fabrikalar = () => ((typeof G !== 'undefined' && G && Array.isArray(G.units)) ? G.units : []).filter(fabrikaMi);
+const fabrikaTarifi = u => (fabrikaMi(u) && tarifVar(u.tarif)) ? TARIF[u.tarif] : null;
+// Dongu suresi (ms). Makine carpani YOK: fabrika isci ve makine kullanmaz, freni TEDARIK.
+const fabrikaSure = u => { const R = fabrikaTarifi(u); return R ? Math.max(60000, R.sure * 1000) : 0; };
+const fabrikaGirdiTon = u => { const R = fabrikaTarifi(u); return R ? FABRIKA_SAATLIK_TON * R.sure / 3600 : 0; };
+const fabrikaCiktiTon = u => { const R = fabrikaTarifi(u); return R ? fabrikaGirdiTon(u) * R.oran : 0; };
+// 🏚️ SILODA NET ETKI. un/cips/peynir yer ACAR (oran < 1); ekmek yer ISTER (oran 1,3).
+//    Fren bu yuzden yalniz net pozitifse devreye giriyor — yoksa un fabrikasi
+//    silo doluyken bosuna dururdu, oysa calissa siloyu BOSALTACAKTI.
+const fabrikaSiloNet = u => fabrikaCiktiTon(u) - fabrikaGirdiTon(u);
+// Isletme bedeli girdinin TABAN degerine ORANLI. Sabit $/ton olsaydi ucuz girdili
+// tarifi haksiz cezalandirirdi (bugdayda %7, sutte %0,8 — baskin tarif uretirdi).
+const fabrikaIsletmeBedel = u => {
+  const R = fabrikaTarifi(u);
+  if (!R) return 0;
+  return Math.max(0, Math.round(fabrikaGirdiTon(u) * (urunBilgi(R.girdi).taban || 0) * FABRIKA_ISLETME));
+};
+// Dongunun baslangici: tarif secildigi an ya da insa bitisi — hangisi SONRAYSA.
+// (Insa surerken tarif secen oyuncu insa bitmeden uretim kazanmasin.)
+const fabrikaBas = u => Math.max(+(u && u.basladi) || 0, +(u && u.buildDone) || 0);
+function fabrikaDongu(u, simdi) {
+  if (!fabrikaTarifi(u)) return 0;
+  const s = simdi || tarimSimdi(), bas = fabrikaBas(u), sr = fabrikaSure(u);
+  if (!(bas > 0) || s <= bas || sr <= 0) return 0;
+  return Math.floor((s - bas) / sr);
+}
+function fabrikaOran(u, simdi) {
+  if (!fabrikaTarifi(u)) return 0;
+  const s = simdi || tarimSimdi(), bas = fabrikaBas(u), sr = fabrikaSure(u);
+  if (!(bas > 0) || sr <= 0 || s <= bas) return 0;
+  return (s - bas) >= sr ? 1 : Math.max(0, Math.min(1, ((s - bas) % sr) / sr));
+}
+const fabrikaHazirMi = (u, simdi) => fabrikaDongu(u, simdi) >= 1;
+
+// 🏅 MALZEME TERCIHI — `yemTercihi`nin birebir esi. Varsayilan 'ucuz': fabrika ONCE
+//    kotu malzemeyi yakar, oyuncunun A kalite hami satilabilir kalir. 'iyi' secmek
+//    bugunku ciroyu feda edip daha iyi CIKTI almaktir.
+const fabrikaTercihi = () => { const d = tarimD(); return (d && d.fabKalite === 'iyi') ? 'iyi' : 'ucuz'; };
+window.fabrikaTercihSec = (v, id) => {
+  const d = tarimD(); if (!d) return;
+  d.fabKalite = (v === 'iyi') ? 'iyi' : 'ucuz';
+  toast(d.fabKalite === 'iyi' ? '🏭 Fabrikalara ÖNCE İYİ malzeme veriliyor — çıktı yükselir, iyi hamını satamazsın'
+                              : '🏭 Fabrikalara ÖNCE KÖTÜ malzeme veriliyor — iyi hamını satarsın, çıktı düşer', '');
+  try { save(); } catch (e) {}
+  if (id != null && typeof openUnitSheet === 'function') openUnitSheet(id);
+};
+
+// 🔑 TEK GOVDE, IKI KULLANIM: `cek=false` ONIZLER (panel), `cek=true` CEKER (motor).
+//    Iki ayri fonksiyon yazilsaydi panel "C cikacak" derken motor B uretebilirdi —
+//    tam da 102. yamada avladigimiz yalan onizleme sinifi.
+// ⚠️ `lotKalite` kullaniliyor, `l.k` DEGIL: curume sonrasi gercek kalite neyse malzeme odur.
+function fabrikaMalzeme(urun, ton, cek) {
+  const d = tarimD();
+  if (!d || !Array.isArray(d.stok) || !(ton > 0)) return { alinan: 0, kalite: 0 };
+  const yon = (fabrikaTercihi() === 'iyi') ? -1 : 1;
+  const lotlar = d.stok.filter(l => l && l.u === urun && l.t > 0)
+    .sort((a, b) => yon * (lotKalite(a) - lotKalite(b)));
+  let kalan = ton, alinan = 0, agirlikli = 0;
+  for (const l of lotlar) {
+    if (kalan <= 1e-9) break;
+    const al = Math.min(l.t, kalan);
+    if (cek) l.t -= al;
+    kalan -= al; alinan += al; agirlikli += al * lotKalite(l);
+  }
+  if (cek) d.stok = d.stok.filter(l => l && l.t > 1e-4);
+  return { alinan: alinan, kalite: alinan > 0 ? kaliteSin(agirlikli / alinan) : 0 };
+}
+
+// ── URETIM ──────────────────────────────────────────────────────────────────
+// elle=true  → oyuncu dugmeye basti: YALNIZ 1 dongu
+// elle=false → fabrika kendi isliyor: biriken donguler (tavana kadar)
+// Donus { ton, girdi, kalite, dongu, bedel, durum }. `durum` NEDEN DURDUGUNU soyler
+// ('malzeme' | 'silo' | 'nakit' | ''), cunku sessizce duran fabrika yalan ekrandir.
+function fabrikaUret(u, elle, simdi) {
+  const t = tarimD();
+  const R = fabrikaTarifi(u);
+  if (!t || !R) return null;
+  const s = simdi || tarimSimdi();
+  const tam = fabrikaDongu(u, s);
+  if (tam < 1) return null;
+  const n = elle ? 1 : Math.min(tam, FABRIKA_OTO_TAVAN);
+  const birim = fabrikaGirdiTon(u), net = fabrikaSiloNet(u), bedelBirim = fabrikaIsletmeBedel(u);
+  const r = { ton: 0, girdi: 0, kalite: 0, dongu: 0, bedel: 0, durum: '' };
+  if (!(birim > 0)) return null;
+  let agirlikli = 0;
+  for (let i = 0; i < n; i++) {
+    // 🔴 UC FREN, HEPSI DAMGADAN ONCE. Tarladaki dersin aynisi (95. yama): sigmayan
+    //    dongu URETILMEMIS sayilir, damga ilerlemez, malzeme SILODA BEKLER.
+    if (stokToplam(R.girdi) < birim - 1e-9) { r.durum = 'malzeme'; break; }
+    if (net > 0 && siloBos() < net - 1e-9) { r.durum = 'silo'; break; }
+    if (bedelBirim > 0 && tarimOdeyebilir() < bedelBirim) { r.durum = 'nakit'; break; }
+    const m = fabrikaMalzeme(R.girdi, birim, true);
+    if (!(m.alinan > 0)) { r.durum = 'malzeme'; break; }
+    // 🏅 CIKTI KALITESI = standart ile malzemenin BIRLESIMI, simetrik DEGIL.
+    const kal = cikisKalite(urunStd(u.tarif), m.kalite);
+    const cikti = m.alinan * R.oran;
+    stokEkle(u.tarif, kal, cikti, s);
+    if (bedelBirim > 0) {
+      tarimGiderOde(bedelBirim);                 // 🏦 112 — once kurtarma fonu, sonra kasa
+      if (typeof gider === 'function') { try { gider('isletme', bedelBirim); } catch (e) {} }
+      r.bedel += bedelBirim;
+    }
+    r.ton += cikti; r.girdi += m.alinan; r.dongu++;
+    agirlikli += cikti * kal;
+  }
+  if (r.dongu < 1) return r;                     // damga ILERLEMEZ — malzeme bekler
+  r.kalite = r.ton > 0 ? kaliteSin(agirlikli / r.ton) : 0;
+  // Tavani asan dongu URETILMEMIS sayilir (tarladaki 67/72. yama karari): yoksa 30 gun
+  // girmeyen oyuncuda 360 dongu birikir ve tik bunu 24'er 24'er saniyeler icinde oder.
+  const yakilan = elle ? 0 : Math.max(0, tam - FABRIKA_OTO_TAVAN);
+  u.basladi = fabrikaBas(u) + (r.dongu + yakilan) * fabrikaSure(u);
+  if (u.basladi > s) u.basladi = s;
+  return r;
+}
+
+// ⏳ TIK — `tarimAkis` icinden, tarla tikiyle ayni 5 saniyelik frene takili.
+function fabrikaTick(simdi) {
+  const fs = fabrikalar();
+  if (!fs.length) return null;
+  const s = simdi || tarimSimdi();
+  const top = { ton: 0, girdi: 0, bedel: 0, dongu: 0, urun: {}, durum: {} };
+  for (const u of fs) {
+    if (!u.on) continue;                         // kapali fabrika islemez (tarla deseni)
+    const r = fabrikaUret(u, false, s);
+    if (!r) continue;
+    top.ton += r.ton; top.girdi += r.girdi; top.bedel += r.bedel; top.dongu += r.dongu;
+    if (r.ton > 0) top.urun[u.tarif] = (top.urun[u.tarif] || 0) + r.ton;
+    if (r.durum) top.durum[r.durum] = (top.durum[r.durum] || 0) + 1;
+  }
+  return (top.dongu > 0 || Object.keys(top.durum).length) ? top : null;
+}
+
+// ── OYUNCU EYLEMLERI ────────────────────────────────────────────────────────
+window.fabrikaTarifSec = (id, tarif) => {
+  const u = ((typeof G !== 'undefined' && G && G.units) || []).find(x => x.id === id);
+  if (!u || !fabrikaMi(u) || !tarifVar(tarif)) { toast('Seçilemedi', 'warn'); return; }
+  if (u.tarif === tarif) { toast('🏭 Bu tarif zaten seçili', ''); return; }
+  // ⚠️ Tarif degistirmek SUREN donguyu yakar — tarlada ekim degistirmenin aynisi.
+  const bekleyen = fabrikaDongu(u);
+  u.tarif = tarif;
+  u.basladi = tarimSimdi();
+  const R = TARIF[tarif];
+  toast('🏭 <b>' + urunBilgi(tarif).ad + '</b> üretimine geçildi — ' + fmtE(fabrikaGirdiTon(u)) + ' ton '
+    + urunBilgi(R.girdi).ad + ' → ' + fmtE(fabrikaCiktiTon(u)) + ' ton, ' + fmtHrs(R.sure / 3600)
+    + (bekleyen > 0 ? '<br><span class="sub">⚠️ ' + bekleyen + ' bekleyen döngü yandı</span>' : ''), '', null, 0, true);
+  try { save(); } catch (e) {}
+  if (typeof openUnitSheet === 'function') openUnitSheet(id);
+};
+window.fabrikaIsle = id => {
+  const u = ((typeof G !== 'undefined' && G && G.units) || []).find(x => x.id === id);
+  if (!u) return;
+  const r = fabrikaUret(u, true);                // elle = tek dongu
+  if (r && r.ton > 0) toast('🏭 ' + fmtE(r.ton) + ' ton ' + kaliteAd(r.kalite) + ' '
+    + urunBilgi(u.tarif).ad + ' üretildi' + (r.bedel > 0 ? ' · işletme ' + fmt(r.bedel) : ''), '');
+  else if (r && r.durum === 'malzeme') toast('🌾 Malzeme yetmiyor — siloda ' + fmtE(fabrikaGirdiTon(u))
+    + ' ton ' + urunBilgi(TARIF[u.tarif].girdi).ad + ' olmalı', 'warn');
+  else if (r && r.durum === 'silo') toast('🏚️ Silo dolu — önce ürün sat ya da siloyu genişlet', 'warn');
+  else if (r && r.durum === 'nakit') toast('💸 İşletme bedelini ödeyemiyorsun', 'warn');
+  else toast('Döngü henüz tamamlanmadı', 'warn');
+  try { save(); } catch (e) {}
+  if (typeof openUnitSheet === 'function') openUnitSheet(id);
+};
+window.fabrikaMi = fabrikaMi;
+window.fabrikalar = fabrikalar;
+
 // ── 🌾 TARIM AKIŞI (63. yama) ────────────────────────────────────────────────
 // ⚠️ KISILMIŞ: her karede çalışmaz. Tarla hasadı saniyede 60 kez hesaplanacak bir şey
 //    değil, ve 51. yamada öğrendik ki sıcak yola konan her tarama ölçeklenince kanıyor.
@@ -17781,6 +18553,17 @@ function tarimAkis(dtSec) {
         + 'sonra haritada istediğin noktaya dokun. Parsel boyunu ve bedelini orada göreceksin.',
         '', 'tarimilk', 15000, true);
     }
+    // 🧪 107. yama — arastirma tiki. Suresi dolan arastirma burada tamamlanir.
+    const ar = (typeof argeTik === 'function') ? argeTik() : null;
+    if (ar) {
+      toast('🧪 <b>' + aileAd(ar.aile) + ' — ' + kaliteAd(ar.lv) + ' kalite araştırması BİTTİ.</b>'
+        + (ar.terfi.length
+            ? '<br>' + ar.terfi.map(id => urunBilgi(id).ico + ' ' + urunBilgi(id).ad).join(', ')
+              + ' artık <b>' + kaliteAd(ar.lv) + '</b> kalite üretiyor.'
+            : '<br><span class="sub">Tavan açıldı; bu kademeye ulaşmış ürünün olmadığı için terfi eden olmadı.</span>'),
+        '', null, 0, true);
+      try { save(); } catch (e) {}
+    }
     const ton = tarlaTick();            // işçili tarlaları topla
     const maas = isciMaasIsle();        // gün döndüyse maaşı kes
     if (maas > 0) toast('👷 Günlük işçi maaşı ödendi — ' + fmt(maas), '', 'tarimmaas', 8000);
@@ -17794,6 +18577,20 @@ function tarimAkis(dtSec) {
         + (hr.olen ? ' · ☠️ ' + hr.olen + ' baş aç öldü' : '')
         + (hr.siloAtlanan > 0 ? ' · 🏚️ silo dolu, ' + fmtE(hr.siloAtlanan) + ' ton toplanamadı' : '')
         + ' · 🩺 ' + fmt(hr.vet), (hr.olen || hr.siloAtlanan > 0) ? 'warn' : '', 'hayvangun', 10000);
+    }
+    // 🏭 119. yama — FABRIKA TIKI. Duran fabrika SEBEBINI soyluyor: sessizce duran
+    //    fabrika, oyuncunun neyi duzeltecegini bilemedigi yalan ekrandir.
+    const fb = (typeof fabrikaTick === 'function') ? fabrikaTick() : null;
+    if (fb) {
+      const fu = Object.keys(fb.urun).map(k => urunBilgi(k).ico + ' ' + fmtE(fb.urun[k]) + ' ton').join(' · ');
+      const dur = [];
+      if (fb.durum.malzeme) dur.push('🌾 malzeme bitti');
+      if (fb.durum.silo) dur.push('🏚️ silo dolu');
+      if (fb.durum.nakit) dur.push('💸 işletme bedeli ödenemedi');
+      if (fu || dur.length) toast('🏭 Fabrika' + (fu ? ' — ' + fu : '')
+        + (fb.bedel > 0 ? ' · işletme ' + fmt(fb.bedel) : '')
+        + (dur.length ? '<br><span class="sub">' + dur.join(' · ') + ' — üretim DURDU, malzeme kaybolmadı</span>' : ''),
+        dur.length ? 'warn' : '', 'fabrikagun', 9000);
     }
     if (ton > 0 && $('overlay').classList.contains('show') && typeof tarimPanel === 'function') {
       // panel açıksa canlı tazele (oyuncu hasadın geldiğini görsün)
@@ -18223,7 +19020,10 @@ const GIDER_ADI = { yatirim: '🏭 Tesis yatırımı', yakit: '⛽ Yakıt', baki
   //    burada adı olmayan kalem kasadan çıkıyor ama ekranda HİÇ GÖRÜNMÜYOR. Tohum ve maaş
   //    tam bu durumdaydı. Patronun açık isteği: "gelir gider tablosu olacak".
   //    İkisi AYRI tutuluyor: biri değişken (üretimle artar), diğeri sabit (atıl tesis de öder).
-  tohum: '🌰 Tohum ve ekim', maas: '👷 İşçi maaşı' };
+  tohum: '🌰 Tohum ve ekim', maas: '👷 İşçi maaşı',
+  // 🏭 119. yama — FABRIKA ISLETME. Ayni ders: adi olmayan kalem kasadan cikar ama
+  //    ekranda hic gorunmez. Tohum ve maas tam bu durumdaydi.
+  isletme: '🏭 Fabrika işletme' };
 function gider(k, n) { if (!G || !n) return; G.spend = G.spend || {}; G.spend[k] = Math.max(0, (G.spend[k] || 0) + n); }
 const giderToplam = () => Object.values((G && G.spend) || {}).reduce((a, b) => a + b, 0);
 
@@ -18270,7 +19070,26 @@ function yakitIhtiyaciTL() {
   return Math.round(nakit);
 }
 // Krediye konu toplam ihtiyaç — FAZLASI VERİLMEZ (istismar kapısı kapalı)
-const krediIhtiyaci = () => Math.round(maintCost() + yakitIhtiyaciTL());
+// 🏦 112. yama — TARIMDA IHTIYAC BASKA SEY. `maintCost` + `yakitIhtiyaciTL` santral ve
+//    yakit tabanli, tarimda ikisi de 0 → kurtarma kredisi HIC acilmiyordu.
+//    Ciftcinin karsiligi: bir kac gunluk kacinilmaz gider + ekili tarlalarin bir
+//    dongusunun tohum bedeli. Yani "ayaga kalkacak kadar", "buyuyecek kadar" degil.
+const CIFTLIK_KURTARMA_GUN = 3;
+function ciftlikKurtarmaIhtiyaci() {
+  if (!(typeof tarimSektoru === 'function' && tarimSektoru())) return 0;
+  const gunluk = (typeof tarimGunlukGider === 'function') ? tarimGunlukGider() : 0;
+  let tohum = 0;
+  for (const u of (typeof tarlalar === 'function' ? tarlalar() : [])) {
+    if (!u || !u.urun) continue;
+    const B = urunBilgi(u.urun);
+    const vk = (typeof tarlaVerimKat === 'function') ? tarlaVerimKat(u) : 1;
+    tohum += Math.round((B.verim || 0) * vk * (B.taban || 0) * TARIM_AYAR.tohumOran);
+  }
+  return Math.round(gunluk * CIFTLIK_KURTARMA_GUN + tohum);
+}
+const krediIhtiyaci = () => (typeof tarimSektoru === 'function' && tarimSektoru())
+  ? ciftlikKurtarmaIhtiyaci()
+  : Math.round(maintCost() + yakitIhtiyaciTL());
 const krediVar = () => !!(G && G.loan && G.loan.borc > G.loan.odenen);
 const krediKalan = () => krediVar() ? G.loan.borc - G.loan.odenen : 0;
 // Kredi ancak GERÇEKTEN sıkışıkken açılır: ihtiyaç var ve kasan onu karşılamıyor
@@ -18531,7 +19350,9 @@ window.openBank = (tab) => {
     // sebebi söylüyoruz ve ⚡ Acil Nakit yoluna yönlendiriyoruz (o para KASAYA girer, depo kurulur).
     const deposuz = plants().some(u => { const T = PLANT_TYPES[u.t]; const f = fuelOf(u);
       return T && T.fuel && f && (u.fuelH || 0) < yakitSaat() - .2 && bosDepoTonu(f) < 1 && fuelStock(f) < .5; });
-    h += '<p class="sub" style="margin-top:0">' + (tarimSektoru() ? 'Kurtarma kredisi yalnız santral bakımı ve yakıtı için açılır — tarım şirketinde <b>devreye girmiyor.</b>' : 'Tesislerinin bakımı tam ve yakıtı yerinde — <b>kredi gerekmiyor.</b>') + '</p>'
+    // 🏦 112b — 104'te bu cumle "tarimda devreye girmiyor" diyordu ve O AN DOGRUYDU.
+    //    112'de kurtarma kredisi tarima acildi; cumle yalan kaldi, duzeltildi.
+    h += '<p class="sub" style="margin-top:0">' + (tarimSektoru() ? 'Çiftliğin dönüyor ve kasan yetiyor — <b>kredi gerekmiyor.</b>' : 'Tesislerinin bakımı tam ve yakıtı yerinde — <b>kredi gerekmiyor.</b>') + '</p>'
       + (deposuz ? '<p class="sub" style="color:var(--warn)">🛢️ <b>Ama yakıt deposu sorunun var.</b> Yakıtsız duran santralin var ve o yakıtı koyacak <b>boş depon yok</b>. Kurtarma kredisi yalnız <b>depoya sığan</b> yakıtı satın alabilir — bu yüzden bu masraf krediye girmiyor.<br>Yapman gereken: önce bir <b>yakıt deposu kur</b>. Nakdin yetmiyorsa ⚡ <b>Acil Nakit</b> sekmesini kullan; o para kasana girer ve depoyu kurabilirsin.</p>' : '')
       + (tarimSektoru() ? '<p class="sub">Tarım şirketinde santral bakımı ve yakıt kalemi yoktur; tohum ve işçi maaşı doğrudan kasadan çıkar. Nakit sıkıştıysa ⚡ <b>Acil Nakit</b> ya da 🏗️ <b>Büyüme</b> sekmesini kullan.</p>' : '<p class="sub">Kurtarma kredisi yalnız <b>gerçekten sıkıştığında</b> açılır: bakım ya da yakıt masrafını karşılayamadığın anda. Parası doğrudan tamire ve ikmale gider, eline geçmez.</p>');
   } else if (yatVar() || acilVar()) {
@@ -18545,11 +19366,15 @@ window.openBank = (tab) => {
         ? '⚡ Acil nakit küçük ve kısa vadelidir — <b>tek seferde</b> kapatılır. Kapatınca kurtarma kredisi kapısı açılır.'
         : '🏗️ Büyüme kredisi taksitle kapanır. Son taksit ödendiğinde kurtarma kredisi kapısı açılır.') + '</p>';
   } else if (!krediUygun()) {
-    h += '<p class="sub" style="margin-top:0">Bekleyen Tamir - İkmal masrafın <b>' + fmt(ihtiyac) + '</b>, kasanda <b>' + fmt(G.cash) + '</b> var — <b>kendi paranla ödeyebilirsin.</b></p>'
+    h += '<p class="sub" style="margin-top:0">' + (tarimSektoru() ? 'Çiftlik gider ihtiyacın' : 'Bekleyen Tamir - İkmal masrafın')
+      + ' <b>' + fmt(ihtiyac) + '</b>, kasanda <b>' + fmt(G.cash) + '</b> var — <b>kendi paranla ödeyebilirsin.</b></p>'
       + '<p class="sub">Kurtarma kredisi yalnız kasan yetmediğinde açılır. Bankaya faiz ödemek yerine kendi paranı kullan.</p>';
   } else {
     const borc = Math.round(ihtiyac * kat);
-    h += '<p class="sub" style="margin-top:0">Tesislerin duruyor ve kasan yetmiyor. Banka <b>yalnız bu durumda</b> devreye girer.</p>'
+    // 🏦 112b — tarimda tesis DURMUYOR: tohum alinamadigi icin HASAT duruyor.
+    h += '<p class="sub" style="margin-top:0">' + (tarimSektoru()
+        ? 'Tohum paran kalmadı — hasat durdu ve gelir kesildi. Banka <b>yalnız bu durumda</b> devreye girer. Para kasana girmez, <b>çiftlik gider fonuna</b> yazılır: tohum, işçi maaşı ve veteriner için harcanır.'
+        : 'Tesislerin duruyor ve kasan yetmiyor. Banka <b>yalnız bu durumda</b> devreye girer.') + '</p>'
       + '<div style="border:1px solid var(--gold);border-radius:10px;padding:10px 12px;margin:10px 0;background:#1b2942">'
       + '<div style="font-weight:800;color:var(--gold);margin-bottom:6px">🏦 KURTARMA KREDİSİ SÖZLEŞMESİ</div>'
       + '<table class="ledger">'
@@ -18578,8 +19403,21 @@ window.krediAl = () => {
   const borc = Math.round(tutar * kat);
   G.loanNo = (G.loanNo || 0) + 1;
   G.loan = { al: tutar, borc, odenen: 0, kat, ts: bankaZaman(), no: G.loanNo };
-  const r = krediUygula(tutar);
-  toast('🏦 Kredi onaylandı — ' + r.tamir + ' tesis onarıldı, ' + r.ikmal + ' santral ikmal edildi. Borç: ' + fmt(borc), '', null, 0, true);
+  // 🏦 112 — TARIMDA tamir/ikmal yok: para KISITLI FONA yazilir ve yalniz ciftlik
+  //    gideri (tohum/maas/veteriner) ondan harcanabilir. Enerjinin "kasaya girmez"
+  //    ilkesinin tarim karsiligi.
+  let r;
+  if (typeof tarimSektoru === 'function' && tarimSektoru()) {
+    const t2 = tarimD();
+    if (t2) t2.kurtarma = Math.round(((t2.kurtarma || 0) + tutar) * 100) / 100;
+    r = { tamir: 0, ikmal: 0, bakim: 0, yakit: 0, fon: tutar };
+    toast('🏦 Kurtarma kredisi onaylandı — ' + fmt(tutar) + ' <b>çiftlik gider fonuna</b> yazıldı.'
+      + '<br><span class="sub">Bu para tohum, işçi maaşı ve veteriner için harcanır; arazi ya da hayvan alınamaz.</span>'
+      + ' Borç: ' + fmt(borc), '', null, 0, true);
+  } else {
+    r = krediUygula(tutar);
+    toast('🏦 Kredi onaylandı — ' + r.tamir + ' tesis onarıldı, ' + r.ikmal + ' santral ikmal edildi. Borç: ' + fmt(borc), '', null, 0, true);
+  }
   addMail('🏦 Banka', 'Kurtarma kredisi sözleşmesi', fmt(tutar) + ' tutarında kurtarma kredin onaylandı; tamamı doğrudan tamire (' + fmt(r.bakim) + ') ve yakıt ikmaline (' + fmt(r.yakit) + ') aktarıldı.<br><br>Toplam borcun <b>' + fmt(borc) + '</b>. Borca giden pay: her satışın %' + (LOAN_CUT * 100) + '. Bekleyen bakım borcun kasanı aşarsa o satışlardan pay alınmaz.<br><br>Borcun bitene kadar yeni yatırım yapamazsın; yakıt, bakım ve tamir serbesttir.', true);
   beep(440, .15);
   save(); refreshUnitMarkers(); openBank();
@@ -20229,6 +21067,8 @@ function migrate(s) {
       }
     }
   }
+  // 🏦 112 — kurtarma fonu SAYI olmali; Firebase 0'i dusurebilir, undefined aritmetigi NaN yapar.
+  if (!(s.tarim.kurtarma > 0)) s.tarim.kurtarma = 0;
   if (!s.tarim.satim || typeof s.tarim.satim !== 'object') s.tarim.satim = { gun: 0, v: {} };
   if (!s.tarim.satim.v || typeof s.tarim.satim.v !== 'object') s.tarim.satim.v = {};
   s.prodByCat = (s.prodByCat && typeof s.prodByCat === 'object') ? s.prodByCat : {};
@@ -20435,12 +21275,14 @@ function initMap(center, zoom) {
     guvenli('drawOthers', drawOthers);
     guvenli('licTiles', refreshLicenseTiles); // 🏷️ kira filigranı zoom eşiğini (9) işlesin
     guvenli('pazarSehirleri', pazarSehirleriCiz);   // 🏙️ 100f — nufus esigi zoom'a bagli
+    guvenli('kirsalDoku', kirsalCiz);               // 🛣️ 109 — zoom esigi 9
   });
   map.on('moveend', () => {
     if (!(G && G._started)) return;
     if (MAPVIEW !== 'normal') guvenli('drawOverlay', drawOverlay);
     guvenli('drawOthers', drawOthers);
     guvenli('pazarSehirleri', pazarSehirleriCiz);   // 🏙️ 100f — pazar cipleri gorunur alanda
+    guvenli('kirsalDoku', kirsalCiz);               // 🛣️ 109 — yollar + yerlesimler
   });
   map.on('click', e => {
     if (!G || !G._started) return;
@@ -20606,11 +21448,16 @@ function unitIconHTML(u) {
   else if (u.kind === 'tarla') {
     // 🌾 Haritada bütün tarlalar aynı görünüyordu — ne ekildiği de, hasadın hazır olduğu
     //    da belli değildi. Enerjide depo dolunca "DOLU!" diyor; tarlanın karşılığı bu.
-    badge = !u.urun ? '🌱 BOŞ'
+    // 🔴 128 — DURAN TARLA HARITADA NORMAL GORUNUYORDU. Bu dal zincirde
+    //    `else if (!u.on) badge = 'DURDU'` satirindan ONCE oldugu icin devre disi
+    //    bir parsel "%42" ya da "🧺 HAZIR" yaziyordu. Kontrol zincirin basina
+    //    TASINMADI (enerjide duran depo da DURDU yazardi) — yalniz buraya kondu.
+    badge = !u.on ? 'DURDU'
+      : !u.urun ? '🌱 BOŞ'
       : tarlaHazirMi(u) ? '🧺 HAZIR' + (tarlaDongu(u) > 1 ? ' ×' + tarlaDongu(u) : '')
       : '%' + Math.round(tarlaOran(u) * 100);
   }
-  else if (u.kind === 'lojman') badge = '👷 ' + isciCalisan() + '/' + isciKapasite();
+  else if (u.kind === 'lojman') badge = !u.on ? 'DURDU' : '👷 ' + isciCalisan() + '/' + isciKapasite();
   else if (!u.on) badge = 'DURDU';
   else if (T.fuel && (u.fuelH || 0) <= 0) badge = '⛽ BİTTİ';
   else if (T.fuel && u.fuelH < 2) badge = '⛽ AZ';
@@ -20643,7 +21490,7 @@ function unitIconHTML(u) {
       + (hz || !u.urun ? ek : '<b>' + (kalanSa >= 1 ? Math.ceil(kalanSa) + 's' : Math.max(1, Math.ceil(kalanSa * 60)) + 'd') + '</b>')
       + '</span>';
   } else if (u.kind === 'lojman') {
-    visual = tarimKare('lojman', '🏘️', px);
+    visual = tarimKare('lojman', '🏘️', px, kareRenk('lojman'));
   } else if (u.kind === 'plant' && T.kind === 'wind') {
     visual = turbineSVG(px, producing, producing && out > T.mw * 0.5, noconn ? '#ff5c5c' : null);
   } else if (u.kind === 'plant' && u.t.startsWith('coal')) {
@@ -20701,7 +21548,14 @@ window.openOthersHere = (ll, cell) => {
 //    üste biniyordu. Izgara hem referanstaki "yan yana dizili tarlalar" görüntüsünü verir
 //    hem de hangi tarlaya dokunduğunu netleştirir.
 const TARLA_IZGARA = 4;                         // karo başına 4×4 = 16 yuva (limit 13)
-const TARLA_YARICAP = CELL / TARLA_IZGARA * .44; // yuvanın %88'i — komşular değmeden yan yana
+// 📐 117. yama — YEDEK YARICAP ARTIK REFERANS HEKTARDAN TURUYOR.
+// Eskiden `CELL / TARLA_IZGARA * .44` idi: hem KALDIRDIGIMIZ izgara kavramina bagliydi
+// hem de 108'de sekil degisince (birim alan 3,18M -> 4,95M) sessizce sapti.
+// Olculdu: eski sabit yeni sekille ortalama 599 ha veriyordu, oysa referans 384.
+// Bu yuzden `ha` alani dusmus bir kayit migrate'te yanlis boyutta geri geliyordu.
+// 🔑 Fonksiyon, sabit DEGIL: `tarlaBirimAlanOrt()` daha asagida tanimli, ust duzey
+//    sabit olsaydi TDZ'ye duserdi. Sekil bir daha degisirse yedek kendiliginden dogru kalir.
+const tarlaYedekYaricap = () => Math.sqrt(TARLA_REF_HEKTAR / tarlaBirimAlanOrt());
 const TARLA_KOSE = 7;                            // 7 düzensiz kenar: tarla gibi, altıgen gibi değil
 // Tarlanın ızgaradaki YUVA MERKEZİ. `u.ll` yerleştirme anındaki serbest noktadır; onu
 // içinde bulunduğu yuvanın ortasına çekiyoruz — kayıt değişmez, çizim hizalanır.
@@ -20716,17 +21570,34 @@ function tarlaYuvaMerkez(u) {
 //    olceklendigi icin "hedef hektar" karekokle tam tutturulur (olculdu: %0,52 hata,
 //    240 ornek). Birim alan ENLEMDEN BAGIMSIZ: boylam daralmasi alan hesabinda
 //    sadelesiyor. Bu yuzden kimlik basina bir kez onbelleklenebilir.
+// 📐 108. yama — PARSELIN TEK SEKIL URETECI.
+// Patron: "tarlalarimizin sekli daha simetrik olmali". Rakipte tarlalar duz kenarli,
+// uzun kadastro parselleri; bizimki 7 koseli yuvarlak lekeydi.
+// En/boy orani, donus acisi ve kose sapmasi KIMLIKTEN turuyor → ayni tarla her acilista
+// ayni sekli alir, kayit buyumez, eski tarlalar da kendiliginden yeni sekle gecer.
+// ⚠️ Kose sapmasi bilerek KUCUK (%7): makine damgasi gibi durmasin ama KENAR DUZ kalsin.
+// 🔑 Cizim, alan hesabi ve yerlestirme onizlemesi UCU DE burayi cagirir — ayri kopya
+//    sekil matematigi kaciniImaz olarak ayrisir (102. yamanin satis bolmesi dersi).
+function parselKose(id, lat, lon, R) {
+  const kat = Math.max(.25, Math.cos(lat * Math.PI / 180));
+  const oran = 1.25 + hash01(id, 0, 41) * 1.35;     // uzun kenar / kisa kenar
+  const aci = hash01(id, 1, 53) * Math.PI;          // parselin kendi donusu
+  const yc = R / Math.sqrt(oran);                   // alan R^2 ile olceklensin diye
+  const en = yc * oran, boy = yc;
+  const ca = Math.cos(aci), sa = Math.sin(aci);
+  const KOSELER = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+  const pts = [];
+  for (let i = 0; i < 4; i++) {
+    const sx = KOSELER[i][0] * en * (1 + (hash01(id, i, 61) - .5) * .14);
+    const sy = KOSELER[i][1] * boy * (1 + (hash01(id, i, 67) - .5) * .14);
+    pts.push([lat + (sx * sa + sy * ca), lon + (sx * ca - sy * sa) / kat]);
+  }
+  return pts;
+}
 const _birimAlanMemo = Object.create(null);
 function tarlaBirimAlan(id) {
   if (id in _birimAlanMemo) return _birimAlanMemo[id];
-  const kat = Math.cos(39 * Math.PI / 180);
-  const pts = [];
-  for (let i = 0; i < TARLA_KOSE; i++) {
-    const a = (i / TARLA_KOSE) * 2 * Math.PI + hash01(id, i, 17) * .45;
-    const r = (.72 + hash01(id, i, 23) * .52);
-    pts.push([39 + Math.sin(a) * r, 30 + Math.cos(a) * r / kat]);
-  }
-  const v = poligonHektar(pts);
+  const v = poligonHektar(parselKose(id, 39, 30, 1));
   _birimAlanMemo[id] = (v > 0) ? v : 1;
   return _birimAlanMemo[id];
 }
@@ -20744,25 +21615,26 @@ function tarlaBirimAlanOrt() {
 //    harita degismis gibi gorunmesin.
 function tarlaYaricap(u) {
   const ha = (u && u.ha > 0) ? u.ha : 0;
-  if (!(ha > 0)) return TARLA_YARICAP;
+  if (!(ha > 0)) return tarlaYedekYaricap();   // 117 — referans hektardan
   const birim = (u && u.id != null) ? tarlaBirimAlan(u.id) : tarlaBirimAlanOrt();
   return Math.sqrt(ha / birim);
 }
 function tarlaPoligon(u) {
   const ll = tarlaYuvaMerkez(u);
-  const enlemKat = Math.max(.25, Math.cos(ll[0] * Math.PI / 180));  // boylam enlemle daralır
-  const R = tarlaYaricap(u);
-  const pts = [];
-  for (let i = 0; i < TARLA_KOSE; i++) {
-    const a = (i / TARLA_KOSE) * 2 * Math.PI + hash01(u.id, i, 17) * .45;
-    const r = R * (.72 + hash01(u.id, i, 23) * .52);
-    pts.push([ll[0] + Math.sin(a) * r, ll[1] + Math.cos(a) * r / enlemKat]);
-  }
-  return pts;
+  return parselKose(u && u.id != null ? u.id : 1, ll[0], ll[1], tarlaYaricap(u));
 }
 // 🎨 Ürüne ve olgunluğa göre renk — oyuncu haritaya bakınca NE ektiğini ve HAZIR MI olduğunu
 //    tek bakışta görsün. Boş tarla sürülmüş toprak kahvesi.
-const TARLA_RENK = { bugday: '#d9a441', patates: '#8a9a5b', aycicek: '#e8b93a', misir: '#c9a227', domates: '#b5422f' };
+const TARLA_RENK = { bugday: '#d9a441', patates: '#8a9a5b', aycicek: '#e8b93a', misir: '#c9a227', domates: '#b5422f',
+  // 🌱 110. yama — yeni urunlerin tarla rengi
+  arpa: '#cbb36a', sogan: '#b9a98c', karpuz: '#4f8f4a', pancar: '#7d8f6a', elma: '#a8402f',
+  uzum: '#6b4b7a', pamuk: '#e3e0d4', zeytin: '#6f7a46', cay: '#3f7a4a', findik: '#8a6a44' };
+// 🖼️ 110. yama — DOKU TAKMA ADI. Yeni urunlerin kendi `doku_*.webp` dosyasi yok; dosya
+//    yoksa tarayici resmi hic cizmez ve tarla DUZ RENK kalirdi (15 urunun 10'u dokusuz).
+//    Her yeni urun mevcut bir dokuya baglandi — gorsel uretmeye gerek kalmadi.
+const TARLA_DOKU = { arpa: 'bugday', sogan: 'patates', karpuz: 'domates', pancar: 'patates',
+  elma: 'domates', uzum: 'aycicek', pamuk: 'bugday', zeytin: 'patates', cay: 'patates', findik: 'bugday' };
+const tarlaDokuAdi = u => TARLA_DOKU[u] || u;
 // 🖼️ 91. yama — ÜRÜN DOKUSU: poligonun içi düz renk değil, ektiğin ürünün FOTOĞRAFI.
 //    Leaflet'in SVG katmanına bir kez <pattern> enjekte ediliyor; poligon `fill: url(#...)`
 //    ile onu kullanıyor. Görsel yoksa düz renk zaten altta duruyor — kırılmaz.
@@ -20786,7 +21658,7 @@ function tarlaDokuKur() {
     //    desen olarak tekrarlanınca tarlanın ortasından gökyüzü şeridi geçiyordu.
     //    Desen için TEPEDEN çekilmiş, ufuksuz, kenarları birbirine yakın AYRI doku gerekir.
     //    Dosya yoksa tarayıcı resmi hiç çizmez ve altındaki düz renk görünür — kırılmaz.
-    im.setAttribute('href', 'img/doku_' + k + '.webp');
+    im.setAttribute('href', 'img/doku_' + tarlaDokuAdi(k) + '.webp');   // 🖼️ 110 — takma ad
     im.setAttribute('width', '64'); im.setAttribute('height', '64');
     im.setAttribute('preserveAspectRatio', 'xMidYMid slice');
     p.appendChild(im); defs.appendChild(p);
@@ -20881,6 +21753,7 @@ function sektorKabugu() {
   g('viewbtn', !tar); g('allybtn', !tar); g('aucbtn', !tar);
   // 🌾 Çekmece: tarıma ait girişler açılır, enerjiye ait olanlar kapanır.
   g('drawerhayvan', tar); g('draweraly', tar); g('draweraucn', tar); g('drawerview', tar);
+  g('drawertarge', tar);                   // 🧪 107. yama — tarim arastirmasi
   // 🌾 Cekmecedeki kopya giris kapali: alt bardaki 🌾 Ciftlik ayni ekrani aciyor.
   //    `renderHUD` (101b) da ayni seyi yaziyor — iki yazici DEGIL, ikisi de GIZLIYOR.
   g('drawertarim', false);
@@ -20909,6 +21782,11 @@ function sektorKabugu() {
   // 🏙️ 100f — pazar sehirleri YALNIZ tarimda. Sektor degisiminde cizilir/temizlenir;
   //    rebirth location.reload() yapmadigi icin temizlik SART (karo dersinin aynisi).
   if (map) { try { pazarSehirleriCiz(); } catch (e) {} }
+  // 🛣️ 109 — kirsal doku da sektore bagli: tarima girince cizilir, cikinca temizlenir.
+  if (map) { try { kirsalCiz(); } catch (e) {} }
+  // 🌾 113 — bot adlari sektore gore takas edilir (ust duzey sabitler yuklenme aninda
+  //    `G`yi goremedigi icin catal ORADA degil BURADA yapilabiliyor).
+  try { botAdlariTakas(s); } catch (e) {}
   // 🧹 100i — KARO VURGUSU (selRect) SEKTOR DEGISIMINDE DUSER.
   //    `highlightCell`in tarim kapisi yalniz fonksiyon YENIDEN cagrilirsa temizlik
   //    yapiyordu; enerjide bir karoya dokunup rebirth ile tarima gecen oyuncuda
@@ -21909,6 +22787,99 @@ function dolumTxt(kalanMWh, inflowMW) {
 // Artik pazar haritanin KENDISINDE: sehre dokun, kartini gor, pazarini sec.
 // ⚠️ AYRI KATMAN: `overlayLayer` drawOverlay her calistiginda temizleniyor; sehirler
 //    oraya konsa gorunum degisiminde kaybolurdu.
+// ═══════════ 🛣️ 109. yama — KIRSAL DOKU: YOLLAR + YERLESIMLER ═══════════
+// Patron: "rakipte yollar mi gorunuyor... daha ilgi cekici daha detayli daha guzel harita".
+// Olculdu: dunyamiz `L.canvas` uzerine cizilen vektor (tileLayer YOK, cevrimdisi/APK
+// karari) ve zemin TEK DOLGU — bombos yesil slab. Rakipte yerlesim adi, yol, tonlama var.
+// ⚠️ Gercek yol verimiz YOK. Yollari en yakin komsu grafiginden turetiyoruz; orta noktaya
+//    kimlikten gelen kucuk bir kivrim koyuyoruz cunku cetvelle cizilmis duz cizgi YAPAY
+//    durur, hafif kivrim yol gibi durur.
+// 🔒 YALNIZ TARIMDA ve yalniz yakinda: enerjinin gorunumune dokunmuyoruz, uzakta harita
+//    okunmaz olurdu, ve 39.235 kaydi her kaydirmada taramak mobilde kanardi.
+let kirsalLayer = [];
+const KIRSAL_ZOOM = 9;          // bu zoomun altinda hic cizilmez
+const KIRSAL_YERLESIM = 40;     // ekranda en cok bu kadar yerlesim
+const KIRSAL_YOL = 70;          // ve bu kadar yol
+function kirsalTemizle() {
+  kirsalLayer.forEach(l => { try { l.remove(); } catch (e) {} });
+  kirsalLayer = [];
+}
+function kirsalCiz() {
+  if (!map) return;
+  kirsalTemizle();
+  if (!(typeof tarimSektoru === 'function' && tarimSektoru())) return;
+  if (!(G && G._started)) return;
+  const z = zoomNow();
+  if (z < KIRSAL_ZOOM) return;
+  const b = map.getBounds();
+  // 🔴 109'un ILK denemesi SEHIR verisinden yerlesim cizmeye calisti ve COKTU:
+  //    olculdu, tarlanin 19 km cevresinde kayitli yerlesim sayisi 1 idi (Konya).
+  //    Kume SEHIR listesi, koy listesi degil — ciftlik ise tanimi geregi kirsalda.
+  //    Bu yuzden doku artik KOORDINATTAN turetiliyor: veri gerekmiyor, 194 ulkede
+  //    calisiyor, ayni yer her acilista ayni goruniyor (hash deterministik).
+  const g = z >= 13 ? .012 : z >= 11 ? .022 : .055;     // izgara adimi (derece)
+  const y0 = Math.floor(b.getSouth() / g) - 1, y1 = Math.ceil(b.getNorth() / g) + 1;
+  const x0 = Math.floor(b.getWest() / g) - 1, x1 = Math.ceil(b.getEast() / g) + 1;
+  if ((y1 - y0) * (x1 - x0) > 1400) return;             // emniyet: cok genisse hic cizme
+  const cf = Math.max(.25, Math.cos(((b.getSouth() + b.getNorth()) / 2) * Math.PI / 180));
+  // Dugumun GERCEK yeri: izgara kesisimi + kimlikten gelen kayma (cetvel izgarasi olmasin)
+  const dugum = (iy, ix) => [
+    (iy + .5 + (hash01(iy, ix, 7) - .5) * .7) * g,
+    (ix + .5 + (hash01(iy, ix, 11) - .5) * .7) * g,
+  ];
+  const yollar = [];
+  let n = 0;
+  for (let iy = y0; iy <= y1 && n < KIRSAL_YOL; iy++) {
+    for (let ix = x0; ix <= x1 && n < KIRSAL_YOL; ix++) {
+      const A = dugum(iy, ix);
+      // Dogu ve guney komsuya yol — hash karar veriyor, boylece ag SEYREK ve DUZENSIZ
+      if (hash01(iy, ix, 19) < .62) {
+        const B = dugum(iy, ix + 1);
+        const h = hash01(iy, ix, 23) - .5;
+        yollar.push([A, [(A[0] + B[0]) / 2 + (B[1] - A[1]) * h * .22, (A[1] + B[1]) / 2], B]);
+        n++;
+      }
+      if (n < KIRSAL_YOL && hash01(iy, ix, 29) < .55) {
+        const B = dugum(iy + 1, ix);
+        const h = hash01(iy, ix, 31) - .5;
+        yollar.push([A, [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2 + (B[0] - A[0]) * h * .22 / cf], B]);
+        n++;
+      }
+    }
+  }
+  if (yollar.length) {
+    // Iki gecis: once koyu alt cizgi (toprak banket), ustune acik yol — derinlik verir
+    kirsalLayer.push(L.polyline(yollar, {
+      color: '#8d7a53', weight: z >= 13 ? 3.4 : 2.4, opacity: .30,
+      interactive: false, smoothFactor: 2, renderer: VEC || undefined,
+    }).addTo(map));
+    kirsalLayer.push(L.polyline(yollar, {
+      color: '#e4d6b0', weight: z >= 13 ? 1.8 : 1.2, opacity: .60,
+      interactive: false, smoothFactor: 2, renderer: VEC || undefined,
+    }).addTo(map));
+  }
+  // MEZRALAR — yol dugumlerinin kucuk bir kisminda; yakinlasmadan cizilmez
+  if (z >= 12) {
+    let m = 0;
+    for (let iy = y0; iy <= y1 && m < KIRSAL_YERLESIM; iy++) {
+      for (let ix = x0; ix <= x1 && m < KIRSAL_YERLESIM; ix++) {
+        if (hash01(iy, ix, 37) >= .12) continue;        // dugumlerin ~%12'si
+        const A = dugum(iy, ix);
+        const bina = 2 + Math.floor(hash01(iy, ix, 41) * 4);
+        for (let k = 0; k < bina; k++) {
+          const rx = (hash01(iy * 7 + k, ix, 43) - .5) * g * .34;
+          const ry = (hash01(iy, ix * 7 + k, 47) - .5) * g * .34;
+          kirsalLayer.push(L.rectangle(
+            [[A[0] + ry, A[1] + rx], [A[0] + ry + g * .055, A[1] + rx + g * .075 / cf]], {
+            color: '#6e5f44', weight: .8, fillColor: '#cdbb95', fillOpacity: .95,
+            interactive: false, renderer: VEC || undefined,
+          }).addTo(map));
+        }
+        m++;
+      }
+    }
+  }
+}
 let pazarLayer = [];
 const PAZAR_TAVAN = 40;              // ekranda en cok 40 cip — kalabalik harita okunmaz
 function pazarSehirleriTemizle() {
@@ -21985,7 +22956,12 @@ window.tarimSehirKarti = (nm, la, lo) => {
     for (const k of [5, 4, 3]) {
       const t2 = talep && talep[k];
       if (!t2) continue;
-      const kalan = Math.max(0, (t2.kota || 0) - (t2.satilan || 0));
+      // 🔴 129. yama — `satilan` DIYE BIR ALAN YOK. `sehirUrunTalep` bandi
+      //    { kota, kalan, fiyat, sert, yok } donuyor; o alan hep undefined oldugu
+      //    icin bu satir **her zaman TAM KOTAYI** yaziyordu. Kota bitmisken bile kart
+      //    "C 114 t kalan" diyor ve asagidaki soluklastirma hic devreye girmiyordu.
+      //    Band zaten gunluk defterden turetilmis dogru `kalan`i tasiyor.
+      const kalan = Math.max(0, (typeof t2.kalan === 'number' && isFinite(t2.kalan)) ? t2.kalan : (t2.kota || 0));
       kal += '<span style="opacity:' + (kalan > 0 ? '1' : '.4') + '">' + (typeof kaliteAd === 'function' ? kaliteAd(k) : k)
         + ' ' + fmtN(Math.round(kalan)) + 't</span> ';
     }
@@ -22597,12 +23573,29 @@ function openCellSheet(c, ll, mode) {
   const botsHere = BOT_PLANTS.filter(bp => cellId(bp.ll) === c);
   const licensed = !!G.licenses[c];
   const cityNm = nearestCityName(c);
-  $('cs_title').textContent = (infoOnly ? 'ℹ️ Konum Bilgisi — ' : '🏗️ İnşa — ') + (cityNm ? cityNm + ' · ' : '') + cellCode(c);
+  // 🌾 123. yama — TARIMDA KARO KODU YOK. `cellCode(c)` (orn. NL-11) bir KARO kimligi;
+  //    patron karoyu ekrandan kaldirdi, ciftcinin bildigi birim PARSEL ve BOLGE (il).
+  $('cs_title').textContent = (infoOnly ? 'ℹ️ Konum Bilgisi' : '🏗️ İnşa')
+    + (cityNm ? ' — ' + cityNm : '') + (tarimSektoru() ? '' : (cityNm ? ' · ' : ' — ') + cellCode(c));
   const wx = liveWx(c);
   surveyCell(c);
   if (infoOnly) {
     // KONUM DETAYLARI YALNIZ BİLGİ EKRANINDA (patron isteği) — inşa ekranı sade katalog
-    $('cs_quality').innerHTML = wx ?
+    // 🌾 122. yama — BU SERIT TARIMDA ENERJI VERISI GOSTERIYORDU: ruzgar m/s, bulut
+    //    orani, gunduz/gece. Ucu de enerji uretim girdisi ve tarim motoru hicbirini
+    //    OKUMUYOR (olculdu: hydroQGeo ile sv.sunH yalniz hidro/gunes uretiminde geciyor).
+    //    Ciftcinin o noktada gercekten verdigi karar iki sayida: ARAZI BEDELI ve RUHSAT.
+    // ⚠️ Asagidaki ifadenin icindeki `tarimSektoru() ? ... : ...` dallari artik
+    //    ulasilmaz; bilerek korundu (cok uzun sablon satirlarini bolmek riskli).
+    const _tarimSerit = () => {
+      const p = ll || cellCenter(c);
+      const bl = (typeof bolgeBul === 'function') ? bolgeBul(p) : null;
+      const rs = !!(bl && typeof bolgeRuhsatliMi === 'function' && bolgeRuhsatliMi(bl.cell));
+      return '<span>🌾 <b>Arazi:</b></span><span><b>' + fmt(araziFiyatHa(p)) + '</b> / hektar</span>'
+        + '<span>' + (rs ? '📜 <b class="pos">ruhsatlı</b>' : '📜 ruhsat yok') + '</span>'
+        + '<span class="sub">' + (bl ? bl.ad : 'ıssız arazi') + '</span>';
+    };
+    $('cs_quality').innerHTML = tarimSektoru() ? _tarimSerit() : wx ?
       (tarimSektoru()
         ? `<span>🏢 <b>CANLI:</b></span><span>🌬️ <b>${(wx.w ?? 0).toFixed(1)} m/s</b></span><span>☁️ <b>%${wx.cloud ?? 0}</b></span><span>${wx.day ? '☀️ gündüz' : '🌙 gece'}</span>`
         : `<span>🏢 <b>CANLI:</b></span><span>🌬️ <b>${(wx.w ?? 0).toFixed(1)} m/s</b> (100m${windCurve(wx.w + NEWBIE_WIND * newbieAid()) === 0 && wx.w > 25 ? ' — FIRTINA!' : windCurve(wx.w + NEWBIE_WIND * newbieAid()) < .1 ? ' — türbin dönmez' : ''})</span><span>☁️ <b>%${wx.cloud ?? 0}</b></span><span>${wx.day ? '☀️ gündüz' : '🌙 gece'}</span>${newbieAid() > .01 ? `<span style="color:var(--acc)">🌱 <b>Yeni şirket takviyesi: +${(NEWBIE_WIND * newbieAid()).toFixed(1)} m/s · bulut etkisi -%${Math.round(NEWBIE_CLOUD * newbieAid() * 100)}</b></span>` : ''}${q.geo ? '<span>♨️ <b>JEOTERMAL</b></span>' : ''}`) :
@@ -22613,16 +23606,19 @@ function openCellSheet(c, ll, mode) {
       // 🔗 ORTAK HÜKÜM (11 Eyl): ülke raporu da AYNI fonksiyondan konuşuyor — bkz. havaNotu.
       const wNote = havaNotu('w', sv.wAvg), sNote = havaNotu('s', sv.sunH);
       svRows = `
+      ${tarimSektoru() ? `<tr><td colspan="2" class="sub">🌦️ <b>İKLİM — bilgi amaçlı.</b> Ürün verimi <b>parselin hektarına</b> bağlı; rüzgar, güneşlenme ve yağış tarımda verimi <b>etkilemiyor</b>.</td></tr>` : ''}
       <tr><td>⛰️ Rakım</td><td>${sv.elev != null ? fmtN(sv.elev) + ' m' : '—'}</td></tr>
       ${tarimSektoru() ? `<tr><td>🌬️ Rüzgar (7 gün ort.)</td><td>${sv.wAvg != null ? sv.wAvg.toFixed(1) + ' m/s' : '—'}</td></tr>`
         : `<tr><td>🌬️ Rüzgar 100m (7 gün ort.)</td><td class="${sv.wAvg >= 6 ? 'pos' : sv.wAvg < 4 ? 'neg' : ''}">${sv.wAvg != null ? sv.wAvg.toFixed(1) + ' m/s — ' + wNote : '—'}</td></tr>`}
       <tr><td>☀️ Güneşlenme (7 gün ort.)</td><td class="${sv.sunH >= 7 ? 'pos' : sv.sunH < 5 ? 'neg' : ''}">${sv.sunH != null ? sv.sunH.toFixed(1) + ' saat/gün — ' + sNote : '—'}</td></tr>
       ${(() => { // 💧 HES verimi (patron: hidro verimi Bilgi ekranında yazmıyordu) — rakım + iklimden
         const hq = hydroQGeo(c, cellQuality(c).hydro);
-        return `<tr><td>💧 Su kaynağı (${tarimSektoru() ? 'sulama gücü' : 'HES verimi'})</td><td class="${hq >= 1 ? 'pos' : hq < .75 ? 'neg' : ''}">×${hq.toFixed(2)} — ${havaNotu('h', hq)} <span class="sub">(rakım + yağışlı iklim)</span></td></tr>`;
+        // 🌾 122 — "sulama gucu" tarimda ENERJI sayisina uydurulmus bir tarim anlamiydi;
+        //    hicbir tarim hesabi bu carpani okumuyor. Iddiasiz ada cekildi.
+        return `<tr><td>💧 ${tarimSektoru() ? 'Yağış eğilimi' : 'Su kaynağı (HES verimi)'}</td><td class="${hq >= 1 ? 'pos' : hq < .75 ? 'neg' : ''}">×${hq.toFixed(2)} — ${havaNotu('h', hq)} <span class="sub">(rakım + yağışlı iklim)</span></td></tr>`;
       })()}`;
     } else if (sv && sv.err) svRows = `<tr><td colspan="2">🏢 Saha verisi alınamadı (çevrimdışı olabilirsin) — <span class="lnk" onclick="retrySurvey('${c}')">tekrar dene</span></td></tr>`;
-  else svRows = `<tr><td colspan="2">🏢 Saha keşfi yükleniyor... (canlı rakım + rüzgar + güneş verisi)</td></tr>`;
+  else svRows = `<tr><td colspan="2">${tarimSektoru() ? '🌾 Arazi keşfi yükleniyor... (rakım ve iklim verisi)' : '🏢 Saha keşfi yükleniyor... (canlı rakım + rüzgar + güneş verisi)'}</td></tr>`;
     $('cs_occupancy').innerHTML = `
     <table class="ledger" style="margin:4px 0">
       ${svRows}
@@ -22631,7 +23627,17 @@ function openCellSheet(c, ll, mode) {
       ${licensed && !tarimSektoru() ? `<tr><td>Bugün kalan talep</td><td class="${demandLeft(c) < 10 ? 'neg' : ''}">${fmtN(demandLeft(c))} MWh</td></tr>` : ''}
       <tr><td>🗺️ Zemin</td><td>${isLand(ll || cellCenter(c)) ? (tarimSektoru() ? '🏞️ <b>Kara</b> <span class="sub">— tarla ve ağıl kurulabilir</span>' : '🏞️ <b>Kara</b> <span class="sub">— her tür tesis kurulabilir</span>') : (tarimSektoru() ? '🌊 <b>Deniz</b> <span class="neg">— buraya tarla kurulamaz</span>' : '🌊 <b>Deniz</b> <span class="neg">— yalnız offshore rüzgar ve yüzer güneş</span>')}</td></tr>
       ${tarimSektoru() ? '' : `<tr><td>Maks birim <span style="color:var(--dim)">(oyuncu başına — kimse kimseyi engelleyemez)</span></td><td>${mine.length} / ${cellCap()}${cellCap() < MAX_PER_CELL + CELLCAP_MAX ? ' <span class="sub">🧱 araştırmayla ' + (MAX_PER_CELL + CELLCAP_MAX) + '</span>' : ''}</td></tr>`}
-      <tr><td>Sahip</td><td>${licensed ? '<b class="pos">SEN 📜</b>' : 'Devlet'}</td></tr>
+      ${tarimSektoru() ? (() => {
+        // 🌾 123 — TARIMDA OLCUT KARO RUHSATI DEGIL BOLGE (IL) RUHSATI (100e). Eski satir
+        //    `G.licenses[c]` okuyordu; o defter tarimda bos oldugu icin ciftlik ruhsati
+        //    OLAN bolgede bile "Devlet" yaziyor ve iki satir yukaridaki serit ile
+        //    CELISIYORDU (olculdu: serit "📜 ruhsatli", tablo "Sahip Devlet").
+        const p = ll || cellCenter(c);
+        const bl = (typeof bolgeBul === 'function') ? bolgeBul(p) : null;
+        if (!bl) return `<tr><td>📜 Çiftlik ruhsatı</td><td>gerekmez <span class="sub">— yakında idari merkez yok</span></td></tr>`;
+        const rs = (typeof bolgeRuhsatliMi === 'function') && bolgeRuhsatliMi(bl.cell);
+        return `<tr><td>📜 ${bl.ad || 'Bölge'} çiftlik ruhsatı</td><td>${rs ? '<b class="pos">SENDE ✅</b>' : '<span class="neg">yok</span> <span class="sub">— şehre dokunup al</span>'}</td></tr>`;
+      })() : `<tr><td>Sahip</td><td>${licensed ? '<b class="pos">SEN 📜</b>' : 'Devlet'}</td></tr>`}
       ${botsHere.length ? `<tr><td>Buradaki rakipler</td><td>${botsHere.map(b => BOTS[b.b]).join(', ')}</td></tr>` : ''}
     </table>`;
   } else {
@@ -23170,7 +24176,7 @@ function openUnitSheet(id) {
         return `<button class="bigsell" onclick="refuelUnit(${u.id})" ${have < .5 ? 'disabled' : ''}>⛽ ${F.nm} İkmali — ${fmtN(Math.min(need, have))} / ${fmtN(need)} ton (şirket stoğu: ${fmtN(have)})</button>
         ${have < .5 ? `<p style="color:var(--warn);font-size:12px">${F.ico} Stok yok — 🏗️ İnşa &gt; <b>Yakıt</b> sekmesinden <b>${f === 'coal' ? 'Kömür Deposu' : 'LNG Tankı'}</b> kur, depoya dokunup yakıt al.</p>` : ''}`;
       })() : ''}
-      ${aucSetupEksik(u) ? `<p style="color:var(--danger);font-size:12px">🚫 KURULUM EKSİK — ${tarimSektoru() ? 'varlık' : 'tesis'} DEVRE DIŞI: ${!G.licenses[u.cell] ? '📜 bölge ruhsatı' : ''}${!G.licenses[u.cell] && !officeCovers(u.cell) ? ' + ' : ''}${!officeCovers(u.cell) ? '🏢 bölge ofisi (menzil)' : ''} gerekli. Alımlar tamamlanınca kendiliğinden aktifleşir.</p>` : ''}
+      ${aucSetupEksik(u) ? `<p style="color:var(--danger);font-size:12px">🚫 KURULUM EKSİK — ${tarimSektoru() ? 'varlık' : 'tesis'} DEVRE DIŞI: ${tarimSektoru() ? '📜 bu bölgenin <b>çiftlik ruhsatı</b> gerekli — haritada şehre dokunup al' : `${!G.licenses[u.cell] ? '📜 bölge ruhsatı' : ''}${!G.licenses[u.cell] && !officeCovers(u.cell) ? ' + ' : ''}${!officeCovers(u.cell) ? '🏢 bölge ofisi (menzil)' : ''} gerekli`}. Alımlar tamamlanınca kendiliğinden aktifleşir.</p>` : ''}
       ${!sts.length ? '<p style="color:var(--warn);font-size:12px">🔌 Bağlantısız: üretim boşa gidiyor! Aşağıdan bir istasyona bağlan ya da kareye küçük bir Pil İstasyonu kur.</p>' : ''}
       ${(() => {
         // 🔗 TEK BAĞLAN DÜĞMESİ (patron: "bir sürü bağlan düğmesi olmaz — sadece Bağlan yazacak,
@@ -23360,7 +24366,11 @@ window.toggleUnit = id => {
   if (!u.on && st2 && st2.disch) { toast('⚡ Bağlı depo boşaltılıyor — bitince yeniden başlatabilirsin', 'warn'); return; }
   // 🚫 kurulum eksik kilidi (patron): ruhsat+ofis tamamlanmadan devralınan tesis AÇILAMAZ
   if (!u.on && aucSetupEksik(u)) {
-    toast('🚫 Kurulum eksik: bu bölgeye ' + (!G.licenses[u.cell] ? '📜 ruhsat' : '') + (!G.licenses[u.cell] && !officeCovers(u.cell) ? ' ve ' : '') + (!officeCovers(u.cell) ? '🏢 ofis (menzil)' : '') + ' al — tesis o zaman aktifleşir', 'warn', null, 0, true);
+    // 🌾 116b — tarimda karo ruhsati ve ofis gecersiz (100e); metin de oyle olmali.
+    toast(tarimSektoru()
+      ? '🚫 Kurulum eksik: bu bölgenin 📜 <b>çiftlik ruhsatı</b> gerekli — haritada şehre dokunup al, tarla o zaman çalışır'
+      : '🚫 Kurulum eksik: bu bölgeye ' + (!G.licenses[u.cell] ? '📜 ruhsat' : '') + (!G.licenses[u.cell] && !officeCovers(u.cell) ? ' ve ' : '') + (!officeCovers(u.cell) ? '🏢 ofis (menzil)' : '') + ' al — tesis o zaman aktifleşir',
+      'warn', null, 0, true);
     return;
   }
   // 🌍 MÜHÜR: emisyon ihlali nedeniyle mühürlenen tesis elle açılamaz
@@ -24817,6 +25827,7 @@ document.querySelectorAll('#drawer button[data-act]').forEach(b => b.addEventLis
   else if (act === 'tarim') tarimPanel();   // 🌾 62. yama
   // 🌾 101. yama — tarima ozel cekmece girisleri
   else if (act === 'hayvan') { hideSheets(); hayvanPaneli(); }
+  else if (act === 'targe') { hideSheets(); tarimArge(); }
   else if (act === 'tally') { hideSheets(); openAllySheet(); }
   else if (act === 'tauc') { hideSheets(); seedAucMarket(); openAucSheet(); }
   else if (act === 'tview') { hideSheets(); openViewSheet(); }
@@ -24836,7 +25847,11 @@ document.querySelectorAll('#drawer button[data-act]').forEach(b => b.addEventLis
 $('sellallbtn').addEventListener('click', () => { sellAll(1); renderPriceSheet(); });
 $('sellhalfbtn').addEventListener('click', () => { sellAll(.5); renderPriceSheet(); });
 $('claimbtn').addEventListener('click', claimWeek);
-$('helpbtn').addEventListener('click', openHelp);
+// ❓ 122 — IKINCI KAPI. 103 cekmecedeki yolu sektore bagladi (`act === 'help'`), bu
+//    dinleyici atlanmisti. Bugun ulasilamiyor (olculdu: helpbtn `menusheet` icinde ve
+//    📋 Gorevler tarimda kapali, offsetParent null) ama gorevler bir gun tarimda
+//    acilirsa ENERJI yardimi beraberinde gelirdi. Yardim tek kapidan gecsin.
+$('helpbtn').addEventListener('click', () => { if (tarimSektoru()) openHelpTarim(); else openHelp(); });
 $('bugbtn').addEventListener('click', reportBug);
 // 🏦 Bankanın girişi: üstteki KASA rakamı. Alt bar dolu, oyuncu zaten sürekli
 // parasına bakıyor — parasına dokununca finans ekranının açılması en sezgisel yol.
@@ -24880,6 +25895,13 @@ $('demolink').addEventListener('click', () => {
       const simdiReel = guvenliZaman();
       if (demoKaymaMs > 0) {
         for (const u of (G.units || [])) if (u && u.kind === 'tarla' && u.ekildi) u.ekildi -= demoKaymaMs;
+        // 🏭 127. yama — KARDES DAMGALAR ATLANMIS. 119'un `u.basladi`si (fabrika dongusu)
+        //    ve 107'nin `argeAktif.biter`i (arastirma bitisi) bu listede yoktu:
+        //    demo kapaninca ikisi de GELECEGE kayiyor, yani butun fabrikalar
+        //    "isliyor %0"da donuyor ve $120M odenen arastirma demo kaymasi kadar uzuyordu.
+        // ⚠️ Ders: yeni bir zaman damgasi eklerken kardes damgalarin KIRPILDIGI yeri greple.
+        for (const u of (G.units || [])) if (u && u.kind === 'fabrika' && u.basladi) u.basladi -= demoKaymaMs;
+        if (G.tarim && G.tarim.argeAktif && G.tarim.argeAktif.biter) G.tarim.argeAktif.biter -= demoKaymaMs;
         const st = (G.tarim && Array.isArray(G.tarim.stok)) ? G.tarim.stok : [];
         for (const l of st) if (l && l.ts) l.ts -= demoKaymaMs;
       }
