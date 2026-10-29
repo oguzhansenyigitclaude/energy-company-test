@@ -1465,14 +1465,14 @@
 // depoya dokun → içindeki enerjiyi sat. Kare başına OYUNCU BAŞI limit (kimse kimseyi kilitleyemez).
 
 const $ = id => document.getElementById(id);
-const BUILD_TAG = 'Prototip 1.0 (2026-10-29 06:06)'; // deploy.js yayında tarih damgası ekler
+const BUILD_TAG = 'Prototip 1.0 (2026-10-29 06:11)'; // deploy.js yayında tarih damgası ekler
 // 📦 GÜNCELLEME NOTU (38. tur, patron: "her güncelleme sonrası güncelleme notu şeklinde tüm
 //    oyunculara posta gitsin, güncellenen şeyler anlatılsın"). Oyuncu bu etiketi taşıyan sürümü
 //    İLK açtığında `surumNotuPostala()` kutusuna düşürür (bir kez). Sunucuya yazılmaz.
 //    ⚠️ HER YAYINDA: `etiket`i yükselt ve maddeleri yeniden yaz — deploy.js etiket değişmemişse
 //    yayını REDDEDER (bekçi). Maddeler OYUNCU diliyle, teknik terimsiz.
 const SURUM_NOTU = {
-  etiket: '2026-10-29',
+  etiket: '2026-10-29b',
   baslik: '🚜 Güncelleme notu — bütün araç fotoğrafları yenilendi, bayiye süzgeç geldi',
   maddeler: [
     '🚜 <b>BÜTÜN ARAÇ FOTOĞRAFLARI YENİLENDİ.</b> Yirmi üç fotoğrafın yirmi üçü bitti. Artık hepsi yandan değil <b>ön çaprazdan</b> — otomobil tanıtımlarındaki açı — ve kadrajı dolduruyor. On traktörün onu da birbirinden <b>ayrı görünüyor</b>: telli çelik tekerlekli, dar üçgen ön düzenli, çıplak metal gövdeli, bahçe tipi, tenteli, rolbarlı ve cam kabinli.',
@@ -1480,7 +1480,7 @@ const SURUM_NOTU = {
     '📸 <b>KARTTAKİ FOTOĞRAF BÜYÜDÜ.</b> Ölçtük: telefonda 512 pikselik fotoğrafımız yalnız 122 piksel çiziliyor, kutunun geri kalanı <b>boş gri bant</b> olarak duruyordu — bant fotoğraftan büyüktü. Bant kalktı, fotoğraf büyüdü.',
     '🚜 <b>TRAKTÖR KARTI ARTIK NE AÇTIĞINI SÖYLÜYOR.</b> Yeni bir satır geldi: bu traktör katalogdaki kaç ekipmanı çekebiliyor. En küçük antikada sekizde bir, üst sınıfta sekizde sekiz.',
     '🚦 <b>BOŞA PARA HARCATMIYORUZ.</b> İş süresinin bir alt sınırı var ve çok hızlı bir makine küçük tarlada o sınıra çarpıyor; yani fazladan ödenen paranın orada karşılığı olmuyor. Kart bunu artık <b>satın almadan önce</b> söylüyor: hangi büyüklüğün altında hızın tamamını kullanamayacağın yazıyor.',
-    '🏆 <b>SIRALAMA EKRANI TEMİZLENDİ.</b> Başlıkta üç ayrı kapatma yolu vardı, tek kaldı. Oyuncuların yanındaki yuvarlak artık iki durumu da gösteriyor: <b>yeşil çevrimiçi, kırmızı çevrimdışı</b>.',
+    '🏆 <b>SIRALAMA EKRANI TEMİZLENDİ.</b> Başlıkta üç ayrı kapatma yolu vardı, tek kaldı. Oyuncuların yanındaki yuvarlak artık iki durumu da gösteriyor: <b>yeşil çevrimiçi, kırmızı çevrimdışı</b>. Rakip şirket adları da elden geçti: artık hepsi kuruldukları ile yakışır adlar taşıyor.',
     '🌐 <b>ÇEVİRİ EKSİKLERİ.</b> Bayideki turuncu uyarılardan biri yirmi dilin hepsinde Türkçe kalıyordu; o ve yeni gelen bütün yazılar yirmi dile çevrildi.',
     '💬 <b>Ve her zamanki gibi:</b> hata bulana ve güzel öneri getirene <b>100 İmtiyaz Puanına kadar</b> ödül veriyoruz. Posta kutusundan yazabilirsin.',
   ],
@@ -1589,6 +1589,8 @@ window.dilSec = l => {
 // LOCALE yalnız SAYI/TARİH biçimini izler.
 const SOZLUK = {
 en: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'This facility does not take direct offers - you can buy it from the 🔨 Auction.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Implements it can pull',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -1923,7 +1925,6 @@ en: {
   '📩 {0} teklifini reddetti — {1} iade edildi': '📩 {0} rejected your offer — {1} refunded',
   'bilinmeyen şirket': 'unknown company',
   '… ve {0} kalem daha': '… and {0} more entries',
-  '🤖 Bu tesis bir bot şirketine ait — gerçek teklif gönderilemez. 🔨 Müzayededen alım yapabilirsin.': '🤖 This facility belongs to a bot company — a real offer cannot be sent. You can buy from the 🔨 Auction instead.',
   '🌐 Teklif göndermek için çevrimiçi olmalısın': '🌐 You must be online to send an offer',
   '⏳ Bu tesis için zaten bekleyen teklifin var': '⏳ You already have a pending offer for this facility',
   'Satın alma teklifi': 'Purchase offer',
@@ -2152,6 +2153,8 @@ en: {
 },
 // DIL-OTOMATIK-BASLA — tools/dil-entegre.js üretti (19 dil, dil başına bir ajan); elle düzenleme buraya DEĞİL, ajana/betiğe
 de: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Diese Anlage nimmt keine Direktangebote an - du kannst sie über die 🔨 Auktion kaufen.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Ziehbare Geräte',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -2464,6 +2467,8 @@ de: {
 'Kapat': 'Schließen'
 },
 fr: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Ce site naccepte pas doffre directe - vous pouvez lacheter via la 🔨 enchère.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Outils tractables',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -2776,6 +2781,8 @@ fr: {
 'Kapat': 'Fermer'
 },
 es: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Esta instalación no acepta ofertas directas - puedes comprarla en la 🔨 subasta.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Aperos que puede tirar',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -3088,6 +3095,8 @@ es: {
 'Kapat': 'Cerrar'
 },
 it: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Questo impianto non accetta offerte dirette - puoi acquistarlo dalla 🔨 asta.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Attrezzi trainabili',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -3400,6 +3409,8 @@ it: {
 'Kapat': 'Chiudi'
 },
 pt: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Esta instalação não aceita ofertas diretas - pode comprá-la no 🔨 leilão.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Implementos que puxa',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -3712,6 +3723,8 @@ pt: {
 'Kapat': 'Fechar'
 },
 ru: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Этот объект не принимает прямые предложения - купите его на 🔨 аукционе.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Тянет навесного',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -4024,6 +4037,8 @@ ru: {
 'Kapat': 'Закрыть'
 },
 zh: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': '该设施不接受直接报价 — 可在 🔨 拍卖中购买。',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': '可牽引器具',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -4336,6 +4351,8 @@ zh: {
 'Kapat': '关闭'
 },
 ja: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'この施設は直接のオファーを受け付けません — 🔨 オークションで購入できます。',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': '牽引できる作業機',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -4648,6 +4665,8 @@ ja: {
 'Kapat': '閉じる'
 },
 ko: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': '이 시설은 직접 제안을 받지 않습니다 - 🔨 경매에서 구매할 수 있습니다.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': '견인 가능 작업기',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -4960,6 +4979,8 @@ ko: {
 'Kapat': '닫기'
 },
 id: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Fasilitas ini tidak menerima penawaran langsung - belilah lewat 🔨 lelang.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Implemen yang bisa ditarik',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -5272,6 +5293,8 @@ id: {
 'Kapat': 'Tutup'
 },
 pl: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Ten obiekt nie przyjmuje ofert bezpośrednich - możesz go kupić na 🔨 aukcji.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Uciągnie narzędzi',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -5584,6 +5607,8 @@ pl: {
 'Kapat': 'Zamknij'
 },
 ar: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'هذه المنشأة لا تقبل العروض المباشرة - يمكنك شراؤها من 🔨 المزاد.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'معدات يمكن سحبها',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -5896,6 +5921,8 @@ ar: {
 'Kapat': 'إغلاق'
 },
 th: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'สิ่งอำนวยความสะดวกนี้ไม่รับข้อเสนอโดยตรง - ซื้อได้จาก 🔨 การประมูล.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'อุปกรณ์ที่ลากได้',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -6208,6 +6235,8 @@ th: {
 'Kapat': 'ปิด'
 },
 nl: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Deze installatie neemt geen directe biedingen aan - koop hem via de 🔨 veiling.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Trekbare werktuigen',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -6520,6 +6549,8 @@ nl: {
 'Kapat': 'Sluiten'
 },
 ms: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Kemudahan ini tidak menerima tawaran terus - anda boleh membelinya di 🔨 lelong.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Alat yang boleh ditarik',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -6832,6 +6863,8 @@ ms: {
 'Kapat': 'Tutup'
 },
 fil: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Hindi tumatanggap ng tuwirang alok ang pasilidad na ito - mabibili ito sa 🔨 subasta.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Mga kagamitang kayang hilahin',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -7144,6 +7177,8 @@ fil: {
 'Kapat': 'Isara'
 },
 vi: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Cơ sở này không nhận chào giá trực tiếp - bạn có thể mua tại 🔨 phiên đấu giá.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Nông cụ kéo được',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -7456,6 +7491,8 @@ vi: {
 'Kapat': 'Đóng'
 },
 uk: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': 'Цей об’єкт не приймає прямі пропозиції - купіть його на 🔨 аукціоні.',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': 'Тягне знарядь',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -7768,6 +7805,8 @@ uk: {
 'Kapat': 'Закрити'
 },
 zht: {
+  // 🤖 320 — teklif toasti: bot sozu kalkti
+  'Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.': '該設施不接受直接報價 — 可在 🔨 拍賣中購買。',
   // 🚜 317 — cekebildigi ekipman
   'Çekebildiği ekipman': '可牽引器具',
   // 🏷️ 316 — bayi alt tur cipleri
@@ -19235,7 +19274,7 @@ window.offerBuy = oid => {
   const o = window.__lastOther;
   if (!o || o.oid !== oid) return;
   if (!o.net || !o.netOwner) {
-    toast(CEV('🤖 Bu tesis bir bot şirketine ait — gerçek teklif gönderilemez. 🔨 Müzayededen alım yapabilirsin.'), 'warn', null, 8000);
+    toast(CEV('Bu tesis doğrudan teklif kabul etmiyor — 🔨 Müzayededen alım yapabilirsin.'), 'warn', null, 8000);
     return;
   }
   if (!NET.on()) { toast(CEV('🌐 Teklif göndermek için çevrimiçi olmalısın'), 'warn'); return; }
@@ -20265,7 +20304,7 @@ window.openLeaderboard = (tab) => {
       const ligAdet = ligRows.length, ligSira = ligRows.findIndex(r => r.me) + 1;
       el.innerHTML = `<table class="ledger">${rows.slice(0, 20).map(satir).join('')}${ben > 20 ? satir(rows[ben - 1], ben - 1) : ''}</table>
         <p class="sub">🏅 <b>Kendi liginde sıran: #${ligSira || '—'}</b> <span style="opacity:.75">(${ligAdet} ${olcekOf(benLig).nm})</span> — ödül KÜRESEL sıradan değil, <b>KENDİ liginde</b> yarıştığın sıradan ödenir.<br>
-        <span style="opacity:.75">⚠️ 🤖 işaretli satırlar simülasyondur, ödül sıralamasına <b>girmez</b>. Ödül <b>GEÇEN</b> haftanın tablosundan ödenir; yukarıdaki tablo <b>BU</b> haftadır. Birincilik ödülü en az <b>3 rakip</b> ister.</span></p>
+        <span style="opacity:.75">⚠️ Ödül sıralaması yalnız <b>gerçek oyuncuları</b> sayar. Ödül <b>GEÇEN</b> haftanın tablosundan ödenir; yukarıdaki tablo <b>BU</b> haftadır. Birincilik ödülü en az <b>3 rakip</b> ister.</span></p>
         <p class="sub">🎁 <b>Senin ligin — ${olcekOf(benLig).ico} ${olcekOf(benLig).nm}</b><br>
         ${benLig <= KATKI_PARA_LIG
           ? '· NAKİT: #1 <b>' + fmt(KATKI_ODUL[benLig][0]) + '</b> · #2 ' + fmt(KATKI_ODUL[benLig][1]) + ' · #3 ' + fmt(KATKI_ODUL[benLig][2]) + ' · ilk 10 ' + fmt(KATKI_ODUL[benLig][3]) + ' · katkısı olan herkese ' + fmt(KATKI_ODUL[benLig][4])
@@ -32885,7 +32924,7 @@ function openCellSheet(c, ll, mode) {
              : `<button class="bigsell" style="color:var(--danger)" onclick="dropLicenseAsk('${c}')">🚪 Bölgeyi Terk Et${cellAssets(c).length ? ' — ' + cellAssets(c).length + ' tesisi sat' : ' (ruhsatı bırak)'}</button>`}`}`
       + (() => { // 🏭 ihale panelinin HEMEN ÜSTÜ: karo ne kadar kalabalık?
         if (tarimSektoru()) return ''; const d = cellDensity(c);
-        const simNot = d.sim ? ` <span class="sub">· 🤖 ${d.sim} simülasyon tesisi (vergi üretmez)</span>` : '';
+        const simNot = d.sim ? ` <span class="sub">· ${d.sim} tesis vergi üretmiyor</span>` : '';
         if (!d.adet) return `<p class="sub" style="margin:8px 0 2px">🏭 Bu karoda <b>henüz gerçek oyuncu santrali yok</b> — ihaleyi kazanırsan vergi toplayacağın üretim de yok demektir.${simNot}</p>`;
         // ⚠️ KURULU GÜÇ (MW) BİLEREK GÖSTERİLMİYOR (patron 26 Ağu): "burdan hesap yapıp
         // ihaleye öyle girerler, biraz risk olsun." MW verilirse vergi geliri neredeyse
@@ -34329,7 +34368,8 @@ function renderMenu() {
   // sunucu bağlıysa GERÇEK oyuncular listelenir
   // gerçek oyuncular + bot şirketler (botlar YAVAŞ gelişir — gerçek oyuncu hep önde olabilir)
   const rows = (NET.on() ? NET.list().map(p => ({ nm: p.nm + (p.online ? ' ●' : ''), raw: p.nm, w: p.worth || 0, em: p.em || 0, spec: DALLAR[p.spec] ? p.spec : null })) : [])
-    .concat(BOTS.map((b, i) => ({ nm: '🤖 ' + b, raw: b, w: botWorth(i), em: botEm(i), spec: botSpec(i) })));
+    // 🤖 320 — 318'İN İKİNCİ ÖRNEĞİ: aynı robot öneki burada da vardı.
+    .concat(BOTS.map((b, i) => ({ nm: b, raw: b, w: botWorth(i), em: botEm(i), spec: botSpec(i) })));
   rows.push({ nm: G.company + ' (SEN)', raw: G.company, w: myWorth(), em: co2Avg(), spec: anaDal(), me: true });
   rows.sort((a, b) => b.w - a.w);
   // Sıraya dokununca o şirketin kamuya açık karnesi açılır (patron isteği)
